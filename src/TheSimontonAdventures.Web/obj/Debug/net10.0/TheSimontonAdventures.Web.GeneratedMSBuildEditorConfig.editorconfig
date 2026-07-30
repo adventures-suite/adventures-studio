@@ -27,8 +27,48 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9BcHAucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/Components/Destinations/ContinueTheJourney.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9EZXN0aW5hdGlvbnMvQ29udGludWVUaGVKb3VybmV5LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/Components/Destinations/DestinationFacts.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9EZXN0aW5hdGlvbnMvRGVzdGluYXRpb25GYWN0cy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/Components/Destinations/DestinationGallery.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9EZXN0aW5hdGlvbnMvRGVzdGluYXRpb25HYWxsZXJ5LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
 [/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/Components/Destinations/DestinationHero.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9EZXN0aW5hdGlvbnMvRGVzdGluYXRpb25IZXJvLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/Components/Destinations/DestinationHighlights.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9EZXN0aW5hdGlvbnMvRGVzdGluYXRpb25IaWdobGlnaHRzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/Components/Destinations/DestinationIntroduction.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9EZXN0aW5hdGlvbnMvRGVzdGluYXRpb25JbnRyb2R1Y3Rpb24ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/Components/Destinations/DestinationMap.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9EZXN0aW5hdGlvbnMvRGVzdGluYXRpb25NYXAucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/Components/Destinations/DestinationNavigation.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9EZXN0aW5hdGlvbnMvRGVzdGluYXRpb25OYXZpZ2F0aW9uLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/Components/Destinations/DestinationStory.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9EZXN0aW5hdGlvbnMvRGVzdGluYXRpb25TdG9yeS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/Components/Destinations/DestinationTips.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9EZXN0aW5hdGlvbnMvRGVzdGluYXRpb25UaXBzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/Components/Pages/ContentTest.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Db250ZW50VGVzdC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/Components/Pages/Counter.razor]
@@ -53,6 +93,14 @@ build_metadata.AdditionalFiles.CssScope =
 
 [/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/Components/Routes.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9Sb3V0ZXMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/Components/Shared/LoadingState.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9TaGFyZWQvTG9hZGluZ1N0YXRlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/Components/Shared/PageHeader.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9TaGFyZWQvUGFnZUhlYWRlci5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/Components/_Imports.razor]

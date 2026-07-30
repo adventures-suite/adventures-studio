@@ -1,5 +1,12 @@
+using TheSimontonAdventures.Web.Models;
+
+namespace TheSimontonAdventures.Web.Services;
+
 public interface ITravelContentService
 {
+    Task<IReadOnlyList<Volume>> GetVolumesAsync(
+        CancellationToken cancellationToken = default);
+
     Task<Volume?> GetVolumeAsync(
         string volumeSlug,
         CancellationToken cancellationToken = default);
@@ -8,8 +15,5 @@ public interface ITravelContentService
         string volumeSlug,
         string countrySlug,
         string destinationSlug,
-        CancellationToken cancellationToken = default);
-
-    Task<IReadOnlyList<Volume>> GetVolumesAsync(
         CancellationToken cancellationToken = default);
 }
