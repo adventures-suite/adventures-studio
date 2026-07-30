@@ -1,0 +1,23 @@
+{
+  "slug": "acropolis",
+  "volumeSlug": "volume-1",
+  "countrySlug": "greece",
+  "title": "The Acropolis",
+  "location": "Athens, Greece",
+  "subtitle": "Standing above Athens, where ancient history and our own journey came together.",
+  "heroImage": "/images/volumes/volume-1/greece/acropolis/hero.jpg",
+  "introduction": [
+    "Few places connect the ancient world with the present as powerfully as the Acropolis.",
+    "Walking the same ground traveled by generations before us made the experience feel larger than a sightseeing stop."
+  ],
+  "highlights": [
+    {
+      "title": "The Parthenon",
+      "description": "The centerpiece of the Acropolis."
+    },
+    {
+      "title": "The Erechtheion",
+      "description": "Known for the Porch of the Caryatids."
+    }
+  ]
+}

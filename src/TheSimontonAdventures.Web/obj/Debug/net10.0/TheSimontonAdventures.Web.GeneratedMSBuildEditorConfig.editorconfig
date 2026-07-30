@@ -27,6 +27,10 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9BcHAucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/Components/Destinations/DestinationHero.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9EZXN0aW5hdGlvbnMvRGVzdGluYXRpb25IZXJvLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
 [/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/Components/Pages/Counter.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Db3VudGVyLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
