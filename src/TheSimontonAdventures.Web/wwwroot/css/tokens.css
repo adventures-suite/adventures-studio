@@ -1,0 +1,14 @@
+:root {
+    --color-background: #f7f4ee;
+    --color-surface: #ffffff;
+    --color-text: #252525;
+    --color-muted: #6c6a65;
+    --color-accent: #9a6e3a;
+    --color-dark: #243238;
+
+    --content-width: 72rem;
+    --reading-width: 52rem;
+
+    --space-section: clamp(4rem, 8vw, 7rem);
+    --radius-small: 0.25rem;
+}

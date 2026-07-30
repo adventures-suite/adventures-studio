@@ -1,0 +1,46 @@
+{
+  "number": 1,
+  "slug": "italy-greece-croatia",
+  "title": "Italy, Greece & Croatia",
+  "subtitle": "A Journey Through the Mediterranean",
+  "description": "Our first volume follows our travels through Italy, Greece and Croatia.",
+  "coverImage": "/images/volumes/volume-1/cover/volume-1-cover.jpg",
+  "published": false,
+  "destinations": [
+    {
+      "countrySlug": "italy",
+      "destinationSlug": "venice",
+      "displayOrder": 1
+    },
+    {
+      "countrySlug": "italy",
+      "destinationSlug": "florence",
+      "displayOrder": 2
+    },
+    {
+      "countrySlug": "italy",
+      "destinationSlug": "ravenna",
+      "displayOrder": 3
+    },
+    {
+      "countrySlug": "croatia",
+      "destinationSlug": "dubrovnik",
+      "displayOrder": 4
+    },
+    {
+      "countrySlug": "greece",
+      "destinationSlug": "acropolis",
+      "displayOrder": 5
+    },
+    {
+      "countrySlug": "greece",
+      "destinationSlug": "santorini",
+      "displayOrder": 6
+    },
+    {
+      "countrySlug": "croatia",
+      "destinationSlug": "split",
+      "displayOrder": 7
+    }
+  ]
+}
