@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "tr6vMnB/Hh4=",
+  "success": true,
+  "projectFilePath": "/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/TheSimontonAdventures.Web.csproj",
+  "expectedPackageFiles": [
+    "/Users/ssimonton/.nuget/packages/microsoft.aspnetcore.app.internal.assets/10.0.10/microsoft.aspnetcore.app.internal.assets.10.0.10.nupkg.sha512"
+  ],
+  "logs": []
+}
