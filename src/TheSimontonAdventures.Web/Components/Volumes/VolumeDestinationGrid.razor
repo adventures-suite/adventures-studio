@@ -1,0 +1,93 @@
+@using TheSimontonAdventures.Web.Models
+
+<section class="volume-destinations">
+    <header class="volume-destinations__header">
+        <p class="destination-eyebrow">
+            Destinations
+        </p>
+
+        <h2>Explore the Adventure</h2>
+
+        <p>
+            Each destination became another chapter in our journey.
+        </p>
+    </header>
+
+    <div class="volume-destinations__grid">
+        @foreach (var destination in Destinations)
+        {
+            <article class="volume-destinations__card">
+                <a class="volume-destinations__media"
+                   href="@GetUrl(destination)">
+
+                    @if (!string.IsNullOrWhiteSpace(
+                        GetImage(destination)))
+                    {
+                        <img src="@GetImage(destination)"
+                             alt="@destination.HeroImageAlt"
+                             loading="lazy" />
+                    }
+                    else
+                    {
+                        <div class="volume-destinations__placeholder">
+                            @destination.Title
+                        </div>
+                    }
+                </a>
+
+                <div class="volume-destinations__copy">
+                    <p>
+                        @destination.City · @destination.Country
+                    </p>
+
+                    <h3>
+                        <a href="@GetUrl(destination)">
+                            @destination.Title
+                        </a>
+                    </h3>
+
+                    <p class="volume-destinations__summary">
+                        @GetSummary(destination)
+                    </p>
+
+                    <a class="volume-destinations__link"
+                       href="@GetUrl(destination)">
+                        Explore
+                        <span aria-hidden="true">→</span>
+                    </a>
+                </div>
+            </article>
+        }
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public Volume Volume { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<Destination> Destinations { get; set; }
+        = Array.Empty<Destination>();
+
+    private static string GetImage(Destination destination)
+    {
+        return !string.IsNullOrWhiteSpace(
+            destination.HomepageImage)
+                ? destination.HomepageImage
+                : destination.HeroImage;
+    }
+
+    private static string GetSummary(Destination destination)
+    {
+        return !string.IsNullOrWhiteSpace(
+            destination.HomepageSummary)
+                ? destination.HomepageSummary
+                : destination.Summary;
+    }
+
+    private static string GetUrl(Destination destination)
+    {
+        return $"/volumes/{destination.VolumeSlug}/" +
+               $"{destination.CountrySlug}/{destination.Slug}";
+    }
+}

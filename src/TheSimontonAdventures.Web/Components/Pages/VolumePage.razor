@@ -1,0 +1,91 @@
+@page "/volumes/{VolumeSlug}"
+
+@using TheSimontonAdventures.Web.Models
+@using TheSimontonAdventures.Web.Services
+@inject ITravelContentService TravelContentService
+
+@if (_isLoading)
+{
+    <main class="volume-page-message">
+        <p>Loading the adventure...</p>
+    </main>
+}
+else if (_volume is null)
+{
+    <PageTitle>Adventure Not Found</PageTitle>
+
+    <main class="volume-page-message">
+        <p class="destination-eyebrow">Adventure not found</p>
+        <h1>We could not find that journey.</h1>
+
+        <a href="/">
+            Return home
+        </a>
+    </main>
+}
+else
+{
+    <PageTitle>@_volume.Title | The Simonton Adventures</PageTitle>
+
+    <VolumeHero Volume="_volume" />
+
+    @if (_volume.JourneyStops.Count > 0)
+    {
+        <VolumeJourneyTimeline Volume="_volume" />
+    }
+
+    @if (_destinations.Count > 0)
+    {
+        <VolumeDestinationGrid
+            Volume="_volume"
+            Destinations="_destinations" />
+    }
+    else
+    {
+        <VolumePlanningPreview Volume="_volume" />
+    }
+}
+
+@code {
+    [Parameter]
+    public string VolumeSlug { get; set; } = string.Empty;
+
+    private Volume? _volume;
+    private IReadOnlyList<Destination> _destinations = [];
+    private bool _isLoading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _isLoading = true;
+        _volume = null;
+        _destinations = [];
+
+        _volume = await TravelContentService.GetVolumeAsync(
+            VolumeSlug);
+
+        if (_volume is not null)
+        {
+            var destinations = new List<Destination>();
+
+            foreach (var reference in _volume.Destinations
+                .OrderBy(item => item.DisplayOrder))
+            {
+                var destination =
+                    await TravelContentService.GetDestinationAsync(
+                        _volume.Slug,
+                        reference.CountrySlug,
+                        reference.DestinationSlug);
+
+                if (destination is not null
+                    && destination.Published)
+                {
+                    destinations.Add(destination);
+                }
+            }
+
+            _destinations = destinations;
+        }
+
+        _isLoading = false;
+    }
+}
