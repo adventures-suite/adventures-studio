@@ -1,0 +1,33 @@
+@using TheSimontonAdventures.Web.Models
+
+@if (Images.Count > 0)
+{
+    <section class="destination-gallery">
+        <header class="destination-section-heading">
+            <p class="destination-eyebrow">Through our lens</p>
+            <h2>Photo Gallery</h2>
+        </header>
+
+        <div class="destination-gallery__grid">
+            @foreach (var image in Images.OrderBy(image => image.DisplayOrder))
+            {
+                <figure class="destination-gallery__item">
+                    <img src="@image.Src"
+                         alt="@image.Alt"
+                         loading="lazy" />
+
+                    @if (!string.IsNullOrWhiteSpace(image.Caption))
+                    {
+                        <figcaption>@image.Caption</figcaption>
+                    }
+                </figure>
+            }
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<GalleryImage> Images { get; set; }
+        = Array.Empty<GalleryImage>();
+}

@@ -33,4 +33,8 @@ public sealed class Destination
     public List<DestinationTip> Tips { get; init; } = [];
 
     public List<GalleryImage> Gallery { get; init; } = [];
+
+    public DestinationMapLocation? Map { get; init; }
+
+    public List<DestinationResource> Resources { get; init; } = [];
 }

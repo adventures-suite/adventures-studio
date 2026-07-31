@@ -49,5 +49,27 @@
       "description": "The marble and stone pathways can be uneven and slippery."
     }
   ],
-  "gallery": []
+  "gallery": [],
+  "map": {
+    "latitude": 37.9715,
+    "longitude": 23.7257,
+    "label": "The Acropolis of Athens",
+    "zoom": 16
+  },
+  "resources": [
+    {
+      "title": "Acropolis Visitor Information",
+      "description": "Review current visitor information, ticket details and site guidance before planning a visit.",
+      "url": "https://hhticket.gr/",
+      "category": "Official information",
+      "displayOrder": 1
+    },
+    {
+      "title": "Acropolis Museum",
+      "description": "Explore the museum collection and learn more about the archaeological discoveries from the Acropolis.",
+      "url": "https://www.theacropolismuseum.gr/",
+      "category": "Museum",
+      "displayOrder": 2
+    }
+  ]
 }

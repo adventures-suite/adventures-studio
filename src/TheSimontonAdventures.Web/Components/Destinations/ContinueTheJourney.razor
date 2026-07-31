@@ -1,0 +1,54 @@
+@using TheSimontonAdventures.Web.Models
+
+<section class="continue-journey">
+    <div class="continue-journey__content">
+        <p class="destination-eyebrow">Continue the journey</p>
+
+        <h2>Explore Beyond the Book</h2>
+
+        <p class="continue-journey__introduction">
+            Discover additional history, visitor information and carefully
+            selected resources related to @Destination.Title.
+        </p>
+
+        @if (Destination.Resources.Count > 0)
+        {
+            <div class="continue-journey__resources">
+                @foreach (var resource in Destination.Resources
+                    .OrderBy(resource => resource.DisplayOrder))
+                {
+                    <article class="continue-journey__resource">
+                        @if (!string.IsNullOrWhiteSpace(resource.Category))
+                        {
+                            <p class="continue-journey__category">
+                                @resource.Category
+                            </p>
+                        }
+
+                        <h3>@resource.Title</h3>
+
+                        <p>@resource.Description</p>
+
+                        <a href="@resource.Url"
+                           target="_blank"
+                           rel="noopener noreferrer">
+                            Visit resource
+                            <span aria-hidden="true">→</span>
+                        </a>
+                    </article>
+                }
+            </div>
+        }
+        else
+        {
+            <p class="continue-journey__coming-soon">
+                Additional resources for this destination are coming soon.
+            </p>
+        }
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public Destination Destination { get; set; } = null!;
+}
