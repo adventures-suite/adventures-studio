@@ -1,10 +1,10 @@
-.featured-volume {
+.current-adventure {
     padding-block: clamp(5rem, 10vw, 9rem);
     color: var(--color-text-inverse);
     background: var(--color-primary);
 }
 
-.featured-volume__content {
+.current-adventure__content {
     width: min(
         var(--content-width),
         calc(100% - (var(--page-gutter) * 2))
@@ -18,11 +18,11 @@
     gap: clamp(3rem, 8vw, 8rem);
 }
 
-.featured-volume__media {
+.current-adventure__media {
     margin: 0;
 }
 
-.featured-volume__media img {
+.current-adventure__media img {
     display: block;
     width: 100%;
     max-width: 34rem;
@@ -32,11 +32,11 @@
     box-shadow: var(--shadow-medium);
 }
 
-.featured-volume__copy {
+.current-adventure__copy {
     max-width: 44rem;
 }
 
-.featured-volume__eyebrow {
+.current-adventure__eyebrow {
     margin: 0 0 var(--space-4);
     color: var(--color-accent-light);
     font-size: var(--font-size-xs);
@@ -45,14 +45,14 @@
     text-transform: uppercase;
 }
 
-.featured-volume h2 {
+.current-adventure h2 {
     margin: 0;
     font-size: clamp(3rem, 6vw, 6rem);
     line-height: 0.98;
     text-wrap: balance;
 }
 
-.featured-volume__subtitle {
+.current-adventure__subtitle {
     margin: var(--space-5) 0 0;
     color: var(--color-accent-light);
     font-family: var(--font-family-heading);
@@ -60,14 +60,14 @@
     font-style: italic;
 }
 
-.featured-volume__description {
+.current-adventure__description {
     margin: var(--space-8) 0 0;
     color: rgba(255, 255, 255, 0.76);
     font-size: var(--font-size-lg);
     line-height: var(--line-height-reading);
 }
 
-.featured-volume__link {
+.current-adventure__link {
     display: inline-flex;
     align-items: center;
     gap: var(--space-3);
@@ -85,21 +85,21 @@
         color var(--transition-standard);
 }
 
-.featured-volume__link:hover {
+.current-adventure__link:hover {
     gap: var(--space-5);
     color: var(--color-accent-light);
 }
 
 @media (max-width: 50rem) {
-    .featured-volume__content {
+    .current-adventure__content {
         grid-template-columns: 1fr;
     }
 
-    .featured-volume__copy {
+    .current-adventure__copy {
         max-width: none;
     }
 
-    .featured-volume__media img {
+    .current-adventure__media img {
         max-width: 28rem;
     }
 }

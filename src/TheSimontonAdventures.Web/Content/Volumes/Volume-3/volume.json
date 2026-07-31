@@ -1,13 +1,13 @@
 {
-  "number": 2,
-  "slug": "key-west-eastern-caribbean-cruise",
-  "title": "Icon Of The Seas - Perfect day CocoCay & Eastern Caribbean cruise",
-  "subtitle": "Perfect day CocoCay & Eastern Caribbean cruise",
-  "description": "A friends and family cruise on the Icon of the Seas, with stops in Perfect Day CocoCay, Nassau, and Key West.",
-  "coverImage": "/images/volumes/volume-2/cover/volume-2-cover.jpeg",
+  "number": 3,
+  "slug": "spain-trans-atlantic-cruise",
+  "title": "Spain & Trans-Atlantic Cruise",
+  "subtitle": "Spain & Trans-Atlantic cruise",
+  "description": "A magical time in Spain, followed by a trans-Atlantic cruise to Fort Lauderdale, Florida, with stops in the Canary Islands and Bermuda.",
+  "coverImage": "/images/volumes/volume-3/cover/volume-3-cover.jpeg",
   "status": "Planned",
-  "travelDates": "May 15 – May 22, 2027",
-  "statusMessage": "Our planned Key West/Eastern Caribbean cruise",
+  "travelDates": "October 25 – November 15, 2027",
+  "statusMessage": "Our planned Spain & Trans-Atlantic cruise",
   "journeyStops": [
     {
       "title": "Phoenix",
