@@ -5,19 +5,123 @@
   "city": "Florence",
   "slug": "florence",
   "title": "Florence",
-  "subtitle": "",
-  "summary": "",
-  "heroImage": "",
-  "heroImageAlt": "",
-  "published": false,,
+  "subtitle": "Walking through the birthplace of the Renaissance, where art and history seemed to fill every street.",
+  "summary": "Florence felt like a city designed to be explored slowly. Around nearly every corner, we found another church, piazza, sculpture, or view that reminded us how deeply the Renaissance shaped this place. It was elegant without feeling distant, historic without feeling frozen in time, and filled with moments that made us stop and simply take it all in.",
+  "heroImage": "/images/volumes/volume-1/italy/florence/hero.jpeg",
+  "heroImageAlt": "A panoramic view of Florence with the Cathedral of Santa Maria del Fiore rising above the city",
+  "published": true,
   "featured": true,
   "homepageOrder": 2,
-  "homepageImage": "/images/volumes/volume-1/italy/florence/hero.jpeg",
-  "homepageSummary": "Stand above Athens among the monuments that shaped the ancient world.",
-  "sections": [],
-  "facts": [],
-  "highlights": [],
-  "tips": [],
+  "homepageImage": "/images/volumes/volume-1/italy/florence/homepage.png",
+  "homepageSummary": "Walk through the art, architecture, and timeless streets of the Renaissance.",
+  "sections": [
+    {
+      "heading": "Arriving in the Renaissance",
+      "paragraphs": [
+        "Florence immediately felt different from Venice. The canals and quiet passageways were replaced by broad piazzas, stone buildings, busy streets, and the unmistakable dome of the cathedral rising above the city.",
+        "As we walked toward the historic center, it became clear that Florence was not simply a city with important art. Art, architecture, and history were woven into the experience of moving through the city itself."
+      ],
+      "imageSrc": "/images/volumes/volume-1/italy/florence/duomo-wide.jpeg",
+      "imageAlt": "The Cathedral of Santa Maria del Fiore and its dome in Florence",
+      "imageCaption": "The Duomo rising above the historic center of Florence"
+    },
+    {
+      "heading": "Standing Before David",
+      "paragraphs": [
+        "Michelangelo's David was one of the landmarks we had anticipated most. We had seen photographs countless times, but seeing the sculpture in person made us understand why it has remained so powerful for centuries.",
+        "The scale, detail, and expression were extraordinary. More than a famous work of art, David felt like a human presence in the room—confident, alert, and frozen in the moment before action."
+      ],
+      "imageSrc": "/images/volumes/volume-1/italy/florence/david.jpeg",
+      "imageAlt": "Michelangelo's David displayed inside the Accademia Gallery in Florence",
+      "imageCaption": "Michelangelo's David inside the Accademia Gallery"
+    },
+    {
+      "heading": "An Evening Along the Arno",
+      "paragraphs": [
+        "Some of our favorite moments in Florence came when we were no longer rushing toward a landmark. Walking near the Arno River in the evening gave us time to appreciate the softer side of the city.",
+        "The light changed across the buildings, the bridges reflected on the water, and Florence seemed to settle into a quieter rhythm. It was the kind of moment that made us want to slow down and stay a little longer."
+      ],
+      "imageSrc": "/images/volumes/volume-1/italy/florence/arno-evening.jpeg",
+      "imageAlt": "The Arno River and Ponte Vecchio during the evening in Florence",
+      "imageCaption": "Evening light along the Arno River"
+    }
+  ],
+  "facts": [
+    {
+      "label": "Location",
+      "value": "Florence, Tuscany, Italy"
+    },
+    {
+      "label": "Defining era",
+      "value": "The Renaissance"
+    },
+    {
+      "label": "Signature landmark",
+      "value": "The Cathedral of Santa Maria del Fiore"
+    },
+    {
+      "label": "Essential experience",
+      "value": "Seeing Michelangelo's David in person"
+    }
+  ],
+  "highlights": [
+    {
+      "title": "The Duomo",
+      "description": "Florence's cathedral dominates the skyline with its marble facade and Brunelleschi's remarkable dome."
+    },
+    {
+      "title": "Michelangelo's David",
+      "description": "The monumental sculpture at the Accademia Gallery remains one of the defining masterpieces of Renaissance art."
+    },
+    {
+      "title": "Ponte Vecchio",
+      "description": "The historic bridge crosses the Arno River and is lined with distinctive shops and centuries of history."
+    },
+    {
+      "title": "Piazza della Signoria",
+      "description": "An open-air gathering place surrounded by sculpture, architecture, and some of Florence's most important civic landmarks."
+    }
+  ],
+  "tips": [
+    {
+      "title": "Reserve major museums early",
+      "description": "Timed entry for the Accademia and other major attractions can prevent long waits and make the day easier to plan."
+    },
+    {
+      "title": "Explore on foot",
+      "description": "Many of Florence's most memorable streets, piazzas, churches, and viewpoints are best discovered while walking."
+    },
+    {
+      "title": "Allow time for the details",
+      "description": "The city rewards visitors who look beyond the headline landmarks and notice its doors, courtyards, sculptures, and smaller churches."
+    },
+    {
+      "title": "Plan for the heat",
+      "description": "Summer afternoons can be warm, so early sightseeing and a slower midday pace can make the experience more comfortable."
+    }
+  ],
+  "reflections": [
+    {
+      "afterSection": 1,
+      "author": "Dianne",
+      "title": "From Dianne's Journal",
+      "text": "Florence felt elegant from the moment we arrived. Everywhere we looked, there seemed to be another beautiful building, sculpture, or street waiting for us.",
+      "signature": "❤️ Dianne"
+    },
+    {
+      "afterSection": 2,
+      "author": "Steve",
+      "title": "Steve's Notes",
+      "text": "I expected David to be impressive. I did not expect the sculpture to feel so alive. Seeing it in person completely changed the way I understood it.",
+      "signature": "— Steve"
+    }
+  ],
   "gallery": [],
+  "map": {
+    "latitude": 43.7696,
+    "longitude": 11.2558,
+    "label": "Florence, Italy",
+    "zoom": 14
+  },
   "resources": []
 }

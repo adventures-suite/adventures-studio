@@ -5,15 +5,123 @@
   "city": "Santorini",
   "slug": "santorini",
   "title": "Santorini",
-  "subtitle": "",
-  "summary": "",
-  "heroImage": "",
-  "heroImageAlt": "",
-  "published": false,
-  "sections": [],
-  "facts": [],
-  "highlights": [],
-  "tips": [],
+  "subtitle": "A volcanic island of whitewashed villages, dramatic cliffs, and unforgettable Aegean views.",
+  "summary": "Santorini looked almost unreal from the moment the island came into view. White buildings seemed to cling to the cliffs above the deep blue water, while the volcanic landscape gave the island a beauty unlike anywhere else on our journey. Beyond the famous views, we discovered villages, beaches, wine, and quiet moments that made Santorini feel even more memorable.",
+  "heroImage": "/images/volumes/volume-1/greece/santorini/hero.jpeg",
+  "heroImageAlt": "Whitewashed buildings and blue-domed churches overlooking the Aegean Sea in Santorini",
+  "published": true,
+  "featured": true,
+  "homepageOrder": 3,
+  "homepageImage": "/images/volumes/volume-1/greece/santorini/homepage.jpeg",
+  "homepageSummary": "Experience volcanic landscapes, whitewashed villages, and the brilliant colors of the Aegean.",
+  "sections": [
+    {
+      "heading": "Approaching the Caldera",
+      "paragraphs": [
+        "The first view of Santorini came from the water. The cliffs rose sharply above the caldera, crowned by white villages that seemed almost impossibly high above us.",
+        "It was one of the most dramatic arrivals of the trip. Before we had even stepped onto the island, Santorini had already created a sense of anticipation."
+      ],
+      "imageSrc": "/images/volumes/volume-1/greece/santorini/caldera-wide.jpeg",
+      "imageAlt": "The volcanic cliffs and whitewashed villages of Santorini viewed from the caldera",
+      "imageCaption": "Santorini rising dramatically above the caldera"
+    },
+    {
+      "heading": "Beyond the Whitewashed Villages",
+      "paragraphs": [
+        "The white buildings and blue domes were every bit as beautiful as we had imagined, but Santorini offered much more than its most familiar postcard views.",
+        "Traveling across the island revealed traditional villages, volcanic terrain, vineyards, and beaches shaped by the island's geological history. Each stop showed us a different side of Santorini."
+      ],
+      "imageSrc": "/images/volumes/volume-1/greece/santorini/pyrgos.jpeg",
+      "imageAlt": "The traditional hillside village of Pyrgos on Santorini",
+      "imageCaption": "Exploring the quieter streets and elevated views of Pyrgos"
+    },
+    {
+      "heading": "Colors of the Island",
+      "paragraphs": [
+        "The colors of Santorini seemed especially vivid: white walls, blue water, dark volcanic stone, red cliffs, and the warm tones of the late afternoon sun.",
+        "Those contrasts gave the island its unmistakable character. It was beautiful in photographs, but being surrounded by those colors and landscapes made the experience feel much richer."
+      ],
+      "imageSrc": "/images/volumes/volume-1/greece/santorini/red-beach.jpeg",
+      "imageAlt": "The red volcanic cliffs and shoreline of Red Beach in Santorini",
+      "imageCaption": "The volcanic colors and rugged landscape of Red Beach"
+    }
+  ],
+  "facts": [
+    {
+      "label": "Location",
+      "value": "Cyclades, Greece"
+    },
+    {
+      "label": "Landscape",
+      "value": "Volcanic caldera and steep cliffs"
+    },
+    {
+      "label": "Signature experience",
+      "value": "Views across the Aegean Sea"
+    },
+    {
+      "label": "Local tradition",
+      "value": "Wine produced from volcanic soil"
+    }
+  ],
+  "highlights": [
+    {
+      "title": "The Caldera",
+      "description": "The flooded volcanic caldera creates Santorini's dramatic cliffs and sweeping views across the Aegean."
+    },
+    {
+      "title": "Pyrgos",
+      "description": "A traditional hilltop village with winding streets, historic architecture, and panoramic island views."
+    },
+    {
+      "title": "Prophet Elias",
+      "description": "One of the island's highest viewpoints, offering a broad perspective across Santorini and the surrounding sea."
+    },
+    {
+      "title": "The Volcanic Beaches",
+      "description": "Red and dark-sand beaches reveal the geological forces that shaped the island."
+    }
+  ],
+  "tips": [
+    {
+      "title": "Plan around cruise crowds",
+      "description": "Popular viewpoints and villages can become crowded, so earlier visits or a private itinerary can create a more relaxed experience."
+    },
+    {
+      "title": "Wear sturdy shoes",
+      "description": "Many village streets are steep, uneven, and paved with stone that can become slippery."
+    },
+    {
+      "title": "Explore beyond Oia",
+      "description": "Santorini's traditional villages, beaches, wineries, and elevated viewpoints reveal much more of the island."
+    },
+    {
+      "title": "Allow extra transportation time",
+      "description": "Narrow roads, summer traffic, and cruise-day demand can make travel across the island slower than expected."
+    }
+  ],
+  "reflections": [
+    {
+      "afterSection": 1,
+      "author": "Dianne",
+      "title": "From Dianne's Journal",
+      "text": "Seeing Santorini from the water was one of those moments when the place looked exactly like a dream. The white villages above us seemed almost too beautiful to be real.",
+      "signature": "❤️ Dianne"
+    },
+    {
+      "afterSection": 2,
+      "author": "Steve",
+      "title": "Steve's Notes",
+      "text": "I expected the famous blue-and-white views, but the volcanic landscape surprised me. The cliffs, beaches, and vineyards made the island much more varied than I had imagined.",
+      "signature": "— Steve"
+    }
+  ],
   "gallery": [],
+  "map": {
+    "latitude": 36.3932,
+    "longitude": 25.4615,
+    "label": "Santorini, Greece",
+    "zoom": 11
+  },
   "resources": []
 }
