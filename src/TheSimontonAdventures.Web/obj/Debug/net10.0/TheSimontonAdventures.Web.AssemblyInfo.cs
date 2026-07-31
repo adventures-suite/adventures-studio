@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TheSimontonAdventures.Web")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5e23f2174b41478f64ed72f5e2960a94c7170944")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+23cb8b7305a825fef6f6148f855fce8d05dc73de")]
 [assembly: System.Reflection.AssemblyProductAttribute("TheSimontonAdventures.Web")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TheSimontonAdventures.Web")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

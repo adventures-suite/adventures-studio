@@ -29,10 +29,8 @@
 /Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/scopedcss/Components/Layout/ReconnectModal.razor.rz.scp.css
 /Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/scopedcss/bundle/TheSimontonAdventures.Web.styles.css
 /Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/scopedcss/projectbundle/TheSimontonAdventures.Web.bundle.scp.css
-/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/compressed/49qbyfw32v-{0}-khy4lop6wu-khy4lop6wu.gz
 /Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/compressed/83ii74ia5k-{0}-5ipweew5fc-5ipweew5fc.gz
 /Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/compressed/4efjukcwr1-{0}-5ipweew5fc-5ipweew5fc.gz
-/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/compressed/5wyfz3f7x7-{0}-cmkwyflbb8-cmkwyflbb8.gz
 /Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/compressed/2bflr32k8a-{0}-5ipweew5fc-5ipweew5fc.gz
 /Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/compressed/1ziq4hrgoq-{0}-bqjiyaj88i-bqjiyaj88i.gz
 /Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/compressed/kcg8zm2r52-{0}-c2jlpeoesf-c2jlpeoesf.gz
@@ -94,5 +92,12 @@
 /Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/scopedcss/Components/Destinations/DestinationFacts.razor.rz.scp.css
 /Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/scopedcss/Components/Destinations/DestinationHighlights.razor.rz.scp.css
 /Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/scopedcss/Components/Destinations/DestinationTips.razor.rz.scp.css
-/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/compressed/mkhzwdfl7y-{0}-xdqn49y8tc-xdqn49y8tc.gz
-/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/compressed/9udhfrukkm-{0}-xdqn49y8tc-xdqn49y8tc.gz
+/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/scopedcss/Components/Destinations/DestinationHero.razor.rz.scp.css
+/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/scopedcss/Components/Destinations/DestinationStory.razor.rz.scp.css
+/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/scopedcss/Components/Pages/DestinationPage.razor.rz.scp.css
+/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/compressed/5wyfz3f7x7-{0}-c2pz0zf3rd-c2pz0zf3rd.gz
+/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/compressed/7vrpfs7l5t-{0}-5ipweew5fc-5ipweew5fc.gz
+/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/compressed/49qbyfw32v-{0}-41upuhcjke-41upuhcjke.gz
+/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/compressed/1snrq4zjkj-{0}-09ako3vggy-09ako3vggy.gz
+/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/compressed/mkhzwdfl7y-{0}-g0leu4p104-g0leu4p104.gz
+/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/compressed/9udhfrukkm-{0}-g0leu4p104-g0leu4p104.gz

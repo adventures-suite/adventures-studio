@@ -1,53 +1,64 @@
 .destination-highlights[b-c1xza3amqr] {
-    width: min(72rem, calc(100% - 3rem));
-    margin: 0 auto;
-    padding: clamp(4rem, 8vw, 7rem) 0;
-    border-top: 1px solid #d8d2c7;
+    width: min(
+        var(--content-width),
+        calc(100% - (var(--page-gutter) * 2))
+    );
+    margin-inline: auto;
+    padding-block: var(--space-section);
+    border-top: var(--border-standard);
 }
 
 .destination-highlights__heading[b-c1xza3amqr] {
-    margin-bottom: 3rem;
+    margin-bottom: var(--space-12);
 }
 
 .destination-highlights__heading p[b-c1xza3amqr] {
-    margin: 0 0 0.75rem;
-    font-size: 0.8rem;
+    margin: 0 0 var(--space-3);
+    color: var(--color-accent);
+    font-size: var(--font-size-xs);
     font-weight: 700;
-    letter-spacing: 0.15rem;
+    letter-spacing: var(--letter-spacing-label);
     text-transform: uppercase;
 }
 
 .destination-highlights__heading h2[b-c1xza3amqr] {
     margin: 0;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: clamp(2rem, 4vw, 3.5rem);
-    font-weight: 400;
+    font-size: var(--font-size-heading-medium);
 }
 
 .destination-highlights__grid[b-c1xza3amqr] {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1.5rem;
+    gap: var(--space-6);
 }
 
 .destination-highlights__card[b-c1xza3amqr] {
-    padding: 2rem;
-    background: white;
-    border: 1px solid #ddd5c8;
+    padding: var(--space-8);
+    background: var(--color-surface);
+    border: var(--border-light);
+    box-shadow: var(--shadow-small);
+    transition:
+        transform var(--transition-standard),
+        box-shadow var(--transition-standard);
+}
+
+.destination-highlights__card:hover[b-c1xza3amqr] {
+    transform: translateY(-0.2rem);
+    box-shadow: var(--shadow-medium);
 }
 
 .destination-highlights__card h3[b-c1xza3amqr] {
-    margin: 0 0 0.75rem;
-    font-family: Georgia, "Times New Roman", serif;
+    margin: 0 0 var(--space-3);
     font-size: 1.5rem;
 }
 
 .destination-highlights__card p[b-c1xza3amqr] {
     margin: 0;
-    line-height: 1.7;
+    color: var(--color-text-muted);
+    line-height: var(--line-height-body);
 }
 
-@media (max-width: 700px) {
+@media (max-width: 43.75rem) {
     .destination-highlights__grid[b-c1xza3amqr] {
         grid-template-columns: 1fr;
     }

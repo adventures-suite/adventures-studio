@@ -1,37 +1,41 @@
 .destination-facts {
-    width: min(72rem, calc(100% - 3rem));
-    margin: 0 auto;
-    padding: clamp(4rem, 8vw, 7rem) 0;
+    width: min(
+        var(--content-width),
+        calc(100% - (var(--page-gutter) * 2))
+    );
+    margin-inline: auto;
+    padding-block: var(--space-section);
     display: grid;
-    grid-template-columns: minmax(14rem, 0.7fr) minmax(0, 1.3fr);
+    grid-template-columns:
+        minmax(14rem, 0.7fr)
+        minmax(0, 1.3fr);
     gap: clamp(2rem, 6vw, 6rem);
-    border-top: 1px solid #d8d2c7;
+    border-top: var(--border-standard);
 }
 
 .destination-facts__heading p {
-    margin: 0 0 0.75rem;
-    font-size: 0.8rem;
+    margin: 0 0 var(--space-3);
+    color: var(--color-accent);
+    font-size: var(--font-size-xs);
     font-weight: 700;
-    letter-spacing: 0.15rem;
+    letter-spacing: var(--letter-spacing-label);
     text-transform: uppercase;
 }
 
 .destination-facts__heading h2 {
     margin: 0;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: clamp(2rem, 4vw, 3.5rem);
-    font-weight: 400;
+    font-size: var(--font-size-heading-medium);
 }
 
 .destination-facts__list {
     margin: 0;
-    background: #243238;
-    color: white;
-    padding: 2rem;
+    padding: var(--space-8);
+    color: var(--color-text-inverse);
+    background: var(--color-primary);
 }
 
 .destination-facts__item {
-    padding: 1.25rem 0;
+    padding-block: var(--space-5);
     border-top: 1px solid rgba(255, 255, 255, 0.18);
 }
 
@@ -41,8 +45,8 @@
 }
 
 .destination-facts dt {
-    margin-bottom: 0.35rem;
-    font-size: 0.75rem;
+    margin-bottom: var(--space-1);
+    font-size: var(--font-size-xs);
     letter-spacing: 0.1rem;
     text-transform: uppercase;
     opacity: 0.7;
@@ -50,11 +54,11 @@
 
 .destination-facts dd {
     margin: 0;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 1.2rem;
+    font-family: var(--font-family-heading);
+    font-size: var(--font-size-lg);
 }
 
-@media (max-width: 750px) {
+@media (max-width: 46.875rem) {
     .destination-facts {
         grid-template-columns: 1fr;
     }
