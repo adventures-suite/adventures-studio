@@ -1,0 +1,51 @@
+<section class="home-hero"
+         aria-label="The Simonton Adventures introduction">
+
+    <div class="home-hero__background"
+         role="img"
+         aria-label="@HeroImageAlt">
+    </div>
+
+    <div class="home-hero__overlay"></div>
+
+    <header class="home-hero__navigation">
+        <a class="home-hero__brand"
+           href="/">
+            The Simonton Adventures
+        </a>
+
+        <button class="home-hero__menu-button"
+                type="button"
+                aria-label="Open navigation menu">
+            <span></span>
+            <span></span>
+        </button>
+    </header>
+
+    <div class="home-hero__content">
+        <p class="home-hero__eyebrow">
+            Stories · Photography · Shared Journeys
+        </p>
+
+        <h1>The Simonton Adventures</h1>
+
+        <p class="home-hero__statement">
+            Every journey begins with a story.
+        </p>
+    </div>
+
+    <a class="home-hero__scroll"
+       href="#our-story">
+        <span>Begin the adventure</span>
+
+        <span class="home-hero__scroll-line"
+              aria-hidden="true">
+        </span>
+    </a>
+</section>
+
+@code {
+    [Parameter]
+    public string HeroImageAlt { get; set; } =
+        "Steve and Dianne exploring a memorable travel destination";
+}
