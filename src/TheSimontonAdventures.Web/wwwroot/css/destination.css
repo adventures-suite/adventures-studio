@@ -35,6 +35,7 @@
 .destination-gallery__item {
     grid-column: span 6;
     margin: 0;
+    overflow: hidden;
 }
 
 .destination-gallery__item:nth-child(3n + 1) {
@@ -44,12 +45,13 @@
 .destination-gallery__item img {
     display: block;
     width: 100%;
-    aspect-ratio: 4 / 3;
+    height: 28rem;
     object-fit: cover;
+    object-position: center;
 }
 
 .destination-gallery__item:nth-child(3n + 1) img {
-    aspect-ratio: 16 / 8;
+    height: 34rem;
 }
 
 .destination-gallery__item figcaption {
@@ -66,7 +68,7 @@
 
     .destination-gallery__item img,
     .destination-gallery__item:nth-child(3n + 1) img {
-        aspect-ratio: 4 / 3;
+        height: 20rem;
     }
 }
 

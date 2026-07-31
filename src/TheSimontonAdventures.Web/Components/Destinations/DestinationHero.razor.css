@@ -1,6 +1,6 @@
 .destination-hero {
     position: relative;
-    min-height: min(88vh, 62rem);
+    min-height: min(90vh, 64rem);
     display: flex;
     align-items: flex-end;
     overflow: hidden;
@@ -9,36 +9,22 @@
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
-    isolation: isolate;
-}
-
-.destination-hero::before {
-    position: absolute;
-    z-index: -1;
-    inset: 0;
-    content: "";
-    background: inherit;
-    background-position: center;
-    background-size: cover;
-    transform: scale(1.02);
-    animation: hero-reveal 1.2s ease-out both;
 }
 
 .destination-hero__overlay {
     position: absolute;
-    z-index: 0;
     inset: 0;
     background:
         linear-gradient(
             90deg,
-            rgba(14, 20, 22, 0.82) 0%,
-            rgba(14, 20, 22, 0.34) 55%,
-            rgba(14, 20, 22, 0.12) 100%
+            rgba(12, 18, 20, 0.86) 0%,
+            rgba(12, 18, 20, 0.42) 52%,
+            rgba(12, 18, 20, 0.12) 100%
         ),
         linear-gradient(
             0deg,
-            rgba(14, 20, 22, 0.78) 0%,
-            transparent 62%
+            rgba(12, 18, 20, 0.76) 0%,
+            transparent 60%
         );
 }
 
@@ -50,7 +36,7 @@
         calc(100% - (var(--page-gutter) * 2))
     );
     margin-inline: auto;
-    padding-block: var(--space-24) 7.5rem;
+    padding: 8rem 0 8rem;
 }
 
 .destination-hero__location {
@@ -60,28 +46,28 @@
     font-weight: 700;
     letter-spacing: 0.24rem;
     text-transform: uppercase;
-    animation: hero-content-reveal 700ms 150ms ease-out both;
+    animation: hero-rise 700ms ease-out both;
 }
 
 .destination-hero h1 {
-    max-width: 62rem;
+    max-width: 64rem;
     margin: 0;
-    font-size: clamp(4rem, 10vw, 8.5rem);
+    font-size: clamp(4rem, 10vw, 8.75rem);
     font-weight: 400;
-    line-height: 0.9;
-    letter-spacing: -0.04em;
+    line-height: 0.88;
+    letter-spacing: -0.045em;
     text-wrap: balance;
-    animation: hero-content-reveal 800ms 250ms ease-out both;
+    animation: hero-rise 800ms 100ms ease-out both;
 }
 
 .destination-hero__subtitle {
     max-width: 44rem;
     margin: var(--space-8) 0 0;
-    color: rgba(255, 255, 255, 0.86);
+    color: rgba(255, 255, 255, 0.87);
     font-size: clamp(1.1rem, 2vw, 1.45rem);
     line-height: 1.65;
     text-wrap: balance;
-    animation: hero-content-reveal 800ms 350ms ease-out both;
+    animation: hero-rise 800ms 200ms ease-out both;
 }
 
 .destination-hero__scroll {
@@ -95,16 +81,12 @@
     display: flex;
     align-items: center;
     gap: var(--space-4);
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.75);
     font-size: var(--font-size-xs);
     font-weight: 700;
     letter-spacing: 0.12rem;
     text-decoration: none;
     text-transform: uppercase;
-}
-
-.destination-hero__scroll:hover {
-    color: var(--color-text-inverse);
 }
 
 .destination-hero__scroll-line {
@@ -124,19 +106,7 @@
     animation: scroll-line 2.2s ease-in-out infinite;
 }
 
-@keyframes hero-reveal {
-    from {
-        opacity: 0;
-        transform: scale(1.08);
-    }
-
-    to {
-        opacity: 1;
-        transform: scale(1.02);
-    }
-}
-
-@keyframes hero-content-reveal {
+@keyframes hero-rise {
     from {
         opacity: 0;
         transform: translateY(1.5rem);
@@ -153,7 +123,7 @@
         transform: translateX(-100%);
     }
 
-    50%,
+    55%,
     100% {
         transform: translateX(100%);
     }
@@ -161,19 +131,16 @@
 
 @media (max-width: 43.75rem) {
     .destination-hero {
-        min-height: 78vh;
+        min-height: 80vh;
     }
 
     .destination-hero__content {
-        width: min(
-            100% - (var(--page-gutter-mobile) * 2),
-            var(--content-width)
-        );
-        padding-bottom: 7rem;
+        width: calc(100% - 2rem);
+        padding: 6rem 0 7rem;
     }
 
     .destination-hero h1 {
-        font-size: clamp(3.5rem, 18vw, 6rem);
+        font-size: clamp(3.7rem, 18vw, 6rem);
     }
 
     .destination-hero__scroll {
@@ -183,7 +150,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .destination-hero::before,
     .destination-hero__location,
     .destination-hero h1,
     .destination-hero__subtitle,

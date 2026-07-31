@@ -8,7 +8,7 @@
 
     <div class="destination-hero__content">
         <p class="destination-hero__location">
-            @Destination.City, @Destination.Country
+            @Destination.City · @Destination.Country
         </p>
 
         <h1>@Destination.Title</h1>
@@ -19,8 +19,7 @@
     </div>
 
     <a class="destination-hero__scroll"
-       href="#destination-story"
-       aria-label="Continue to the destination story">
+       href="#destination-story">
         <span>Begin the story</span>
         <span class="destination-hero__scroll-line"
               aria-hidden="true"></span>
@@ -31,10 +30,8 @@
     [Parameter, EditorRequired]
     public Destination Destination { get; set; } = null!;
 
-    private string GetBackgroundStyle()
-    {
-        return string.IsNullOrWhiteSpace(Destination.HeroImage)
+    private string GetBackgroundStyle() =>
+        string.IsNullOrWhiteSpace(Destination.HeroImage)
             ? string.Empty
             : $"background-image: url('{Destination.HeroImage}');";
-    }
 }

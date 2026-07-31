@@ -2,17 +2,29 @@
 
 @if (Sections.Count > 0)
 {
-    @foreach (var section in Sections)
-    {
-        <section>
-            <h2>@section.Heading</h2>
+    <div class="destination-story">
+        @for (var index = 0; index < Sections.Count; index++)
+        {
+            var section = Sections[index];
 
-            @foreach (var paragraph in section.Paragraphs)
-            {
-                <p>@paragraph</p>
-            }
-        </section>
-    }
+            <section class="destination-story__section">
+                <div class="destination-story__heading">
+                    <span class="destination-story__number">
+                        @(index + 1 < 10 ? $"0{index + 1}" : $"{index + 1}")
+                    </span>
+
+                    <h2>@section.Heading</h2>
+                </div>
+
+                <div class="destination-story__body">
+                    @foreach (var paragraph in section.Paragraphs)
+                    {
+                        <p>@paragraph</p>
+                    }
+                </div>
+            </section>
+        }
+    </div>
 }
 
 @code {

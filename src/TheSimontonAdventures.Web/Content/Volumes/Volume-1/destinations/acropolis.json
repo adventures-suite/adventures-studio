@@ -5,17 +5,31 @@
   "city": "Athens",
   "slug": "acropolis",
   "title": "The Acropolis",
-  "subtitle": "Standing above Athens, where ancient history and our own journey came together.",
-  "summary": "Our visit to one of the world's most recognizable ancient landmarks.",
+  "subtitle": "Standing above Athens, where the ancient world suddenly felt very close.",
+  "summary": "There are places you recognize immediately, even before you have ever stood there. The Acropolis was one of those places for us. But photographs could not prepare us for the scale of the hill, the brightness of the marble, or the feeling of looking across a city shaped by thousands of years of history.",
   "heroImage": "/images/volumes/volume-1/greece/acropolis/hero.jpeg",
-  "heroImageAlt": "The Acropolis and Parthenon above Athens",
+  "heroImageAlt": "The Parthenon rising above Athens at the Acropolis",
   "published": true,
   "sections": [
     {
-      "heading": "A Citadel Above Athens",
+      "heading": "The Climb Above Athens",
       "paragraphs": [
-        "The Acropolis is a fortified hill that has watched over Athens for thousands of years.",
-        "Walking through the site brought us face-to-face with one of the most important landmarks of the ancient world."
+        "As we made our way upward, modern Athens gradually disappeared behind us. The streets, traffic and tightly packed buildings gave way to stone pathways, open sky and widening views across the city.",
+        "Then the columns of the Parthenon came into view. It was familiar, but seeing it in person gave it an entirely different weight. This was no longer an image from a history book. We were standing inside a place that had endured for centuries."
+      ]
+    },
+    {
+      "heading": "More Than the Parthenon",
+      "paragraphs": [
+        "The Parthenon commands attention, but the Acropolis is more than a single structure. The Erechtheion, the Caryatids, the Temple of Athena Nike and the monumental entrance through the Propylaea each add another layer to the story.",
+        "What stayed with us most was the contrast: fragile stone against an enormous sky, ancient ruins above a living modern city, and the sense that every generation has viewed this hill through a different moment in history."
+      ]
+    },
+    {
+      "heading": "A View Across Time",
+      "paragraphs": [
+        "From the top, Athens stretches in every direction. The city seems almost endless, yet the Acropolis remains its unmistakable center.",
+        "Standing there, it was easy to understand why this hill has represented Athens for so long. It is not simply above the city geographically. It remains above it symbolically as well."
       ]
     }
   ],
@@ -27,29 +41,72 @@
     {
       "label": "Primary landmark",
       "value": "The Parthenon"
+    },
+    {
+      "label": "Historic era",
+      "value": "Classical Greece"
+    },
+    {
+      "label": "Best experience",
+      "value": "Early morning with a knowledgeable guide"
     }
   ],
   "highlights": [
     {
       "title": "The Parthenon",
-      "description": "The centerpiece of the Acropolis and one of the world's most influential buildings."
+      "description": "The defining structure of the Acropolis and one of the most influential buildings in Western architecture."
     },
     {
       "title": "The Erechtheion",
-      "description": "Known for the Porch of the Caryatids."
+      "description": "A graceful temple best known for the Porch of the Caryatids and its six sculpted female figures."
+    },
+    {
+      "title": "The Propylaea",
+      "description": "The monumental gateway that transforms the final approach into a dramatic entrance."
+    },
+    {
+      "title": "The View of Athens",
+      "description": "A sweeping panorama that reveals how completely the ancient citadel still dominates the modern city."
     }
   ],
   "tips": [
     {
-      "title": "Go early",
-      "description": "Earlier admission generally provides cooler temperatures and smaller crowds."
+      "title": "Arrive early",
+      "description": "Earlier entry generally means cooler temperatures, softer light and fewer people on the narrow pathways."
     },
     {
-      "title": "Wear proper shoes",
-      "description": "The marble and stone pathways can be uneven and slippery."
+      "title": "Wear shoes with grip",
+      "description": "The polished marble can be surprisingly slippery, especially on sloped sections."
+    },
+    {
+      "title": "Bring water",
+      "description": "The site is highly exposed, and shade is limited during the warmest parts of the day."
+    },
+    {
+      "title": "Use a guide",
+      "description": "The ruins become far more meaningful when their history, architecture and symbolism are explained."
     }
   ],
-  "gallery": [],
+  "gallery": [
+    {
+      "src": "/images/volumes/volume-1/greece/acropolis/parthenon-wide.jpeg",
+      "alt": "Wide view of the Parthenon at the Acropolis",
+      "caption": "The Parthenon overlooking Athens",
+      "displayOrder": 1
+    },
+    {
+      "src": "/images/volumes/volume-1/greece/acropolis/caryatids.jpeg",
+      "alt": "The Caryatids at the Erechtheion",
+      "caption": "The Porch of the Caryatids",
+      "displayOrder": 2
+    },
+    {
+      "src": "/images/volumes/volume-1/greece/acropolis/athens-overlook.jpeg",
+      "alt": "View across Athens from the Acropolis",
+      "caption": "Athens stretching toward the horizon",
+      "displayOrder": 3
+    }
+  ],
   "map": {
     "latitude": 37.9715,
     "longitude": 23.7257,
@@ -58,15 +115,15 @@
   },
   "resources": [
     {
-      "title": "Acropolis Visitor Information",
-      "description": "Review current visitor information, ticket details and site guidance before planning a visit.",
+      "title": "Plan Your Acropolis Visit",
+      "description": "Review official ticketing information and current visitor guidance before planning your visit.",
       "url": "https://hhticket.gr/",
       "category": "Official information",
       "displayOrder": 1
     },
     {
-      "title": "Acropolis Museum",
-      "description": "Explore the museum collection and learn more about the archaeological discoveries from the Acropolis.",
+      "title": "Explore the Acropolis Museum",
+      "description": "Discover the sculptures and archaeological finds that bring the monuments above Athens into greater context.",
       "url": "https://www.theacropolismuseum.gr/",
       "category": "Museum",
       "displayOrder": 2
