@@ -1,0 +1,91 @@
+@using TheSimontonAdventures.Web.Models
+@using TheSimontonAdventures.Web.Services
+@inject ITravelContentService TravelContentService
+
+@if (_isLoading)
+{
+    <section class="current-adventure">
+        <p>Loading the current adventure...</p>
+    </section>
+}
+else if (_volume is not null)
+{
+    <section class="current-adventure">
+        <div class="current-adventure__content">
+            <figure class="current-adventure__media">
+                @if (!string.IsNullOrWhiteSpace(_volume.CoverImage))
+                {
+                    <img src="@_volume.CoverImage"
+                         alt="Cover artwork for @_volume.Title"
+                         loading="lazy" />
+                }
+                else
+                {
+                    <div class="current-adventure__placeholder">
+                        <span>@_volume.Title</span>
+                    </div>
+                }
+            </figure>
+
+            <div class="current-adventure__copy">
+                <p class="current-adventure__eyebrow">
+                    @_volume.Status.GetDisplayLabel()
+                </p>
+
+                <p class="current-adventure__volume-number">
+                    Volume @ToRomanNumeral(_volume.Number)
+                </p>
+
+                <h2>@_volume.Title</h2>
+
+                @if (!string.IsNullOrWhiteSpace(_volume.Subtitle))
+                {
+                    <p class="current-adventure__subtitle">
+                        @_volume.Subtitle
+                    </p>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(_volume.TravelDates))
+                {
+                    <p class="current-adventure__dates">
+                        @_volume.TravelDates
+                    </p>
+                }
+
+                <p class="current-adventure__description">
+                    @_volume.Description
+                </p>
+
+                <a class="current-adventure__link"
+                   href="/volumes/@_volume.Slug">
+                    Join the journey
+                    <span aria-hidden="true">→</span>
+                </a>
+            </div>
+        </div>
+    </section>
+}
+
+@code {
+    private Volume? _volume;
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _volume = await TravelContentService.GetCurrentVolumeAsync();
+        _isLoading = false;
+    }
+
+    private static string ToRomanNumeral(int number)
+    {
+        return number switch
+        {
+            1 => "I",
+            2 => "II",
+            3 => "III",
+            4 => "IV",
+            5 => "V",
+            _ => number.ToString()
+        };
+    }
+}
