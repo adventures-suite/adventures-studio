@@ -1,0 +1,27 @@
+@using TheSimontonAdventures.Web.Models
+
+@if (Highlights.Count > 0)
+{
+    <section class="destination-highlights">
+        <header class="destination-highlights__heading">
+            <p>What to see</p>
+            <h2>Highlights</h2>
+        </header>
+
+        <div class="destination-highlights__grid">
+            @foreach (var highlight in Highlights)
+            {
+                <article class="destination-highlights__card">
+                    <h3>@highlight.Title</h3>
+                    <p>@highlight.Description</p>
+                </article>
+            }
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<DestinationHighlight> Highlights { get; set; }
+        = Array.Empty<DestinationHighlight>();
+}

@@ -81,8 +81,6 @@
 /Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/compressed/u6pci8uwzt-{0}-abdmv1u4y3-abdmv1u4y3.gz
 /Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/compressed/g0nb3jaepc-{0}-f7fxoh55ae-f7fxoh55ae.gz
 /Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/compressed/3lwt4c6aau-{0}-68qhiysw0j-68qhiysw0j.gz
-/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/compressed/mkhzwdfl7y-{0}-ddhniq7jxu-ddhniq7jxu.gz
-/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/compressed/9udhfrukkm-{0}-ddhniq7jxu-ddhniq7jxu.gz
 /Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/staticwebassets.build.json
 /Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/staticwebassets.build.json.cache
 /Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/staticwebassets.development.json
@@ -93,3 +91,8 @@
 /Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/TheSimontonAdventures.Web.pdb
 /Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/TheSimontonAdventures.Web.genruntimeconfig.cache
 /Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/ref/TheSimontonAdventures.Web.dll
+/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/scopedcss/Components/Destinations/DestinationFacts.razor.rz.scp.css
+/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/scopedcss/Components/Destinations/DestinationHighlights.razor.rz.scp.css
+/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/scopedcss/Components/Destinations/DestinationTips.razor.rz.scp.css
+/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/compressed/mkhzwdfl7y-{0}-xdqn49y8tc-xdqn49y8tc.gz
+/Users/ssimonton/code/thesimontonadventures/thesimontonadventures/src/TheSimontonAdventures.Web/obj/Debug/net10.0/compressed/9udhfrukkm-{0}-xdqn49y8tc-xdqn49y8tc.gz

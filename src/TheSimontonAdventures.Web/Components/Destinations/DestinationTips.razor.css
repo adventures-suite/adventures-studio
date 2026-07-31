@@ -1,0 +1,53 @@
+.destination-tips {
+    width: min(72rem, calc(100% - 3rem));
+    margin: 0 auto;
+    padding: clamp(4rem, 8vw, 7rem) 0;
+    border-top: 1px solid #d8d2c7;
+}
+
+.destination-tips__heading {
+    margin-bottom: 3rem;
+}
+
+.destination-tips__heading p {
+    margin: 0 0 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.15rem;
+    text-transform: uppercase;
+}
+
+.destination-tips__heading h2 {
+    margin: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 400;
+}
+
+.destination-tips__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+}
+
+.destination-tips__card {
+    padding: 2rem;
+    background: #f1ece3;
+}
+
+.destination-tips__card h3 {
+    margin: 0 0 0.75rem;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.4rem;
+}
+
+.destination-tips__card p {
+    margin: 0;
+    line-height: 1.7;
+}
+
+@media (max-width: 700px) {
+    .destination-tips__grid {
+        grid-template-columns: 1fr;
+    }
+}

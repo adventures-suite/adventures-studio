@@ -1,0 +1,12 @@
+@using TheSimontonAdventures.Web.Models
+
+<section>
+    <p>@Destination.City, @Destination.Country</p>
+    <h1>@Destination.Title</h1>
+    <p>@Destination.Subtitle</p>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public Destination Destination { get; set; } = null!;
+}

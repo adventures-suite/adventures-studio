@@ -1,0 +1,70 @@
+@page "/volumes/{VolumeSlug}/{CountrySlug}/{DestinationSlug}"
+
+@using TheSimontonAdventures.Web.Models
+@using TheSimontonAdventures.Web.Services
+@inject ITravelContentService TravelContentService
+
+<PageTitle>@PageTitle</PageTitle>
+
+@if (_isLoading)
+{
+    <main>
+        <p>Loading destination...</p>
+    </main>
+}
+else if (_destination is null)
+{
+    <main>
+        <h1>Destination not found</h1>
+        <p>The requested destination could not be found.</p>
+    </main>
+}
+else
+{
+    <DestinationHero Destination="_destination" />
+
+    <DestinationIntroduction Destination="_destination" />
+
+    <DestinationStory Sections="_destination.Sections" />
+
+    <DestinationFacts Facts="_destination.Facts" />
+
+    <DestinationHighlights Highlights="_destination.Highlights" />
+
+    <DestinationTips Tips="_destination.Tips" />
+
+    @* <DestinationGallery Images="_destination.Gallery" />
+
+    <ContinueTheJourney Destination="_destination" /> *@
+}
+
+@code {
+    [Parameter]
+    public string VolumeSlug { get; set; } = string.Empty;
+
+    [Parameter]
+    public string CountrySlug { get; set; } = string.Empty;
+
+    [Parameter]
+    public string DestinationSlug { get; set; } = string.Empty;
+
+    private Destination? _destination;
+    private bool _isLoading;
+
+    private string PageTitle =>
+        _destination is null
+            ? "Destination | The Simonton Adventures"
+            : $"{_destination.Title} | The Simonton Adventures";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _isLoading = true;
+
+        _destination = await TravelContentService.GetDestinationAsync(
+            VolumeSlug,
+            CountrySlug,
+            DestinationSlug);
+
+        _isLoading = false;
+    }
+}

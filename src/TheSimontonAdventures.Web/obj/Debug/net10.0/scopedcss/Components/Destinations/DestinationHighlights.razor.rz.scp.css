@@ -1,0 +1,54 @@
+.destination-highlights[b-c1xza3amqr] {
+    width: min(72rem, calc(100% - 3rem));
+    margin: 0 auto;
+    padding: clamp(4rem, 8vw, 7rem) 0;
+    border-top: 1px solid #d8d2c7;
+}
+
+.destination-highlights__heading[b-c1xza3amqr] {
+    margin-bottom: 3rem;
+}
+
+.destination-highlights__heading p[b-c1xza3amqr] {
+    margin: 0 0 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.15rem;
+    text-transform: uppercase;
+}
+
+.destination-highlights__heading h2[b-c1xza3amqr] {
+    margin: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 400;
+}
+
+.destination-highlights__grid[b-c1xza3amqr] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+}
+
+.destination-highlights__card[b-c1xza3amqr] {
+    padding: 2rem;
+    background: white;
+    border: 1px solid #ddd5c8;
+}
+
+.destination-highlights__card h3[b-c1xza3amqr] {
+    margin: 0 0 0.75rem;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.5rem;
+}
+
+.destination-highlights__card p[b-c1xza3amqr] {
+    margin: 0;
+    line-height: 1.7;
+}
+
+@media (max-width: 700px) {
+    .destination-highlights__grid[b-c1xza3amqr] {
+        grid-template-columns: 1fr;
+    }
+}

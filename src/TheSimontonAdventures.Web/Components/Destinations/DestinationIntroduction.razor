@@ -1,0 +1,10 @@
+@using TheSimontonAdventures.Web.Models
+
+<section>
+    <p>@Destination.Summary</p>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public Destination Destination { get; set; } = null!;
+}

@@ -1,0 +1,22 @@
+@using TheSimontonAdventures.Web.Models
+
+@if (Sections.Count > 0)
+{
+    @foreach (var section in Sections)
+    {
+        <section>
+            <h2>@section.Heading</h2>
+
+            @foreach (var paragraph in section.Paragraphs)
+            {
+                <p>@paragraph</p>
+            }
+        </section>
+    }
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<DestinationSection> Sections { get; set; }
+        = Array.Empty<DestinationSection>();
+}

@@ -1,0 +1,27 @@
+@using TheSimontonAdventures.Web.Models
+
+@if (Tips.Count > 0)
+{
+    <section class="destination-tips">
+        <header class="destination-tips__heading">
+            <p>Plan your visit</p>
+            <h2>Travel Tips</h2>
+        </header>
+
+        <div class="destination-tips__grid">
+            @foreach (var tip in Tips)
+            {
+                <article class="destination-tips__card">
+                    <h3>@tip.Title</h3>
+                    <p>@tip.Description</p>
+                </article>
+            }
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<DestinationTip> Tips { get; set; }
+        = Array.Empty<DestinationTip>();
+}

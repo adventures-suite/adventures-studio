@@ -1,0 +1,61 @@
+.destination-facts {
+    width: min(72rem, calc(100% - 3rem));
+    margin: 0 auto;
+    padding: clamp(4rem, 8vw, 7rem) 0;
+    display: grid;
+    grid-template-columns: minmax(14rem, 0.7fr) minmax(0, 1.3fr);
+    gap: clamp(2rem, 6vw, 6rem);
+    border-top: 1px solid #d8d2c7;
+}
+
+.destination-facts__heading p {
+    margin: 0 0 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.15rem;
+    text-transform: uppercase;
+}
+
+.destination-facts__heading h2 {
+    margin: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 400;
+}
+
+.destination-facts__list {
+    margin: 0;
+    background: #243238;
+    color: white;
+    padding: 2rem;
+}
+
+.destination-facts__item {
+    padding: 1.25rem 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.destination-facts__item:first-child {
+    padding-top: 0;
+    border-top: 0;
+}
+
+.destination-facts dt {
+    margin-bottom: 0.35rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.1rem;
+    text-transform: uppercase;
+    opacity: 0.7;
+}
+
+.destination-facts dd {
+    margin: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.2rem;
+}
+
+@media (max-width: 750px) {
+    .destination-facts {
+        grid-template-columns: 1fr;
+    }
+}
