@@ -26,6 +26,8 @@ public sealed class Destination
 
     public List<DestinationSection> Sections { get; init; } = [];
 
+    public DestinationQuote? Quote { get; init; }
+
     public List<DestinationFact> Facts { get; init; } = [];
 
     public List<DestinationHighlight> Highlights { get; init; } = [];
@@ -37,4 +39,5 @@ public sealed class Destination
     public DestinationMapLocation? Map { get; init; }
 
     public List<DestinationResource> Resources { get; init; } = [];
+    
 }
