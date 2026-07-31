@@ -55,23 +55,26 @@
 }
 
 @code {
+    [Parameter, EditorRequired]
+    public string VolumeSlug { get; set; } = string.Empty;
+
     private Volume? _volume;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
-        _volume = await TravelContentService.GetVolumeAsync(
-            "italy-greece-croatia");
+        _volume = await TravelContentService.GetCurrentVolumeAsync();
     }
 
     private string GetStopUrl(JourneyStop stop)
     {
-        if (string.IsNullOrWhiteSpace(stop.CountrySlug)
+        if (_volume is null
+            || string.IsNullOrWhiteSpace(stop.CountrySlug)
             || string.IsNullOrWhiteSpace(stop.DestinationSlug))
         {
             return string.Empty;
         }
 
-        return $"/volumes/{_volume!.Slug}/" +
+        return $"/volumes/{_volume.Slug}/" +
                $"{stop.CountrySlug}/{stop.DestinationSlug}";
     }
 }

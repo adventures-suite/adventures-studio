@@ -1,5 +1,6 @@
 using System.Text.Json;
 using TheSimontonAdventures.Web.Models;
+using System.Text.Json.Serialization;
 
 namespace TheSimontonAdventures.Web.Services;
 
@@ -19,7 +20,11 @@ public sealed class JsonTravelContentService : ITravelContentService
 
         _serializerOptions = new JsonSerializerOptions
         {
-            PropertyNameCaseInsensitive = true
+            PropertyNameCaseInsensitive = true,
+            Converters =
+            {
+                new JsonStringEnumConverter()
+            }
         };
     }
 
@@ -181,5 +186,27 @@ public sealed class JsonTravelContentService : ITravelContentService
         {
             return default;
         }
+    }
+
+    public async Task<IReadOnlyList<Volume>> GetPublicVolumesAsync(
+    CancellationToken cancellationToken = default)
+    {
+        var volumes = await GetVolumesAsync(cancellationToken);
+
+        return volumes
+            .Where(volume => volume.Status.IsPubliclyVisible())
+            .OrderBy(volume => volume.Number)
+            .ToList();
+    }
+
+    public async Task<Volume?> GetCurrentVolumeAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var volumes = await GetVolumesAsync(cancellationToken);
+
+        return volumes
+            .Where(volume => volume.Status == VolumeStatus.Current)
+            .OrderBy(volume => volume.Number)
+            .FirstOrDefault();
     }
 }

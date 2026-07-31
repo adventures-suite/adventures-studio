@@ -1,0 +1,154 @@
+@using TheSimontonAdventures.Web.Models
+@using TheSimontonAdventures.Web.Services
+@inject ITravelContentService TravelContentService
+
+@if (_isLoading)
+{
+    <section class="home-adventures">
+        <p>Loading adventures...</p>
+    </section>
+}
+else if (_volumes.Count > 0)
+{
+    <section class="home-adventures">
+        <header class="home-adventures__header">
+            <p class="home-adventures__eyebrow">
+                Our Adventures
+            </p>
+
+            <h2>Every Journey Becomes a Story</h2>
+
+            <p>
+                Explore completed journeys, follow the adventure currently
+                being featured, and see where we are dreaming of going next.
+            </p>
+        </header>
+
+        <div class="home-adventures__grid">
+            @foreach (var volume in _volumes
+                .OrderBy(volume => volume.Number))
+            {
+                <article class="home-adventures__card">
+                    <div class="home-adventures__media">
+                        @if (!string.IsNullOrWhiteSpace(volume.CoverImage))
+                        {
+                            <img src="@volume.CoverImage"
+                                 alt="Cover image for @volume.Title"
+                                 loading="lazy" />
+                        }
+                        else
+                        {
+                            <div class="home-adventures__placeholder"
+                                 aria-hidden="true">
+                                <span>@volume.Title</span>
+                            </div>
+                        }
+
+                        <span class="home-adventures__status
+                                     @GetStatusClass(volume.Status)">
+                            @volume.Status.GetDisplayLabel()
+                        </span>
+                    </div>
+
+                    <div class="home-adventures__copy">
+                        <p class="home-adventures__volume-number">
+                            Volume @ToRomanNumeral(volume.Number)
+                        </p>
+
+                        <h3>@volume.Title</h3>
+
+                        @if (!string.IsNullOrWhiteSpace(volume.Subtitle))
+                        {
+                            <p class="home-adventures__subtitle">
+                                @volume.Subtitle
+                            </p>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(volume.TravelDates))
+                        {
+                            <p class="home-adventures__dates">
+                                @volume.TravelDates
+                            </p>
+                        }
+
+                        <p class="home-adventures__description">
+                            @volume.Description
+                        </p>
+
+                        @if (volume.Status != VolumeStatus.Draft)
+                        {
+                            <a class="home-adventures__link"
+                               href="@GetVolumeUrl(volume)">
+                                @GetCallToAction(volume.Status)
+                                <span aria-hidden="true">→</span>
+                            </a>
+                        }
+                    </div>
+                </article>
+            }
+        </div>
+    </section>
+}
+
+@code {
+    private IReadOnlyList<Volume> _volumes = [];
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _volumes =
+            await TravelContentService.GetPublicVolumesAsync();
+
+        _isLoading = false;
+    }
+
+    private static string GetVolumeUrl(Volume volume)
+    {
+        return $"/volumes/{volume.Slug}";
+    }
+
+    private static string GetCallToAction(VolumeStatus status)
+    {
+        return status switch
+        {
+            VolumeStatus.Planned => "Follow the planning",
+            VolumeStatus.Upcoming => "Preview the journey",
+            VolumeStatus.Current => "Join the journey",
+            VolumeStatus.Published => "Explore the volume",
+            _ => "Learn more"
+        };
+    }
+
+    private static string GetStatusClass(VolumeStatus status)
+    {
+        return status switch
+        {
+            VolumeStatus.Planned =>
+                "home-adventures__status--planned",
+
+            VolumeStatus.Upcoming =>
+                "home-adventures__status--upcoming",
+
+            VolumeStatus.Current =>
+                "home-adventures__status--current",
+
+            VolumeStatus.Published =>
+                "home-adventures__status--published",
+
+            _ => string.Empty
+        };
+    }
+
+    private static string ToRomanNumeral(int number)
+    {
+        return number switch
+        {
+            1 => "I",
+            2 => "II",
+            3 => "III",
+            4 => "IV",
+            5 => "V",
+            _ => number.ToString()
+        };
+    }
+}

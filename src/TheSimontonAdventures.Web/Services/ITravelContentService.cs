@@ -15,4 +15,10 @@ public interface ITravelContentService
 
     Task<IReadOnlyList<Volume>> GetVolumesAsync(
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<Volume>> GetPublicVolumesAsync(
+        CancellationToken cancellationToken = default);
+
+    Task<Volume?> GetCurrentVolumeAsync(
+        CancellationToken cancellationToken = default);
 }

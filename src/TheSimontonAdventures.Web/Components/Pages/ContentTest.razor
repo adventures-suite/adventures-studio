@@ -1,102 +1,22 @@
-@page "/content-test"
 @using TheSimontonAdventures.Web.Models
 @using TheSimontonAdventures.Web.Services
 @inject ITravelContentService TravelContentService
 
-<PageTitle>Content Test</PageTitle>
-
-<h1>Travel Content Test</h1>
-
-@if (_isLoading)
+@foreach (var volume in _volumes)
 {
-    <p>Loading volume content...</p>
-}
-else if (_errorMessage is not null)
-{
-    <div class="alert alert-danger">
-        @_errorMessage
-    </div>
-}
-else if (_volume is null)
-{
-    <div class="alert alert-warning">
-        Volume 1 could not be found.
-    </div>
-}
-else
-{
-    <div class="card">
-        <div class="card-body">
-            <h2>@_volume.Title</h2>
-
-            <p>
-                <strong>Volume:</strong>
-                @_volume.Number
-            </p>
-
-            <p>
-                <strong>Slug:</strong>
-                @_volume.Slug
-            </p>
-
-            <p>
-                <strong>Subtitle:</strong>
-                @_volume.Subtitle
-            </p>
-
-            <p>
-                <strong>Description:</strong>
-                @_volume.Description
-            </p>
-
-            <p>
-                <strong>Published:</strong>
-                @_volume.Published
-            </p>
-
-            <h3>Destinations</h3>
-
-            @if (_volume.Destinations.Count == 0)
-            {
-                <p>No destinations were found.</p>
-            }
-            else
-            {
-                <ol>
-                    @foreach (var destination in _volume.Destinations
-                        .OrderBy(item => item.DisplayOrder))
-                    {
-                        <li>
-                            @destination.CountrySlug /
-                            @destination.DestinationSlug
-                        </li>
-                    }
-                </ol>
-            }
-        </div>
-    </div>
+    <p>
+        Volume @volume.Number:
+        @volume.Title —
+        @volume.Status
+    </p>
 }
 
 @code {
-    private Volume? _volume;
-    private bool _isLoading = true;
-    private string? _errorMessage;
+    private IReadOnlyList<Volume> _volumes = [];
 
     protected override async Task OnInitializedAsync()
     {
-        try
-        {
-            _volume = await TravelContentService.GetVolumeAsync(
-                "italy-greece-croatia");
-        }
-        catch (Exception exception)
-        {
-            _errorMessage =
-                $"The volume content could not be loaded: {exception.Message}";
-        }
-        finally
-        {
-            _isLoading = false;
-        }
+        _volumes =
+            await TravelContentService.GetPublicVolumesAsync();
     }
 }

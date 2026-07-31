@@ -1,0 +1,168 @@
+.home-adventures {
+    padding-block: clamp(5rem, 10vw, 9rem);
+    background: var(--color-background-alt);
+}
+
+.home-adventures__header {
+    width: min(
+        var(--reading-width),
+        calc(100% - (var(--page-gutter) * 2))
+    );
+    margin: 0 auto var(--space-16);
+    text-align: center;
+}
+
+.home-adventures__eyebrow {
+    margin: 0 0 var(--space-4);
+    color: var(--color-accent);
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    letter-spacing: var(--letter-spacing-label);
+    text-transform: uppercase;
+}
+
+.home-adventures__header h2 {
+    margin: 0;
+    font-size: clamp(2.8rem, 6vw, 5.75rem);
+    line-height: 1;
+    text-wrap: balance;
+}
+
+.home-adventures__header > p:last-child {
+    margin: var(--space-6) 0 0;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-lg);
+    line-height: var(--line-height-reading);
+}
+
+.home-adventures__grid {
+    width: min(
+        var(--content-width),
+        calc(100% - (var(--page-gutter) * 2))
+    );
+    margin-inline: auto;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-8);
+}
+
+.home-adventures__card {
+    overflow: hidden;
+    background: var(--color-surface);
+    border: var(--border-light);
+}
+
+.home-adventures__media {
+    position: relative;
+    overflow: hidden;
+}
+
+.home-adventures__media img,
+.home-adventures__placeholder {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+}
+
+.home-adventures__placeholder {
+    display: grid;
+    place-items: center;
+    padding: var(--space-8);
+    color: var(--color-text-inverse);
+    background:
+        linear-gradient(
+            135deg,
+            var(--color-primary),
+            var(--color-primary-hover)
+        );
+    font-family: var(--font-family-heading);
+    font-size: clamp(2rem, 5vw, 4rem);
+    text-align: center;
+}
+
+.home-adventures__status {
+    position: absolute;
+    top: var(--space-5);
+    left: var(--space-5);
+    padding: 0.45rem 0.75rem;
+    color: var(--color-text-inverse);
+    background: var(--color-primary);
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    letter-spacing: 0.08rem;
+    text-transform: uppercase;
+}
+
+.home-adventures__status--planned {
+    background: var(--color-accent);
+}
+
+.home-adventures__status--upcoming {
+    background: var(--color-success);
+}
+
+.home-adventures__status--current {
+    background: var(--color-primary);
+}
+
+.home-adventures__copy {
+    padding: clamp(2rem, 4vw, 3.5rem);
+}
+
+.home-adventures__volume-number {
+    margin: 0 0 var(--space-3);
+    color: var(--color-accent);
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    letter-spacing: var(--letter-spacing-label);
+    text-transform: uppercase;
+}
+
+.home-adventures h3 {
+    margin: 0;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    line-height: 1;
+}
+
+.home-adventures__subtitle {
+    margin: var(--space-4) 0 0;
+    color: var(--color-accent);
+    font-family: var(--font-family-heading);
+    font-size: var(--font-size-xl);
+    font-style: italic;
+}
+
+.home-adventures__dates {
+    margin: var(--space-5) 0 0;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+    letter-spacing: 0.05rem;
+    text-transform: uppercase;
+}
+
+.home-adventures__description {
+    margin: var(--space-6) 0 0;
+    color: var(--color-text-muted);
+    line-height: var(--line-height-reading);
+}
+
+.home-adventures__link {
+    display: inline-flex;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+    padding-bottom: var(--space-2);
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+    letter-spacing: 0.08rem;
+    text-decoration: none;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--color-accent);
+}
+
+@media (max-width: 50rem) {
+    .home-adventures__grid {
+        grid-template-columns: 1fr;
+    }
+}

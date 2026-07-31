@@ -14,10 +14,15 @@ public sealed class Volume
 
     public string CoverImage { get; init; } = string.Empty;
 
-    public bool Published { get; init; }
+    public string HeroImage { get; init; } = string.Empty;
+
+    public string TravelDates { get; init; } = string.Empty;
+
+    public string StatusMessage { get; init; } = string.Empty;
+
+    public VolumeStatus Status { get; init; } = VolumeStatus.Draft;
 
     public List<JourneyStop> JourneyStops { get; init; } = [];
 
     public List<VolumeDestinationReference> Destinations { get; init; } = [];
-    
 }

@@ -4,10 +4,10 @@
   "title": "Italy, Greece & Croatia",
   "subtitle": "A Journey Through the Mediterranean",
   "description": "Our journey through the canals, cities, islands and ancient landmarks of Italy, Greece and Croatia.",
-  "coverImage": "/images/volumes/volume-1/cover/volume-1-cover.jpg",
-  "status": "Current",
-  "travelDates": "June 20 – July 5, 2026",
-  "statusMessage": "Our current featured Mediterranean adventure",
+  "coverImage": "/images/volumes/volume-2/cover/volume-2-cover.jpeg",
+  "status": "Planned",
+  "travelDates": "October 25 – November 55, 2027",
+  "statusMessage": "Our planned Spain/Trans-Atlantic adventure",
   "journeyStops": [
     {
       "title": "Phoenix",
@@ -18,10 +18,10 @@
       "displayOrder": 1
     },
     {
-      "title": "Venice",
-      "subtitle": "Italy",
-      "countrySlug": "italy",
-      "destinationSlug": "venice",
+      "title": "Madrid",
+      "subtitle": "Spain",
+      "countrySlug": "spain",
+      "destinationSlug": "madrid",
       "icon": "◈",
       "displayOrder": 2
     },
