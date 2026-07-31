@@ -1,0 +1,100 @@
+@using TheSimontonAdventures.Web.Models
+@using TheSimontonAdventures.Web.Services
+@inject ITravelContentService TravelContentService
+
+@if (_volume is not null && _volume.JourneyStops.Count > 0)
+{
+    <section class="journey-timeline">
+        <div class="journey-timeline__header">
+            <p class="destination-eyebrow">The journey</p>
+            <h2>Where We Are</h2>
+        </div>
+
+        <div class="journey-timeline__track">
+            @foreach (var stop in _volume.JourneyStops.OrderBy(stop => stop.DisplayOrder))
+            {
+                var isCurrent = IsCurrentStop(stop);
+                var url = GetStopUrl(stop);
+
+                @if (!string.IsNullOrWhiteSpace(url))
+                {
+                    <a class="journey-timeline__stop @(isCurrent ? "journey-timeline__stop--current" : null)"
+                       href="@url"
+                       aria-current="@(isCurrent ? "location" : null)">
+
+                        <span class="journey-timeline__icon" aria-hidden="true">
+                            @stop.Icon
+                        </span>
+
+                        <span class="journey-timeline__text">
+                            <strong>@stop.Title</strong>
+                            <small>@stop.Subtitle</small>
+
+                            @if (isCurrent)
+                            {
+                                <em>You are here</em>
+                            }
+                        </span>
+                    </a>
+                }
+                else
+                {
+                    <div class="journey-timeline__stop @(isCurrent ? "journey-timeline__stop--current" : null)">
+
+                        <span class="journey-timeline__icon" aria-hidden="true">
+                            @stop.Icon
+                        </span>
+
+                        <span class="journey-timeline__text">
+                            <strong>@stop.Title</strong>
+                            <small>@stop.Subtitle</small>
+
+                            @if (isCurrent)
+                            {
+                                <em>You are here</em>
+                            }
+                        </span>
+                    </div>
+                }
+            }
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public Destination Destination { get; set; } = null!;
+
+    private Volume? _volume;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _volume = await TravelContentService.GetVolumeAsync(
+            Destination.VolumeSlug);
+    }
+
+    private bool IsCurrentStop(JourneyStop stop)
+    {
+        return string.Equals(
+                   stop.CountrySlug,
+                   Destination.CountrySlug,
+                   StringComparison.OrdinalIgnoreCase)
+               &&
+               string.Equals(
+                   stop.DestinationSlug,
+                   Destination.Slug,
+                   StringComparison.OrdinalIgnoreCase);
+    }
+
+    private string GetStopUrl(JourneyStop stop)
+    {
+        if (string.IsNullOrWhiteSpace(stop.CountrySlug)
+            || string.IsNullOrWhiteSpace(stop.DestinationSlug))
+        {
+            return string.Empty;
+        }
+
+        return $"/volumes/{Destination.VolumeSlug}/" +
+               $"{stop.CountrySlug}/{stop.DestinationSlug}";
+    }
+}

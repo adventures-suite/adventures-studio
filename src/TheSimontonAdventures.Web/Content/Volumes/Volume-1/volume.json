@@ -6,6 +6,80 @@
   "description": "Our journey through the canals, cities, islands and ancient landmarks of Italy, Greece and Croatia.",
   "coverImage": "/images/volumes/volume-1/cover/volume-1-cover.jpg",
   "published": false,
+  "journeyStops": [
+    {
+      "title": "Phoenix",
+      "subtitle": "The journey begins",
+      "countrySlug": "",
+      "destinationSlug": "",
+      "icon": "✈",
+      "displayOrder": 1
+    },
+    {
+      "title": "Venice",
+      "subtitle": "Italy",
+      "countrySlug": "italy",
+      "destinationSlug": "venice",
+      "icon": "◈",
+      "displayOrder": 2
+    },
+    {
+      "title": "Florence",
+      "subtitle": "Italy",
+      "countrySlug": "italy",
+      "destinationSlug": "florence",
+      "icon": "◆",
+      "displayOrder": 3
+    },
+    {
+      "title": "Tuscany",
+      "subtitle": "Italy",
+      "countrySlug": "italy",
+      "destinationSlug": "tuscany",
+      "icon": "◆",
+      "displayOrder": 3
+    },
+    {
+      "title": "Ravenna",
+      "subtitle": "Italy",
+      "countrySlug": "italy",
+      "destinationSlug": "ravenna",
+      "icon": "⚓",
+      "displayOrder": 4
+    },
+    {
+      "title": "Dubrovnik",
+      "subtitle": "Croatia",
+      "countrySlug": "croatia",
+      "destinationSlug": "dubrovnik",
+      "icon": "◆",
+      "displayOrder": 5
+    },
+    {
+      "title": "Athens",
+      "subtitle": "Greece",
+      "countrySlug": "greece",
+      "destinationSlug": "acropolis",
+      "icon": "◇",
+      "displayOrder": 6
+    },
+    {
+      "title": "Santorini",
+      "subtitle": "Greece",
+      "countrySlug": "greece",
+      "destinationSlug": "santorini",
+      "icon": "◉",
+      "displayOrder": 7
+    },
+    {
+      "title": "Split",
+      "subtitle": "Croatia",
+      "countrySlug": "croatia",
+      "destinationSlug": "split",
+      "icon": "⚓",
+      "displayOrder": 8
+    }
+  ],
   "destinations": [
     {
       "countrySlug": "italy",

@@ -16,5 +16,8 @@ public sealed class Volume
 
     public bool Published { get; init; }
 
+    public List<JourneyStop> JourneyStops { get; init; } = [];
+
     public List<VolumeDestinationReference> Destinations { get; init; } = [];
+    
 }

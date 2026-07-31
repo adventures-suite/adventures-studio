@@ -26,22 +26,23 @@ else
     <main class="destination-content">
         <DestinationIntroduction Destination="_destination" />
 
+        <DestinationJourneyTimeline Destination="_destination" />
+
         <DestinationStory Sections="_destination.Sections" />
 
-        <DestinationFacts Facts="_destination.Facts" />
-
-        <DestinationHighlights Highlights="_destination.Highlights" />
-
-        <DestinationTips Tips="_destination.Tips" />
-
+        <DestinationGuide
+            Facts="_destination.Facts"
+            Highlights="_destination.Highlights"
+            Tips="_destination.Tips" />
+            
         <DestinationGallery Images="_destination.Gallery" />
 
         <DestinationMap Map="_destination.Map" />
     </main>
 
-<ContinueTheJourney Destination="_destination" />
+    <ContinueTheJourney Destination="_destination" />
 
-<DestinationNavigation Destination="_destination" />
+    <DestinationNavigation Destination="_destination" />
 }
 
 @code {
