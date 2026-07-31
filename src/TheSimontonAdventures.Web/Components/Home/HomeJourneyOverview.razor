@@ -1,0 +1,77 @@
+@using TheSimontonAdventures.Web.Models
+@using TheSimontonAdventures.Web.Services
+@inject ITravelContentService TravelContentService
+
+@if (_volume is not null && _volume.JourneyStops.Count > 0)
+{
+    <section class="home-journey">
+        <div class="home-journey__header">
+            <p class="home-journey__eyebrow">The Journey</p>
+
+            <h2>From Phoenix to the Mediterranean</h2>
+
+            <p>
+                Follow the route through Italy, Croatia, and Greece,
+                with each stop becoming another chapter in the adventure.
+            </p>
+        </div>
+
+        <div class="home-journey__track">
+            @foreach (var stop in _volume.JourneyStops
+                .OrderBy(stop => stop.DisplayOrder))
+            {
+                var url = GetStopUrl(stop);
+
+                @if (string.IsNullOrWhiteSpace(url))
+                {
+                    <div class="home-journey__stop">
+                        <span class="home-journey__icon" aria-hidden="true">
+                            @stop.Icon
+                        </span>
+
+                        <span class="home-journey__text">
+                            <strong>@stop.Title</strong>
+                            <small>@stop.Subtitle</small>
+                        </span>
+                    </div>
+                }
+                else
+                {
+                    <a class="home-journey__stop"
+                       href="@url">
+                        <span class="home-journey__icon" aria-hidden="true">
+                            @stop.Icon
+                        </span>
+
+                        <span class="home-journey__text">
+                            <strong>@stop.Title</strong>
+                            <small>@stop.Subtitle</small>
+                        </span>
+                    </a>
+                }
+            }
+        </div>
+    </section>
+}
+
+@code {
+    private Volume? _volume;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _volume = await TravelContentService.GetVolumeAsync(
+            "italy-greece-croatia");
+    }
+
+    private string GetStopUrl(JourneyStop stop)
+    {
+        if (string.IsNullOrWhiteSpace(stop.CountrySlug)
+            || string.IsNullOrWhiteSpace(stop.DestinationSlug))
+        {
+            return string.Empty;
+        }
+
+        return $"/volumes/{_volume!.Slug}/" +
+               $"{stop.CountrySlug}/{stop.DestinationSlug}";
+    }
+}
