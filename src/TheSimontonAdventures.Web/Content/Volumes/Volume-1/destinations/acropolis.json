@@ -16,21 +16,30 @@
       "paragraphs": [
         "As we made our way upward, modern Athens gradually disappeared behind us. The streets, traffic and tightly packed buildings gave way to stone pathways, open sky and widening views across the city.",
         "Then the columns of the Parthenon came into view. It was familiar, but seeing it in person gave it an entirely different weight. This was no longer an image from a history book. We were standing inside a place that had endured for centuries."
-      ]
+      ],
+      "imageSrc": "/images/volumes/volume-1/greece/acropolis/parthenon-wide.jpeg",
+      "imageAlt": "Wide view of the Parthenon at the Acropolis",
+      "imageCaption": "The Parthenon emerging above the ancient pathways"
     },
     {
       "heading": "More Than the Parthenon",
       "paragraphs": [
         "The Parthenon commands attention, but the Acropolis is more than a single structure. The Erechtheion, the Caryatids, the Temple of Athena Nike and the monumental entrance through the Propylaea each add another layer to the story.",
         "What stayed with us most was the contrast: fragile stone against an enormous sky, ancient ruins above a living modern city, and the sense that every generation has viewed this hill through a different moment in history."
-      ]
+      ],
+      "imageSrc": "/images/volumes/volume-1/greece/acropolis/caryatids.jpeg",
+      "imageAlt": "The Caryatids supporting the porch of the Erechtheion",
+      "imageCaption": "The Porch of the Caryatids"
     },
     {
       "heading": "A View Across Time",
       "paragraphs": [
         "From the top, Athens stretches in every direction. The city seems almost endless, yet the Acropolis remains its unmistakable center.",
         "Standing there, it was easy to understand why this hill has represented Athens for so long. It is not simply above the city geographically. It remains above it symbolically as well."
-      ]
+      ],
+      "imageSrc": "/images/volumes/volume-1/greece/acropolis/athens-overlook.jpeg",
+      "imageAlt": "Athens stretching toward the horizon below the Acropolis",
+      "imageCaption": "A view across modern Athens from the ancient citadel"
     }
   ],
   "facts": [
@@ -87,26 +96,7 @@
       "description": "The ruins become far more meaningful when their history, architecture and symbolism are explained."
     }
   ],
-  "gallery": [
-    {
-      "src": "/images/volumes/volume-1/greece/acropolis/parthenon-wide.jpeg",
-      "alt": "Wide view of the Parthenon at the Acropolis",
-      "caption": "The Parthenon overlooking Athens",
-      "displayOrder": 1
-    },
-    {
-      "src": "/images/volumes/volume-1/greece/acropolis/caryatids.jpeg",
-      "alt": "The Caryatids at the Erechtheion",
-      "caption": "The Porch of the Caryatids",
-      "displayOrder": 2
-    },
-    {
-      "src": "/images/volumes/volume-1/greece/acropolis/athens-overlook.jpeg",
-      "alt": "View across Athens from the Acropolis",
-      "caption": "Athens stretching toward the horizon",
-      "displayOrder": 3
-    }
-  ],
+  "gallery": [],
   "map": {
     "latitude": 37.9715,
     "longitude": 23.7257,

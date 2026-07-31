@@ -6,11 +6,16 @@
         @for (var index = 0; index < Sections.Count; index++)
         {
             var section = Sections[index];
+            var hasImage = !string.IsNullOrWhiteSpace(section.ImageSrc);
+            var isReversed = index % 2 == 1;
 
-            <section class="destination-story__section">
+            <section class="destination-story__section
+                            @(hasImage ? "destination-story__section--with-image" : string.Empty)
+                            @(isReversed ? "destination-story__section--reversed" : string.Empty)">
+
                 <div class="destination-story__heading">
                     <span class="destination-story__number">
-                        @(index + 1 < 10 ? $"0{index + 1}" : $"{index + 1}")
+                        @((index + 1).ToString("00"))
                     </span>
 
                     <h2>@section.Heading</h2>
@@ -22,6 +27,22 @@
                         <p>@paragraph</p>
                     }
                 </div>
+
+                @if (hasImage)
+                {
+                    <figure class="destination-story__media">
+                        <img src="@section.ImageSrc"
+                             alt="@section.ImageAlt"
+                             loading="lazy" />
+
+                        @if (!string.IsNullOrWhiteSpace(section.ImageCaption))
+                        {
+                            <figcaption>
+                                @section.ImageCaption
+                            </figcaption>
+                        }
+                    </figure>
+                }
             </section>
         }
     </div>

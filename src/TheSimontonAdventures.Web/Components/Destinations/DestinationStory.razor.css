@@ -42,16 +42,65 @@
     max-width: var(--reading-width);
 }
 
-.destination-story p {
+.destination-story__body p {
     margin: 0 0 var(--space-6);
     color: var(--color-text-muted);
     font-size: var(--font-size-lg);
     line-height: var(--line-height-reading);
 }
 
-.destination-story p:first-child {
+.destination-story__body p:first-child {
     color: var(--color-text);
     font-size: 1.25rem;
+}
+
+/* Editorial photograph */
+
+.destination-story__media {
+    grid-column: 1 / -1;
+    margin: var(--space-10) 0 0;
+}
+
+.destination-story__media img {
+    display: block;
+    width: 100%;
+    height: clamp(24rem, 52vw, 42rem);
+    object-fit: cover;
+    object-position: center;
+}
+
+.destination-story__media figcaption {
+    max-width: var(--reading-width);
+    margin-top: var(--space-3);
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    font-style: italic;
+}
+
+/* Alternate visual rhythm */
+
+.destination-story__section--reversed
+.destination-story__heading {
+    grid-column: 2;
+}
+
+.destination-story__section--reversed
+.destination-story__body {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.destination-story__section--reversed
+.destination-story__media {
+    grid-column: 1 / -1;
+}
+
+/* Give every second photograph a narrower editorial treatment */
+
+.destination-story__section--reversed
+.destination-story__media {
+    width: min(52rem, 82%);
+    margin-left: auto;
 }
 
 @media (max-width: 46.875rem) {
@@ -60,7 +109,25 @@
         gap: var(--space-8);
     }
 
-    .destination-story__heading {
+    .destination-story__heading,
+    .destination-story__section--reversed
+    .destination-story__heading,
+    .destination-story__section--reversed
+    .destination-story__body {
         position: static;
+        grid-column: 1;
+        grid-row: auto;
+    }
+
+    .destination-story__media,
+    .destination-story__section--reversed
+    .destination-story__media {
+        grid-column: 1;
+        width: 100%;
+        margin: var(--space-6) 0 0;
+    }
+
+    .destination-story__media img {
+        height: clamp(18rem, 75vw, 28rem);
     }
 }
