@@ -96,6 +96,22 @@
       "description": "The ruins become far more meaningful when their history, architecture and symbolism are explained."
     }
   ],
+  "reflections": [
+    {
+      "afterSection": 1,
+      "author": "Dianne",
+      "title": "From Dianne's Journal",
+      "text": "Standing together above Athens...",
+      "signature": "❤️ Dianne"
+    },
+    {
+      "afterSection": 1,
+      "author": "Steve",
+      "title": "Steve's Notes",
+      "text": "The first glimpse of the Parthenon...",
+      "signature": "— Steve"
+    }
+  ],
   "gallery": [],
   "map": {
     "latitude": 37.9715,

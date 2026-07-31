@@ -6,6 +6,7 @@
         @for (var index = 0; index < Sections.Count; index++)
         {
             var section = Sections[index];
+            var sectionNumber = index + 1;
             var hasImage = !string.IsNullOrWhiteSpace(section.ImageSrc);
             var isReversed = index % 2 == 1;
 
@@ -15,7 +16,7 @@
 
                 <div class="destination-story__heading">
                     <span class="destination-story__number">
-                        @((index + 1).ToString("00"))
+                        @sectionNumber.ToString("00")
                     </span>
 
                     <h2>@section.Heading</h2>
@@ -43,6 +44,12 @@
                         }
                     </figure>
                 }
+
+                @foreach (var reflection in Reflections
+                    .Where(item => item.AfterSection == sectionNumber))
+                {
+                    <DestinationReflection Reflection="reflection" />
+                }
             </section>
         }
     </div>
@@ -52,4 +59,8 @@
     [Parameter, EditorRequired]
     public IReadOnlyList<DestinationSection> Sections { get; set; }
         = Array.Empty<DestinationSection>();
+
+    [Parameter]
+    public IReadOnlyList<JourneyReflection> Reflections { get; set; }
+        = Array.Empty<JourneyReflection>();
 }
