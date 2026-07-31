@@ -1,4 +1,4 @@
-# Admin Studio Vision
+# Adventure Studio Vision
 
 **Version:** 1.0
 
