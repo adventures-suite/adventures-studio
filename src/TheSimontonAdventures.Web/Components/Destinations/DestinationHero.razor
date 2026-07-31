@@ -1,12 +1,40 @@
 @using TheSimontonAdventures.Web.Models
 
-<section>
-    <p>@Destination.City, @Destination.Country</p>
-    <h1>@Destination.Title</h1>
-    <p>@Destination.Subtitle</p>
+<section class="destination-hero"
+         style="@GetBackgroundStyle()"
+         aria-label="@Destination.HeroImageAlt">
+
+    <div class="destination-hero__overlay"></div>
+
+    <div class="destination-hero__content">
+        <p class="destination-hero__location">
+            @Destination.City, @Destination.Country
+        </p>
+
+        <h1>@Destination.Title</h1>
+
+        <p class="destination-hero__subtitle">
+            @Destination.Subtitle
+        </p>
+    </div>
+
+    <a class="destination-hero__scroll"
+       href="#destination-story"
+       aria-label="Continue to the destination story">
+        <span>Begin the story</span>
+        <span class="destination-hero__scroll-line"
+              aria-hidden="true"></span>
+    </a>
 </section>
 
 @code {
     [Parameter, EditorRequired]
     public Destination Destination { get; set; } = null!;
+
+    private string GetBackgroundStyle()
+    {
+        return string.IsNullOrWhiteSpace(Destination.HeroImage)
+            ? string.Empty
+            : $"background-image: url('{Destination.HeroImage}');";
+    }
 }

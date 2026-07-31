@@ -23,21 +23,25 @@ else
 {
     <DestinationHero Destination="_destination" />
 
-    <DestinationIntroduction Destination="_destination" />
+    <main class="destination-content">
+        <DestinationIntroduction Destination="_destination" />
 
-    <DestinationStory Sections="_destination.Sections" />
+        <DestinationStory Sections="_destination.Sections" />
 
-    <DestinationFacts Facts="_destination.Facts" />
+        <DestinationFacts Facts="_destination.Facts" />
 
-    <DestinationHighlights Highlights="_destination.Highlights" />
+        <DestinationHighlights Highlights="_destination.Highlights" />
 
-    <DestinationMap Map="_destination.Map" />
+        <DestinationTips Tips="_destination.Tips" />
 
-    <DestinationTips Tips="_destination.Tips" />
+        <DestinationGallery Images="_destination.Gallery" />
 
-    <DestinationGallery Images="_destination.Gallery" />
+        <DestinationMap Map="_destination.Map" />
+    </main>
 
-    <ContinueTheJourney Destination="_destination" />
+<ContinueTheJourney Destination="_destination" />
+
+<DestinationNavigation Destination="_destination" />
 }
 
 @code {

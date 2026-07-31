@@ -153,19 +153,33 @@ public sealed class JsonTravelContentService : ITravelContentService
     }
 
     private async Task<T?> DeserializeFileAsync<T>(
-        string filePath,
-        CancellationToken cancellationToken)
+    string filePath,
+    CancellationToken cancellationToken)
     {
         if (!File.Exists(filePath))
         {
             return default;
         }
 
-        await using var stream = File.OpenRead(filePath);
+        var fileInfo = new FileInfo(filePath);
 
-        return await JsonSerializer.DeserializeAsync<T>(
-            stream,
-            _serializerOptions,
-            cancellationToken);
+        if (fileInfo.Length == 0)
+        {
+            return default;
+        }
+
+        try
+        {
+            await using var stream = File.OpenRead(filePath);
+
+            return await JsonSerializer.DeserializeAsync<T>(
+                stream,
+                _serializerOptions,
+                cancellationToken);
+        }
+        catch (JsonException)
+        {
+            return default;
+        }
     }
 }

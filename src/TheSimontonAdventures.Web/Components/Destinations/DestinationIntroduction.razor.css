@@ -1,0 +1,56 @@
+.destination-introduction {
+    width: min(
+        var(--content-width),
+        calc(100% - (var(--page-gutter) * 2))
+    );
+    margin-inline: auto;
+    padding-block: var(--space-section);
+    display: grid;
+    grid-template-columns:
+        minmax(14rem, 0.65fr)
+        minmax(0, 1.35fr);
+    gap: clamp(2.5rem, 7vw, 7rem);
+}
+
+.destination-introduction__heading {
+    align-self: start;
+}
+
+.destination-introduction__heading h2 {
+    max-width: 22rem;
+    margin: 0;
+    font-size: var(--font-size-heading-medium);
+    line-height: var(--line-height-tight);
+}
+
+.destination-introduction__story {
+    max-width: var(--reading-width);
+}
+
+.destination-introduction__story p {
+    margin: 0;
+    font-family: var(--font-family-heading);
+    font-size: clamp(1.5rem, 3vw, 2.35rem);
+    line-height: 1.5;
+    text-wrap: pretty;
+}
+
+.destination-introduction__story p::first-letter {
+    float: left;
+    margin: 0.08em 0.12em 0 0;
+    color: var(--color-accent);
+    font-family: var(--font-family-heading);
+    font-size: 4.2em;
+    line-height: 0.78;
+}
+
+@media (max-width: 46.875rem) {
+    .destination-introduction {
+        grid-template-columns: 1fr;
+        gap: var(--space-8);
+    }
+
+    .destination-introduction__heading h2 {
+        max-width: none;
+    }
+}

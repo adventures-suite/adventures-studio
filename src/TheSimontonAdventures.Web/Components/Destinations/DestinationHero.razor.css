@@ -1,28 +1,44 @@
 .destination-hero {
     position: relative;
-    min-height: 70vh;
+    min-height: min(88vh, 62rem);
     display: flex;
     align-items: flex-end;
+    overflow: hidden;
     color: var(--color-text-inverse);
     background-color: var(--color-primary);
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
+    isolation: isolate;
+}
+
+.destination-hero::before {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    content: "";
+    background: inherit;
+    background-position: center;
+    background-size: cover;
+    transform: scale(1.02);
+    animation: hero-reveal 1.2s ease-out both;
 }
 
 .destination-hero__overlay {
     position: absolute;
+    z-index: 0;
     inset: 0;
     background:
         linear-gradient(
             90deg,
-            rgba(0, 0, 0, 0.65),
-            rgba(0, 0, 0, 0.15)
+            rgba(14, 20, 22, 0.82) 0%,
+            rgba(14, 20, 22, 0.34) 55%,
+            rgba(14, 20, 22, 0.12) 100%
         ),
         linear-gradient(
             0deg,
-            rgba(0, 0, 0, 0.55),
-            transparent 65%
+            rgba(14, 20, 22, 0.78) 0%,
+            transparent 62%
         );
 }
 
@@ -34,34 +50,118 @@
         calc(100% - (var(--page-gutter) * 2))
     );
     margin-inline: auto;
-    padding-block: var(--space-24) var(--space-16);
+    padding-block: var(--space-24) 7.5rem;
 }
 
 .destination-hero__location {
-    margin: 0 0 var(--space-4);
+    margin: 0 0 var(--space-5);
+    color: var(--color-accent-light);
     font-size: var(--font-size-xs);
     font-weight: 700;
-    letter-spacing: var(--letter-spacing-wide);
+    letter-spacing: 0.24rem;
     text-transform: uppercase;
+    animation: hero-content-reveal 700ms 150ms ease-out both;
 }
 
 .destination-hero h1 {
-    max-width: 60rem;
+    max-width: 62rem;
     margin: 0;
-    font-size: var(--font-size-heading-large);
-    line-height: 0.95;
+    font-size: clamp(4rem, 10vw, 8.5rem);
+    font-weight: 400;
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+    text-wrap: balance;
+    animation: hero-content-reveal 800ms 250ms ease-out both;
 }
 
 .destination-hero__subtitle {
-    max-width: var(--narrow-width);
-    margin: var(--space-6) 0 0;
-    font-size: var(--font-size-xl);
-    line-height: var(--line-height-body);
+    max-width: 44rem;
+    margin: var(--space-8) 0 0;
+    color: rgba(255, 255, 255, 0.86);
+    font-size: clamp(1.1rem, 2vw, 1.45rem);
+    line-height: 1.65;
+    text-wrap: balance;
+    animation: hero-content-reveal 800ms 350ms ease-out both;
+}
+
+.destination-hero__scroll {
+    position: absolute;
+    z-index: 2;
+    right: max(
+        var(--page-gutter),
+        calc((100vw - var(--content-width)) / 2)
+    );
+    bottom: var(--space-8);
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    letter-spacing: 0.12rem;
+    text-decoration: none;
+    text-transform: uppercase;
+}
+
+.destination-hero__scroll:hover {
+    color: var(--color-text-inverse);
+}
+
+.destination-hero__scroll-line {
+    position: relative;
+    width: 3.5rem;
+    height: 1px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.35);
+}
+
+.destination-hero__scroll-line::after {
+    position: absolute;
+    inset: 0;
+    content: "";
+    background: var(--color-accent-light);
+    transform: translateX(-100%);
+    animation: scroll-line 2.2s ease-in-out infinite;
+}
+
+@keyframes hero-reveal {
+    from {
+        opacity: 0;
+        transform: scale(1.08);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1.02);
+    }
+}
+
+@keyframes hero-content-reveal {
+    from {
+        opacity: 0;
+        transform: translateY(1.5rem);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes scroll-line {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    50%,
+    100% {
+        transform: translateX(100%);
+    }
 }
 
 @media (max-width: 43.75rem) {
     .destination-hero {
-        min-height: 60vh;
+        min-height: 78vh;
     }
 
     .destination-hero__content {
@@ -69,6 +169,25 @@
             100% - (var(--page-gutter-mobile) * 2),
             var(--content-width)
         );
-        padding-bottom: var(--space-12);
+        padding-bottom: 7rem;
+    }
+
+    .destination-hero h1 {
+        font-size: clamp(3.5rem, 18vw, 6rem);
+    }
+
+    .destination-hero__scroll {
+        right: var(--page-gutter-mobile);
+        bottom: var(--space-6);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .destination-hero::before,
+    .destination-hero__location,
+    .destination-hero h1,
+    .destination-hero__subtitle,
+    .destination-hero__scroll-line::after {
+        animation: none;
     }
 }
