@@ -39,7 +39,7 @@
       "countrySlug": "usa",
       "destinationSlug": "miami",
       "icon": "◈",
-      "displayOrder": 3
+      "displayOrder": 4
     },
     {
       "title": "Philipsburg",
@@ -47,7 +47,7 @@
       "countrySlug": "st. maarten",
       "destinationSlug": "philipsburg",
       "icon": "⚓",
-      "displayOrder": 4
+      "displayOrder": 5
     },
     {
       "title": "Charlotte Amalie",
@@ -55,7 +55,7 @@
       "countrySlug": "st. thomas",
       "destinationSlug": "charlotte-amalie",
       "icon": "⚓",
-      "displayOrder": 5
+      "displayOrder": 6
     },
     {
       "title": "Perfect Day Cococay",
@@ -63,39 +63,45 @@
       "countrySlug": "bahamas",
       "destinationSlug": "perfect-day-cococay",
       "icon": "◇",
-      "displayOrder": 6
+      "displayOrder": 7
     }
   ],
   "destinations": [
     {
       "countrySlug": "usa",
       "destinationSlug": "miami",
-      "displayOrder": 1
+      "displayOrder": 1,
+      "featured": false
     },
     {
       "countrySlug": "usa",
       "destinationSlug": "key-west",
-      "displayOrder": 2
+      "displayOrder": 2,
+      "featured": false
     },
     {
       "countrySlug": "usa",
       "destinationSlug": "miami",
-      "displayOrder": 3
+      "displayOrder": 3,
+      "featured": false
     },
     {
       "countrySlug": "st. maarten",
       "destinationSlug": "philipsburg",
-      "displayOrder": 4
+      "displayOrder": 4,
+      "featured": false
     },
     {
       "countrySlug": "st. thomas",
       "destinationSlug": "charlotte-amalie",
-      "displayOrder": 5
+      "displayOrder": 5,
+      "featured": false
     },
     {
       "countrySlug": "bahamas",
       "destinationSlug": "perfect-day-cococay",
-      "displayOrder": 6
+      "displayOrder": 6,
+      "featured": false
     }
   ]
 }

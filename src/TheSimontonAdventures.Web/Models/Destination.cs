@@ -24,6 +24,14 @@ public sealed class Destination
 
     public bool Published { get; init; }
 
+    public bool Featured { get; init; }
+
+    public int HomepageOrder { get; init; }
+
+    public string HomepageImage { get; init; } = string.Empty;
+
+    public string HomepageSummary { get; init; } = string.Empty;
+
     public List<DestinationSection> Sections { get; init; } = [];
 
     public List<JourneyReflection> Reflections { get; init; } = [];

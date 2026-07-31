@@ -10,6 +10,10 @@
   "heroImage": "/images/volumes/volume-1/greece/acropolis/hero.jpeg",
   "heroImageAlt": "The Parthenon rising above Athens at the Acropolis",
   "published": true,
+  "featured": true,
+  "homepageOrder": 2,
+  "homepageImage": "/images/volumes/volume-1/greece/acropolis/homepage.jpeg",
+  "homepageSummary": "Stand above Athens among the monuments that shaped the ancient world.",
   "sections": [
     {
       "heading": "The Climb Above Athens",

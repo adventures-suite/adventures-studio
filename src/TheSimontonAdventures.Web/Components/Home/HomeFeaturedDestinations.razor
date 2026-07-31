@@ -1,0 +1,131 @@
+@using TheSimontonAdventures.Web.Models
+@using TheSimontonAdventures.Web.Services
+@inject ITravelContentService TravelContentService
+
+@if (_destinations.Count > 0)
+{
+    <section class="home-destinations">
+        <header class="home-destinations__header">
+            <p class="home-destinations__eyebrow">
+                Featured Destinations
+            </p>
+
+            <h2>Places That Became Part of Our Story</h2>
+
+            <p>
+                Explore a few of the places that defined our current adventure.
+            </p>
+        </header>
+
+        <div class="home-destinations__grid">
+            @for (var index = 0; index < _destinations.Count; index++)
+            {
+                var destination = _destinations[index];
+
+                <article class="home-destinations__card
+                                @(index == 0 ? "home-destinations__card--featured" : string.Empty)">
+
+                    <a class="home-destinations__image-link"
+                       href="@GetDestinationUrl(destination)">
+
+                        @if (!string.IsNullOrWhiteSpace(GetHomepageImage(destination)))
+                        {
+                            <img src="@GetHomepageImage(destination)"
+                                alt="@destination.HeroImageAlt"
+                                loading="lazy" />
+                        }
+                        else
+                        {
+                            <div class="home-destinations__placeholder">
+                                @destination.Title
+                            </div>
+                        }
+                    </a>
+
+                    <div class="home-destinations__copy">
+                        <p>
+                            @destination.City · @destination.Country
+                        </p>
+
+                        <h3>
+                            <a href="@GetDestinationUrl(destination)">
+                                @destination.Title
+                            </a>
+                        </h3>
+
+                        <p class="home-destinations__summary">
+                            @GetHomepageSummary(destination)
+                        </p>
+
+                        <a class="home-destinations__link"
+                           href="@GetDestinationUrl(destination)">
+                            Explore the destination
+                            <span aria-hidden="true">→</span>
+                        </a>
+                    </div>
+                </article>
+            }
+        </div>
+    </section>
+}
+
+@code {
+    private Volume? _volume;
+    private IReadOnlyList<Destination> _destinations = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _volume = await TravelContentService.GetCurrentVolumeAsync();
+
+        if (_volume is null)
+        {
+            return;
+        }
+
+        var destinations = new List<Destination>();
+
+        foreach (var reference in _volume.Destinations
+            .OrderBy(item => item.DisplayOrder))
+        {
+            var destination =
+                await TravelContentService.GetDestinationAsync(
+                    _volume.Slug,
+                    reference.CountrySlug,
+                    reference.DestinationSlug);
+
+            if (destination is not null
+                && destination.Published
+                && destination.Featured)
+            {
+                destinations.Add(destination);
+            }
+        }
+
+        _destinations = destinations
+            .OrderBy(destination => destination.HomepageOrder)
+            .Take(3)
+            .ToList();
+    }
+
+    private string GetDestinationUrl(Destination destination)
+    {
+        return $"/volumes/{destination.VolumeSlug}/" +
+               $"{destination.CountrySlug}/{destination.Slug}";
+    }
+
+    private static string GetHomepageImage(
+    Destination destination)
+    {
+        return !string.IsNullOrWhiteSpace(destination.HomepageImage)
+            ? destination.HomepageImage
+            : destination.HeroImage;
+    }
+
+    private static string GetHomepageSummary(
+        Destination destination)
+    {
+        return !string.IsNullOrWhiteSpace(destination.HomepageSummary)
+            ? destination.HomepageSummary
+            : destination.Summary;
+    }
+}
