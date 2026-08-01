@@ -11,6 +11,8 @@ public sealed class Destination
     public string City { get; init; } = string.Empty;
 
     public string Slug { get; init; } = string.Empty;
+    
+    public string QrSlug { get; init; } = string.Empty;
 
     public string Title { get; init; } = string.Empty;
 
@@ -49,4 +51,5 @@ public sealed class Destination
     public DestinationMapLocation? Map { get; init; }
 
     public List<DestinationResource> Resources { get; init; } = [];
+    
 }

@@ -209,4 +209,55 @@ public sealed class JsonTravelContentService : ITravelContentService
             .OrderBy(volume => volume.Number)
             .FirstOrDefault();
     }
+    public async Task<QrDestinationRoute?> GetDestinationRouteByQrSlugAsync(
+    string qrSlug,
+    CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(qrSlug))
+        {
+            return null;
+        }
+
+        var normalizedQrSlug = qrSlug.Trim();
+
+        var volumes = await GetPublicVolumesAsync(cancellationToken);
+
+        foreach (var volume in volumes)
+        {
+            foreach (var reference in volume.Destinations
+                .OrderBy(item => item.DisplayOrder))
+            {
+                var destination = await GetDestinationAsync(
+                    volume.Slug,
+                    reference.CountrySlug,
+                    reference.DestinationSlug,
+                    cancellationToken);
+
+                if (destination is null
+                    || !destination.Published
+                    || string.IsNullOrWhiteSpace(destination.QrSlug))
+                {
+                    continue;
+                }
+
+                if (!string.Equals(
+                    destination.QrSlug,
+                    normalizedQrSlug,
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                return new QrDestinationRoute
+                {
+                    QrSlug = destination.QrSlug,
+                    VolumeSlug = destination.VolumeSlug,
+                    CountrySlug = destination.CountrySlug,
+                    DestinationSlug = destination.Slug
+                };
+            }
+        }
+
+        return null;
+    }
 }

@@ -28,6 +28,30 @@ app.UseAntiforgery();
 
 
 app.MapStaticAssets();
+
+app.MapGet(
+    "/go/{qrSlug}",
+    async (
+        string qrSlug,
+        ITravelContentService travelContentService,
+        CancellationToken cancellationToken) =>
+    {
+        var destinationRoute =
+            await travelContentService.GetDestinationRouteByQrSlugAsync(
+                qrSlug,
+                cancellationToken);
+
+        if (destinationRoute is null)
+        {
+            return Results.NotFound(
+                $"No destination was found for QR slug '{qrSlug}'.");
+        }
+
+        return Results.Redirect(
+            destinationRoute.DestinationUrl,
+            permanent: false);
+    });
+
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

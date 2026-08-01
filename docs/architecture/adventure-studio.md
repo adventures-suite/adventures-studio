@@ -10,7 +10,7 @@
 
 # Vision
 
-Admin Studio is the primary application of Adventure Platform.
+Adventure Studio is the primary application of Adventure Platform.
 
 It is where Adventures are created.
 
@@ -22,7 +22,7 @@ It is where memories are preserved.
 
 The public website is the output.
 
-Admin Studio is the product.
+Adventure Studio is the product.
 
 ---
 
@@ -486,7 +486,7 @@ Permissions are role based.
 
 # Mobile Experience
 
-The Admin Studio should work on tablets.
+The Adventure Studio should work on tablets.
 
 Basic editing should work on phones.
 
@@ -496,7 +496,7 @@ Heavy publishing remains desktop-focused.
 
 # Platform Goals
 
-The Admin Studio should make users feel like they are working inside:
+The Adventure Studio should make users feel like they are working inside:
 
 Apple Photos
 
@@ -524,7 +524,7 @@ Instead they should feel like they were simply preserving memories.
 
 # Long-Term Vision
 
-Eventually the Admin Studio becomes an AI-powered Adventure Studio.
+Eventually the Adventure Studio becomes an AI-powered Adventure Studio.
 
 Users simply say:
 

@@ -1,0 +1,1 @@
+Version 1.0 is defined by the successful publication of The Simonton Adventures – Volume I and its companion website.
