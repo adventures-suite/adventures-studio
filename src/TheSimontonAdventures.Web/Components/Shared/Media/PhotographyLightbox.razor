@@ -1,0 +1,116 @@
+@using TheSimontonAdventures.Web.Models
+
+@if (IsOpen && Images.Count > 0)
+{
+    <div class="lightbox-backdrop"
+         role="dialog"
+         aria-modal="true"
+         aria-label="Photography viewer"
+         @onclick="Close">
+
+        <div class="lightbox"
+             @onclick:stopPropagation>
+
+            <button class="lightbox-close"
+                    type="button"
+                    @onclick="Close"
+                    aria-label="Close photography viewer">
+                ✕
+            </button>
+
+            @if (Images.Count > 1)
+            {
+                <button class="lightbox-previous"
+                        type="button"
+                        @onclick="Previous"
+                        aria-label="View previous image">
+                    ‹
+                </button>
+            }
+
+            <figure class="lightbox-figure">
+                <img src="@Current.Src"
+                     alt="@Current.Alt" />
+
+                <figcaption class="lightbox-caption">
+                    @if (!string.IsNullOrWhiteSpace(Current.Caption))
+                    {
+                        <span>@Current.Caption</span>
+                    }
+
+                    <small>
+                        @(CurrentIndex + 1) of @Images.Count
+                    </small>
+                </figcaption>
+            </figure>
+
+            @if (Images.Count > 1)
+            {
+                <button class="lightbox-next"
+                        type="button"
+                        @onclick="Next"
+                        aria-label="View next image">
+                    ›
+                </button>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<GalleryImage> Images { get; set; }
+        = Array.Empty<GalleryImage>();
+
+    [Parameter]
+    public int CurrentIndex { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    [Parameter]
+    public EventCallback<int> CurrentIndexChanged { get; set; }
+
+    private GalleryImage Current =>
+        Images[NormalizeIndex(CurrentIndex)];
+
+    private Task Close()
+    {
+        return OnClose.InvokeAsync();
+    }
+
+    private Task Previous()
+    {
+        var index = NormalizeIndex(CurrentIndex - 1);
+        return CurrentIndexChanged.InvokeAsync(index);
+    }
+
+    private Task Next()
+    {
+        var index = NormalizeIndex(CurrentIndex + 1);
+        return CurrentIndexChanged.InvokeAsync(index);
+    }
+
+    private int NormalizeIndex(int index)
+    {
+        if (Images.Count == 0)
+        {
+            return 0;
+        }
+
+        if (index < 0)
+        {
+            return Images.Count - 1;
+        }
+
+        if (index >= Images.Count)
+        {
+            return 0;
+        }
+
+        return index;
+    }
+}

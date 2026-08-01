@@ -116,7 +116,26 @@
       "signature": "— Steve"
     }
   ],
-  "gallery": [],
+  "gallery": [
+    {
+        "src": "/images/volumes/volume-1/italy/florence/duomo-wide.jpeg",
+        "alt": "The Cathedral of Santa Maria del Fiore in Florence",
+        "caption": "The Duomo rising above Florence",
+        "displayOrder": 1
+    },
+    {
+        "src": "/images/volumes/volume-1/italy/florence/david.jpeg",
+        "alt": "Michelangelo's David inside the Accademia Gallery",
+        "caption": "Michelangelo's David",
+        "displayOrder": 2
+    },
+    {
+        "src": "/images/volumes/volume-1/italy/florence/arno-evening.jpeg",
+        "alt": "Evening light along the Arno River in Florence",
+        "caption": "Evening along the Arno",
+        "displayOrder": 3
+    }
+    ],
   "map": {
     "latitude": 43.7696,
     "longitude": 11.2558,
