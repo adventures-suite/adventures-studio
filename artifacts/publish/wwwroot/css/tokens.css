@@ -1,0 +1,109 @@
+:root {
+    /* Colors */
+    --color-background: #f7f4ee;
+    --color-background-alt: #efe9df;
+    --color-surface: #ffffff;
+    --color-surface-muted: #f1ece3;
+
+    --color-text: #252525;
+    --color-text-muted: #6c6a65;
+    --color-text-inverse: #ffffff;
+
+    --color-primary: #243238;
+    --color-primary-hover: #182327;
+
+    --color-accent: #9a6e3a;
+    --color-accent-hover: #765027;
+    --color-accent-light: #d9b27c;
+
+    --color-border: #d8d2c7;
+    --color-border-light: #e5dfd5;
+
+    --color-error: #9d2f2f;
+    --color-warning: #9a6e3a;
+    --color-success: #3f6b4f;
+
+    /* Typography */
+    --font-family-body:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    --font-family-heading:
+        Georgia,
+        "Times New Roman",
+        serif;
+
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.875rem;
+    --font-size-base: 1rem;
+    --font-size-lg: 1.125rem;
+    --font-size-xl: 1.35rem;
+
+    --font-size-heading-small: clamp(1.5rem, 3vw, 2.25rem);
+    --font-size-heading-medium: clamp(2rem, 4vw, 3.5rem);
+    --font-size-heading-large: clamp(3.5rem, 9vw, 7.5rem);
+
+    --line-height-tight: 1.1;
+    --line-height-heading: 1.25;
+    --line-height-body: 1.7;
+    --line-height-reading: 1.9;
+
+    --letter-spacing-label: 0.15rem;
+    --letter-spacing-wide: 0.18rem;
+
+    /* Spacing */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.25rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+    --space-10: 2.5rem;
+    --space-12: 3rem;
+    --space-16: 4rem;
+    --space-20: 5rem;
+    --space-24: 6rem;
+    --space-28: 7rem;
+
+    --space-section: clamp(4rem, 8vw, 7rem);
+    --space-section-small: clamp(3rem, 6vw, 5rem);
+
+    /* Layout */
+    --content-width: 72rem;
+    --reading-width: 52rem;
+    --narrow-width: 42rem;
+
+    --page-gutter: 1.5rem;
+    --page-gutter-mobile: 1rem;
+
+    /* Borders and radius */
+    --border-standard: 1px solid var(--color-border);
+    --border-light: 1px solid var(--color-border-light);
+
+    --radius-small: 0.25rem;
+    --radius-medium: 0.5rem;
+    --radius-large: 1rem;
+    --radius-pill: 999px;
+
+    /* Shadows */
+    --shadow-small:
+        0 0.25rem 0.75rem rgba(25, 25, 25, 0.08);
+
+    --shadow-medium:
+        0 0.75rem 2rem rgba(25, 25, 25, 0.12);
+
+    /* Motion */
+    --transition-fast: 150ms ease;
+    --transition-standard: 250ms ease;
+
+    /* Breakpoints are documented here for reference.
+       CSS custom properties cannot be used directly
+       inside media-query conditions. */
+
+    --breakpoint-mobile: 43.75rem;
+    --breakpoint-tablet: 46.875rem;
+}

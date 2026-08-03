@@ -1,0 +1,107 @@
+{
+  "number": 3,
+  "slug": "spain-trans-atlantic-cruise",
+  "title": "Spain & Trans-Atlantic Cruise",
+  "subtitle": "Spain & Trans-Atlantic cruise",
+  "description": "A magical time in Spain, followed by a trans-Atlantic cruise to Fort Lauderdale, Florida, with stops in the Canary Islands and Bermuda.",
+  "coverImage": "/images/volumes/volume-3/cover/volume-3-cover.jpeg",
+  "status": "Planned",
+  "travelDates": "October 25 – November 15, 2027",
+  "statusMessage": "Our planned Spain & Trans-Atlantic cruise",
+  "journeyStops": [
+    {
+      "title": "Phoenix",
+      "subtitle": "The journey begins",
+      "countrySlug": "",
+      "destinationSlug": "",
+      "icon": "✈",
+      "displayOrder": 1
+    },
+    {
+      "title": "Miami",
+      "subtitle": "Florida",
+      "countrySlug": "usa",
+      "destinationSlug": "miami",
+      "icon": "◈",
+      "displayOrder": 2
+    },
+    {
+      "title": "Key West",
+      "subtitle": "Florida",
+      "countrySlug": "usa",
+      "destinationSlug": "key-west",
+      "icon": "◈",
+      "displayOrder": 3
+    },
+    {
+      "title": "Miami",
+      "subtitle": "Florida",
+      "countrySlug": "usa",
+      "destinationSlug": "miami",
+      "icon": "◈",
+      "displayOrder": 4
+    },
+    {
+      "title": "Philipsburg",
+      "subtitle": "St. Maarten",
+      "countrySlug": "st. maarten",
+      "destinationSlug": "philipsburg",
+      "icon": "⚓",
+      "displayOrder": 5
+    },
+    {
+      "title": "Charlotte Amalie",
+      "subtitle": "St. Thomas",
+      "countrySlug": "st. thomas",
+      "destinationSlug": "charlotte-amalie",
+      "icon": "⚓",
+      "displayOrder": 6
+    },
+    {
+      "title": "Perfect Day Cococay",
+      "subtitle": "CoCoday  Bahamas",
+      "countrySlug": "bahamas",
+      "destinationSlug": "perfect-day-cococay",
+      "icon": "◇",
+      "displayOrder": 7
+    }
+  ],
+  "destinations": [
+    {
+      "countrySlug": "usa",
+      "destinationSlug": "miami",
+      "displayOrder": 1,
+      "featured": false
+    },
+    {
+      "countrySlug": "usa",
+      "destinationSlug": "key-west",
+      "displayOrder": 2,
+      "featured": false
+    },
+    {
+      "countrySlug": "usa",
+      "destinationSlug": "miami",
+      "displayOrder": 3,
+      "featured": false
+    },
+    {
+      "countrySlug": "st. maarten",
+      "destinationSlug": "philipsburg",
+      "displayOrder": 4,
+      "featured": false
+    },
+    {
+      "countrySlug": "st. thomas",
+      "destinationSlug": "charlotte-amalie",
+      "displayOrder": 5,
+      "featured": false
+    },
+    {
+      "countrySlug": "bahamas",
+      "destinationSlug": "perfect-day-cococay",
+      "displayOrder": 6,
+      "featured": false
+    }
+  ]
+}

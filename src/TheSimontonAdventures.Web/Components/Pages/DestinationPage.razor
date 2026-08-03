@@ -2,10 +2,12 @@
 @rendermode InteractiveServer
 
 @using TheSimontonAdventures.Web.Models
-@using TheSimontonAdventures.Web.Services
 @using TheSimontonAdventures.Web.Components.Platform
+@using Microsoft.Extensions.Options
+@using TheSimontonAdventures.Web.Configuration
 
 @inject ITravelContentService TravelContentService
+@inject IOptions<PlatformOptions> PlatformOptions
 
 <PageTitle>@PageTitle</PageTitle>
 
@@ -44,7 +46,10 @@ else
 
         <DestinationMap Map="_destination.Map" />
 
-        <AdventuresCompanion DestinationName="@_destination.Title" />
+        @if (PlatformOptions.Value.EnableCompanion)
+        {
+            <AdventuresCompanion DestinationName="@_destination.Title" />
+        }
     </main>
     
     <ContinueTheJourney Destination="_destination" />
