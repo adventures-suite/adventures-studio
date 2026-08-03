@@ -1,6 +1,6 @@
 using TheSimontonAdventures.Web.Components;
 using TheSimontonAdventures.Web.Services;
-using TheSimontonAdventures.Web.Options;
+using TheSimontonAdventures.Web.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,13 +8,23 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+builder.Services
+    .AddOptions<PlatformOptions>()
+    .Bind(builder.Configuration.GetSection(PlatformOptions.SectionName))
+    .ValidateDataAnnotations()
+    .Validate(
+        options => Uri.TryCreate(
+            options.PublicBaseUrl,
+            UriKind.Absolute,
+            out var uri) &&
+            (uri.Scheme == Uri.UriSchemeHttp ||
+             uri.Scheme == Uri.UriSchemeHttps),
+        $"{PlatformOptions.SectionName}:PublicBaseUrl must be a valid HTTP or HTTPS URL.")
+    .ValidateOnStart();
+
 builder.Services.AddSingleton<
     ITravelContentService,
     JsonTravelContentService>();
-
-builder.Services.Configure<QrCodeOptions>(
-    builder.Configuration.GetSection(
-        QrCodeOptions.SectionName));
 
 builder.Services.AddSingleton<IQrCodeService, QrCodeService>();
 

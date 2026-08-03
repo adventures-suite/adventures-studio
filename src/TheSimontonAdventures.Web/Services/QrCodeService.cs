@@ -1,15 +1,17 @@
 using Microsoft.Extensions.Options;
 using QRCoder;
-using TheSimontonAdventures.Web.Options;
+using TheSimontonAdventures.Web.Configuration;
 
 namespace TheSimontonAdventures.Web.Services;
 
 public sealed class QrCodeService : IQrCodeService
 {
-    private readonly QrCodeOptions _options;
+    private readonly PlatformOptions _options;
 
-    public QrCodeService(IOptions<QrCodeOptions> options)
+    public QrCodeService(IOptions<PlatformOptions> options)
     {
+        ArgumentNullException.ThrowIfNull(options);
+
         _options = options.Value;
     }
 
@@ -25,7 +27,7 @@ public sealed class QrCodeService : IQrCodeService
         if (string.IsNullOrWhiteSpace(_options.PublicBaseUrl))
         {
             throw new InvalidOperationException(
-                "QrCodes:PublicBaseUrl has not been configured.");
+                "Platform:PublicBaseUrl has not been configured.");
         }
 
         var baseUrl = _options.PublicBaseUrl.TrimEnd('/');
