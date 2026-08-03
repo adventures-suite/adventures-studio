@@ -1,0 +1,72 @@
+@rendermode InteractiveServer
+
+<header class="site-header">
+    <div class="site-header__inner">
+        <a class="site-header__brand"
+           href="/"
+           aria-label="Adventures Studio home">
+            <span class="site-header__brand-name">
+                Adventures Studio
+            </span>
+
+            <span class="site-header__brand-tagline">
+                Inspiration to unforgettable experiences
+            </span>
+        </a>
+
+        <button class="site-header__menu-button"
+                type="button"
+                aria-label="Toggle primary navigation"
+                aria-expanded="@_isMenuOpen"
+                aria-controls="primary-navigation"
+                @onclick="ToggleMenu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <nav id="primary-navigation"
+             class="@NavigationClass"
+             aria-label="Primary navigation">
+            <NavLink href="/"
+                     Match="NavLinkMatch.All"
+                     @onclick="CloseMenu">
+                Home
+            </NavLink>
+
+            <NavLink href="/volumes/italy-greece-croatia"
+                     @onclick="CloseMenu">
+                Explore
+            </NavLink>
+
+            <NavLink href="/platform/adventures-companion"
+                     @onclick="CloseMenu">
+                Adventures Companion
+            </NavLink>
+
+            <NavLink href="/about"
+                     @onclick="CloseMenu">
+                About
+            </NavLink>
+        </nav>
+    </div>
+</header>
+
+@code {
+    private bool _isMenuOpen;
+
+    private string NavigationClass =>
+        _isMenuOpen
+            ? "site-header__navigation site-header__navigation--open"
+            : "site-header__navigation";
+
+    private void ToggleMenu()
+    {
+        _isMenuOpen = !_isMenuOpen;
+    }
+
+    private void CloseMenu()
+    {
+        _isMenuOpen = false;
+    }
+}

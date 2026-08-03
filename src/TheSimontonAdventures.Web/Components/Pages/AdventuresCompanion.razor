@@ -10,6 +10,28 @@
 @if (!PlatformOptions.Value.EnableCompanion)
 {
     <main class="companion-page">
+        <section class="companion-status">
+            <span class="companion-section__eyebrow">
+                Adventures Studio
+            </span>
+
+            <h1>Adventures Companion is not currently available.</h1>
+
+            <p>
+                This experience is part of the long-term Adventures Studio platform
+                vision and will be introduced in a future release.
+            </p>
+
+            <a href="/">
+                Return home
+                <span aria-hidden="true">→</span>
+            </a>
+        </section>
+    </main>
+}
+else
+{
+    <main class="companion-page">
         <section class="companion-hero">
             <span class="companion-hero__eyebrow">
                 Adventures Studio
@@ -115,11 +137,5 @@
                 <span aria-hidden="true">→</span>
             </a>
         </section>
-    </main>
-}
-else
-{
-    <main class="companion-page">
-        @* Keep all of your existing Companion page content here. *@
     </main>
 }

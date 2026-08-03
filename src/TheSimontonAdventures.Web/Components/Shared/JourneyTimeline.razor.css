@@ -1,0 +1,64 @@
+.journey-timeline {
+    margin: 5rem auto;
+}
+
+.journey-timeline__header {
+    margin-bottom: 2.5rem;
+}
+
+.journey-timeline__eyebrow {
+    display: block;
+    margin-bottom: .5rem;
+
+    text-transform: uppercase;
+    letter-spacing: .12em;
+
+    font-size: .8rem;
+    font-weight: 700;
+
+    color: #6b7280;
+}
+
+.journey-timeline h2 {
+    margin: 0;
+
+    font-size: 2.5rem;
+    line-height: 1.1;
+}
+
+.journey-timeline__items {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.journey-stop {
+    display: flex;
+    gap: 1.25rem;
+    align-items: flex-start;
+}
+
+.journey-stop__icon {
+    width: 3rem;
+    height: 3rem;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 999px;
+
+    background: #f3f4f6;
+
+    font-size: 1.4rem;
+}
+
+.journey-stop__content h3 {
+    margin: 0;
+}
+
+.journey-stop__content p {
+    margin-top: .35rem;
+
+    color: #6b7280;
+}

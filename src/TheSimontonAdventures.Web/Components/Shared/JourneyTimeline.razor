@@ -1,0 +1,44 @@
+@using TheSimontonAdventures.Web.Models
+
+<section class="journey-timeline">
+    <div class="journey-timeline__header">
+        <span class="journey-timeline__eyebrow">
+            Journey
+        </span>
+
+        <h2>
+            Follow the adventure
+        </h2>
+    </div>
+
+    <div class="journey-timeline__items">
+        @foreach (var stop in Stops.OrderBy(s => s.DisplayOrder))
+        {
+            <article class="journey-stop">
+
+                <div class="journey-stop__icon">
+                    @stop.Icon
+                </div>
+
+                <div class="journey-stop__content">
+
+                    <h3>@stop.Title</h3>
+
+                    @if (!string.IsNullOrWhiteSpace(stop.Subtitle))
+                    {
+                        <p>@stop.Subtitle</p>
+                    }
+
+                </div>
+
+            </article>
+        }
+    </div>
+</section>
+
+@code
+{
+    [Parameter]
+    public IEnumerable<JourneyStop> Stops { get; set; } =
+        Enumerable.Empty<JourneyStop>();
+}
