@@ -3,6 +3,8 @@
 
 @using TheSimontonAdventures.Web.Models
 @using TheSimontonAdventures.Web.Services
+@using TheSimontonAdventures.Web.Components.Platform
+
 @inject ITravelContentService TravelContentService
 
 <PageTitle>@PageTitle</PageTitle>
@@ -41,8 +43,10 @@ else
         <DestinationGallery Images="_destination.Gallery" />
 
         <DestinationMap Map="_destination.Map" />
-    </main>
 
+        <AdventuresCompanion DestinationName="@_destination.Title" />
+    </main>
+    
     <ContinueTheJourney Destination="_destination" />
 
     <DestinationNavigation Destination="_destination" />
