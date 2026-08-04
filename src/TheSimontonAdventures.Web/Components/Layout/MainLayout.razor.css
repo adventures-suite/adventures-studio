@@ -1,7 +1,28 @@
 .site-shell {
+    display: flex;
     min-height: 100vh;
+    flex-direction: column;
+    background: var(--color-background);
 }
 
 .site-main {
     min-height: calc(100vh - 5rem);
+    flex: 1;
+    overflow-x: clip;
+}
+
+.site-main:focus {
+    outline: none;
+}
+
+@supports not (overflow: clip) {
+    .site-main {
+        overflow-x: hidden;
+    }
+}
+
+@media (max-width: 760px) {
+    .site-main {
+        min-height: calc(100vh - 4.5rem);
+    }
 }
