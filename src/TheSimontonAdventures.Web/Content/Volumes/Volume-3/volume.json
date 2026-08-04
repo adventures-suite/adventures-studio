@@ -14,56 +14,53 @@
       "subtitle": "The journey begins",
       "countrySlug": "",
       "destinationSlug": "",
-      "icon": "✈",
+      "travelMode": "Flight",
+      "travelDescription": "American Airlines to Venice",
       "displayOrder": 1
     },
     {
-      "title": "Miami",
-      "subtitle": "Florida",
-      "countrySlug": "usa",
-      "destinationSlug": "miami",
-      "icon": "◈",
+      "title": "barcelona",
+      "subtitle": "Spain",
+      "countrySlug": "spain",
+      "destinationSlug": "barcelona",
+      "travelMode": "Cruise",
+      "travelDescription": "Royal Caribbean Transatlantic cruise",
       "displayOrder": 2
     },
     {
-      "title": "Key West",
-      "subtitle": "Florida",
-      "countrySlug": "usa",
-      "destinationSlug": "key-west",
-      "icon": "◈",
+      "title": "Palma de Mallorca",
+      "subtitle": "Spain",
+      "countrySlug": "spain",
+      "destinationSlug": "palma-de-mallorca",
+      "travelMode": "Cruise",
+      "travelDescription": "Royal Caribbean Transatlantic cruise",
       "displayOrder": 3
     },
     {
-      "title": "Miami",
-      "subtitle": "Florida",
-      "countrySlug": "usa",
-      "destinationSlug": "miami",
-      "icon": "◈",
+      "title": "Alicante",
+      "subtitle": "Spain",
+      "countrySlug": "spain",
+      "destinationSlug": "palma-de-mallorca",
+      "travelMode": "Cruise",
+      "travelDescription": "Royal Caribbean Transatlantic cruise",
+      "displayOrder": 3
+    },
+    {
+      "title": "Malaga",
+      "subtitle": "Spain",
+      "countrySlug": "spain",
+      "destinationSlug": "malaga",
+      "travelMode": "Cruise",
+      "travelDescription": "Royal Caribbean Transatlantic cruise",
       "displayOrder": 4
     },
     {
-      "title": "Philipsburg",
-      "subtitle": "St. Maarten",
-      "countrySlug": "st. maarten",
-      "destinationSlug": "philipsburg",
-      "icon": "⚓",
-      "displayOrder": 5
-    },
-    {
-      "title": "Charlotte Amalie",
-      "subtitle": "St. Thomas",
-      "countrySlug": "st. thomas",
-      "destinationSlug": "charlotte-amalie",
-      "icon": "⚓",
-      "displayOrder": 6
-    },
-    {
-      "title": "Perfect Day Cococay",
-      "subtitle": "CoCoday  Bahamas",
-      "countrySlug": "bahamas",
-      "destinationSlug": "perfect-day-cococay",
+      "title": "Fort Lauderdale",
+      "subtitle": "Florida",
+      "countrySlug": "usa",
+      "destinationSlug": "fort-lauderdale",
       "icon": "◇",
-      "displayOrder": 7
+      "displayOrder": 5
     }
   ],
   "destinations": [

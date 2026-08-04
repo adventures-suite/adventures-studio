@@ -1,16 +1,10 @@
 ﻿@page "/"
 
-<PageTitle>The Simonton Adventures</PageTitle>
+@using TheSimontonAdventures.Web.Components.Home
 
-<HomeHero />
+<PageTitle>Adventures Studio</PageTitle>
 
-<HomeStory />
-
-<CurrentAdventure />
-
-<HomeJourneyOverview
-    VolumeSlug="italy-greece-croatia" />
-
-<HomeFeaturedDestinations />
-
-<HomeAdventures />
+<HomeHero
+    HeroImage="/images/home/adventures-studio-hero.jpeg"
+    HeroImageAlt="A sweeping Mediterranean travel scene"
+    PrimaryActionUrl="/volumes/italy-greece-croatia" />

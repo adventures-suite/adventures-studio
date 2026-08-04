@@ -1,0 +1,50 @@
+.travel-mode-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.45rem;
+    height: 1.45rem;
+    color: #16202a;
+    transition:
+        color 180ms ease,
+        transform 180ms ease;
+}
+
+.travel-mode-icon svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    fill: currentColor;
+}
+
+.travel-mode-icon--flight {
+    color: #4f7d9b;
+}
+
+.travel-mode-icon--train {
+    color: #8b4f57;
+}
+
+.travel-mode-icon--cruise,
+.travel-mode-icon--ferry {
+    color: #315f78;
+}
+
+.travel-mode-icon--watertaxi,
+.travel-mode-icon--water-taxi {
+    color: #3f7f83;
+}
+
+.travel-mode-icon--car,
+.travel-mode-icon--taxi,
+.travel-mode-icon--bus {
+    color: #5b6670;
+}
+
+.travel-mode-icon--walking {
+    color: #5d7552;
+}
+
+.travel-mode-icon:hover {
+    transform: translateY(-1px);
+}

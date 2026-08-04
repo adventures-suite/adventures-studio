@@ -64,3 +64,21 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+#blazor-error-ui {
+    display: none;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 0.75rem 1rem;
+    background: #fff3cd;
+    border-top: 1px solid #ffe69c;
+    color: #664d03;
+    z-index: 10000;
+}
+
+#blazor-error-ui .dismiss {
+    float: right;
+    cursor: pointer;
+}

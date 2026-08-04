@@ -1,0 +1,68 @@
+<span class="@IconCssClass"
+      role="img"
+      aria-label="@AccessibleLabel">
+    @switch (NormalizedTravelMode)
+    {
+        case "flight":
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5L21 16Z" />
+            </svg>
+            break;
+
+        case "train":
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M7 2h10a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3h-1l2 3h-2l-1.3-2h-5.4L8 21H6l2-3H7a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3Zm0 2a1 1 0 0 0-1 1v5h12V5a1 1 0 0 0-1-1H7Zm0 8a1 1 0 1 0 0 2 1 1 0 0 0 0-2Zm10 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z" />
+            </svg>
+            break;
+
+        case "cruise":
+        case "ferry":
+        case "watertaxi":
+        case "water taxi":
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 2 8 5v3H5l-2 7 9 5 9-5-2-7h-3V5l-4-3Zm-2 4 2-1.5L14 6v2h-4V6Zm-4.6 8.1L6.6 10h10.8l1.2 4.1L12 17.8l-6.6-3.7ZM3 19c1.5 1 3 1 4.5 0 1.5 1 3 1 4.5 0 1.5 1 3 1 4.5 0 1.5 1 3 1 4.5 0v2c-1.5 1-3 1-4.5 0-1.5 1-3 1-4.5 0-1.5 1-3 1-4.5 0-1.5 1-3 1-4.5 0v-2Z" />
+            </svg>
+            break;
+
+        case "car":
+        case "taxi":
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 11 7 5h10l2 6 2 2v6h-2v-2H5v2H3v-6l2-2Zm2.4-4-1.3 4h11.8l-1.3-4H7.4ZM6 13a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Zm12 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z" />
+            </svg>
+            break;
+
+        case "bus":
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 2h12a3 3 0 0 1 3 3v11a3 3 0 0 1-2 2.83V21h-2v-2H7v2H5v-2.17A3 3 0 0 1 3 16V5a3 3 0 0 1 3-3Zm0 2a1 1 0 0 0-1 1v6h14V5a1 1 0 0 0-1-1H6Zm0 9a1 1 0 1 0 0 2 1 1 0 0 0 0-2Zm12 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z" />
+            </svg>
+            break;
+
+        case "walking":
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M13 3.5A1.5 1.5 0 1 1 10 3.5a1.5 1.5 0 0 1 3 0ZM10.5 6h3l2 4h3v2h-4l-1.2-2.4-.8 3.4 2.5 2.5V21h-2v-4.5l-2-2-1 3L7 21H4.5l3.6-4.5L9.5 10 8 11.5V14H6v-3.3L10.5 6Z" />
+            </svg>
+            break;
+
+        default:
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="4" />
+            </svg>
+            break;
+    }
+</span>
+
+@code {
+    [Parameter]
+    public string TravelMode { get; set; } = string.Empty;
+
+    private string NormalizedTravelMode =>
+        TravelMode.Trim().ToLowerInvariant();
+
+    private string AccessibleLabel =>
+        string.IsNullOrWhiteSpace(TravelMode)
+            ? "Travel"
+            : TravelMode;
+
+    private string IconCssClass =>
+        $"travel-mode-icon travel-mode-icon--{NormalizedTravelMode.Replace(" ", "-")}";
+}

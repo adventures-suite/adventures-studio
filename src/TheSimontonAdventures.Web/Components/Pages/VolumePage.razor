@@ -1,91 +1,158 @@
 @page "/volumes/{VolumeSlug}"
 
 @using TheSimontonAdventures.Web.Models
-@using TheSimontonAdventures.Web.Services
+@using TheSimontonAdventures.Web.Components.Shared
+@using TheSimontonAdventures.Web.Components.Volume
+
 @inject ITravelContentService TravelContentService
+
+<PageTitle>@PageTitle</PageTitle>
 
 @if (_isLoading)
 {
-    <main class="volume-page-message">
-        <p>Loading the adventure...</p>
+    <main class="volume-page">
+        <p>Loading adventure...</p>
     </main>
 }
 else if (_volume is null)
 {
-    <PageTitle>Adventure Not Found</PageTitle>
-
-    <main class="volume-page-message">
-        <p class="destination-eyebrow">Adventure not found</p>
-        <h1>We could not find that journey.</h1>
-
-        <a href="/">
-            Return home
-        </a>
+    <main class="volume-page">
+        <h1>Adventure not found</h1>
     </main>
 }
 else
 {
-    <PageTitle>@_volume.Title | The Simonton Adventures</PageTitle>
+    <main class="volume-page">
 
-    <VolumeHero Volume="_volume" />
+        <section class="volume-hero">
 
-    @if (_volume.JourneyStops.Count > 0)
-    {
-        <VolumeJourneyTimeline Volume="_volume" />
-    }
+            <span class="volume-eyebrow">
+                The Simonton Adventures
+            </span>
 
-    @if (_destinations.Count > 0)
-    {
-        <VolumeDestinationGrid
-            Volume="_volume"
-            Destinations="_destinations" />
-    }
-    else
-    {
-        <VolumePlanningPreview Volume="_volume" />
-    }
+            <h1>
+                @_volume.Title
+            </h1>
+
+            @if (!string.IsNullOrWhiteSpace(_volume.Subtitle))
+            {
+                <h2>
+                    @_volume.Subtitle
+                </h2>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(_volume.Description))
+            {
+                <p class="volume-description">
+                    @_volume.Description
+                </p>
+            }
+
+        </section>
+
+        <JourneyTimeline Stops="@_volume.JourneyStops" />
+
+        <VolumeDestinations
+            Destinations="@_destinationCards"
+            VolumeSlug="@_volume.Slug" />
+
+    </main>
 }
 
 @code {
+
     [Parameter]
     public string VolumeSlug { get; set; } = string.Empty;
 
     private Volume? _volume;
-    private IReadOnlyList<Destination> _destinations = [];
-    private bool _isLoading = true;
+
+    private IReadOnlyList<VolumeDestinationCard> _destinationCards = Array.Empty<VolumeDestinationCard>();
+
+    private bool _isLoading;
+
+    private string PageTitle =>
+        _volume is null
+            ? "Adventure"
+            : _volume.Title;
 
     protected override async Task OnParametersSetAsync()
     {
         _isLoading = true;
-        _volume = null;
-        _destinations = [];
 
-        _volume = await TravelContentService.GetVolumeAsync(
-            VolumeSlug);
-
-        if (_volume is not null)
+        try
         {
-            var destinations = new List<Destination>();
+            _volume = await TravelContentService.GetVolumeAsync(VolumeSlug);
 
-            foreach (var reference in _volume.Destinations
-                .OrderBy(item => item.DisplayOrder))
+            if (_volume is null)
             {
-                var destination =
-                    await TravelContentService.GetDestinationAsync(
-                        _volume.Slug,
-                        reference.CountrySlug,
-                        reference.DestinationSlug);
-
-                if (destination is not null
-                    && destination.Published)
-                {
-                    destinations.Add(destination);
-                }
+                _destinationCards = Array.Empty<VolumeDestinationCard>();
+                return;
             }
 
-            _destinations = destinations;
+            var cardTasks = _volume.Destinations
+                .OrderBy(reference => reference.DisplayOrder)
+                .Select(reference => LoadDestinationCardAsync(
+                    _volume.Slug,
+                    reference));
+
+            var cards = await Task.WhenAll(cardTasks);
+
+            _destinationCards = cards
+                .Where(card => card is not null)
+                .Select(card => card!)
+                .OrderBy(card => card.DisplayOrder)
+                .ToArray();
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task<VolumeDestinationCard?> LoadDestinationCardAsync(
+    string volumeSlug,
+    VolumeDestinationReference reference)
+    {
+        var destination = await TravelContentService.GetDestinationAsync(
+            volumeSlug,
+            reference.CountrySlug,
+            reference.DestinationSlug);
+
+        if (destination is null)
+        {
+            return null;
         }
 
-        _isLoading = false;
+        return new VolumeDestinationCard
+        {
+            CountrySlug = reference.CountrySlug,
+            DestinationSlug = reference.DestinationSlug,
+            Title = destination.Title,
+            CountryName = destination.Country,
+            HeroImage = string.IsNullOrWhiteSpace(destination.HomepageImage)
+                ? destination.HeroImage
+                : destination.HomepageImage,
+            Summary = string.IsNullOrWhiteSpace(destination.HomepageSummary)
+                ? destination.Summary
+                : destination.HomepageSummary,
+            DisplayOrder = reference.DisplayOrder
+        };
+    }
+
+    private static string FormatSlug(string slug)
+    {
+        if (string.IsNullOrWhiteSpace(slug))
+        {
+            return string.Empty;
+        }
+
+        return string.Join(
+            ' ',
+            slug.Split(
+                    '-',
+                    StringSplitOptions.RemoveEmptyEntries |
+                    StringSplitOptions.TrimEntries)
+                .Select(word =>
+                    char.ToUpperInvariant(word[0]) + word[1..]));
     }
 }

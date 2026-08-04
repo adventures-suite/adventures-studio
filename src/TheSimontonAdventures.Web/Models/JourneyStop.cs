@@ -12,5 +12,9 @@ public sealed class JourneyStop
 
     public string Icon { get; init; } = string.Empty;
 
+    public string TravelMode { get; init; } = string.Empty;
+
+    public string TravelDescription { get; init; } = string.Empty;
+
     public int DisplayOrder { get; init; }
 }

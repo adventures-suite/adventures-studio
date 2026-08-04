@@ -1,44 +1,43 @@
-<section class="home-hero"
-         aria-label="The Simonton Adventures introduction">
+<section class="home-hero">
+    <div class="home-hero__media">
+        <img src="@HeroImage"
+             alt="@HeroImageAlt" />
 
-    <div class="home-hero__background"
-         role="img"
-         aria-label="@HeroImageAlt">
+        <div class="home-hero__overlay"></div>
     </div>
-
-    <div class="home-hero__overlay"></div>
-
-    <header class="home-hero__navigation">
-        <a class="home-hero__brand"
-           href="/">
-            The Simonton Adventures
-        </a>
-    </header>
 
     <div class="home-hero__content">
-        <p class="home-hero__eyebrow">
-            Stories · Photography · Shared Journeys
-        </p>
-
-        <h1>The Simonton Adventures</h1>
-
-        <p class="home-hero__statement">
-            Every journey begins with a story.
-        </p>
-    </div>
-
-    <a class="home-hero__scroll"
-       href="#our-story">
-        <span>Begin the adventure</span>
-
-        <span class="home-hero__scroll-line"
-              aria-hidden="true">
+        <span class="home-hero__eyebrow">
+            Adventures Studio
         </span>
-    </a>
+
+        <h1>
+            Transforming inspiration into unforgettable experiences.
+        </h1>
+
+        <p>
+            Discover meaningful journeys, trusted guidance, and stories designed
+            to help you experience the world with confidence.
+        </p>
+
+        <a class="home-hero__action"
+           href="@PrimaryActionUrl">
+            Begin the Adventure
+            <span aria-hidden="true">→</span>
+        </a>
+    </div>
 </section>
 
 @code {
     [Parameter]
+    public string HeroImage { get; set; } =
+        "/images/home/adventures-studio-hero.jpeg";
+
+    [Parameter]
     public string HeroImageAlt { get; set; } =
-        "Steve and Dianne exploring a memorable travel destination";
+        "A memorable travel experience";
+
+    [Parameter]
+    public string PrimaryActionUrl { get; set; } =
+        "/volumes/italy-greece-croatia";
 }

@@ -1,7 +1,0 @@
-.home-placeholder {
-    min-height: 60vh;
-    display: grid;
-    place-items: center;
-    padding: var(--space-section);
-    background: var(--color-background);
-}

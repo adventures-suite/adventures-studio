@@ -14,7 +14,8 @@
       "subtitle": "The journey begins",
       "countrySlug": "",
       "destinationSlug": "",
-      "icon": "✈",
+      "travelMode": "Flight",
+      "travelDescription": "American Airlines to Venice",
       "displayOrder": 1
     },
     {
@@ -22,7 +23,8 @@
       "subtitle": "Florida",
       "countrySlug": "usa",
       "destinationSlug": "miami",
-      "icon": "◈",
+      "travelMode": "Car",
+      "travelDescription": "Ground transportation from Miami International Airport",
       "displayOrder": 2
     },
     {
@@ -30,7 +32,8 @@
       "subtitle": "Florida",
       "countrySlug": "usa",
       "destinationSlug": "key-west",
-      "icon": "◈",
+      "travelMode": "Car",
+      "travelDescription": "Ground transportation from Miami International Airport",
       "displayOrder": 3
     },
     {
@@ -38,7 +41,8 @@
       "subtitle": "Florida",
       "countrySlug": "usa",
       "destinationSlug": "miami",
-      "icon": "◈",
+      "travelMode": "Cruise",
+      "travelDescription": "Royal Caribbean Mediterranean cruise",
       "displayOrder": 4
     },
     {
@@ -46,7 +50,8 @@
       "subtitle": "St. Maarten",
       "countrySlug": "st. maarten",
       "destinationSlug": "philipsburg",
-      "icon": "⚓",
+      "travelMode": "Cruise",
+      "travelDescription": "Royal Caribbean Mediterranean cruise",
       "displayOrder": 5
     },
     {
@@ -54,7 +59,8 @@
       "subtitle": "St. Thomas",
       "countrySlug": "st. thomas",
       "destinationSlug": "charlotte-amalie",
-      "icon": "⚓",
+      "travelMode": "Cruise",
+      "travelDescription": "Royal Caribbean Mediterranean cruise",
       "displayOrder": 6
     },
     {
@@ -62,7 +68,8 @@
       "subtitle": "CoCoday  Bahamas",
       "countrySlug": "bahamas",
       "destinationSlug": "perfect-day-cococay",
-      "icon": "◇",
+      "travelMode": "Cruise",
+      "travelDescription": "Royal Caribbean Mediterranean cruise",
       "displayOrder": 7
     }
   ],

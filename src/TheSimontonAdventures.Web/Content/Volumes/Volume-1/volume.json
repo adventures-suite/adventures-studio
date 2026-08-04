@@ -11,75 +11,111 @@
   "journeyStops": [
     {
       "title": "Phoenix",
-      "subtitle": "The journey begins",
+      "subtitle": "The adventure begins",
       "countrySlug": "",
       "destinationSlug": "",
-      "icon": "✈",
+      "travelMode": "Flight",
+      "travelDescription": "American Airlines to Venice",
       "displayOrder": 1
     },
     {
       "title": "Venice",
-      "subtitle": "Italy",
+      "subtitle": "Canals, quiet streets, and our first Italian memories",
       "countrySlug": "italy",
       "destinationSlug": "venice",
-      "icon": "◈",
+      "travelMode": "WaterTaxi",
+      "travelDescription": "Private water taxi from Venice Marco Polo Airport",
       "displayOrder": 2
     },
     {
       "title": "Florence",
-      "subtitle": "Italy",
+      "subtitle": "Art, history, and the heart of the Renaissance",
       "countrySlug": "italy",
       "destinationSlug": "florence",
-      "icon": "◆",
+      "travelMode": "Train",
+      "travelDescription": "High-speed rail from Venice",
       "displayOrder": 3
     },
     {
-      "title": "Tuscany",
-      "subtitle": "Italy",
+      "title": "Ravenna",
+      "subtitle": "The gateway to our Mediterranean cruise",
       "countrySlug": "italy",
-      "destinationSlug": "tuscany",
-      "icon": "◆",
+      "destinationSlug": "",
+      "travelMode": "Train",
+      "travelDescription": "Train from Florence through Bologna",
       "displayOrder": 4
     },
     {
-      "title": "Ravenna",
-      "subtitle": "Italy",
-      "countrySlug": "italy",
-      "destinationSlug": "ravenna",
-      "icon": "⚓",
+      "title": "Explorer of the Seas",
+      "subtitle": "Seven nights across the Adriatic and Aegean",
+      "countrySlug": "",
+      "destinationSlug": "",
+      "travelMode": "Cruise",
+      "travelDescription": "Royal Caribbean Mediterranean cruise",
       "displayOrder": 5
     },
     {
       "title": "Dubrovnik",
-      "subtitle": "Croatia",
+      "subtitle": "Ancient walls overlooking the Adriatic",
       "countrySlug": "croatia",
       "destinationSlug": "dubrovnik",
-      "icon": "◆",
+      "travelMode": "Cruise",
+      "travelDescription": "Explorer of the Seas",
       "displayOrder": 6
     },
     {
       "title": "Athens",
-      "subtitle": "Greece",
+      "subtitle": "Walking through the foundations of Western civilization",
       "countrySlug": "greece",
       "destinationSlug": "acropolis",
-      "icon": "◇",
+      "travelMode": "Cruise",
+      "travelDescription": "Explorer of the Seas to Piraeus",
       "displayOrder": 7
     },
     {
       "title": "Santorini",
-      "subtitle": "Greece",
+      "subtitle": "Clifftop villages, volcanic landscapes, and Aegean views",
       "countrySlug": "greece",
       "destinationSlug": "santorini",
-      "icon": "◉",
+      "travelMode": "Cruise",
+      "travelDescription": "Explorer of the Seas",
       "displayOrder": 8
     },
     {
       "title": "Split",
-      "subtitle": "Croatia",
+      "subtitle": "Roman history along Croatia’s Dalmatian coast",
       "countrySlug": "croatia",
       "destinationSlug": "split",
-      "icon": "⚓",
+      "travelMode": "Cruise",
+      "travelDescription": "Explorer of the Seas",
       "displayOrder": 9
+    },
+    {
+      "title": "Ravenna",
+      "subtitle": "Returning to Italy after the cruise",
+      "countrySlug": "italy",
+      "destinationSlug": "",
+      "travelMode": "Cruise",
+      "travelDescription": "Disembark Explorer of the Seas",
+      "displayOrder": 10
+    },
+    {
+      "title": "Venice",
+      "subtitle": "One final evening before returning home",
+      "countrySlug": "italy",
+      "destinationSlug": "venice",
+      "travelMode": "Bus",
+      "travelDescription": "Ground transportation from Ravenna",
+      "displayOrder": 11
+    },
+    {
+      "title": "Phoenix",
+      "subtitle": "Home with memories worth preserving",
+      "countrySlug": "",
+      "destinationSlug": "",
+      "travelMode": "Flight",
+      "travelDescription": "American Airlines from Venice",
+      "displayOrder": 12
     }
   ],
     "destinations": [
@@ -122,6 +158,16 @@
       "countrySlug": "croatia",
       "destinationSlug": "split",
       "displayOrder": 8
+    },
+    {
+      "countrySlug": "italy",
+      "destinationSlug": "ravenna",
+      "displayOrder": 9
+    },
+    {
+      "countrySlug": "italy",
+      "destinationSlug": "venice",
+      "displayOrder": 10
     }
   ]
 }

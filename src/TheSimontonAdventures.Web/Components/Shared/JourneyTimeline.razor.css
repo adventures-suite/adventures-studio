@@ -8,57 +8,192 @@
 
 .journey-timeline__eyebrow {
     display: block;
-    margin-bottom: .5rem;
-
-    text-transform: uppercase;
-    letter-spacing: .12em;
-
-    font-size: .8rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.8rem;
     font-weight: 700;
-
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
     color: #6b7280;
 }
 
 .journey-timeline h2 {
     margin: 0;
-
-    font-size: 2.5rem;
-    line-height: 1.1;
+    font-size: clamp(2.25rem, 5vw, 4rem);
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    color: #16202a;
 }
 
 .journey-timeline__items {
+    position: relative;
     display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+    gap: 2.5rem;
+    margin-top: 2.5rem;
+    padding: 1rem 2rem 1.75rem;
+    overflow-x: auto;
+    overflow-y: visible;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: 2rem;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+}
+
+.journey-timeline__items::before {
+    position: absolute;
+    top: 2.45rem;
+    left: 2rem;
+    width: calc(100% - 4rem);
+    min-width: 100rem;
+    height: 2px;
+    content: "";
+    background: rgba(22, 32, 42, 0.12);
+}
+
+.journey-timeline__items::-webkit-scrollbar {
+    height: 0.55rem;
+}
+
+.journey-timeline__items::-webkit-scrollbar-track {
+    border-radius: 999px;
+    background: rgba(22, 32, 42, 0.06);
+}
+
+.journey-timeline__items::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(22, 32, 42, 0.28);
 }
 
 .journey-stop {
-    display: flex;
-    gap: 1.25rem;
-    align-items: flex-start;
+    position: relative;
+    z-index: 1;
+    flex: 0 0 12rem;
+    scroll-snap-align: start;
+    transition:
+        transform 180ms ease,
+        opacity 180ms ease;
+}
+
+.journey-stop:hover {
+    transform: translateY(-3px);
 }
 
 .journey-stop__icon {
-    width: 3rem;
-    height: 3rem;
-
     display: flex;
     align-items: center;
     justify-content: center;
-
+    width: 3rem;
+    height: 3rem;
+    border: 1px solid rgba(22, 32, 42, 0.12);
     border-radius: 999px;
+    background: #ffffff;
+    box-shadow: 0 0.6rem 1.4rem rgba(22, 32, 42, 0.08);
+    font-size: 1.35rem;
+    transition:
+        border-color 180ms ease,
+        box-shadow 180ms ease;
+}
 
-    background: #f3f4f6;
+.journey-stop:hover .journey-stop__icon {
+    border-color: rgba(22, 32, 42, 0.2);
+    box-shadow: 0 0.9rem 1.8rem rgba(22, 32, 42, 0.12);
+}
 
-    font-size: 1.4rem;
+.journey-stop__content {
+    margin-top: 1rem;
 }
 
 .journey-stop__content h3 {
     margin: 0;
+    font-size: 1.05rem;
+    line-height: 1.3;
+    color: #16202a;
 }
 
-.journey-stop__content p {
-    margin-top: .35rem;
+.journey-stop__subtitle {
+    margin: 0.45rem 0 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: rgba(22, 32, 42, 0.64);
+}
 
-    color: #6b7280;
+.journey-stop__travel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    margin-top: 0.9rem;
+    padding-top: 0.8rem;
+    border-top: 1px solid rgba(22, 32, 42, 0.08);
+}
+
+.journey-stop__travel-mode {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(22, 32, 42, 0.54);
+}
+
+.journey-stop__travel-description {
+    font-size: 0.88rem;
+    line-height: 1.45;
+    color: rgba(22, 32, 42, 0.72);
+}
+
+.journey-stop:hover ::deep .travel-mode-icon--flight {
+    transform: translate(0.18rem, -0.12rem) rotate(-5deg);
+}
+
+.journey-stop:hover ::deep .travel-mode-icon--train {
+    transform: translateX(0.18rem);
+}
+
+.journey-stop:hover ::deep .travel-mode-icon--cruise,
+.journey-stop:hover ::deep .travel-mode-icon--ferry,
+.journey-stop:hover ::deep .travel-mode-icon--watertaxi,
+.journey-stop:hover ::deep .travel-mode-icon--water-taxi {
+    transform: translateY(-0.08rem) rotate(-1deg);
+}
+
+.journey-stop:hover ::deep .travel-mode-icon--car,
+.journey-stop:hover ::deep .travel-mode-icon--taxi,
+.journey-stop:hover ::deep .travel-mode-icon--bus {
+    transform: translateX(0.16rem);
+}
+
+.journey-stop:hover ::deep .travel-mode-icon--walking {
+    transform: translate(0.08rem, -0.08rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .journey-stop,
+    .journey-stop__icon,
+    .journey-stop ::deep .travel-mode-icon {
+        transition: none;
+    }
+
+    .journey-stop:hover,
+    .journey-stop:hover ::deep .travel-mode-icon {
+        transform: none;
+    }
+}
+
+@media (max-width: 760px) {
+    .journey-timeline {
+        margin-top: 4rem;
+    }
+
+    .journey-timeline__items {
+        gap: 1.75rem;
+        padding-inline: 1rem;
+        scroll-padding-inline: 1rem;
+    }
+
+    .journey-timeline__items::before {
+        left: 1rem;
+        width: calc(100% - 2rem);
+    }
+
+    .journey-stop {
+        flex-basis: 10rem;
+    }
 }
