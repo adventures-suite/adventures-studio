@@ -1,0 +1,151 @@
+{
+  "volumeSlug": "italy-greece-croatia",
+  "country": "Greece",
+  "countrySlug": "greece",
+  "city": "Athens",
+  "slug": "athens",
+  "qrSlug": "athens",
+  "title": "Athens",
+  "subtitle": "Where Democracy Was Born",
+  "summary": "Athens brought ancient history and modern life together in a way that felt immediate and alive. Around every corner, busy neighborhoods, timeless ruins, and remarkable landmarks reminded us how deeply this city shaped the world. Standing beneath the Acropolis made the distance between the past and present feel surprisingly small.",
+  "heroImage": "/images/volumes/volume-1/greece/athens/hero.jpeg",
+  "heroImageAlt": "The Acropolis and Parthenon overlooking the city of Athens",
+  "published": true,
+  "featured": true,
+  "homepageOrder": 6,
+  "homepageImage": "/images/volumes/volume-1/greece/athens/homepage.jpeg",
+  "homepageSummary": "Walk through the birthplace of Western civilization where ancient ruins and vibrant modern life meet.",
+  "sections": [
+    {
+      "heading": "Arriving in Athens",
+      "paragraphs": [
+        "Athens felt different from the island destinations and historic cities that came before it. The streets were busy, energetic, and unmistakably modern, yet ancient landmarks remained visible throughout the city.",
+        "As we moved toward the historic center, the Acropolis rose above everything around it. Its presence made the city feel connected to thousands of years of history before we had even reached the site."
+      ],
+      "imageSrc": "/images/volumes/volume-1/greece/athens/athens-wide.jpeg",
+      "imageAlt": "A panoramic view of Athens with the Acropolis rising above the city",
+      "imageCaption": "The Acropolis rising above modern Athens"
+    },
+    {
+      "heading": "Walking Through the Acropolis",
+      "paragraphs": [
+        "Walking through the Acropolis was one of the most anticipated experiences of our journey. The climb led us past ancient stone, monumental gateways, and views that stretched across the entire city.",
+        "Standing among structures that had survived for centuries made the history feel more immediate than any photograph or textbook ever could. It was not simply a collection of ruins. It was a place that helped shape art, architecture, government, and culture throughout the Western world."
+      ],
+      "imageSrc": "/images/volumes/volume-1/greece/athens/acropolis.jpeg",
+      "imageAlt": "Ancient structures and visitors on the Acropolis in Athens",
+      "imageCaption": "Walking through the Acropolis"
+    },
+    {
+      "heading": "Standing Before the Parthenon",
+      "paragraphs": [
+        "The Parthenon was familiar long before we saw it in person, but its scale and setting were more powerful than we expected. Even after centuries of change, the structure still dominated the summit.",
+        "From the Acropolis, Athens extended in every direction below us. The contrast between the ancient monument and the modern city surrounding it made the moment especially memorable."
+      ],
+      "imageSrc": "/images/volumes/volume-1/greece/athens/parthenon.jpeg",
+      "imageAlt": "The Parthenon standing on the Acropolis above Athens",
+      "imageCaption": "The Parthenon overlooking Athens"
+    }
+  ],
+  "facts": [
+    {
+      "label": "Location",
+      "value": "Athens, Attica, Greece"
+    },
+    {
+      "label": "Historic significance",
+      "value": "Birthplace of democracy and a center of ancient Greek civilization"
+    },
+    {
+      "label": "Signature landmark",
+      "value": "The Acropolis"
+    },
+    {
+      "label": "Essential experience",
+      "value": "Standing before the Parthenon"
+    }
+  ],
+  "highlights": [
+    {
+      "title": "The Acropolis",
+      "description": "The ancient citadel rises above Athens and contains some of the most influential monuments of classical Greece."
+    },
+    {
+      "title": "The Parthenon",
+      "description": "The temple dedicated to Athena remains one of the world's most recognizable examples of classical architecture."
+    },
+    {
+      "title": "The Ancient Agora",
+      "description": "The former political, commercial, and social center of ancient Athens offers another perspective on daily life in the classical city."
+    },
+    {
+      "title": "Plaka",
+      "description": "Historic streets, cafés, shops, and traditional architecture create one of Athens' most inviting neighborhoods."
+    }
+  ],
+  "tips": [
+    {
+      "title": "Visit the Acropolis early",
+      "description": "Morning temperatures and smaller crowds can make the climb and exploration much more comfortable."
+    },
+    {
+      "title": "Wear shoes with good traction",
+      "description": "Ancient marble surfaces can be uneven and surprisingly slippery."
+    },
+    {
+      "title": "Carry water",
+      "description": "Summer temperatures can become intense, especially on exposed archaeological sites."
+    },
+    {
+      "title": "Explore beyond the ruins",
+      "description": "Athens is also a vibrant modern capital with lively neighborhoods, restaurants, markets, and street life."
+    }
+  ],
+  "reflections": [
+    {
+      "afterSection": 1,
+      "author": "Dianne",
+      "title": "From Dianne's Journal",
+      "text": "Seeing the Acropolis above the city made Athens feel different from anywhere else we had visited. The history was not hidden away. It seemed to watch over the entire city.",
+      "signature": "❤️ Dianne"
+    },
+    {
+      "afterSection": 2,
+      "author": "Steve",
+      "title": "Steve's Notes",
+      "text": "I expected the Acropolis to be impressive, but standing there made the scale of its influence much easier to understand. So much of the world we know was shaped by ideas that began here.",
+      "signature": "— Steve"
+    }
+  ],
+  "quote": {
+    "text": "Standing beneath the Acropolis reminded us how small we are compared to the civilizations that came before us.",
+    "attribution": "The Simonton Adventures"
+  },
+  "gallery": [
+    {
+      "src": "/images/volumes/volume-1/greece/athens/athens-wide.jpeg",
+      "alt": "The Acropolis rising above the city of Athens",
+      "caption": "Ancient history above modern Athens",
+      "displayOrder": 1
+    },
+    {
+      "src": "/images/volumes/volume-1/greece/athens/acropolis.jpeg",
+      "alt": "Ancient monuments and pathways on the Acropolis",
+      "caption": "Walking through the Acropolis",
+      "displayOrder": 2
+    },
+    {
+      "src": "/images/volumes/volume-1/greece/athens/parthenon.jpeg",
+      "alt": "The Parthenon on the Acropolis in Athens",
+      "caption": "The Parthenon",
+      "displayOrder": 3
+    }
+  ],
+  "map": {
+    "latitude": 37.9715,
+    "longitude": 23.7257,
+    "label": "Athens, Greece",
+    "zoom": 13
+  },
+  "resources": []
+}

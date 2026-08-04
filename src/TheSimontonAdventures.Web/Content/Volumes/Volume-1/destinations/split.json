@@ -1,0 +1,86 @@
+{
+  "volumeSlug": "italy-greece-croatia",
+  "country": "Croatia",
+  "countrySlug": "croatia",
+  "city": "Split",
+  "slug": "split",
+  "qrSlug": "split",
+  "title": "Split",
+  "subtitle": "Ancient City by the Sea",
+  "summary": "Split blended everyday life with nearly two thousand years of history. Ancient Roman walls surrounded lively cafés, narrow streets, and waterfront promenades, creating a city that felt both timeless and wonderfully alive.",
+  "heroImage": "/images/volumes/volume-1/croatia/split/hero.jpeg",
+  "heroImageAlt": "The waterfront and historic center of Split, Croatia",
+  "published": true,
+  "featured": true,
+  "homepageOrder": 8,
+  "homepageImage": "",
+  "homepageSummary": "Walk through a living Roman palace where history, local culture, and the Adriatic Sea come together.",
+  "sections": [],
+  "reflections": [],
+  "quote": {
+    "text": "Split reminded us that history doesn't have to be behind museum glass. Here, people still live inside it every day.",
+    "attribution": "The Simonton Adventures"
+  },
+  "facts": [
+    {
+      "label": "Location",
+      "value": "Dalmatian Coast, Croatia"
+    },
+    {
+      "label": "Known for",
+      "value": "Diocletian's Palace"
+    },
+    {
+      "label": "UNESCO site",
+      "value": "Historic Center of Split"
+    },
+    {
+      "label": "Essential experience",
+      "value": "Walking through Diocletian's Palace"
+    }
+  ],
+  "highlights": [
+    {
+      "title": "Diocletian's Palace",
+      "description": "One of the world's most remarkable Roman structures still serving as the heart of a modern city."
+    },
+    {
+      "title": "Riva Promenade",
+      "description": "Split's waterfront is lined with cafés, palm trees, and beautiful Adriatic views."
+    },
+    {
+      "title": "Cathedral of Saint Domnius",
+      "description": "Originally built as Emperor Diocletian's mausoleum, it later became one of the world's oldest cathedrals."
+    },
+    {
+      "title": "Old Town",
+      "description": "Stone alleys, hidden courtyards, and centuries of history make every walk feel like an exploration."
+    }
+  ],
+  "tips": [
+    {
+      "title": "Explore on foot",
+      "description": "The historic center is compact and rewards slow exploration."
+    },
+    {
+      "title": "Spend time on the waterfront",
+      "description": "The Riva offers a relaxing place to enjoy the city's atmosphere."
+    },
+    {
+      "title": "Look upward",
+      "description": "Many of Split's architectural details are easy to miss unless you slow down and look around."
+    },
+    {
+      "title": "Allow time to wander",
+      "description": "Some of the city's most memorable discoveries happen away from the busiest streets."
+    }
+  ],
+  "gallery": [],
+  "map": {
+    "latitude": 43.5081,
+    "longitude": 16.4402,
+    "label": "Split, Croatia",
+    "zoom": 14
+  },
+  "resources": []
+}

@@ -155,7 +155,7 @@
     },
     {
       "countrySlug": "greece",
-      "destinationSlug": "acropolis",
+      "destinationSlug": "athens",
       "displayOrder": 6
     },
     {
@@ -167,16 +167,6 @@
       "countrySlug": "croatia",
       "destinationSlug": "split",
       "displayOrder": 8
-    },
-    {
-      "countrySlug": "italy",
-      "destinationSlug": "ravenna",
-      "displayOrder": 9
-    },
-    {
-      "countrySlug": "italy",
-      "destinationSlug": "venice",
-      "displayOrder": 10
     }
   ]
 }

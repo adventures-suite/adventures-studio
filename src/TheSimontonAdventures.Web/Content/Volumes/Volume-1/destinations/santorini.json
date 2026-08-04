@@ -5,16 +5,27 @@
   "city": "Santorini",
   "slug": "santorini",
   "qrSlug": "santorini",
+
   "title": "Santorini",
-  "subtitle": "A volcanic island of whitewashed villages, dramatic cliffs, and unforgettable Aegean views.",
-  "summary": "Santorini looked almost unreal from the moment the island came into view. White buildings seemed to cling to the cliffs above the deep blue water, while the volcanic landscape gave the island a beauty unlike anywhere else on our journey. Beyond the famous views, we discovered villages, beaches, wine, and quiet moments that made Santorini feel even more memorable.",
+
+  "subtitle": "Island of Sunsets",
+
+  "summary": "Santorini looked almost unreal from the moment it appeared on the horizon. Whitewashed villages clung to volcanic cliffs above the deep blue Aegean, while every turn revealed another breathtaking view. Beyond its famous scenery, we discovered welcoming villages, volcanic landscapes, local wine, and quiet moments that made Santorini even more unforgettable.",
+
   "heroImage": "/images/volumes/volume-1/greece/santorini/hero.jpeg",
+
   "heroImageAlt": "Whitewashed buildings and blue-domed churches overlooking the Aegean Sea in Santorini",
+
   "published": true,
+
   "featured": true,
-  "homepageOrder": 3,
+
+  "homepageOrder": 7,
+
   "homepageImage": "/images/volumes/volume-1/greece/santorini/homepage.jpeg",
-  "homepageSummary": "Experience volcanic landscapes, whitewashed villages, and the brilliant colors of the Aegean.",
+
+  "homepageSummary": "Discover dramatic cliffs, timeless villages, unforgettable sunsets, and the beauty of the Aegean Sea.",
+
   "sections": [
     {
       "heading": "Approaching the Caldera",
@@ -47,6 +58,29 @@
       "imageCaption": "The volcanic colors and rugged landscape of Red Beach"
     }
   ],
+
+  "reflections": [
+    {
+      "afterSection": 1,
+      "author": "Dianne",
+      "title": "From Dianne's Journal",
+      "text": "Seeing Santorini from the water was one of those moments when the place looked exactly like a dream. The white villages above us seemed almost too beautiful to be real.",
+      "signature": "❤️ Dianne"
+    },
+    {
+      "afterSection": 2,
+      "author": "Steve",
+      "title": "Steve's Notes",
+      "text": "I expected the famous blue-and-white views, but the volcanic landscape surprised me. The cliffs, beaches, and vineyards made the island much more varied than I had imagined.",
+      "signature": "— Steve"
+    }
+  ],
+
+  "quote": {
+    "text": "Santorini looked exactly like the postcards—until we experienced it ourselves. Then it became something far more memorable.",
+    "attribution": "The Simonton Adventures"
+  },
+
   "facts": [
     {
       "label": "Location",
@@ -65,6 +99,7 @@
       "value": "Wine produced from volcanic soil"
     }
   ],
+
   "highlights": [
     {
       "title": "The Caldera",
@@ -83,6 +118,7 @@
       "description": "Red and dark-sand beaches reveal the geological forces that shaped the island."
     }
   ],
+
   "tips": [
     {
       "title": "Plan around cruise crowds",
@@ -101,28 +137,15 @@
       "description": "Narrow roads, summer traffic, and cruise-day demand can make travel across the island slower than expected."
     }
   ],
-  "reflections": [
-    {
-      "afterSection": 1,
-      "author": "Dianne",
-      "title": "From Dianne's Journal",
-      "text": "Seeing Santorini from the water was one of those moments when the place looked exactly like a dream. The white villages above us seemed almost too beautiful to be real.",
-      "signature": "❤️ Dianne"
-    },
-    {
-      "afterSection": 2,
-      "author": "Steve",
-      "title": "Steve's Notes",
-      "text": "I expected the famous blue-and-white views, but the volcanic landscape surprised me. The cliffs, beaches, and vineyards made the island much more varied than I had imagined.",
-      "signature": "— Steve"
-    }
-  ],
+
   "gallery": [],
+
   "map": {
     "latitude": 36.3932,
     "longitude": 25.4615,
     "label": "Santorini, Greece",
     "zoom": 11
   },
+
   "resources": []
 }

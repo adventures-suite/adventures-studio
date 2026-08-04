@@ -6,14 +6,14 @@
   "slug": "florence",
   "qrSlug": "florence",
   "title": "Florence",
-  "subtitle": "Walking through the birthplace of the Renaissance, where art and history seemed to fill every street.",
+  "subtitle": "Heart of the Renaissance",
   "summary": "Florence felt like a city designed to be explored slowly. Around nearly every corner, we found another church, piazza, sculpture, or view that reminded us how deeply the Renaissance shaped this place. It was elegant without feeling distant, historic without feeling frozen in time, and filled with moments that made us stop and simply take it all in.",
   "heroImage": "/images/volumes/volume-1/italy/florence/hero.jpeg",
   "heroImageAlt": "A panoramic view of Florence with the Cathedral of Santa Maria del Fiore rising above the city",
   "published": true,
   "featured": true,
   "homepageOrder": 2,
-  "homepageImage": "/images/volumes/volume-1/italy/florence/homepage.png",
+  "homepageImage": "/images/volumes/volume-1/italy/florence/homepage.jpeg",
   "homepageSummary": "Walk through the art, architecture, and timeless streets of the Renaissance.",
   "sections": [
     {
@@ -42,7 +42,7 @@
         "Some of our favorite moments in Florence came when we were no longer rushing toward a landmark. Walking near the Arno River in the evening gave us time to appreciate the softer side of the city.",
         "The light changed across the buildings, the bridges reflected on the water, and Florence seemed to settle into a quieter rhythm. It was the kind of moment that made us want to slow down and stay a little longer."
       ],
-      "imageSrc": "/images/volumes/volume-1/italy/florence/arno-evening.jpeg",
+      "imageSrc": "/images/volumes/volume-1/italy/florence/arno-evening.png",
       "imageAlt": "The Arno River and Ponte Vecchio during the evening in Florence",
       "imageCaption": "Evening light along the Arno River"
     }
@@ -117,26 +117,30 @@
       "signature": "— Steve"
     }
   ],
+  "quote": {
+    "text": "Florence made us slow down, look closer, and appreciate the history woven into nearly every street.",
+    "attribution": "The Simonton Adventures"
+  },
   "gallery": [
     {
-        "src": "/images/volumes/volume-1/italy/florence/duomo-wide.jpeg",
-        "alt": "The Cathedral of Santa Maria del Fiore in Florence",
-        "caption": "The Duomo rising above Florence",
-        "displayOrder": 1
+      "src": "/images/volumes/volume-1/italy/florence/duomo-wide.jpeg",
+      "alt": "The Cathedral of Santa Maria del Fiore in Florence",
+      "caption": "The Duomo rising above Florence",
+      "displayOrder": 1
     },
     {
-        "src": "/images/volumes/volume-1/italy/florence/david.jpeg",
-        "alt": "Michelangelo's David inside the Accademia Gallery",
-        "caption": "Michelangelo's David",
-        "displayOrder": 2
+      "src": "/images/volumes/volume-1/italy/florence/david.jpeg",
+      "alt": "Michelangelo's David inside the Accademia Gallery",
+      "caption": "Michelangelo's David",
+      "displayOrder": 2
     },
     {
-        "src": "/images/volumes/volume-1/italy/florence/arno-evening.jpeg",
-        "alt": "Evening light along the Arno River in Florence",
-        "caption": "Evening along the Arno",
-        "displayOrder": 3
+      "src": "/images/volumes/volume-1/italy/florence/arno-evening.png",
+      "alt": "Evening light along the Arno River in Florence",
+      "caption": "Evening along the Arno",
+      "displayOrder": 3
     }
-    ],
+  ],
   "map": {
     "latitude": 43.7696,
     "longitude": 11.2558,

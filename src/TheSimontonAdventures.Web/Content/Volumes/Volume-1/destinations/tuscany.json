@@ -1,0 +1,86 @@
+{
+  "volumeSlug": "italy-greece-croatia",
+  "country": "Italy",
+  "countrySlug": "italy",
+  "city": "Tuscany",
+  "slug": "tuscany",
+  "qrSlug": "tuscany",
+  "title": "Tuscany",
+  "subtitle": "Rolling Hills and Timeless Vineyards",
+  "summary": "Tuscany gave us a slower rhythm after the energy of Florence. Vineyards, stone villages, quiet roads, and long views across the countryside made the day feel less like sightseeing and more like stepping into the Italy we had imagined for years.",
+  "heroImage": "/images/volumes/volume-1/italy/tuscany/hero.jpeg",
+  "heroImageAlt": "Rolling hills, vineyards, and a historic countryside estate in Tuscany",
+  "published": true,
+  "featured": true,
+  "homepageOrder": 3,
+  "homepageImage": "",
+  "homepageSummary": "Explore the rolling hills, vineyards, historic villages, and relaxed pace that make Tuscany feel timeless.",
+  "sections": [],
+  "reflections": [],
+  "quote": {
+    "text": "Tuscany reminded us that some of the best travel moments happen when there is nowhere else you need to be.",
+    "attribution": "The Simonton Adventures"
+  },
+  "facts": [
+    {
+      "label": "Region",
+      "value": "Central Italy"
+    },
+    {
+      "label": "Known for",
+      "value": "Vineyards, hill towns, art, food, and countryside"
+    },
+    {
+      "label": "Signature experience",
+      "value": "Exploring the Chianti countryside"
+    },
+    {
+      "label": "Travel style",
+      "value": "Slow, scenic, and immersive"
+    }
+  ],
+  "highlights": [
+    {
+      "title": "Chianti Countryside",
+      "description": "Vineyards, olive groves, and winding roads create one of Italy's most recognizable landscapes."
+    },
+    {
+      "title": "Historic Villages",
+      "description": "Stone towns and quiet piazzas offer a slower and more intimate view of Tuscany."
+    },
+    {
+      "title": "Food and Wine",
+      "description": "Local meals and regional wines connect the landscape to centuries of tradition."
+    },
+    {
+      "title": "Scenic Drives",
+      "description": "The journey between villages is often as memorable as the destinations themselves."
+    }
+  ],
+  "tips": [
+    {
+      "title": "Allow time between stops",
+      "description": "Tuscany is best experienced at a relaxed pace, with room for unplanned views, village walks, and long meals."
+    },
+    {
+      "title": "Use local transportation carefully",
+      "description": "Many countryside locations are difficult to reach by public transportation, so a private driver or organized tour may simplify the day."
+    },
+    {
+      "title": "Choose fewer places",
+      "description": "A smaller number of meaningful stops creates a better experience than trying to cover too much countryside in one day."
+    },
+    {
+      "title": "Look beyond the headline towns",
+      "description": "Some of Tuscany's most memorable moments may come from smaller villages, local farms, and quiet overlooks."
+    }
+  ],
+  "gallery": [],
+  "map": {
+    "latitude": 43.7711,
+    "longitude": 11.2486,
+    "label": "Tuscany, Italy",
+    "zoom": 8
+  },
+  "resources": []
+}

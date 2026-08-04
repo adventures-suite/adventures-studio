@@ -1,0 +1,86 @@
+{
+  "volumeSlug": "italy-greece-croatia",
+  "country": "Croatia",
+  "countrySlug": "croatia",
+  "city": "Dubrovnik",
+  "slug": "dubrovnik",
+  "qrSlug": "dubrovnik",
+  "title": "Dubrovnik",
+  "subtitle": "The Pearl of the Adriatic",
+  "summary": "Dubrovnik greeted us with massive stone walls, narrow streets, and sweeping views across the Adriatic. Walking through the Old Town felt like stepping into another century, where every corner revealed another layer of history.",
+  "heroImage": "/images/volumes/volume-1/croatia/dubrovnik/hero.jpeg",
+  "heroImageAlt": "The historic walled city of Dubrovnik overlooking the Adriatic Sea",
+  "published": true,
+  "featured": true,
+  "homepageOrder": 5,
+  "homepageImage": "/images/volumes/volume-1/croatia/dubrovnik/homepage.jpeg",
+  "homepageSummary": "Explore Dubrovnik's ancient walls, marble streets, dramatic coastline, and beautifully preserved Old Town.",
+  "sections": [],
+  "reflections": [],
+  "quote": {
+    "text": "Dubrovnik felt both powerful and peaceful—an ancient city standing confidently above the sea.",
+    "attribution": "The Simonton Adventures"
+  },
+  "facts": [
+    {
+      "label": "Location",
+      "value": "Dalmatian Coast, Croatia"
+    },
+    {
+      "label": "Known for",
+      "value": "Medieval walls, Old Town, and Adriatic views"
+    },
+    {
+      "label": "Historic identity",
+      "value": "Former Republic of Ragusa"
+    },
+    {
+      "label": "Essential experience",
+      "value": "Walking the city walls"
+    }
+  ],
+  "highlights": [
+    {
+      "title": "Dubrovnik City Walls",
+      "description": "The historic walls provide sweeping views over the Old Town, rooftops, fortifications, and the Adriatic Sea."
+    },
+    {
+      "title": "Stradun",
+      "description": "The polished limestone main street forms the heart of Dubrovnik's Old Town."
+    },
+    {
+      "title": "Fort Lovrijenac",
+      "description": "The fortress rises above the sea just outside the city walls and offers dramatic coastal views."
+    },
+    {
+      "title": "Old Town",
+      "description": "Churches, palaces, stone alleys, and public squares preserve centuries of history inside the walls."
+    }
+  ],
+  "tips": [
+    {
+      "title": "Explore early",
+      "description": "The Old Town becomes much busier later in the day, especially when several cruise ships are in port."
+    },
+    {
+      "title": "Prepare for stairs",
+      "description": "Many streets and parts of the city walls include steep steps and uneven stone surfaces."
+    },
+    {
+      "title": "Allow time for the walls",
+      "description": "Walking the complete circuit takes time, especially when stopping for photographs and views."
+    },
+    {
+      "title": "Look beyond the main street",
+      "description": "Some of Dubrovnik's most memorable corners are found along the smaller side streets and quieter alleys."
+    }
+  ],
+  "gallery": [],
+  "map": {
+    "latitude": 42.6507,
+    "longitude": 18.0944,
+    "label": "Dubrovnik, Croatia",
+    "zoom": 14
+  },
+  "resources": []
+}

@@ -1,11 +1,15 @@
 {
-  "journey": {
+    "slug": "our-mediterranean-adventure",
+    "volumeSlug": "italy-greece-croatia",
     "title": "Italy, Greece & Croatia",
     "summary": "A romantic journey through Italy, Greece, and Croatia.",
+    "journeyType": "Editorial",
     "startLocation": "Phoenix",
     "endLocation": "Phoenix",
     "startDate": "June 20, 2026",
     "endDate": "July 5, 2026",
+    "published": true,
+    "displayOrder": 1,
     "segments": [
       {
         "from": "Phoenix Sky Harbor International Airport",
@@ -295,4 +299,3 @@
       }
     ]
   }
-}

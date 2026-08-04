@@ -6,8 +6,30 @@
 }
 
 .volume-hero {
-    max-width: 58rem;
-    padding: 3rem 0 4rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(20rem, 0.9fr);
+    gap: clamp(2rem, 5vw, 5rem);
+    align-items: center;
+    padding: 2rem 0 5rem;
+}
+
+.volume-hero__image {
+    width: 100%;
+    overflow: hidden;
+    border-radius: 1.5rem;
+    box-shadow: 0 1.5rem 3.5rem rgba(22, 32, 42, 0.14);
+}
+
+.volume-hero__image img {
+    display: block;
+    width: 100%;
+    height: clamp(22rem, 42vw, 34rem);
+    object-fit: cover;
+    object-position: center;
+}
+
+.volume-hero__content {
+    max-width: 42rem;
 }
 
 .volume-eyebrow {
@@ -23,7 +45,7 @@
 .volume-hero h1 {
     margin: 0;
     max-width: 54rem;
-    font-size: clamp(3rem, 8vw, 6.25rem);
+    font-size: clamp(3rem, 7vw, 6rem);
     line-height: 0.96;
     letter-spacing: -0.055em;
 }
@@ -37,12 +59,46 @@
     color: rgba(22, 32, 42, 0.68);
 }
 
+.volume-travel-dates {
+    margin: 1.5rem 0 0;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(22, 32, 42, 0.56);
+}
+
 .volume-description {
     max-width: 48rem;
-    margin: 1.75rem 0 0;
+    margin: 1.5rem 0 0;
     font-size: 1.12rem;
     line-height: 1.8;
     color: rgba(22, 32, 42, 0.74);
+}
+
+.volume-status-message {
+    margin: 1.25rem 0 0;
+    padding-left: 1rem;
+    border-left: 3px solid rgba(22, 32, 42, 0.18);
+    font-size: 0.92rem;
+    line-height: 1.55;
+    color: rgba(22, 32, 42, 0.62);
+}
+
+@media (max-width: 900px) {
+    .volume-hero {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        padding-bottom: 4rem;
+    }
+
+    .volume-hero__image img {
+        height: clamp(20rem, 65vw, 28rem);
+    }
+
+    .volume-hero__content {
+        max-width: none;
+    }
 }
 
 @media (max-width: 760px) {
@@ -52,6 +108,16 @@
     }
 
     .volume-hero {
-        padding: 2rem 0 3rem;
+        padding: 1rem 0 3rem;
+    }
+}
+
+@media (max-width: 560px) {
+    .volume-hero__image {
+        border-radius: 1rem;
+    }
+
+    .volume-hero__image img {
+        height: 19rem;
     }
 }

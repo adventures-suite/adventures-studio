@@ -1,7 +1,6 @@
 @page "/volumes/{VolumeSlug}"
 
 @using TheSimontonAdventures.Web.Models
-@using TheSimontonAdventures.Web.Components.Shared
 @using TheSimontonAdventures.Web.Components.Volume
 @using TheSimontonAdventures.Web.Components.Journeys
 
@@ -27,31 +26,61 @@ else
 
         <section class="volume-hero">
 
-            <span class="volume-eyebrow">
-                The Simonton Adventures
-            </span>
-
-            <h1>
-                @_volume.Title
-            </h1>
-
-            @if (!string.IsNullOrWhiteSpace(_volume.Subtitle))
+            @if (!string.IsNullOrWhiteSpace(_volume.CoverImage))
             {
-                <h2>
-                    @_volume.Subtitle
-                </h2>
+                <div class="volume-hero__image">
+                    <img src="@_volume.CoverImage"
+                         alt="@BuildVolumeHeroAltText()"
+                         loading="eager" />
+                </div>
             }
 
-            @if (!string.IsNullOrWhiteSpace(_volume.Description))
-            {
-                <p class="volume-description">
-                    @_volume.Description
-                </p>
-            }
+            <div class="volume-hero__content">
+
+                <span class="volume-eyebrow">
+                    The Simonton Adventures
+                </span>
+
+                <h1>
+                    @_volume.Title
+                </h1>
+
+                @if (!string.IsNullOrWhiteSpace(_volume.Subtitle))
+                {
+                    <h2>
+                        @_volume.Subtitle
+                    </h2>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(_volume.TravelDates))
+                {
+                    <p class="volume-travel-dates">
+                        @_volume.TravelDates
+                    </p>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(_volume.Description))
+                {
+                    <p class="volume-description">
+                        @_volume.Description
+                    </p>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(_volume.StatusMessage))
+                {
+                    <p class="volume-status-message">
+                        @_volume.StatusMessage
+                    </p>
+                }
+
+            </div>
 
         </section>
 
-        <JourneyTimeline Stops="@_volume.JourneyStops" />
+        @if (_journey is not null)
+        {
+            <JourneySegmentTimeline Journey="@_journey" />
+        }
 
         <VolumeDestinations
             Destinations="@_destinationCards"
@@ -61,13 +90,15 @@ else
 }
 
 @code {
-
     [Parameter]
     public string VolumeSlug { get; set; } = string.Empty;
 
-    private Volume? _volume;
+    private TheSimontonAdventures.Web.Models.Volume? _volume;
 
-    private IReadOnlyList<VolumeDestinationCard> _destinationCards = Array.Empty<VolumeDestinationCard>();
+    private Journey? _journey;
+
+    private IReadOnlyList<VolumeDestinationCard> _destinationCards =
+        Array.Empty<VolumeDestinationCard>();
 
     private bool _isLoading;
 
@@ -79,6 +110,9 @@ else
     protected override async Task OnParametersSetAsync()
     {
         _isLoading = true;
+        _volume = null;
+        _journey = null;
+        _destinationCards = Array.Empty<VolumeDestinationCard>();
 
         try
         {
@@ -86,8 +120,19 @@ else
 
             if (_volume is null)
             {
-                _destinationCards = Array.Empty<VolumeDestinationCard>();
                 return;
+            }
+
+            var featuredJourneyReference = _volume.Journeys
+                .Where(reference => reference.Featured)
+                .OrderBy(reference => reference.DisplayOrder)
+                .FirstOrDefault();
+
+            if (featuredJourneyReference is not null)
+            {
+                _journey = await TravelContentService.GetJourneyAsync(
+                    _volume.Slug,
+                    featuredJourneyReference.Slug);
             }
 
             var cardTasks = _volume.Destinations
@@ -111,8 +156,8 @@ else
     }
 
     private async Task<VolumeDestinationCard?> LoadDestinationCardAsync(
-    string volumeSlug,
-    VolumeDestinationReference reference)
+        string volumeSlug,
+        VolumeDestinationReference reference)
     {
         var destination = await TravelContentService.GetDestinationAsync(
             volumeSlug,
@@ -130,30 +175,43 @@ else
             DestinationSlug = reference.DestinationSlug,
             Title = destination.Title,
             CountryName = destination.Country,
-            HeroImage = string.IsNullOrWhiteSpace(destination.HomepageImage)
-                ? destination.HeroImage
-                : destination.HomepageImage,
-            Summary = string.IsNullOrWhiteSpace(destination.HomepageSummary)
-                ? destination.Summary
-                : destination.HomepageSummary,
+            HeroImage = ResolveDestinationCardImage(destination),
+            Summary = ResolveDestinationCardSummary(destination),
             DisplayOrder = reference.DisplayOrder
         };
     }
 
-    private static string FormatSlug(string slug)
+    private static string ResolveDestinationCardImage(
+        Destination destination)
     {
-        if (string.IsNullOrWhiteSpace(slug))
+        if (!string.IsNullOrWhiteSpace(destination.HomepageImage))
+        {
+            return destination.HomepageImage;
+        }
+
+        return destination.HeroImage;
+    }
+
+    private static string ResolveDestinationCardSummary(
+        Destination destination)
+    {
+        if (!string.IsNullOrWhiteSpace(destination.HomepageSummary))
+        {
+            return destination.HomepageSummary;
+        }
+
+        return destination.Summary;
+    }
+
+    private string BuildVolumeHeroAltText()
+    {
+        if (_volume is null)
         {
             return string.Empty;
         }
 
-        return string.Join(
-            ' ',
-            slug.Split(
-                    '-',
-                    StringSplitOptions.RemoveEmptyEntries |
-                    StringSplitOptions.TrimEntries)
-                .Select(word =>
-                    char.ToUpperInvariant(word[0]) + word[1..]));
+        return string.IsNullOrWhiteSpace(_volume.Subtitle)
+            ? _volume.Title
+            : $"{_volume.Title}: {_volume.Subtitle}";
     }
 }

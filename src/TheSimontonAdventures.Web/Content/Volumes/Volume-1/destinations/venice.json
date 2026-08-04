@@ -4,16 +4,46 @@
   "countrySlug": "italy",
   "city": "Venice",
   "slug": "venice",
+  "qrSlug": "venice",
+
   "title": "Venice",
-  "subtitle": "",
-  "summary": "",
-  "heroImage": "",
-  "heroImageAlt": "",
-  "published": false,
+
+  "subtitle": "The Floating City",
+
+  "summary": "Our Mediterranean adventure began in Venice, where canals replaced roads, centuries of history surrounded every corner, and every quiet walk revealed another unforgettable view.",
+
+  "heroImage": "/images/volumes/volume-1/italy/venice/hero.jpeg",
+
+  "heroImageAlt": "Historic canal in Venice lined with colorful buildings and gondolas",
+
+  "published": true,
+
+  "featured": true,
+
+  "homepageOrder": 1,
+
+  "homepageImage": "/images/volumes/volume-1/italy/venice/hero.jpeg",
+
+  "homepageSummary": "Discover Venice through hidden canals, romantic bridges, authentic neighborhoods, and unforgettable first impressions that made it the perfect beginning to our Italian adventure.",
+
   "sections": [],
+
+  "reflections": [],
+
+  "quote": {
+    "text": "The moment we stepped onto the water taxi, we realized this wasn't just another vacation—it was the beginning of an adventure.",
+    "attribution": "The Simonton Adventures"
+  },
+
   "facts": [],
+
   "highlights": [],
+
   "tips": [],
+
   "gallery": [],
+
+  "map": null,
+
   "resources": []
 }
