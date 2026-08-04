@@ -1,26 +1,34 @@
 # Domain Model
 
-**Version:** 1.0
+**Version:** 1.1
 
 **Status:** Approved
 
-**Last Updated:** July 31, 2026
+**Last Updated:** August 2026
 
 ---
 
 # Purpose
 
-The Domain Model defines the core business concepts of Adventure Platform.
+The Domain Model defines the core business concepts of Adventures Studio.
 
-Every feature, service, API, AI workflow, and user interface should build upon these concepts.
+Every feature, service, API, AI workflow, mobile application, publishing capability, and user interface should build upon these concepts.
 
 These concepts should remain stable over the lifetime of the platform.
+
+Technologies will evolve.
+
+User interfaces will evolve.
+
+Artificial Intelligence will evolve.
+
+The language of Adventures Studio should remain consistent.
 
 ---
 
 # Philosophy
 
-Adventure Platform is not organized around books.
+Adventures Studio is not organized around books.
 
 It is not organized around websites.
 
@@ -28,39 +36,67 @@ It is organized around Adventures.
 
 Everything else is derived from an Adventure.
 
+Books are one expression of an Adventure.
+
+Journeys are one way of experiencing an Adventure.
+
+The Adventure remains the source of truth.
+
 ---
 
 # Core Domain
+
+Publisher
+
+↓
 
 Adventure
 
 ↓
 
-Journey Stops
+Volume
 
 ↓
 
-Destinations
+Journey
 
 ↓
 
-Stories
+Journey Segment
 
 ↓
 
-Photography
+Destination
 
 ↓
 
-Reflections
+Experience
 
 ↓
 
-Resources
+Memory
 
-↓
+Every future capability within Adventures Studio should naturally fit somewhere within this hierarchy.
 
-Book
+---
+
+# Publisher
+
+A Publisher owns Adventures.
+
+Examples include:
+
+- Adventures Studio
+- Independent Travelers
+- Families
+- Professional Photographers
+- Travel Bloggers
+- Tour Companies
+- Destination Organizations
+
+The platform should never assume Adventures Studio is the only publisher.
+
+Publishers create Adventures.
 
 ---
 
@@ -73,21 +109,23 @@ It owns:
 - title
 - subtitle
 - description
-- status
+- lifecycle
 - travel dates
 - cover artwork
 - hero image
-- timeline
-- destinations
+- Volumes
+- Journeys
+- Destinations
+- Memories
 
 Examples:
 
 - Italy • Greece • Croatia
-- Icon Cruise
+- Alaska Expedition
 - Spain
 - Japan
 
-An Adventure is the highest level object in the system.
+An Adventure is the primary business object of the platform.
 
 ---
 
@@ -113,38 +151,95 @@ Current
 
 Published
 
+↓
+
+Archived
+
 Only one Adventure should normally have the status of Current.
 
 ---
 
-# Journey Stop
+# Volume
 
-A Journey Stop represents one stop along the adventure timeline.
+A Volume represents a published chapter within an Adventure.
+
+Volumes primarily organize editorial content.
 
 Examples:
 
-- Phoenix
-- Venice
-- Florence
-- Ravenna
-- Dubrovnik
-- Athens
-- Santorini
+- Volume I
+- Volume II
+- Anniversary Edition
+- Photography Edition
 
-Journey Stops define:
+Books are generated from Volumes.
 
-- order
-- map position
-- navigation
-- travel flow
+Volumes are editorial.
 
-They do not contain stories.
+Journeys are experiential.
+
+---
+
+# Journey
+
+A Journey represents one way of experiencing an Adventure.
+
+Examples:
+
+- Our Mediterranean Adventure
+- Cruise Only
+- Land Tour
+- Food & Wine Journey
+- Photography Journey
+
+Multiple Journeys may exist within one Adventure.
+
+Journeys organize movement.
+
+They do not own destinations.
+
+---
+
+# Journey Segment
+
+A Journey is composed of one or more Journey Segments.
+
+A Journey Segment represents movement between two locations.
+
+Examples:
+
+- Flight
+- Train
+- Cruise
+- Ferry
+- Water Taxi
+- Walking
+- Car
+- Bus
+
+A Journey Segment may include:
+
+- Origin
+- Destination
+- Travel Mode
+- Transportation Details
+- Coordinates
+- Waypoints
+- Timing
+- Reservations
+- Notes
+
+Journey Segments tell the story of movement.
 
 ---
 
 # Destination
 
-A Destination represents a place that can be explored.
+A Destination represents a meaningful place that can be explored.
+
+Destinations are reusable.
+
+Multiple Journeys may reference the same Destination.
 
 A Destination owns:
 
@@ -157,8 +252,32 @@ A Destination owns:
 - reflections
 - resources
 - maps
+- experiences
 
-A Destination belongs to exactly one Adventure.
+Destinations belong to Adventures.
+
+Not Journeys.
+
+---
+
+# Experience
+
+Experiences happen within Destinations.
+
+Examples include:
+
+- Walking Tours
+- Museums
+- Restaurants
+- Wine Tastings
+- Cooking Classes
+- Gondola Rides
+- Excursions
+- Scenic Viewpoints
+
+Experiences enrich Destinations.
+
+They do not replace the Story.
 
 ---
 
@@ -168,60 +287,59 @@ Every Destination contains one Story.
 
 The Story is divided into Sections.
 
-Each section may contain:
+Each Section may contain:
 
 - heading
-- paragraphs
+- narrative
 - editorial photography
 - reflections
 
-The Story is always the emotional center of the destination.
+The Story remains the emotional center of every Destination.
 
 ---
 
-# Reflection
+# Memory
 
-Reflections capture the personal experience.
+Memories preserve the experience.
 
-Examples:
+Examples include:
 
-Steve's Notes
+- Journal Entries
+- Reflections
+- Photography
+- Videos
+- Voice Notes
+- GPS Timeline
+- Milestones
 
-From Dianne's Journal
-
-Reflections exist to preserve emotion.
+Memories exist to preserve emotion.
 
 Not information.
 
-Multiple reflections may exist within a destination.
+Reflections become one type of Memory.
 
 ---
 
 # Photography
 
-Photography belongs to Destinations.
+Photography belongs primarily to Destinations.
 
 Photography includes:
 
-Hero
-
-Homepage
-
-Story Images
-
-Gallery
+- Hero
+- Homepage
+- Story Images
+- Gallery
 
 Future:
 
-Panoramas
+- Panoramas
+- Video
+- Drone
+- 360°
+- Spatial Media
 
-Video
-
-360°
-
-Drone
-
-Photography should drive the visual experience.
+Photography should continue driving the visual experience.
 
 ---
 
@@ -231,21 +349,18 @@ The Guide provides practical information.
 
 Examples:
 
-Facts
-
-Highlights
-
-Travel Tips
+- Facts
+- Highlights
+- Travel Tips
 
 Future:
 
-Accessibility
-
-Best Time
-
-Transportation
-
-Costs
+- Accessibility
+- Transportation
+- Costs
+- Best Time
+- Safety
+- Planning Notes
 
 The Guide supports the Story.
 
@@ -259,25 +374,19 @@ Resources extend the experience.
 
 Examples:
 
-Official websites
-
-Museums
-
-Maps
-
-Historical references
-
-Travel planning
+- Official Websites
+- Museums
+- Maps
+- Historical References
+- Travel Planning
 
 Future:
 
-Affiliate partners
-
-Reservations
-
-Tickets
-
-Downloads
+- Reservations
+- Tickets
+- Downloads
+- Affiliate Partners
+- Planning Services
 
 ---
 
@@ -287,17 +396,15 @@ A Book is generated from an Adventure.
 
 Books are outputs.
 
-Not primary objects.
+They are not primary business objects.
 
 Future publishing formats include:
 
-Print
-
-PDF
-
-EPUB
-
-Interactive
+- Print
+- PDF
+- EPUB
+- Interactive
+- Companion Edition
 
 The Adventure remains the source of truth.
 
@@ -307,17 +414,17 @@ The Adventure remains the source of truth.
 
 A User owns one or more Adventures.
 
-Future roles:
+Future roles include:
 
-Traveler
+- Traveler
+- Creator
+- Editor
+- Contributor
+- Administrator
 
-Editor
+Users own content.
 
-Contributor
-
-Administrator
-
-Organization
+The platform never owns user content.
 
 ---
 
@@ -327,95 +434,98 @@ Organizations may own multiple Adventures.
 
 Examples:
 
-Family
+- Family
+- Travel Company
+- Church
+- School
+- Mission Organization
+- University
 
-Travel Company
-
-Church
-
-School
-
-Mission Organization
-
-University
-
-Organizations support multi-user collaboration.
+Organizations support collaboration.
 
 ---
 
 # AI
 
-Artificial Intelligence is not a domain object.
+Artificial Intelligence is not a Domain Object.
 
-It is a platform service.
+It is a Platform Capability.
 
-AI assists users in creating and managing Adventures.
+AI assists users in creating, organizing, preserving, and publishing Adventures.
 
 AI may interact with:
 
-Adventure
-
-Destination
-
-Story
-
-Reflection
-
-Photography
-
-Publishing
+- Adventure
+- Journey
+- Destination
+- Experience
+- Memory
+- Photography
+- Publishing
 
 AI never owns content.
 
-The user owns the content.
+Users own content.
 
 ---
 
 # Relationships
 
-Adventure
+Publisher
 
-├── Journey Stops
+└── Adventures
 
-├── Destinations
+&nbsp;&nbsp;&nbsp;&nbsp;├── Volumes
 
-│   ├── Story
+&nbsp;&nbsp;&nbsp;&nbsp;├── Journeys
 
-│   ├── Reflections
+&nbsp;&nbsp;&nbsp;&nbsp;│   └── Journey Segments
 
-│   ├── Photography
+&nbsp;&nbsp;&nbsp;&nbsp;├── Destinations
 
-│   ├── Guide
+&nbsp;&nbsp;&nbsp;&nbsp;│   ├── Story
 
-│   ├── Resources
+&nbsp;&nbsp;&nbsp;&nbsp;│   ├── Experiences
 
-│   └── Maps
+&nbsp;&nbsp;&nbsp;&nbsp;│   ├── Photography
 
-└── Book
+&nbsp;&nbsp;&nbsp;&nbsp;│   ├── Guide
+
+&nbsp;&nbsp;&nbsp;&nbsp;│   ├── Resources
+
+&nbsp;&nbsp;&nbsp;&nbsp;│   └── Maps
+
+&nbsp;&nbsp;&nbsp;&nbsp;├── Memories
+
+&nbsp;&nbsp;&nbsp;&nbsp;└── Books
 
 ---
 
 # Ownership Rules
 
+Publisher owns Adventures.
+
 Adventure owns:
 
-- timeline
-- order
 - lifecycle
 - publication state
+- Volumes
+- Journeys
+- Destinations
+
+Journey owns:
+
+- Journey Segments
 
 Destination owns:
 
-- presentation
-- photography
-- summaries
-- stories
-- reflections
-- homepage content
+- Story
+- Photography
+- Guide
+- Resources
+- Experiences
 
-Book owns:
-
-- formatting
+Book owns formatting.
 
 AI owns nothing.
 
@@ -425,7 +535,7 @@ AI owns nothing.
 
 Whenever a new feature is proposed, ask:
 
-Which domain object owns this?
+**Which Domain Object owns this?**
 
 If the answer is unclear, the feature probably needs to be redesigned.
 
@@ -433,8 +543,10 @@ If the answer is unclear, the feature probably needs to be redesigned.
 
 # Guiding Principle
 
-Keep the domain simple.
+Keep the Domain Model simple.
 
 Keep responsibilities clear.
 
-A clean domain model creates software that can evolve for decades.
+Protect the language of the platform.
+
+A stable Domain Model creates software that can evolve for decades.

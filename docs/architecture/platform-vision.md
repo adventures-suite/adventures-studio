@@ -1,20 +1,22 @@
-# Adventure Platform Vision
+# Adventures Studio Platform Vision
 
-**Version:** 1.0
+**Version:** 1.1
 
 **Status:** Approved
 
-**Last Updated:** July 31, 2026
+**Last Updated:** August 2026
 
 ---
 
 # Vision Statement
 
-Adventure Platform exists to help people preserve, enrich, publish, and share meaningful adventures.
+Adventures Studio exists to help people dream, discover, plan, experience, capture, preserve, publish, and share meaningful adventures.
 
-It transforms travel experiences into lasting stories through beautiful publishing, intelligent planning, photography, journals, maps, and books.
+The platform transforms travel experiences into lasting stories through beautiful publishing, intelligent planning, photography, journals, maps, books, and interactive digital experiences.
 
-The platform exists to ensure adventures become memories that can be shared for generations.
+Our goal is simple:
+
+Help every meaningful adventure become a lasting legacy.
 
 ---
 
@@ -30,32 +32,41 @@ Travel blogs publish stories.
 
 Book services print memories.
 
+Mapping tools provide navigation.
+
+Reservation systems organize bookings.
+
+Artificial Intelligence answers questions.
+
 None of these systems work together.
 
-After every trip people end up with:
+After every trip people are left with:
 
 - thousands of photos
 - scattered notes
 - reservations
 - maps
-- emails
 - tickets
+- confirmations
 - journal entries
+- videos
+- memories spread across dozens of applications
 
 Most of those memories are eventually forgotten.
 
-Adventure Platform exists to solve that problem.
+Adventures Studio exists to solve that problem.
 
 ---
 
 # Our Mission
 
-Enable anyone to transform an adventure into a lasting publication.
+Enable anyone to transform an adventure into a lasting experience.
 
-Every adventure should become:
+Every adventure should naturally become:
 
 - a story
 - a website
+- a companion experience
 - a book
 - a collection of memories
 
@@ -73,15 +84,19 @@ Photography should inspire.
 
 History should educate.
 
+Experiences should be remembered.
+
 Journals should preserve emotion.
 
 Maps should provide context.
 
 Books should become family heirlooms.
 
+The platform exists to support the traveler—not distract from the adventure.
+
 ---
 
-# What Makes Adventure Platform Different
+# What Makes Adventures Studio Different
 
 We are not building:
 
@@ -89,10 +104,11 @@ We are not building:
 - a photo gallery
 - a journal
 - a trip planner
+- a book publishing platform
 
-We are building all of those together.
+We are building an Adventure Platform.
 
-The adventure is the center.
+The Adventure is the center.
 
 Everything else grows naturally from it.
 
@@ -100,9 +116,13 @@ Everything else grows naturally from it.
 
 # Core Lifecycle
 
-Every adventure moves through the same lifecycle.
+Every adventure follows the same lifecycle.
 
 Dream
+
+↓
+
+Discover
 
 ↓
 
@@ -110,7 +130,11 @@ Plan
 
 ↓
 
-Travel
+Experience
+
+↓
+
+Capture
 
 ↓
 
@@ -124,13 +148,17 @@ Publish
 
 Share
 
-The platform supports every stage.
+↓
+
+Inspire
+
+The platform should support every stage.
 
 ---
 
 # Primary Markets
 
-Adventure Platform is designed for:
+Adventures Studio is designed for:
 
 - Families
 - Travel enthusiasts
@@ -147,9 +175,23 @@ Adventure Platform is designed for:
 - Tour operators
 - Historical organizations
 
-Travel is only the first market.
+Travel is our first market.
 
-The platform can support any meaningful journey.
+The platform architecture should support any meaningful journey.
+
+---
+
+# The Creator Ecosystem
+
+Every traveler has the potential to become a creator.
+
+The platform should eventually allow creators to publish adventures that inspire other travelers.
+
+One creator becomes inspiration for another.
+
+This continuous cycle strengthens the platform over time.
+
+Publishing should become as natural as preserving memories.
 
 ---
 
@@ -157,41 +199,52 @@ The platform can support any meaningful journey.
 
 People do not remember software.
 
-People remember stories.
+People remember adventures.
 
-Everything we build should help tell a better story.
+Everything we build should help people create better adventures and preserve better memories.
 
 ---
 
 # The Flagship Customer
 
-The first implementation of Adventure Platform is:
+The first implementation of Adventures Studio is:
 
-The Simonton Adventures.
+**The Simonton Adventures**
 
 Every feature is first proven through The Simonton Adventures.
 
-Once validated, it becomes part of the platform.
+Once validated, it becomes part of the platform for everyone.
 
 ---
 
 # Long-Term Vision
 
-Adventure Platform becomes the operating system for storytelling.
+Adventures Studio becomes the platform where adventures are:
 
-One adventure creates:
+- Planned
+- Experienced
+- Captured
+- Preserved
+- Published
+- Shared
+- Discovered
+
+One adventure naturally creates:
 
 - Website
+- Companion Experience
 - Book
 - EPUB
 - PDF
-- Photography gallery
+- Photography Gallery
 - Maps
 - Journal
-- Planning history
-- AI knowledge base
+- Planning History
+- AI Knowledge Base
 
 Everything remains connected.
+
+Nothing becomes isolated.
 
 ---
 
@@ -199,6 +252,7 @@ Everything remains connected.
 
 The platform should always be:
 
+- Adventure-first
 - Story-first
 - Photography-led
 - Beautiful
@@ -208,6 +262,7 @@ The platform should always be:
 - Reusable
 - Accessible
 - Multi-tenant
+- Creator-friendly
 - AI-assisted
 
 ---
@@ -222,30 +277,31 @@ The platform preserves the author's voice.
 
 AI assists with:
 
+- discovery
 - planning
 - organization
 - writing
 - photography
 - publishing
 
-The human always owns the story.
+The traveler always owns the story.
 
 ---
 
 # Success
 
-Adventure Platform succeeds when people say:
+Adventures Studio succeeds when people say:
 
 "I will always remember this adventure."
 
 Not because of the software.
 
-Because the software helped preserve the experience.
+Because the software helped preserve something that mattered.
 
 ---
 
-# The Ultimate Goal
+# Our North Star
 
-Every meaningful adventure deserves to become a lasting story.
+Every meaningful adventure deserves to become a lasting legacy.
 
-Adventure Platform exists to make that possible.
+Adventures Studio exists to make that possible.

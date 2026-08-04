@@ -1,20 +1,22 @@
 # Business Model
 
-**Version:** 1.0
+**Version:** 1.1
 
 **Status:** Vision
 
-**Last Updated:** July 31, 2026
+**Last Updated:** August 2026
 
 ---
 
 # Purpose
 
-This document defines how Adventure Suite creates value for customers and how that value becomes a sustainable business.
+This document defines how Adventures Studio creates value for customers and how that value becomes a sustainable business.
 
-The purpose is not to maximize revenue.
+Our purpose is not to maximize short-term revenue.
 
-The purpose is to build a platform people genuinely love using while creating a business capable of supporting long-term development.
+Our purpose is to build a platform people genuinely love using while creating a business capable of supporting continuous innovation for decades.
+
+Revenue should always follow customer value.
 
 ---
 
@@ -22,19 +24,30 @@ The purpose is to build a platform people genuinely love using while creating a 
 
 Help people preserve life's greatest adventures.
 
-Create software that people enjoy using.
+Empower every traveler to become a creator.
 
-Build a sustainable company.
+Build software people genuinely enjoy using.
 
-Never sacrifice the experience simply to increase short-term revenue.
+Create a sustainable business without compromising the customer experience.
 
 ---
 
 # Core Business
 
-Adventure Suite is Software as a Service (SaaS).
+Adventures Studio is a Software as a Service (SaaS) platform.
 
-Customers subscribe to Adventure Suite to create, preserve, publish, and share Adventures.
+Customers use Adventures Studio to:
+
+- Dream
+- Discover
+- Plan
+- Experience
+- Capture
+- Preserve
+- Publish
+- Share
+
+meaningful adventures.
 
 The platform continuously improves over time.
 
@@ -42,45 +55,53 @@ The platform continuously improves over time.
 
 # Customer Value
 
-Adventure Suite saves users:
+Adventures Studio saves customers:
 
-Time
+- Time
+- Organization
+- Creative effort
+- Publishing complexity
+- Technical frustration
 
-Organization
-
-Creativity
-
-Publishing effort
-
-Technical complexity
-
-It helps them create something that lasts.
+More importantly, it helps them preserve experiences that matter.
 
 ---
 
 # Primary Revenue Model
 
-Recurring subscriptions.
+Recurring subscriptions remain the primary revenue source.
 
-Monthly
+Subscription tiers may include:
 
-Annual
-
-Enterprise
+- Explorer
+- Creator
+- Professional
+- Enterprise
 
 Recurring revenue supports:
 
-Development
+- Product development
+- AI services
+- Cloud infrastructure
+- Storage
+- Customer support
+- Continuous innovation
 
-AI services
+---
 
-Hosting
+# Creator Economy
 
-Storage
+Long term, Adventures Studio becomes more than a SaaS platform.
 
-Customer support
+It becomes a Creator Ecosystem.
 
-Future innovation
+Travelers become creators.
+
+Creators inspire future travelers.
+
+The platform grows as more adventures are published.
+
+Every published adventure increases the value of the ecosystem.
 
 ---
 
@@ -88,23 +109,20 @@ Future innovation
 
 Purpose
 
-Allow users to experience Adventure Suite.
+Allow customers to experience Adventures Studio before subscribing.
 
-Possible limits
+Potential limitations:
 
-One Adventure
-
-Limited storage
-
-Basic website
-
-Limited AI usage
-
-No publishing
-
-No custom domains
+- One Adventure
+- Limited storage
+- Basic website
+- Limited AI usage
+- No publishing
+- No custom domains
 
 The goal is to demonstrate value.
+
+Not frustrate users.
 
 ---
 
@@ -112,49 +130,47 @@ The goal is to demonstrate value.
 
 Designed for hobby travelers.
 
-Possible features
+Examples:
 
-Unlimited Adventures
+- Couples
+- Families
+- Vacation travelers
+- Cruise travelers
 
-Adventure Studio
+Potential features:
 
-Adventure Web
-
-Adventure Advisor
-
-Journey timelines
-
-Photography
-
-Maps
-
-Journals
-
-Basic publishing
+- Unlimited Adventures
+- Planning
+- Companion
+- Journey timelines
+- Photography
+- Maps
+- Journals
+- Basic publishing
 
 ---
 
 # Creator
 
-Designed for photographers, bloggers, and authors.
+Designed for:
+
+- Photographers
+- Bloggers
+- Authors
+- Independent creators
 
 Everything in Explorer plus:
 
-Adventure Publisher
+- Book publishing
+- EPUB generation
+- PDF generation
+- Print preparation
+- Custom domains
+- Advanced AI
+- Larger storage
+- Priority publishing
 
-Book generation
-
-EPUB
-
-PDF
-
-Custom domains
-
-Advanced AI
-
-Priority publishing
-
-Larger storage
+Creators become the foundation of the marketplace.
 
 ---
 
@@ -162,173 +178,138 @@ Larger storage
 
 Designed for organizations.
 
-Examples
+Examples:
 
-Schools
+- Schools
+- Churches
+- Mission organizations
+- Tour operators
+- Photography businesses
+- Travel companies
 
-Churches
+Features may include:
 
-Mission organizations
-
-Tour operators
-
-Photography businesses
-
-Travel companies
-
-Features
-
-Multiple users
-
-Permissions
-
-Shared Adventures
-
-Organization branding
-
-Analytics
-
-Administration
+- Multiple users
+- Shared Adventures
+- Permissions
+- Branding
+- Analytics
+- Administration
 
 ---
 
 # Enterprise
 
-Large organizations.
+Designed for large organizations.
 
-Examples
+Examples:
 
-Universities
+- Universities
+- Museums
+- Historical organizations
+- Large travel companies
 
-Travel companies
+Enterprise capabilities may include:
 
-Museums
-
-Historical organizations
-
-Enterprise features include
-
-Single Sign-On
-
-Advanced permissions
-
-Dedicated support
-
-Custom integrations
-
-Private AI
-
-Custom hosting
+- Single Sign-On
+- Advanced permissions
+- Private AI
+- Custom integrations
+- Dedicated support
+- Custom hosting
 
 ---
 
-# AI Strategy
+# Marketplace
 
-AI should create value.
+A long-term objective is creating a marketplace where creators publish adventures for other travelers.
 
-Not simply cost.
+Potential marketplace products include:
 
-Potential AI capabilities
+- Published Adventures
+- Books
+- Photography collections
+- Travel itineraries
+- Adventure templates
+- Planning resources
+- Maps
+- Premium destination guides
 
-Travel planning
+Marketplace revenue should strengthen the ecosystem.
 
-Story writing
-
-Photo organization
-
-Adventure generation
-
-Publishing
-
-Search
-
-Personalized recommendations
-
-AI should remain optional.
-
-The product should still be valuable without it.
+It should never compromise customer trust.
 
 ---
 
-# Marketplace Opportunities
+# Publishing
 
-Future possibilities
+Publishing becomes a core platform capability.
 
-Photography presets
+Creators should eventually publish:
 
-Adventure templates
+- Printed books
+- Digital books
+- Interactive adventures
+- Companion experiences
+- Photography collections
+- Journals
+- Travel guides
 
-Destination guides
-
-Travel itineraries
-
-Premium maps
-
-Partner integrations
-
-Guidebooks
-
-Professional themes
-
-Marketplace revenue should never compromise quality.
+Publishing should become as simple as preserving memories.
 
 ---
 
-# Publishing Revenue
+# Partner Ecosystem
 
-Potential future revenue
+Potential partners include:
 
-Printed books
+- Cruise lines
+- Tour operators
+- Travel agencies
+- Photography companies
+- Print providers
+- Museums
+- Historical organizations
+- Educational institutions
 
-Premium layouts
+Partnerships should always improve the customer experience.
 
-Professional editing
-
-Print fulfillment
-
-Family editions
-
-Gift editions
-
-Publishing becomes another service.
+Never interrupt it.
 
 ---
 
-# Partner Opportunities
+# Artificial Intelligence
 
-Potential partnerships
+Artificial Intelligence creates value.
 
-Cruise lines
+It does not become the product.
 
-Tour operators
+Potential capabilities include:
 
-Travel agencies
+- Trip planning
+- Story assistance
+- Photo organization
+- Publishing assistance
+- Search
+- Personalized recommendations
+- Adventure generation
 
-Photography companies
+AI should always remain optional.
 
-Print providers
-
-Historical organizations
-
-Educational institutions
-
-Partnerships should improve the customer experience.
-
-Not overwhelm it.
+The platform must remain valuable without AI.
 
 ---
 
 # Hosting
 
-Adventure Suite should be cloud native.
+Adventures Studio should remain cloud-native.
 
-Potential providers
+Potential providers include:
 
-Azure
+- Microsoft Azure
+- Amazon Web Services
 
-AWS
-
-Cloud infrastructure should scale automatically.
+Infrastructure should scale automatically.
 
 Customers should never think about hosting.
 
@@ -336,51 +317,56 @@ Customers should never think about hosting.
 
 # Growth Strategy
 
-Grow by delighting customers.
+Growth comes from customer delight.
 
-Word of mouth should become the primary marketing channel.
+Word of mouth should remain the primary marketing channel.
 
-Every published Adventure becomes marketing for Adventure Suite.
+Every published Adventure becomes marketing for Adventures Studio.
+
+Every creator becomes an ambassador for the platform.
+
+The community becomes the engine of growth.
 
 ---
 
 # Long-Term Vision
 
-Adventure Suite becomes the standard platform for preserving meaningful adventures.
+Adventures Studio becomes the world's leading platform for creating, preserving, publishing, discovering, and sharing meaningful adventures.
 
-Books become one output.
+Books become one expression of an adventure.
 
 Websites become another.
 
-AI becomes another.
+Companion experiences become another.
 
-Everything connects naturally.
+Publishing becomes another.
+
+Everything remains connected.
 
 ---
 
 # Success Metrics
 
-Meaningful metrics include
+Meaningful metrics include:
 
-Published Adventures
+- Adventures created
+- Adventures published
+- Active creators
+- Returning travelers
+- Books generated
+- Stories preserved
+- Memories captured
+- Community engagement
+- Customer retention
+- Customer satisfaction
 
-Returning users
+Not:
 
-Books created
+- Advertising clicks
+- Page views
+- Time on site
 
-Stories written
-
-Journal entries
-
-Shared Adventures
-
-Customer retention
-
-Customer satisfaction
-
-Not page views.
-
-Not advertising clicks.
+We measure meaningful outcomes.
 
 ---
 
@@ -388,4 +374,8 @@ Not advertising clicks.
 
 Revenue follows value.
 
-If Adventure Suite genuinely helps people preserve meaningful experiences, a sustainable business will naturally follow.
+Communities follow trust.
+
+Platforms endure when creators succeed.
+
+If Adventures Studio helps people preserve meaningful adventures and empowers them to inspire others, a sustainable business will naturally follow.

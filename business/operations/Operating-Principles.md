@@ -1,6 +1,6 @@
 # Adventures Studio Operating Principles
 
-**Version:** 1.0 Draft  
+**Version:** 1.1  
 **Status:** Living Document  
 **Owner:** Founders  
 **Last Updated:** August 2026
@@ -15,11 +15,13 @@ Products will evolve.
 
 Technology will change.
 
+Artificial Intelligence will improve.
+
 Markets will shift.
 
 These principles should remain constant.
 
-Every employee, family member, contractor, and partner should understand them.
+Every employee, family member, contractor, partner, and future creator should understand them.
 
 ---
 
@@ -33,6 +35,10 @@ Trust can only be earned one interaction at a time.
 
 We will never compromise long-term trust for short-term profit.
 
+Trust compounds.
+
+Protect it.
+
 ---
 
 # 2. Every Recommendation Matters
@@ -41,25 +47,19 @@ Every recommendation carries our name.
 
 Whether it is:
 
-• A hotel
-
-• A restaurant
-
-• A museum
-
-• A cruise
-
-• A guide
-
-• A piece of software
-
-• A camera
-
-• A backpack
+- A hotel
+- A restaurant
+- A museum
+- A cruise
+- A guide
+- A destination
+- A camera
+- A backpack
+- A software feature
 
 If we recommend it...
 
-We should feel comfortable recommending it to our own family.
+We should feel completely comfortable recommending it to our own family.
 
 ---
 
@@ -77,11 +77,13 @@ Websites.
 
 Applications.
 
-Packaging.
-
 Typography.
 
 Writing.
+
+Packaging.
+
+Maps.
 
 Everything should reflect craftsmanship.
 
@@ -95,9 +97,11 @@ Complexity belongs behind the scenes.
 
 Customers should experience confidence—not confusion.
 
-When given two solutions that accomplish the same goal...
+When two solutions accomplish the same goal...
 
 Choose the simpler one.
+
+The simplest experience is usually the best experience.
 
 ---
 
@@ -107,9 +111,9 @@ Whenever possible we create.
 
 We do not copy.
 
-We do not recycle.
-
 We do not chase trends.
+
+We do not imitate competitors.
 
 Our experiences should come from firsthand exploration.
 
@@ -121,33 +125,27 @@ Original work creates lasting value.
 
 ---
 
-# 6. Every Expedition Creates Assets
+# 6. Every Adventure Creates Assets
 
-Research expeditions are investments.
+Every expedition is an investment.
 
-Each expedition should create assets that strengthen the company.
+Every adventure should strengthen the company.
 
-Photography.
+Assets include:
 
-Video.
+- Photography
+- Video
+- Stories
+- Research
+- Knowledge
+- Relationships
+- Maps
+- Books
+- Companion content
+- Artificial Intelligence knowledge
+- Future products
 
-Stories.
-
-Research.
-
-Relationships.
-
-Knowledge.
-
-Books.
-
-Website content.
-
-Marketing.
-
-Artificial intelligence.
-
-One expedition should benefit many products.
+One adventure should benefit many experiences.
 
 ---
 
@@ -159,9 +157,9 @@ Technology removes friction.
 
 Technology creates confidence.
 
-Technology helps people experience the world.
+Technology allows people to spend more time experiencing the world.
 
-If technology ever distracts from the adventure...
+If technology distracts from the adventure...
 
 We have failed.
 
@@ -171,51 +169,56 @@ We have failed.
 
 Customers own their information.
 
-Features like:
+Features such as:
 
-GPS tracking
+- GPS tracking
+- Travel history
+- Journals
+- Memories
+- Locations
+- Timelines
 
-Travel history
+should always require informed consent.
 
-Adventure timelines
+Customers should always understand:
 
-Personal journals
-
-Location sharing
-
-Should always require informed consent.
-
-Customers should understand exactly what is collected and why.
+- What is collected.
+- Why it is collected.
+- How it is used.
 
 Privacy builds trust.
 
 ---
 
-# 9. Every Product Strengthens the Ecosystem
+# 9. Build One Platform
 
-Nothing exists in isolation.
+Nothing should exist in isolation.
 
-Every new product should increase the value of at least one existing product.
+Every new capability should strengthen the platform.
 
-Books improve the website.
+Books strengthen the website.
 
-The website improves the Adventures Companion.
+The website strengthens Adventures Companion.
 
-The Adventures Companion improves memory preservation.
+The Companion strengthens memory preservation.
+
+Publishing strengthens the creator community.
 
 Everything should work together.
 
 ---
 
-# 10. We Build For Decades
+# 10. Build For Decades
 
 We are not building for next quarter.
 
+We are not building for the next release.
+
 We are building for future generations.
 
-Every important decision should answer this question:
+Every important decision should answer one question:
 
-"Will we still be proud of this in twenty years?"
+> "Will we still be proud of this in twenty years?"
 
 If the answer is no...
 
@@ -225,17 +228,17 @@ We should reconsider.
 
 # 11. Curiosity Comes First
 
-Curiosity is the beginning of every adventure.
+Curiosity begins every adventure.
 
-We remain students.
+Remain students.
 
-We ask questions.
+Ask questions.
 
-We explore.
+Explore.
 
-We listen.
+Listen.
 
-We continue learning.
+Learn continuously.
 
 Curiosity keeps Adventures Studio alive.
 
@@ -243,21 +246,23 @@ Curiosity keeps Adventures Studio alive.
 
 # 12. Memories Matter More Than Metrics
 
-Metrics are important.
+Metrics matter.
 
 Revenue matters.
 
 Growth matters.
 
-Traffic matters.
+Analytics matter.
 
-But these are measurements—not purpose.
+But these are measurements.
+
+They are not purpose.
 
 Our purpose is helping people create memories worth preserving.
 
-When forced to choose between improving a metric and improving an experience...
+Whenever forced to choose between improving a metric and improving an experience...
 
-We improve the experience.
+Improve the experience.
 
 The metrics will follow.
 
@@ -275,23 +280,55 @@ Health matters.
 
 Integrity matters.
 
-No success is worth sacrificing what matters most.
+No business success is worth sacrificing what matters most.
 
 ---
 
 # 14. Leave Every Place Better
 
-We travel with gratitude.
+Travel with gratitude.
 
-We respect cultures.
+Respect cultures.
 
-We support local businesses.
+Support local businesses.
 
-We preserve history.
+Preserve history.
 
-We care for the environment.
+Protect the environment.
 
-We leave places better than we found them whenever possible.
+Leave every place better than we found it whenever possible.
+
+---
+
+# 15. Design For Creators
+
+Every traveler has the potential to become a creator.
+
+Design every system so that today's customer can become tomorrow's publisher.
+
+Even when Version 1 supports only Adventures Studio content...
+
+The architecture should never assume Adventures Studio is the only creator.
+
+---
+
+# 16. One Source Of Truth
+
+Every important business concept should exist only once.
+
+One Adventure.
+
+One Journey.
+
+One Destination.
+
+One Story.
+
+One Memory.
+
+Every system should consume the same source of truth.
+
+Duplicate data creates duplicate problems.
 
 ---
 
@@ -299,15 +336,12 @@ We leave places better than we found them whenever possible.
 
 Before building anything ask:
 
-Does it increase trust?
-
-Does it simplify the experience?
-
-Does it strengthen relationships?
-
-Does it create lasting value?
-
-Does it fit our mission?
+- Does it increase trust?
+- Does it simplify the experience?
+- Does it strengthen relationships?
+- Does it create lasting value?
+- Does it fit our mission?
+- Would we be proud to put our name on it?
 
 If the answer is "no"...
 
@@ -323,6 +357,6 @@ Technology is not our purpose.
 
 Travel is not even our purpose.
 
-Helping people create meaningful adventures together is our purpose.
+Helping people create meaningful adventures, preserve them beautifully, and inspire others through those experiences is our purpose.
 
 Everything else is simply how we fulfill that promise.
