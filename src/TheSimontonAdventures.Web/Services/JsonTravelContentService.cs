@@ -260,4 +260,48 @@ public sealed class JsonTravelContentService : ITravelContentService
 
         return null;
     }
+
+    public async Task<Journey?> GetJourneyAsync(
+    string volumeSlug,
+    string journeySlug,
+    CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(volumeSlug);
+        ArgumentException.ThrowIfNullOrWhiteSpace(journeySlug);
+
+        var volumeDirectory = await FindVolumeDirectoryAsync(
+            volumeSlug,
+            cancellationToken);
+
+        if (volumeDirectory is null)
+        {
+            return null;
+        }
+
+        var journeyPath = Path.Combine(
+            volumeDirectory,
+            "journeys",
+            $"{journeySlug}.json");
+
+        var journey = await DeserializeFileAsync<Journey>(
+            journeyPath,
+            cancellationToken);
+
+        if (journey is null)
+        {
+            return null;
+        }
+
+        var routeMatches =
+            string.Equals(
+                journey.VolumeSlug,
+                volumeSlug,
+                StringComparison.OrdinalIgnoreCase)
+            && string.Equals(
+                journey.Slug,
+                journeySlug,
+                StringComparison.OrdinalIgnoreCase);
+
+        return routeMatches ? journey : null;
+    }
 }

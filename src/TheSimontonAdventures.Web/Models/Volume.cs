@@ -24,5 +24,7 @@ public sealed class Volume
 
     public List<JourneyStop> JourneyStops { get; init; } = [];
 
+    public List<VolumeJourneyReference> Journeys { get; init; } = [];
+
     public List<VolumeDestinationReference> Destinations { get; init; } = [];
 }

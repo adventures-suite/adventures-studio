@@ -25,4 +25,9 @@ public interface ITravelContentService
     Task<QrDestinationRoute?> GetDestinationRouteByQrSlugAsync(
         string qrSlug,
         CancellationToken cancellationToken = default);
+
+    Task<Journey?> GetJourneyAsync(
+        string volumeSlug,
+        string journeySlug,
+        CancellationToken cancellationToken = default);
 }

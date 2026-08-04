@@ -118,7 +118,16 @@
       "displayOrder": 12
     }
   ],
-    "destinations": [
+  "journeys": [
+    {
+      "slug": "our-mediterranean-adventure",
+      "title": "Our Mediterranean Adventure",
+      "journeyType": "Editorial",
+      "featured": true,
+      "displayOrder": 1
+    }
+  ],
+  "destinations": [
     {
       "countrySlug": "italy",
       "destinationSlug": "venice",

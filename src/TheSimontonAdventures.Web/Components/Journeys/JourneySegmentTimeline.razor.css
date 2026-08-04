@@ -1,0 +1,192 @@
+.journey-segment-timeline {
+    margin: 5rem 0 0;
+}
+
+.journey-segment-timeline__header {
+    max-width: 52rem;
+}
+
+.journey-segment-timeline__eyebrow {
+    display: inline-block;
+    margin-bottom: 0.75rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(22, 32, 42, 0.58);
+}
+
+.journey-segment-timeline__header h2 {
+    margin: 0;
+    font-size: clamp(2.25rem, 5vw, 4rem);
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    color: #16202a;
+}
+
+.journey-segment-timeline__header p {
+    max-width: 46rem;
+    margin: 1.25rem 0 0;
+    font-size: 1.08rem;
+    line-height: 1.75;
+    color: rgba(22, 32, 42, 0.72);
+}
+
+.journey-segment-timeline__segments {
+    display: grid;
+    gap: 1.25rem;
+    margin-top: 2.5rem;
+}
+
+.journey-segment {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(15rem, 0.8fr);
+    gap: 2rem;
+    align-items: center;
+    padding: 1.5rem;
+    border: 1px solid rgba(22, 32, 42, 0.1);
+    border-radius: 1.25rem;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 0.8rem 2rem rgba(22, 32, 42, 0.05);
+    transition:
+        transform 180ms ease,
+        border-color 180ms ease,
+        box-shadow 180ms ease;
+}
+
+.journey-segment:hover {
+    transform: translateY(-2px);
+    border-color: rgba(22, 32, 42, 0.18);
+    box-shadow: 0 1rem 2.5rem rgba(22, 32, 42, 0.09);
+}
+
+.journey-segment__route {
+    display: grid;
+    grid-template-columns: minmax(8rem, 1fr) minmax(8rem, 1.35fr) minmax(8rem, 1fr);
+    gap: 1rem;
+    align-items: center;
+}
+
+.journey-segment__location {
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.35;
+    color: #16202a;
+}
+
+.journey-segment__location:last-child {
+    text-align: right;
+}
+
+.journey-segment__transport {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 0.55rem;
+    align-items: center;
+    color: rgba(22, 32, 42, 0.72);
+}
+
+.journey-segment__line {
+    display: block;
+    height: 2px;
+    border-radius: 999px;
+    background: rgba(22, 32, 42, 0.16);
+}
+
+.journey-segment__arrow {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.journey-segment__details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding-left: 1.5rem;
+    border-left: 1px solid rgba(22, 32, 42, 0.08);
+}
+
+.journey-segment__mode {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(22, 32, 42, 0.54);
+}
+
+.journey-segment__description {
+    font-size: 0.95rem;
+    font-weight: 650;
+    line-height: 1.45;
+    color: #16202a;
+}
+
+.journey-segment__dates {
+    font-size: 0.88rem;
+    line-height: 1.45;
+    color: rgba(22, 32, 42, 0.66);
+}
+
+.journey-segment__waypoints {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    align-items: center;
+    margin-top: 0.35rem;
+    font-size: 0.82rem;
+    color: rgba(22, 32, 42, 0.6);
+}
+
+.journey-segment__waypoint {
+    padding: 0.25rem 0.55rem;
+    border-radius: 999px;
+    background: rgba(22, 32, 42, 0.06);
+    color: rgba(22, 32, 42, 0.74);
+}
+
+@media (max-width: 900px) {
+    .journey-segment {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+
+    .journey-segment__details {
+        padding-top: 1rem;
+        padding-left: 0;
+        border-top: 1px solid rgba(22, 32, 42, 0.08);
+        border-left: 0;
+    }
+}
+
+@media (max-width: 640px) {
+    .journey-segment-timeline {
+        margin-top: 4rem;
+    }
+
+    .journey-segment {
+        padding: 1.25rem;
+    }
+
+    .journey-segment__route {
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+    }
+
+    .journey-segment__location:last-child {
+        text-align: left;
+    }
+
+    .journey-segment__transport {
+        grid-template-columns: auto minmax(4rem, 1fr) auto;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .journey-segment {
+        transition: none;
+    }
+
+    .journey-segment:hover {
+        transform: none;
+    }
+}

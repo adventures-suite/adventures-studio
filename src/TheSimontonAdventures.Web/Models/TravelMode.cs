@@ -1,5 +1,8 @@
+using System.Text.Json.Serialization;
+
 namespace TheSimontonAdventures.Web.Models;
 
+[JsonConverter(typeof(JsonStringEnumConverter<TravelMode>))]
 public enum TravelMode
 {
     Unknown = 0,

@@ -6,6 +6,13 @@ public sealed class JourneySegment
 
     public string To { get; init; } = string.Empty;
 
+    public GeoCoordinate? StartCoordinate { get; init; }
+
+    public GeoCoordinate? EndCoordinate { get; init; }
+
+    public IReadOnlyList<JourneyWaypoint> Waypoints { get; init; } =
+        Array.Empty<JourneyWaypoint>();
+
     public TravelMode TravelMode { get; init; } = TravelMode.Unknown;
 
     public string TravelDescription { get; init; } = string.Empty;
