@@ -58,12 +58,15 @@ else
 }
 
 @code {
+    /// <summary>Gets or sets the volume segment captured from the route.</summary>
     [Parameter]
     public string VolumeSlug { get; set; } = string.Empty;
 
+    /// <summary>Gets or sets the country segment captured from the route.</summary>
     [Parameter]
     public string CountrySlug { get; set; } = string.Empty;
 
+    /// <summary>Gets or sets the destination segment captured from the route.</summary>
     [Parameter]
     public string DestinationSlug { get; set; } = string.Empty;
 

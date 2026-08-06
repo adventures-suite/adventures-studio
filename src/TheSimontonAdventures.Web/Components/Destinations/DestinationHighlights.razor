@@ -21,6 +21,7 @@
 }
 
 @code {
+    /// <summary>Gets or sets the destination highlights to render.</summary>
     [Parameter, EditorRequired]
     public IReadOnlyList<DestinationHighlight> Highlights { get; set; }
         = Array.Empty<DestinationHighlight>();

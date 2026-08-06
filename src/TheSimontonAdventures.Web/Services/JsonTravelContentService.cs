@@ -4,11 +4,20 @@ using System.Text.Json.Serialization;
 
 namespace TheSimontonAdventures.Web.Services;
 
+/// <summary>
+/// Loads strongly typed travel content from version-controlled JSON files
+/// beneath the application's content root.
+/// </summary>
 public sealed class JsonTravelContentService : ITravelContentService
 {
     private readonly string _volumesDirectory;
     private readonly JsonSerializerOptions _serializerOptions;
 
+    /// <summary>Initializes the service using the host's deployed content root.</summary>
+    /// <param name="hostEnvironment">The active application host environment.</param>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="hostEnvironment"/> is <see langword="null"/>.
+    /// </exception>
     public JsonTravelContentService(IHostEnvironment hostEnvironment)
     {
         ArgumentNullException.ThrowIfNull(hostEnvironment);
@@ -28,6 +37,7 @@ public sealed class JsonTravelContentService : ITravelContentService
         };
     }
 
+    /// <inheritdoc />
     public async Task<IReadOnlyList<Volume>> GetVolumesAsync(
         CancellationToken cancellationToken = default)
     {
@@ -62,6 +72,7 @@ public sealed class JsonTravelContentService : ITravelContentService
             .ToList();
     }
 
+    /// <inheritdoc />
     public async Task<Volume?> GetVolumeAsync(
         string volumeSlug,
         CancellationToken cancellationToken = default)
@@ -77,6 +88,7 @@ public sealed class JsonTravelContentService : ITravelContentService
                 StringComparison.OrdinalIgnoreCase));
     }
 
+    /// <inheritdoc />
     public async Task<Destination?> GetDestinationAsync(
         string volumeSlug,
         string countrySlug,
@@ -283,6 +295,7 @@ public sealed class JsonTravelContentService : ITravelContentService
         }
     }
 
+    /// <inheritdoc />
     public async Task<IReadOnlyList<Volume>> GetPublicVolumesAsync(
     CancellationToken cancellationToken = default)
     {
@@ -294,6 +307,7 @@ public sealed class JsonTravelContentService : ITravelContentService
             .ToList();
     }
 
+    /// <inheritdoc />
     public async Task<Volume?> GetCurrentVolumeAsync(
         CancellationToken cancellationToken = default)
     {
@@ -304,6 +318,7 @@ public sealed class JsonTravelContentService : ITravelContentService
             .OrderBy(volume => volume.Number)
             .FirstOrDefault();
     }
+    /// <inheritdoc />
     public async Task<QrDestinationRoute?> GetDestinationRouteByQrSlugAsync(
     string qrSlug,
     CancellationToken cancellationToken = default)
@@ -352,6 +367,7 @@ public sealed class JsonTravelContentService : ITravelContentService
         return null;
     }
 
+    /// <inheritdoc />
     public async Task<Journey?> GetJourneyAsync(
     string volumeSlug,
     string journeySlug,

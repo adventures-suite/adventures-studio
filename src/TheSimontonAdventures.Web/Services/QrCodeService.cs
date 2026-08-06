@@ -4,10 +4,16 @@ using TheSimontonAdventures.Web.Configuration;
 
 namespace TheSimontonAdventures.Web.Services;
 
+/// <summary>
+/// Generates print and screen QR images that point to stable public addresses.
+/// </summary>
 public sealed class QrCodeService : IQrCodeService
 {
     private readonly PlatformOptions _options;
 
+    /// <summary>Initializes a QR service with validated platform configuration.</summary>
+    /// <param name="options">The configured public platform options.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="options"/> is null.</exception>
     public QrCodeService(IOptions<PlatformOptions> options)
     {
         ArgumentNullException.ThrowIfNull(options);
@@ -15,6 +21,7 @@ public sealed class QrCodeService : IQrCodeService
         _options = options.Value;
     }
 
+    /// <inheritdoc />
     public string BuildPublicUrl(string qrSlug)
     {
         if (string.IsNullOrWhiteSpace(qrSlug))
@@ -36,6 +43,7 @@ public sealed class QrCodeService : IQrCodeService
         return $"{baseUrl}/go/{normalizedSlug}";
     }
 
+    /// <inheritdoc />
     public string GenerateSvg(string qrSlug)
     {
         var publicUrl = BuildPublicUrl(qrSlug);
@@ -53,6 +61,7 @@ public sealed class QrCodeService : IQrCodeService
             drawQuietZones: true);
     }
 
+    /// <inheritdoc />
     public byte[] GeneratePng(string qrSlug)
     {
         var publicUrl = BuildPublicUrl(qrSlug);

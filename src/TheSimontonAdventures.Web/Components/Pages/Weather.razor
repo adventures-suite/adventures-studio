@@ -56,9 +56,24 @@ else
 
     private class WeatherForecast
     {
+        /// <summary>
+        /// Gets or sets the date represented by the forecast.
+        /// </summary>
         public DateOnly Date { get; set; }
+
+        /// <summary>
+        /// Gets or sets the forecast temperature in degrees Celsius.
+        /// </summary>
         public int TemperatureC { get; set; }
+
+        /// <summary>
+        /// Gets or sets a short description of the forecast conditions.
+        /// </summary>
         public string? Summary { get; set; }
+
+        /// <summary>
+        /// Gets the forecast temperature converted to degrees Fahrenheit.
+        /// </summary>
         public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
     }
 }

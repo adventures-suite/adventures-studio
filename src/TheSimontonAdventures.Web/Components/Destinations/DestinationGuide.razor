@@ -121,14 +121,17 @@
 }
 
 @code {
+    /// <summary>Gets or sets the concise facts shown in the guide.</summary>
     [Parameter]
     public IReadOnlyList<DestinationFact> Facts { get; set; }
         = Array.Empty<DestinationFact>();
 
+    /// <summary>Gets or sets the notable experiences shown in the guide.</summary>
     [Parameter]
     public IReadOnlyList<DestinationHighlight> Highlights { get; set; }
         = Array.Empty<DestinationHighlight>();
 
+    /// <summary>Gets or sets the practical advice shown in the guide.</summary>
     [Parameter]
     public IReadOnlyList<DestinationTip> Tips { get; set; }
         = Array.Empty<DestinationTip>();

@@ -29,14 +29,17 @@
 </section>
 
 @code {
+    /// <summary>Gets or sets the background image shown by the homepage hero.</summary>
     [Parameter]
     public string HeroImage { get; set; } =
         "/images/home/adventures-studio-hero.jpeg";
 
+    /// <summary>Gets or sets accessible alternative text for the hero image.</summary>
     [Parameter]
     public string HeroImageAlt { get; set; } =
         "A memorable travel experience";
 
+    /// <summary>Gets or sets the route opened by the primary hero action.</summary>
     [Parameter]
     public string PrimaryActionUrl { get; set; } =
         "/volumes/italy-greece-croatia";

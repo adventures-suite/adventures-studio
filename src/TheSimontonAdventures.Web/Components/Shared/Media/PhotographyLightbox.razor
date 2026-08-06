@@ -58,19 +58,26 @@
 }
 
 @code {
+    /// <summary>Gets or sets whether the modal lightbox is visible.</summary>
     [Parameter]
     public bool IsOpen { get; set; }
 
+    /// <summary>Gets or sets the images available for lightbox navigation.</summary>
     [Parameter]
     public IReadOnlyList<GalleryImage> Images { get; set; }
         = Array.Empty<GalleryImage>();
 
+    /// <summary>Gets or sets the zero-based index of the active image.</summary>
     [Parameter]
     public int CurrentIndex { get; set; }
 
+    /// <summary>Gets or sets the callback invoked when the lightbox closes.</summary>
     [Parameter]
     public EventCallback OnClose { get; set; }
 
+    /// <summary>
+    /// Gets or sets the callback invoked when navigation changes the active index.
+    /// </summary>
     [Parameter]
     public EventCallback<int> CurrentIndexChanged { get; set; }
 

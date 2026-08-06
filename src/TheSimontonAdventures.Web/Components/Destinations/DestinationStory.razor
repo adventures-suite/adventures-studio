@@ -56,10 +56,14 @@
 }
 
 @code {
+    /// <summary>Gets or sets the ordered sections that form the story.</summary>
     [Parameter, EditorRequired]
     public IReadOnlyList<DestinationSection> Sections { get; set; }
         = Array.Empty<DestinationSection>();
 
+    /// <summary>
+    /// Gets or sets reflections inserted after their configured story sections.
+    /// </summary>
     [Parameter]
     public IReadOnlyList<JourneyReflection> Reflections { get; set; }
         = Array.Empty<JourneyReflection>();
