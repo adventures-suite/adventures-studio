@@ -32,14 +32,21 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore
-        run: dotnet restore "${{ env.PROJECT }}"
+        run: dotnet restore TheSimontonAdventures.slnx
 
       - name: Build
         run: >
           dotnet build
-          "${{ env.PROJECT }}"
+          TheSimontonAdventures.slnx
           --configuration Release
           --no-restore
+
+      - name: Test
+        run: >
+          dotnet test
+          TheSimontonAdventures.slnx
+          --configuration Release
+          --no-build
 
       - name: Publish
         run: >

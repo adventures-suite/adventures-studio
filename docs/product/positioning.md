@@ -10,11 +10,11 @@
 
 # Purpose
 
-This document defines how Adventure Suite is positioned within the marketplace.
+This document defines how AdventuresSuite is positioned within the marketplace.
 
 It explains:
 
-- What Adventure Suite is.
+- What AdventuresSuite is.
 - Who it serves.
 - Why it exists.
 - How it differs from competing products.
@@ -26,15 +26,15 @@ This document guides product strategy, marketing, and future development.
 
 # Positioning Statement
 
-Adventure Suite is an integrated storytelling platform that helps travelers transform meaningful adventures into beautiful websites, books, photography collections, journals, and lasting family memories.
+AdventuresSuite is an integrated storytelling platform that helps travelers transform meaningful adventures into beautiful websites, books, photography collections, journals, and lasting family memories.
 
-Unlike traditional travel apps, Adventure Suite supports the entire adventure lifecycle—from dreaming and planning through publishing and preserving.
+Unlike traditional travel apps, AdventuresSuite supports the entire adventure lifecycle—from dreaming and planning through publishing and preserving.
 
 ---
 
-# What Adventure Suite Is
+# What AdventuresSuite Is
 
-Adventure Suite is:
+AdventuresSuite is:
 
 - An adventure planning platform
 - A storytelling platform
@@ -49,9 +49,9 @@ It combines all of them into one seamless experience.
 
 ---
 
-# What Adventure Suite Is Not
+# What AdventuresSuite Is Not
 
-Adventure Suite is not:
+AdventuresSuite is not:
 
 - A travel booking website
 - A generic blogging platform
@@ -60,7 +60,7 @@ Adventure Suite is not:
 - A content management system
 - A travel agency
 
-Adventure Suite complements those tools rather than replacing them.
+AdventuresSuite complements those tools rather than replacing them.
 
 ---
 
@@ -101,7 +101,7 @@ Publishing:
 
 Nothing connects the complete experience.
 
-Adventure Suite exists to unify it.
+AdventuresSuite exists to unify it.
 
 ---
 
@@ -117,13 +117,13 @@ Most memories remain:
 - incomplete
 - forgotten
 
-Adventure Suite turns experiences into permanent stories.
+AdventuresSuite turns experiences into permanent stories.
 
 ---
 
 # Primary Audience
 
-Adventure Suite is designed for:
+AdventuresSuite is designed for:
 
 Families
 
@@ -181,7 +181,7 @@ Adventure companies
 
 # Core Value Proposition
 
-Adventure Suite helps people preserve life's greatest adventures.
+AdventuresSuite helps people preserve life's greatest adventures.
 
 Planning.
 
@@ -209,7 +209,7 @@ Photos.
 
 Publishing.
 
-Adventure Suite supports the complete lifecycle.
+AdventuresSuite supports the complete lifecycle.
 
 ---
 
@@ -283,7 +283,7 @@ Everything comes from one Adventure.
 
 ## Personal Voice
 
-Adventure Suite encourages:
+AdventuresSuite encourages:
 
 Reflections
 
@@ -301,13 +301,13 @@ Not generic travel articles.
 
 # Customer Promise
 
-Adventure Suite helps people preserve adventures so future generations can experience them again.
+AdventuresSuite helps people preserve adventures so future generations can experience them again.
 
 ---
 
 # Product Experience
 
-Adventure Suite should feel:
+AdventuresSuite should feel:
 
 Calm
 
@@ -331,7 +331,7 @@ Never technical.
 
 # Long-Term Vision
 
-Adventure Suite becomes the operating system for adventure storytelling.
+AdventuresSuite becomes the operating system for adventure storytelling.
 
 Travel is the first market.
 
@@ -357,7 +357,7 @@ The platform is built around preserving meaningful experiences.
 
 # Success
 
-Adventure Suite succeeds when people say:
+AdventuresSuite succeeds when people say:
 
 "I finally have one place for everything."
 
@@ -369,6 +369,6 @@ Not:
 
 # Guiding Principle
 
-Adventure Suite is not software for travel.
+AdventuresSuite is not software for travel.
 
-Adventure Suite is software for preserving meaningful experiences.
+AdventuresSuite is software for preserving meaningful experiences.

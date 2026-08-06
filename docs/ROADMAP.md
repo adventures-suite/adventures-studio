@@ -1,4 +1,4 @@
-# Adventure Suite Roadmap
+# AdventuresSuite Roadmap
 
 **Version:** 1.0
 
@@ -10,7 +10,7 @@
 
 # Purpose
 
-This roadmap defines the long-term evolution of Adventure Suite.
+This roadmap defines the long-term evolution of AdventuresSuite.
 
 It is intended to be a living document.
 
@@ -20,13 +20,13 @@ Ideas may evolve.
 
 The vision remains constant.
 
-Every completed milestone moves Adventure Suite closer to becoming the premier platform for preserving, publishing, and sharing meaningful adventures.
+Every completed milestone moves AdventuresSuite closer to becoming the premier platform for preserving, publishing, and sharing meaningful adventures.
 
 ---
 
 # Product Philosophy
 
-Adventure Suite should evolve in small, high-quality iterations.
+AdventuresSuite should evolve in small, high-quality iterations.
 
 We prefer:
 
@@ -59,7 +59,7 @@ Every release should noticeably improve the customer experience.
 - [x] Reflections
 - [x] Continue the Journey
 - [x] Planning adventures
-- [x] Adventure Suite branding
+- [x] AdventuresSuite branding
 
 ### Remaining
 
@@ -135,7 +135,7 @@ Goals
 
 # Version 2.0
 
-## Adventure Studio
+## AdventuresSuite Creator Workspace
 
 The editor becomes the product.
 
@@ -260,11 +260,11 @@ Automatic synchronization
 
 ## Adventure Ecosystem
 
-Adventure Suite becomes the operating system for adventure storytelling.
+AdventuresSuite becomes the operating system for adventure storytelling.
 
 Products
 
-Adventure Studio
+AdventuresSuite Creator Workspace
 
 Adventure Advisor
 
@@ -290,7 +290,7 @@ Adventure Marketplace
 
 # Long-Term Vision
 
-Adventure Suite becomes the standard platform for preserving meaningful adventures.
+AdventuresSuite becomes the standard platform for preserving meaningful adventures.
 
 Families use it for vacations.
 
@@ -310,7 +310,7 @@ The platform grows far beyond travel while remaining true to its purpose.
 
 # Success
 
-Adventure Suite succeeds when people say:
+AdventuresSuite succeeds when people say:
 
 "I never want to lose another adventure."
 

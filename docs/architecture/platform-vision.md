@@ -106,7 +106,7 @@ We are not building:
 - a trip planner
 - a book publishing platform
 
-We are building an Adventure Platform.
+We are building AdventuresSuite.
 
 The Adventure is the center.
 

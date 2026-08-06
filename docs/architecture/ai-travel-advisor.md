@@ -10,7 +10,7 @@
 
 # Vision
 
-Adventure Platform includes an intelligent travel partner that helps users dream, plan, experience, preserve, and publish meaningful adventures.
+AdventuresSuite includes an intelligent travel partner that helps users dream, plan, experience, preserve, and publish meaningful adventures.
 
 The AI is not a chatbot.
 
@@ -438,7 +438,7 @@ The user approves.
 
 # AI Studio
 
-The long-term goal is an AI-powered Adventure Studio.
+The long-term goal is an AI-powered AdventuresSuite creator workspace.
 
 The user simply says:
 
@@ -524,6 +524,6 @@ The relationship matters more than the conversation.
 
 # Guiding Principle
 
-Adventure Platform is not building artificial intelligence.
+AdventuresSuite is not building artificial intelligence.
 
-Adventure Platform is building better storytellers.
+AdventuresSuite is building better storytellers.

@@ -1,4 +1,4 @@
-# Adventure Studio Vision
+# AdventuresSuite Creator Workspace Vision
 
 **Version:** 1.0
 
@@ -10,7 +10,7 @@
 
 # Vision
 
-Adventure Studio is the primary application of Adventure Platform.
+The creator workspace is the primary application experience within AdventuresSuite.
 
 It is where Adventures are created.
 
@@ -22,7 +22,7 @@ It is where memories are preserved.
 
 The public website is the output.
 
-Adventure Studio is the product.
+AdventuresSuite is the product.
 
 ---
 
@@ -50,7 +50,7 @@ Not learning software.
 
 When users sign in they arrive at:
 
-Adventure Studio
+AdventuresSuite
 
 The dashboard immediately answers:
 
@@ -486,7 +486,7 @@ Permissions are role based.
 
 # Mobile Experience
 
-The Adventure Studio should work on tablets.
+The AdventuresSuite creator workspace should work on tablets.
 
 Basic editing should work on phones.
 
@@ -496,7 +496,7 @@ Heavy publishing remains desktop-focused.
 
 # Platform Goals
 
-The Adventure Studio should make users feel like they are working inside:
+The AdventuresSuite creator workspace should make users feel like they are working inside:
 
 Apple Photos
 
@@ -524,7 +524,7 @@ Instead they should feel like they were simply preserving memories.
 
 # Long-Term Vision
 
-Eventually the Adventure Studio becomes an AI-powered Adventure Studio.
+Eventually the AdventuresSuite creator workspace becomes AI-powered.
 
 Users simply say:
 

@@ -14,7 +14,7 @@ Every Adventure follows a lifecycle.
 
 This document defines that lifecycle.
 
-Every feature in Adventure Suite should support one or more stages.
+Every feature in AdventuresSuite should support one or more stages.
 
 The lifecycle is one of the core concepts of the platform.
 
@@ -28,7 +28,7 @@ It begins long before departure.
 
 It continues long after returning home.
 
-Adventure Suite exists to support the complete journey.
+AdventuresSuite exists to support the complete journey.
 
 ---
 
@@ -78,7 +78,7 @@ Examples:
 
 "We should take the kids to Yellowstone."
 
-At this stage Adventure Suite should help users:
+At this stage AdventuresSuite should help users:
 
 Discover destinations
 
@@ -162,7 +162,7 @@ Current
 
 The website reflects the active journey.
 
-Adventure Suite becomes a travel companion.
+AdventuresSuite becomes a travel companion.
 
 Examples:
 
@@ -292,13 +292,13 @@ Adventure Advisor
 
 Plan
 
-Adventure Studio
+AdventuresSuite
 
 Adventure Advisor
 
 Travel
 
-Adventure Studio
+AdventuresSuite
 
 Adventure Advisor
 
@@ -306,7 +306,7 @@ Adventure Maps
 
 Preserve
 
-Adventure Studio
+AdventuresSuite
 
 Adventure Photos
 
@@ -326,7 +326,7 @@ Adventure Publisher
 
 Remember
 
-Adventure Suite
+AdventuresSuite
 
 ---
 
@@ -416,7 +416,7 @@ AI evolves with the Adventure.
 
 # Design Goal
 
-Adventure Suite should feel like one continuous experience.
+AdventuresSuite should feel like one continuous experience.
 
 Not a collection of unrelated applications.
 
@@ -426,7 +426,7 @@ The traveler should never feel like they are switching systems.
 
 # Success
 
-Adventure Suite succeeds when users naturally move from dreaming about an Adventure to preserving it forever without ever leaving the ecosystem.
+AdventuresSuite succeeds when users naturally move from dreaming about an Adventure to preserving it forever without ever leaving the ecosystem.
 
 ---
 
@@ -436,4 +436,4 @@ An Adventure is not an event.
 
 It is a story.
 
-Adventure Suite exists to help tell it.
+AdventuresSuite exists to help tell it.

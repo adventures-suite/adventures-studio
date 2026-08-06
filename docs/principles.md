@@ -1,4 +1,4 @@
-# Adventure Platform Principles
+# AdventuresSuite Principles
 
 > "We are not building a travel website.
 >

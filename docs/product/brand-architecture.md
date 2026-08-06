@@ -10,7 +10,7 @@
 
 # Purpose
 
-This document defines the brand architecture of the Adventure Suite ecosystem.
+This document defines the brand architecture of the AdventuresSuite ecosystem operated by Adventures Studio.
 
 It establishes the relationship between the company, the products, and flagship customer implementations.
 
@@ -39,11 +39,15 @@ It should feel inspiring.
 
 # Brand Hierarchy
 
-Adventure Suite
+Adventures Studio
 
 ↓
 
-Adventure Studio
+AdventuresSuite
+
+↓
+
+Creator Workspace
 
 Adventure Advisor
 
@@ -73,11 +77,11 @@ Destinations
 
 # Parent Brand
 
-## Adventure Suite
+## AdventuresSuite
 
-Adventure Suite is the complete ecosystem.
+AdventuresSuite is the complete software platform and product ecosystem.
 
-Adventure Suite represents the company, the platform, and the family of products.
+Adventures Studio is the company. AdventuresSuite is its platform and family of software capabilities.
 
 It is never responsible for one specific task.
 
@@ -91,9 +95,9 @@ Tagline (working)
 
 # Product
 
-## Adventure Studio
+## Creator Workspace
 
-Adventure Studio is the primary application.
+Adventures Studio creates and operates AdventuresSuite. Its primary creator experience is provided through the AdventuresSuite workspace.
 
 It is where customers:
 
@@ -111,9 +115,9 @@ Publish Books
 
 Manage Websites
 
-Adventure Studio is the daily workspace.
+The AdventuresSuite workspace is where creators spend most of their time.
 
-The Studio is the product users spend most of their time using.
+The creator workspace is the AdventuresSuite experience users spend most of their time using.
 
 ---
 
@@ -261,7 +265,7 @@ Live tracking
 
 # Future Products
 
-Possible future members of Adventure Suite include:
+Possible future capabilities of AdventuresSuite include:
 
 Adventure Photos
 
@@ -289,7 +293,7 @@ The Simonton Adventures is NOT the software.
 
 It is the flagship customer.
 
-The Simonton Adventures demonstrates how Adventure Suite can be used.
+The Simonton Adventures demonstrates how AdventuresSuite can be used.
 
 Future customers may include:
 
@@ -315,13 +319,11 @@ The Simonton Adventures remains the showcase implementation.
 
 # Naming Rules
 
-Every first-party product begins with:
+Every named first-party product begins with:
 
 Adventure
 
 Examples:
-
-Adventure Studio
 
 Adventure Advisor
 
@@ -419,7 +421,7 @@ The platform should always speak the customer's language.
 
 # Brand Personality
 
-Adventure Suite should feel:
+AdventuresSuite should feel:
 
 Warm
 
@@ -445,7 +447,7 @@ Never overwhelm.
 
 # Brand Promise
 
-Adventure Suite helps people preserve life's greatest adventures.
+AdventuresSuite helps people preserve life's greatest adventures.
 
 Not simply record them.
 
@@ -453,11 +455,11 @@ Not simply record them.
 
 # Long-Term Vision
 
-Adventure Suite becomes the operating system for adventure storytelling.
+AdventuresSuite becomes the operating system for adventure storytelling.
 
 Customers create Adventures once.
 
-Adventure Suite transforms them into:
+AdventuresSuite transforms them into:
 
 Websites
 
@@ -481,6 +483,6 @@ The stories remain.
 
 # Guiding Principle
 
-Every new product should strengthen the Adventure Suite ecosystem.
+Every new product should strengthen the AdventuresSuite ecosystem.
 
 If a new feature does not naturally fit within the family of products, reconsider its purpose before introducing it.

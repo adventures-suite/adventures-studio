@@ -1,4 +1,4 @@
-# Adventures Platform Vision
+# AdventuresSuite Vision
 
 **Status:** Vision  
 **Priority:** Future Iteration  

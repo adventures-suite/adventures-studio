@@ -5,45 +5,147 @@
   "city": "Venice",
   "slug": "venice",
   "qrSlug": "venice",
-
   "title": "Venice",
-
   "subtitle": "The Floating City",
-
-  "summary": "Our Mediterranean adventure began in Venice, where canals replaced roads, centuries of history surrounded every corner, and every quiet walk revealed another unforgettable view.",
-
+  "summary": "Our Mediterranean adventure began in Venice, where canals replaced roads, centuries of history surrounded every corner, and every quiet walk revealed another unforgettable view. From the moment we stepped onto our private water taxi, Venice felt unlike anywhere we had ever visited.",
   "heroImage": "/images/volumes/volume-1/italy/venice/hero.jpeg",
-
   "heroImageAlt": "Historic canal in Venice lined with colorful buildings and gondolas",
-
   "published": true,
-
   "featured": true,
-
   "homepageOrder": 1,
-
-  "homepageImage": "/images/volumes/volume-1/italy/venice/hero.jpeg",
-
-  "homepageSummary": "Discover Venice through hidden canals, romantic bridges, authentic neighborhoods, and unforgettable first impressions that made it the perfect beginning to our Italian adventure.",
-
-  "sections": [],
-
-  "reflections": [],
-
+  "homepageImage": "/images/volumes/volume-1/italy/venice/homepage.jpeg",
+  "homepageSummary": "Begin our adventure in Venice, where winding canals, hidden alleyways, unforgettable meals, and timeless beauty created the perfect first chapter.",
+  "sections": [
+    {
+      "heading": "Our First Glimpse of Venice",
+      "paragraphs": [
+        "After landing in Venice, everything about travel suddenly changed. Roads disappeared, boats replaced cars, and our private water taxi became the first chapter of an adventure we had dreamed about for months.",
+        "As we cruised through the canals toward our hotel, historic buildings rose directly from the water and gondolas quietly passed beneath centuries-old bridges. Within minutes, we realized Venice wasn't simply another city—it was an experience unlike anywhere else in the world."
+      ],
+      "imageSrc": "/images/volumes/volume-1/italy/venice/water-taxi.jpeg",
+      "imageAlt": "Private water taxi traveling through the canals of Venice",
+      "imageCaption": "Our first journey through the canals of Venice"
+    },
+    {
+      "heading": "Getting Lost on Purpose",
+      "paragraphs": [
+        "Some of our favorite memories came without an itinerary. We wandered through quiet alleyways, crossed countless bridges, and discovered charming canals where very few tourists seemed to venture.",
+        "Every turn revealed another postcard view. Small cafés, colorful buildings, flower-filled balconies, and peaceful canals reminded us that Venice rewards those willing to slow down and simply explore."
+      ],
+      "imageSrc": "/images/volumes/volume-1/italy/venice/canal-walk.jpeg",
+      "imageAlt": "Quiet canal surrounded by historic Venetian buildings",
+      "imageCaption": "Exploring Venice one bridge at a time"
+    },
+    {
+      "heading": "Evenings We Will Never Forget",
+      "paragraphs": [
+        "Our evenings quickly became our favorite part of Venice. Sitting outside along the canals, enjoying incredible Italian food while gondolas quietly drifted past, created memories that photographs could never fully capture.",
+        "It wasn't just the scenery that made Venice special. It was sharing those moments together—the conversations, the laughter, and the realization that this incredible journey was only beginning."
+      ],
+      "imageSrc": "/images/volumes/volume-1/italy/venice/canal-restaurant.jpeg",
+      "imageAlt": "Outdoor restaurant beside a Venice canal at sunset",
+      "imageCaption": "Dinner beside the canals"
+    }
+  ],
+  "facts": [
+    {
+      "label": "Location",
+      "value": "Venice, Veneto, Italy"
+    },
+    {
+      "label": "Historic significance",
+      "value": "One of the world's most unique maritime cities and a UNESCO World Heritage Site"
+    },
+    {
+      "label": "Signature landmark",
+      "value": "Grand Canal"
+    },
+    {
+      "label": "Essential experience",
+      "value": "Exploring Venice on foot and by water taxi"
+    }
+  ],
+  "highlights": [
+    {
+      "title": "Grand Canal",
+      "description": "Venice's main waterway serves as both a transportation route and one of the city's most beautiful sightseeing experiences."
+    },
+    {
+      "title": "St. Mark's Square",
+      "description": "The historic heart of Venice, surrounded by remarkable architecture, cafés, and centuries of history."
+    },
+    {
+      "title": "Hidden Canals",
+      "description": "Some of Venice's greatest beauty is found away from the crowds in its quiet residential neighborhoods."
+    },
+    {
+      "title": "Canal-side Dining",
+      "description": "Sharing authentic Italian meals beside the canals became one of our favorite parts of every evening."
+    }
+  ],
+  "tips": [
+    {
+      "title": "Walk beyond the tourist areas",
+      "description": "Some of Venice's most memorable streets and canals are found just a few blocks away from the busiest attractions."
+    },
+    {
+      "title": "Travel by water taxi at least once",
+      "description": "Arriving by boat provides an unforgettable first impression of Venice."
+    },
+    {
+      "title": "Slow down",
+      "description": "Venice is best experienced without rushing. Leave time simply to wander and discover."
+    },
+    {
+      "title": "Enjoy dinner along the canals",
+      "description": "Evening meals beside the water offer some of the most memorable moments of the entire city."
+    }
+  ],
+  "reflections": [
+    {
+      "afterSection": 1,
+      "author": "Dianne",
+      "title": "From Dianne's Journal",
+      "text": "The moment our water taxi entered the canals, I knew this trip was going to be something special. Venice felt magical from the very beginning.",
+      "signature": "❤️ Dianne"
+    },
+    {
+      "afterSection": 2,
+      "author": "Steve",
+      "title": "Steve's Notes",
+      "text": "I've seen thousands of photographs of Venice, but none of them prepared me for what it felt like to stand there in person. The city somehow feels both timeless and alive.",
+      "signature": "— Steve"
+    }
+  ],
   "quote": {
     "text": "The moment we stepped onto the water taxi, we realized this wasn't just another vacation—it was the beginning of an adventure.",
     "attribution": "The Simonton Adventures"
   },
-
-  "facts": [],
-
-  "highlights": [],
-
-  "tips": [],
-
-  "gallery": [],
-
-  "map": null,
-
+  "gallery": [
+    {
+      "src": "/images/volumes/volume-1/italy/venice/water-taxi.jpeg",
+      "alt": "Private water taxi traveling through Venice",
+      "caption": "Our first arrival in Venice",
+      "displayOrder": 1
+    },
+    {
+      "src": "/images/volumes/volume-1/italy/venice/canal-walk.jpeg",
+      "alt": "Quiet Venetian canal lined with historic buildings",
+      "caption": "Exploring hidden canals",
+      "displayOrder": 2
+    },
+    {
+      "src": "/images/volumes/volume-1/italy/venice/canal-restaurant.jpeg",
+      "alt": "Outdoor restaurant beside a Venice canal",
+      "caption": "Dinner beside the canals",
+      "displayOrder": 3
+    }
+  ],
+  "map": {
+    "latitude": 45.4408,
+    "longitude": 12.3155,
+    "label": "Venice, Italy",
+    "zoom": 13
+  },
   "resources": []
 }
