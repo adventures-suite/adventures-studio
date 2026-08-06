@@ -1,0 +1,150 @@
+@page "/about"
+
+<PageTitle>About | The Simonton Adventures</PageTitle>
+
+@*
+    The About page introduces Steve and Dianne and explains the purpose of
+    The Simonton Adventures.
+
+    This page is intentionally simple so it can serve as a visible end-to-end
+    deployment test for the AdventuresSuite GitHub Actions and Azure pipeline.
+*@
+
+<main class="about-page">
+    <section class="about-hero">
+        <div class="about-content">
+            <p class="about-eyebrow">The Simonton Adventures</p>
+
+            <h1>Life is better when we explore it together.</h1>
+
+            <p class="about-lead">
+                We are Steve and Dianne Simonton, and some of our favorite
+                memories have been made while discovering new places together.
+            </p>
+        </div>
+    </section>
+
+    <section class="about-story">
+        <div class="about-content about-reading-width">
+            <h2>About Us</h2>
+
+            <p>
+                We love traveling, learning the history behind the places we
+                visit, taking photographs, sharing great meals, and turning
+                those experiences into stories that our family can keep.
+            </p>
+
+            <p>
+                Every trip gives us another opportunity to laugh, explore,
+                learn something new, and create memories together.
+            </p>
+
+            <p class="about-highlight">
+                Steve would also like the official record to reflect that his
+                wife is incredibly hot, and traveling the world with her is
+                his favorite adventure.
+            </p>
+
+            <p>
+                What started as a simple idea to preserve our own memories slowly became
+                something much bigger. As we planned our trips, captured photographs,
+                organized reservations, wrote stories, and designed our books, we kept
+                asking ourselves why there wasn't one place that brought everything
+                together.
+            </p>
+
+            <p>
+                That question eventually inspired a much bigger vision&mdash;to build a
+                platform that could help anyone preserve meaningful adventures, not just
+                ours. That vision became <strong>AdventuresSuite</strong>, the platform
+                powering The Simonton Adventures and, someday, many other creators who
+                want to transform their journeys into lasting legacies.
+            </p>
+
+            <p>
+                The Simonton Adventures is our story. AdventuresSuite is the platform
+                that grew from it. Together they represent our belief that every
+                meaningful adventure deserves to be remembered, shared, and passed on to
+                future generations.
+            </p>
+        </div>
+    </section>
+</main>
+
+<style>
+    .about-page {
+        min-height: 100vh;
+        background:
+            linear-gradient(
+                180deg,
+                rgba(26, 35, 39, 0.88),
+                rgba(26, 35, 39, 0.55)
+            ),
+            url('/images/volumes/volume-1/greece/athens/athens.jpeg')
+                center / cover no-repeat fixed;
+        color: #f7f4ee;
+    }
+
+    .about-hero {
+        display: flex;
+        align-items: end;
+        min-height: 52vh;
+        padding: clamp(5rem, 10vw, 9rem) 1.5rem 4rem;
+    }
+
+    .about-story {
+        padding: clamp(4rem, 8vw, 7rem) 1.5rem;
+        background: rgba(247, 244, 238, 0.96);
+        color: #252525;
+    }
+
+    .about-content {
+        width: min(100%, 72rem);
+        margin: 0 auto;
+    }
+
+    .about-reading-width {
+        width: min(100%, 52rem);
+    }
+
+    .about-eyebrow {
+        margin-bottom: 1rem;
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+    }
+
+    h1 {
+        max-width: 16ch;
+        margin: 0;
+        font-size: clamp(3rem, 7vw, 6.5rem);
+        line-height: 0.98;
+    }
+
+    h2 {
+        margin-top: 0;
+        font-size: clamp(2rem, 4vw, 3.25rem);
+    }
+
+    .about-lead {
+        max-width: 42rem;
+        margin-top: 1.5rem;
+        font-size: clamp(1.15rem, 2vw, 1.5rem);
+        line-height: 1.6;
+    }
+
+    .about-story p {
+        font-size: 1.15rem;
+        line-height: 1.8;
+    }
+
+    .about-highlight {
+        margin: 2.5rem 0;
+        padding: 1.5rem 1.75rem;
+        border-left: 0.3rem solid #9a6e3a;
+        background: #ffffff;
+        font-size: 1.25rem !important;
+        font-style: italic;
+    }
+</style>
