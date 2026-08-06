@@ -1,3 +1,5 @@
+using TheSimontonAdventures.Web.Routing;
+
 namespace TheSimontonAdventures.Web.Models;
 
 public sealed class QrDestinationRoute
@@ -11,5 +13,8 @@ public sealed class QrDestinationRoute
     public string DestinationSlug { get; init; } = string.Empty;
 
     public string DestinationUrl =>
-        $"/volumes/{VolumeSlug}/{CountrySlug}/{DestinationSlug}";
+        TravelRoutes.Destination(
+            VolumeSlug,
+            CountrySlug,
+            DestinationSlug);
 }

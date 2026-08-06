@@ -45,25 +45,16 @@
         _previous = null;
         _next = null;
 
-        var volume = await TravelContentService.GetVolumeAsync(
+        var destinations = await TravelContentService.GetDestinationsForVolumeAsync(
             Destination.VolumeSlug);
 
-        if (volume is null)
-        {
-            return;
-        }
-
-        var destinations = volume.Destinations
-            .OrderBy(item => item.DisplayOrder)
-            .ToList();
-
-        var currentIndex = destinations.FindIndex(item =>
+        var currentIndex = destinations.ToList().FindIndex(item =>
             string.Equals(
                 item.CountrySlug,
                 Destination.CountrySlug,
                 StringComparison.OrdinalIgnoreCase)
             && string.Equals(
-                item.DestinationSlug,
+                item.Slug,
                 Destination.Slug,
                 StringComparison.OrdinalIgnoreCase));
 
@@ -74,28 +65,20 @@
 
         if (currentIndex > 0)
         {
-            var previousReference = destinations[currentIndex - 1];
-
-            _previous = await TravelContentService.GetDestinationAsync(
-                Destination.VolumeSlug,
-                previousReference.CountrySlug,
-                previousReference.DestinationSlug);
+            _previous = destinations[currentIndex - 1];
         }
 
         if (currentIndex < destinations.Count - 1)
         {
-            var nextReference = destinations[currentIndex + 1];
-
-            _next = await TravelContentService.GetDestinationAsync(
-                Destination.VolumeSlug,
-                nextReference.CountrySlug,
-                nextReference.DestinationSlug);
+            _next = destinations[currentIndex + 1];
         }
     }
 
     private static string GetDestinationUrl(Destination destination)
     {
-        return $"/volumes/{destination.VolumeSlug}/" +
-               $"{destination.CountrySlug}/{destination.Slug}";
+        return TravelRoutes.Destination(
+            destination.VolumeSlug,
+            destination.CountrySlug,
+            destination.Slug);
     }
 }

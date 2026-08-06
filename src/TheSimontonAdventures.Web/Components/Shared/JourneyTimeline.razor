@@ -10,37 +10,42 @@
     </div>
 
     <div class="journey-timeline__items">
-        @foreach (var stop in Stops.OrderBy(s => s.DisplayOrder))
+        @foreach (var stop in Stops.InDisplayOrder())
         {
-            <article class="journey-stop">
-                <div class="journey-stop__icon">
-                    <TravelModeIcon TravelMode="@stop.TravelMode" />
-                </div>
+            <JourneyStopItem
+                Stop="@stop"
+                CssClass="journey-stop"
+                UseArticleElement="true">
+                <Content Context="item">
+                    <div class="journey-stop__icon">
+                        <TravelModeIcon TravelMode="@item.TravelMode" />
+                    </div>
 
-                <div class="journey-stop__content">
-                    <h3>@stop.Title</h3>
+                    <div class="journey-stop__content">
+                        <h3>@item.Title</h3>
 
-                    @if (!string.IsNullOrWhiteSpace(stop.Subtitle))
-                    {
-                        <p class="journey-stop__subtitle">
-                            @stop.Subtitle
-                        </p>
-                    }
+                        @if (!string.IsNullOrWhiteSpace(item.Subtitle))
+                        {
+                            <p class="journey-stop__subtitle">
+                                @item.Subtitle
+                            </p>
+                        }
 
-                    @if (!string.IsNullOrWhiteSpace(stop.TravelDescription))
-                    {
-                        <div class="journey-stop__travel">
-                            <span class="journey-stop__travel-mode">
-                                @FormatTravelMode(stop.TravelMode)
-                            </span>
+                        @if (!string.IsNullOrWhiteSpace(item.TravelDescription))
+                        {
+                            <div class="journey-stop__travel">
+                                <span class="journey-stop__travel-mode">
+                                    @FormatTravelMode(item.TravelMode)
+                                </span>
 
-                            <span class="journey-stop__travel-description">
-                                @stop.TravelDescription
-                            </span>
-                        </div>
-                    }
-                </div>
-            </article>
+                                <span class="journey-stop__travel-description">
+                                    @item.TravelDescription
+                                </span>
+                            </div>
+                        }
+                    </div>
+                </Content>
+            </JourneyStopItem>
         }
     </div>
 </section>

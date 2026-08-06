@@ -1,0 +1,112 @@
+@using TheSimontonAdventures.Web.Models
+
+@if (!string.IsNullOrWhiteSpace(Href))
+{
+    <a class="@CssClass"
+       href="@Href"
+       aria-current="@(IsCurrent ? "location" : null)">
+        @RenderContent()
+    </a>
+}
+else if (UseArticleElement)
+{
+    <article class="@CssClass">
+        @RenderContent()
+    </article>
+}
+else
+{
+    <div class="@CssClass">
+        @RenderContent()
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// Gets or sets the journey stop being rendered.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public JourneyStop Stop { get; set; } = null!;
+
+    /// <summary>
+    /// Gets or sets the optional destination route for the stop.
+    /// </summary>
+    [Parameter]
+    public string Href { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the CSS class applied to the outer stop element.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public string CssClass { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the CSS class applied to the standard stop icon.
+    /// </summary>
+    [Parameter]
+    public string IconCssClass { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the CSS class applied to the standard text container.
+    /// </summary>
+    [Parameter]
+    public string TextCssClass { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets whether the stop represents the current destination.
+    /// </summary>
+    [Parameter]
+    public bool IsCurrent { get; set; }
+
+    /// <summary>
+    /// Gets or sets the label displayed for the current destination.
+    /// </summary>
+    [Parameter]
+    public string CurrentLabel { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets whether an unlinked stop uses an article element rather
+    /// than a div element.
+    /// </summary>
+    [Parameter]
+    public bool UseArticleElement { get; set; }
+
+    /// <summary>
+    /// Gets or sets optional custom content for specialized stop layouts.
+    /// </summary>
+    [Parameter]
+    public RenderFragment<JourneyStop>? Content { get; set; }
+
+    private RenderFragment RenderContent() => builder =>
+    {
+        if (Content is not null)
+        {
+            builder.AddContent(0, Content(Stop));
+            return;
+        }
+
+        builder.OpenElement(1, "span");
+        builder.AddAttribute(2, "class", IconCssClass);
+        builder.AddAttribute(3, "aria-hidden", "true");
+        builder.AddContent(4, Stop.Icon);
+        builder.CloseElement();
+
+        builder.OpenElement(5, "span");
+        builder.AddAttribute(6, "class", TextCssClass);
+        builder.OpenElement(7, "strong");
+        builder.AddContent(8, Stop.Title);
+        builder.CloseElement();
+        builder.OpenElement(9, "small");
+        builder.AddContent(10, Stop.Subtitle);
+        builder.CloseElement();
+
+        if (IsCurrent && !string.IsNullOrWhiteSpace(CurrentLabel))
+        {
+            builder.OpenElement(11, "em");
+            builder.AddContent(12, CurrentLabel);
+            builder.CloseElement();
+        }
+
+        builder.CloseElement();
+    };
+}

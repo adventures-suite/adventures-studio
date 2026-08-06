@@ -5,7 +5,7 @@
 @if (_isLoading)
 {
     <section class="home-adventures">
-        <p>Loading adventures...</p>
+        <LoadingState Message="Loading adventures…" />
     </section>
 }
 else if (_volumes.Count > 0)
@@ -52,7 +52,7 @@ else if (_volumes.Count > 0)
 
                     <div class="home-adventures__copy">
                         <p class="home-adventures__volume-number">
-                            Volume @ToRomanNumeral(volume.Number)
+                            Volume @volume.GetNumberLabel()
                         </p>
 
                         <h3>@volume.Title</h3>
@@ -104,7 +104,7 @@ else if (_volumes.Count > 0)
 
     private static string GetVolumeUrl(Volume volume)
     {
-        return $"/volumes/{volume.Slug}";
+        return TravelRoutes.Volume(volume.Slug);
     }
 
     private static string GetCallToAction(VolumeStatus status)
@@ -136,19 +136,6 @@ else if (_volumes.Count > 0)
                 "home-adventures__status--published",
 
             _ => string.Empty
-        };
-    }
-
-    private static string ToRomanNumeral(int number)
-    {
-        return number switch
-        {
-            1 => "I",
-            2 => "II",
-            3 => "III",
-            4 => "IV",
-            5 => "V",
-            _ => number.ToString()
         };
     }
 }

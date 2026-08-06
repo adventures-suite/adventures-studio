@@ -1,0 +1,30 @@
+.loading-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin: 0;
+    color: var(--color-text-muted);
+}
+
+.loading-state__indicator {
+    width: 0.85rem;
+    height: 0.85rem;
+    flex: 0 0 auto;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: loading-state-spin 700ms linear infinite;
+}
+
+@keyframes loading-state-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .loading-state__indicator {
+        animation: none;
+        border-right-color: currentColor;
+    }
+}

@@ -127,7 +127,7 @@
     background: rgba(22, 32, 42, 0.4);
 }
 
-.home-journey__stop {
+.home-journey__track ::deep .home-journey__stop {
     position: relative;
     z-index: 1;
     display: flex;
@@ -145,17 +145,17 @@
         color var(--transition-standard);
 }
 
-.home-journey__stop:hover {
+.home-journey__track ::deep .home-journey__stop:hover {
     transform: translateY(-0.25rem);
 }
 
-.home-journey__stop:focus-visible {
+.home-journey__track ::deep .home-journey__stop:focus-visible {
     outline: 3px solid rgba(22, 32, 42, 0.24);
     outline-offset: 0.45rem;
     border-radius: 0.75rem;
 }
 
-.home-journey__icon {
+.home-journey__track ::deep .home-journey__icon {
     display: grid;
     width: 3.9rem;
     height: 3.9rem;
@@ -181,13 +181,13 @@
         transform var(--transition-standard);
 }
 
-.home-journey__text {
+.home-journey__track ::deep .home-journey__text {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
 }
 
-.home-journey__text strong {
+.home-journey__track ::deep .home-journey__text strong {
     color: var(--color-text);
     font-family: var(--font-family-heading);
     font-size: 1.08rem;
@@ -195,13 +195,13 @@
     line-height: 1.25;
 }
 
-.home-journey__text small {
+.home-journey__track ::deep .home-journey__text small {
     color: var(--color-text-muted);
     font-size: var(--font-size-xs);
     line-height: 1.4;
 }
 
-a.home-journey__stop:hover .home-journey__icon {
+.home-journey__track ::deep a.home-journey__stop:hover .home-journey__icon {
     color: var(--color-text-inverse);
     background: var(--color-accent);
     border-color: var(--color-accent);
@@ -211,32 +211,32 @@ a.home-journey__stop:hover .home-journey__icon {
     transform: translateY(-0.2rem) scale(1.04);
 }
 
-a.home-journey__stop:hover .home-journey__text strong {
+.home-journey__track ::deep a.home-journey__stop:hover .home-journey__text strong {
     color: var(--color-primary);
 }
 
-.home-journey__stop:hover ::deep .travel-mode-icon--flight {
+.home-journey__track ::deep .home-journey__stop:hover .travel-mode-icon--flight {
     transform: translate(0.16rem, -0.1rem) rotate(-5deg);
 }
 
-.home-journey__stop:hover ::deep .travel-mode-icon--train {
+.home-journey__track ::deep .home-journey__stop:hover .travel-mode-icon--train {
     transform: translateX(0.16rem);
 }
 
-.home-journey__stop:hover ::deep .travel-mode-icon--cruise,
-.home-journey__stop:hover ::deep .travel-mode-icon--ferry,
-.home-journey__stop:hover ::deep .travel-mode-icon--watertaxi,
-.home-journey__stop:hover ::deep .travel-mode-icon--water-taxi {
+.home-journey__track ::deep .home-journey__stop:hover .travel-mode-icon--cruise,
+.home-journey__track ::deep .home-journey__stop:hover .travel-mode-icon--ferry,
+.home-journey__track ::deep .home-journey__stop:hover .travel-mode-icon--watertaxi,
+.home-journey__track ::deep .home-journey__stop:hover .travel-mode-icon--water-taxi {
     transform: translateY(-0.08rem) rotate(-1deg);
 }
 
-.home-journey__stop:hover ::deep .travel-mode-icon--car,
-.home-journey__stop:hover ::deep .travel-mode-icon--taxi,
-.home-journey__stop:hover ::deep .travel-mode-icon--bus {
+.home-journey__track ::deep .home-journey__stop:hover .travel-mode-icon--car,
+.home-journey__track ::deep .home-journey__stop:hover .travel-mode-icon--taxi,
+.home-journey__track ::deep .home-journey__stop:hover .travel-mode-icon--bus {
     transform: translateX(0.14rem);
 }
 
-.home-journey__stop:hover ::deep .travel-mode-icon--walking {
+.home-journey__track ::deep .home-journey__stop:hover .travel-mode-icon--walking {
     transform: translate(0.07rem, -0.07rem);
 }
 
@@ -267,26 +267,26 @@ a.home-journey__stop:hover .home-journey__text strong {
         left: 0;
     }
 
-    .home-journey__stop {
+    .home-journey__track ::deep .home-journey__stop {
         padding-inline: var(--space-2);
     }
 
-    .home-journey__icon {
+    .home-journey__track ::deep .home-journey__icon {
         width: 3.55rem;
         height: 3.55rem;
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .home-journey__stop,
-    .home-journey__icon,
-    .home-journey__stop ::deep .travel-mode-icon {
+    .home-journey__track ::deep .home-journey__stop,
+    .home-journey__track ::deep .home-journey__icon,
+    .home-journey__track ::deep .home-journey__stop .travel-mode-icon {
         transition: none;
     }
 
-    .home-journey__stop:hover,
-    a.home-journey__stop:hover .home-journey__icon,
-    .home-journey__stop:hover ::deep .travel-mode-icon {
+    .home-journey__track ::deep .home-journey__stop:hover,
+    .home-journey__track ::deep a.home-journey__stop:hover .home-journey__icon,
+    .home-journey__track ::deep .home-journey__stop:hover .travel-mode-icon {
         transform: none;
     }
 }

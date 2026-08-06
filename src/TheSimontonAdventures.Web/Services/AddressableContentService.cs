@@ -1,4 +1,5 @@
 using TheSimontonAdventures.Web.Models;
+using TheSimontonAdventures.Web.Routing;
 
 namespace TheSimontonAdventures.Web.Services;
 
@@ -103,23 +104,17 @@ public sealed class AddressableContentService : IAddressableContentService
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            foreach (var destinationReference in volume.Destinations)
+            var destinations =
+                await _travelContentService
+                    .GetPublishedDestinationsForVolumeAsync(
+                        volume.Slug,
+                        cancellationToken);
+
+            foreach (var destination in destinations)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var destination =
-                    await _travelContentService.GetDestinationAsync(
-                        volume.Slug,
-                        destinationReference.CountrySlug,
-                        destinationReference.DestinationSlug,
-                        cancellationToken);
-
-                // A destination may be referenced by a volume while still being
-                // unavailable, malformed, or unpublished. Such content must not
-                // be exposed through the public Address Engine.
-                if (destination is null ||
-                    !destination.Published ||
-                    string.IsNullOrWhiteSpace(destination.QrSlug))
+                if (string.IsNullOrWhiteSpace(destination.QrSlug))
                 {
                     continue;
                 }
@@ -154,9 +149,10 @@ public sealed class AddressableContentService : IAddressableContentService
             Slug = destination.QrSlug,
             Title = destination.Title,
             ContentType = AddressableContentType.Destination,
-            TargetUrl =
-                $"/volumes/{destination.VolumeSlug}/" +
-                $"{destination.CountrySlug}/{destination.Slug}",
+            TargetUrl = TravelRoutes.Destination(
+                destination.VolumeSlug,
+                destination.CountrySlug,
+                destination.Slug),
             Published = destination.Published,
             Aliases = []
         };

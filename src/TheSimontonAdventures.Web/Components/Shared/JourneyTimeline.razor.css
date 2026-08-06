@@ -87,7 +87,7 @@
     background: rgba(22, 32, 42, 0.38);
 }
 
-.journey-stop {
+.journey-timeline__items ::deep .journey-stop {
     position: relative;
     z-index: 1;
     flex: 0 0 12.5rem;
@@ -97,11 +97,11 @@
         opacity 220ms ease;
 }
 
-.journey-stop:hover {
+.journey-timeline__items ::deep .journey-stop:hover {
     transform: translateY(-4px);
 }
 
-.journey-stop__icon {
+.journey-timeline__items ::deep .journey-stop__icon {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -125,7 +125,7 @@
         box-shadow 220ms ease;
 }
 
-.journey-stop:hover .journey-stop__icon {
+.journey-timeline__items ::deep .journey-stop:hover .journey-stop__icon {
     transform: scale(1.04);
     border-color: rgba(22, 32, 42, 0.18);
     box-shadow:
@@ -133,11 +133,11 @@
         0 0 0 0.4rem rgba(255, 255, 255, 0.9);
 }
 
-.journey-stop__content {
+.journey-timeline__items ::deep .journey-stop__content {
     margin-top: 1.15rem;
 }
 
-.journey-stop__content h3 {
+.journey-timeline__items ::deep .journey-stop__content h3 {
     margin: 0;
     font-size: 1.08rem;
     line-height: 1.28;
@@ -145,14 +145,14 @@
     color: #16202a;
 }
 
-.journey-stop__subtitle {
+.journey-timeline__items ::deep .journey-stop__subtitle {
     margin: 0.5rem 0 0;
     font-size: 0.9rem;
     line-height: 1.55;
     color: rgba(22, 32, 42, 0.64);
 }
 
-.journey-stop__travel {
+.journey-timeline__items ::deep .journey-stop__travel {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
@@ -161,7 +161,7 @@
     border-top: 1px solid rgba(22, 32, 42, 0.08);
 }
 
-.journey-stop__travel-mode {
+.journey-timeline__items ::deep .journey-stop__travel-mode {
     align-self: flex-start;
     padding: 0.28rem 0.55rem;
     border: 1px solid rgba(22, 32, 42, 0.07);
@@ -174,35 +174,35 @@
     color: rgba(22, 32, 42, 0.58);
 }
 
-.journey-stop__travel-description {
+.journey-timeline__items ::deep .journey-stop__travel-description {
     margin-top: 0.2rem;
     font-size: 0.87rem;
     line-height: 1.48;
     color: rgba(22, 32, 42, 0.7);
 }
 
-.journey-stop:hover ::deep .travel-mode-icon--flight {
+.journey-timeline__items ::deep .journey-stop:hover .travel-mode-icon--flight {
     transform: translate(0.18rem, -0.12rem) rotate(-5deg);
 }
 
-.journey-stop:hover ::deep .travel-mode-icon--train {
+.journey-timeline__items ::deep .journey-stop:hover .travel-mode-icon--train {
     transform: translateX(0.18rem);
 }
 
-.journey-stop:hover ::deep .travel-mode-icon--cruise,
-.journey-stop:hover ::deep .travel-mode-icon--ferry,
-.journey-stop:hover ::deep .travel-mode-icon--watertaxi,
-.journey-stop:hover ::deep .travel-mode-icon--water-taxi {
+.journey-timeline__items ::deep .journey-stop:hover .travel-mode-icon--cruise,
+.journey-timeline__items ::deep .journey-stop:hover .travel-mode-icon--ferry,
+.journey-timeline__items ::deep .journey-stop:hover .travel-mode-icon--watertaxi,
+.journey-timeline__items ::deep .journey-stop:hover .travel-mode-icon--water-taxi {
     transform: translateY(-0.08rem) rotate(-1deg);
 }
 
-.journey-stop:hover ::deep .travel-mode-icon--car,
-.journey-stop:hover ::deep .travel-mode-icon--taxi,
-.journey-stop:hover ::deep .travel-mode-icon--bus {
+.journey-timeline__items ::deep .journey-stop:hover .travel-mode-icon--car,
+.journey-timeline__items ::deep .journey-stop:hover .travel-mode-icon--taxi,
+.journey-timeline__items ::deep .journey-stop:hover .travel-mode-icon--bus {
     transform: translateX(0.16rem);
 }
 
-.journey-stop:hover ::deep .travel-mode-icon--walking {
+.journey-timeline__items ::deep .journey-stop:hover .travel-mode-icon--walking {
     transform: translate(0.08rem, -0.08rem);
 }
 
@@ -228,26 +228,26 @@
         width: calc(100% - 2rem);
     }
 
-    .journey-stop {
+    .journey-timeline__items ::deep .journey-stop {
         flex-basis: 10.5rem;
     }
 
-    .journey-stop__icon {
+    .journey-timeline__items ::deep .journey-stop__icon {
         width: 3rem;
         height: 3rem;
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .journey-stop,
-    .journey-stop__icon,
-    .journey-stop ::deep .travel-mode-icon {
+    .journey-timeline__items ::deep .journey-stop,
+    .journey-timeline__items ::deep .journey-stop__icon,
+    .journey-timeline__items ::deep .journey-stop .travel-mode-icon {
         transition: none;
     }
 
-    .journey-stop:hover,
-    .journey-stop:hover .journey-stop__icon,
-    .journey-stop:hover ::deep .travel-mode-icon {
+    .journey-timeline__items ::deep .journey-stop:hover,
+    .journey-timeline__items ::deep .journey-stop:hover .journey-stop__icon,
+    .journey-timeline__items ::deep .journey-stop:hover .travel-mode-icon {
         transform: none;
     }
 }

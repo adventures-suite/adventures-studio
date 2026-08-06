@@ -81,6 +81,9 @@
 
     private string BuildDestinationUrl(VolumeDestinationCard destination)
     {
-        return $"/volumes/{VolumeSlug}/{destination.CountrySlug}/{destination.DestinationSlug}";
+        return TravelRoutes.Destination(
+            VolumeSlug,
+            destination.CountrySlug,
+            destination.DestinationSlug);
     }
 }

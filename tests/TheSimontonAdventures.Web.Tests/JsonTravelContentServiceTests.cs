@@ -127,4 +127,83 @@ public sealed class JsonTravelContentServiceTests
         Assert.All(publicVolumes, volume => Assert.True(volume.Status.IsPubliclyVisible()));
         Assert.DoesNotContain(publicVolumes, volume => volume.Status == VolumeStatus.Draft);
     }
+
+    /// <summary>
+    /// Ensures aggregate destination loading follows the display order declared
+    /// by the containing volume manifest.
+    /// </summary>
+    [Fact]
+    public async Task GetDestinationsForVolumeAsync_ReturnsManifestOrder()
+    {
+        var service = TestContentServiceFactory.Create();
+
+        var destinations = await service.GetDestinationsForVolumeAsync(
+            "italy-greece-croatia");
+
+        Assert.Equal(
+            [
+                "venice",
+                "florence",
+                "tuscany",
+                "ravenna",
+                "dubrovnik",
+                "athens",
+                "santorini",
+                "split"
+            ],
+            destinations.Select(destination => destination.Slug));
+    }
+
+    /// <summary>
+    /// Ensures published destination queries do not expose unpublished content.
+    /// </summary>
+    [Fact]
+    public async Task GetPublishedDestinationsForVolumeAsync_ReturnsOnlyPublishedContent()
+    {
+        var service = TestContentServiceFactory.Create();
+
+        var destinations =
+            await service.GetPublishedDestinationsForVolumeAsync(
+                "italy-greece-croatia");
+
+        Assert.NotEmpty(destinations);
+        Assert.All(destinations, destination => Assert.True(destination.Published));
+    }
+
+    /// <summary>
+    /// Ensures featured destinations are published and ordered for homepage
+    /// presentation.
+    /// </summary>
+    [Fact]
+    public async Task GetFeaturedDestinationsAsync_ReturnsHomepageOrder()
+    {
+        var service = TestContentServiceFactory.Create();
+
+        var destinations = await service.GetFeaturedDestinationsAsync(
+            "italy-greece-croatia");
+
+        Assert.NotEmpty(destinations);
+        Assert.All(destinations, destination =>
+        {
+            Assert.True(destination.Published);
+            Assert.True(destination.Featured);
+        });
+        Assert.Equal(
+            destinations.OrderBy(destination => destination.HomepageOrder),
+            destinations);
+    }
+
+    /// <summary>
+    /// Ensures an unknown volume produces an empty aggregate result.
+    /// </summary>
+    [Fact]
+    public async Task GetDestinationsForVolumeAsync_UnknownVolume_ReturnsEmptyList()
+    {
+        var service = TestContentServiceFactory.Create();
+
+        var destinations = await service.GetDestinationsForVolumeAsync(
+            "not-a-real-volume");
+
+        Assert.Empty(destinations);
+    }
 }

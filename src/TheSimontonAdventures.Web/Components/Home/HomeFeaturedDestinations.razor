@@ -28,9 +28,9 @@
                     <a class="home-destinations__image-link"
                        href="@GetDestinationUrl(destination)">
 
-                        @if (!string.IsNullOrWhiteSpace(GetHomepageImage(destination)))
+                        @if (!string.IsNullOrWhiteSpace(destination.GetCardImage()))
                         {
-                            <img src="@GetHomepageImage(destination)"
+                            <img src="@destination.GetCardImage()"
                                 alt="@destination.HeroImageAlt"
                                 loading="lazy" />
                         }
@@ -54,7 +54,7 @@
                         </h3>
 
                         <p class="home-destinations__summary">
-                            @GetHomepageSummary(destination)
+                            @destination.GetCardSummary()
                         </p>
 
                         <a class="home-destinations__link"
@@ -82,50 +82,21 @@
             return;
         }
 
-        var destinations = new List<Destination>();
-
-        foreach (var reference in _volume.Destinations
-            .OrderBy(item => item.DisplayOrder))
-        {
-            var destination =
-                await TravelContentService.GetDestinationAsync(
-                    _volume.Slug,
-                    reference.CountrySlug,
-                    reference.DestinationSlug);
-
-            if (destination is not null
-                && destination.Published
-                && destination.Featured)
-            {
-                destinations.Add(destination);
-            }
-        }
+        var destinations =
+            await TravelContentService.GetFeaturedDestinationsAsync(
+                _volume.Slug);
 
         _destinations = destinations
-            .OrderBy(destination => destination.HomepageOrder)
             .Take(3)
             .ToList();
     }
 
     private string GetDestinationUrl(Destination destination)
     {
-        return $"/volumes/{destination.VolumeSlug}/" +
-               $"{destination.CountrySlug}/{destination.Slug}";
+        return TravelRoutes.Destination(
+            destination.VolumeSlug,
+            destination.CountrySlug,
+            destination.Slug);
     }
 
-    private static string GetHomepageImage(
-    Destination destination)
-    {
-        return !string.IsNullOrWhiteSpace(destination.HomepageImage)
-            ? destination.HomepageImage
-            : destination.HeroImage;
-    }
-
-    private static string GetHomepageSummary(
-        Destination destination)
-    {
-        return !string.IsNullOrWhiteSpace(destination.HomepageSummary)
-            ? destination.HomepageSummary
-            : destination.Summary;
-    }
 }

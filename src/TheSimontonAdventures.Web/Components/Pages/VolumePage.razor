@@ -11,7 +11,7 @@
 @if (_isLoading)
 {
     <main class="volume-page">
-        <p>Loading adventure...</p>
+        <LoadingState Message="Loading adventure…" />
     </main>
 }
 else if (_volume is null)
@@ -135,17 +135,12 @@ else
                     featuredJourneyReference.Slug);
             }
 
-            var cardTasks = _volume.Destinations
-                .OrderBy(reference => reference.DisplayOrder)
-                .Select(reference => LoadDestinationCardAsync(
-                    _volume.Slug,
-                    reference));
+            var destinations =
+                await TravelContentService.GetDestinationsForVolumeAsync(
+                    _volume.Slug);
 
-            var cards = await Task.WhenAll(cardTasks);
-
-            _destinationCards = cards
-                .Where(card => card is not null)
-                .Select(card => card!)
+            _destinationCards = destinations
+                .Select(CreateDestinationCard)
                 .OrderBy(card => card.DisplayOrder)
                 .ToArray();
         }
@@ -155,19 +150,18 @@ else
         }
     }
 
-    private async Task<VolumeDestinationCard?> LoadDestinationCardAsync(
-        string volumeSlug,
-        VolumeDestinationReference reference)
+    private VolumeDestinationCard CreateDestinationCard(
+        Destination destination)
     {
-        var destination = await TravelContentService.GetDestinationAsync(
-            volumeSlug,
-            reference.CountrySlug,
-            reference.DestinationSlug);
-
-        if (destination is null)
-        {
-            return null;
-        }
+        var reference = _volume!.Destinations.Single(item =>
+            string.Equals(
+                item.CountrySlug,
+                destination.CountrySlug,
+                StringComparison.OrdinalIgnoreCase)
+            && string.Equals(
+                item.DestinationSlug,
+                destination.Slug,
+                StringComparison.OrdinalIgnoreCase));
 
         return new VolumeDestinationCard
         {
@@ -175,32 +169,10 @@ else
             DestinationSlug = reference.DestinationSlug,
             Title = destination.Title,
             CountryName = destination.Country,
-            HeroImage = ResolveDestinationCardImage(destination),
-            Summary = ResolveDestinationCardSummary(destination),
+            HeroImage = destination.GetCardImage(),
+            Summary = destination.GetCardSummary(),
             DisplayOrder = reference.DisplayOrder
         };
-    }
-
-    private static string ResolveDestinationCardImage(
-        Destination destination)
-    {
-        if (!string.IsNullOrWhiteSpace(destination.HomepageImage))
-        {
-            return destination.HomepageImage;
-        }
-
-        return destination.HeroImage;
-    }
-
-    private static string ResolveDestinationCardSummary(
-        Destination destination)
-    {
-        if (!string.IsNullOrWhiteSpace(destination.HomepageSummary))
-        {
-            return destination.HomepageSummary;
-        }
-
-        return destination.Summary;
     }
 
     private string BuildVolumeHeroAltText()

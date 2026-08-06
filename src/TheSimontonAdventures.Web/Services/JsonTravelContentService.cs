@@ -110,21 +110,116 @@ public sealed class JsonTravelContentService : ITravelContentService
             return null;
         }
 
-        var routeMatches =
-            string.Equals(
-                destination.VolumeSlug,
-                volumeSlug,
-                StringComparison.OrdinalIgnoreCase)
-            && string.Equals(
-                destination.CountrySlug,
-                countrySlug,
-                StringComparison.OrdinalIgnoreCase)
-            && string.Equals(
-                destination.Slug,
-                destinationSlug,
-                StringComparison.OrdinalIgnoreCase);
+        return DestinationMatchesRoute(
+            destination,
+            volumeSlug,
+            countrySlug,
+            destinationSlug)
+                ? destination
+                : null;
+    }
 
-        return routeMatches ? destination : null;
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<Destination>> GetDestinationsForVolumeAsync(
+        string volumeSlug,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(volumeSlug);
+
+        var volume = await GetVolumeAsync(volumeSlug, cancellationToken);
+
+        if (volume is null)
+        {
+            return [];
+        }
+
+        var volumeDirectory = await FindVolumeDirectoryAsync(
+            volumeSlug,
+            cancellationToken);
+
+        if (volumeDirectory is null)
+        {
+            return [];
+        }
+
+        var destinations = new List<Destination>();
+
+        foreach (var reference in volume.Destinations
+            .OrderBy(item => item.DisplayOrder))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var destinationPath = Path.Combine(
+                volumeDirectory,
+                "destinations",
+                $"{reference.DestinationSlug}.json");
+
+            var destination = await DeserializeFileAsync<Destination>(
+                destinationPath,
+                cancellationToken);
+
+            if (destination is not null && DestinationMatchesRoute(
+                destination,
+                volumeSlug,
+                reference.CountrySlug,
+                reference.DestinationSlug))
+            {
+                destinations.Add(destination);
+            }
+        }
+
+        return destinations;
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<Destination>>
+        GetPublishedDestinationsForVolumeAsync(
+            string volumeSlug,
+            CancellationToken cancellationToken = default)
+    {
+        var destinations = await GetDestinationsForVolumeAsync(
+            volumeSlug,
+            cancellationToken);
+
+        return destinations
+            .Where(destination => destination.Published)
+            .ToArray();
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<Destination>> GetFeaturedDestinationsAsync(
+        string volumeSlug,
+        CancellationToken cancellationToken = default)
+    {
+        var destinations = await GetPublishedDestinationsForVolumeAsync(
+            volumeSlug,
+            cancellationToken);
+
+        return destinations
+            .Where(destination => destination.Featured)
+            .OrderBy(destination => destination.HomepageOrder)
+            .ThenBy(destination => destination.Title)
+            .ToArray();
+    }
+
+    private static bool DestinationMatchesRoute(
+        Destination destination,
+        string volumeSlug,
+        string countrySlug,
+        string destinationSlug)
+    {
+        return string.Equals(
+                   destination.VolumeSlug,
+                   volumeSlug,
+                   StringComparison.OrdinalIgnoreCase)
+               && string.Equals(
+                   destination.CountrySlug,
+                   countrySlug,
+                   StringComparison.OrdinalIgnoreCase)
+               && string.Equals(
+                   destination.Slug,
+                   destinationSlug,
+                   StringComparison.OrdinalIgnoreCase);
     }
 
     private async Task<string?> FindVolumeDirectoryAsync(
@@ -224,18 +319,14 @@ public sealed class JsonTravelContentService : ITravelContentService
 
         foreach (var volume in volumes)
         {
-            foreach (var reference in volume.Destinations
-                .OrderBy(item => item.DisplayOrder))
-            {
-                var destination = await GetDestinationAsync(
+            var destinations =
+                await GetPublishedDestinationsForVolumeAsync(
                     volume.Slug,
-                    reference.CountrySlug,
-                    reference.DestinationSlug,
                     cancellationToken);
 
-                if (destination is null
-                    || !destination.Published
-                    || string.IsNullOrWhiteSpace(destination.QrSlug))
+            foreach (var destination in destinations)
+            {
+                if (string.IsNullOrWhiteSpace(destination.QrSlug))
                 {
                     continue;
                 }
