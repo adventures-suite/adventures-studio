@@ -1,0 +1,64 @@
+name: Deploy AdventuresSuite Dev
+
+on:
+  push:
+    branches:
+      - feature/journey-engine
+
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AZURE_WEBAPP_NAME: adventures-suite-dev
+  DOTNET_VERSION: "10.0.x"
+  PROJECT: src/TheSimontonAdventures.Web/TheSimontonAdventures.Web.csproj
+  PUBLISH_DIR: ./artifacts/publish
+
+jobs:
+  build-and-deploy:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore "${{ env.PROJECT }}"
+
+      - name: Build
+        run: >
+          dotnet build
+          "${{ env.PROJECT }}"
+          --configuration Release
+          --no-restore
+
+      - name: Publish
+        run: >
+          dotnet publish
+          "${{ env.PROJECT }}"
+          --configuration Release
+          --no-build
+          --output "${{ env.PUBLISH_DIR }}"
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: 1a45a93e-9630-4df9-861b-ad9cca04a05f
+          tenant-id: d7add2bb-ac03-49a8-9377-d0bf6a012f2f
+          subscription-id: 5ace9cdd-06d1-47d9-8214-1e7c756d076a
+
+      - name: Deploy Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          package: ${{ env.PUBLISH_DIR }}
