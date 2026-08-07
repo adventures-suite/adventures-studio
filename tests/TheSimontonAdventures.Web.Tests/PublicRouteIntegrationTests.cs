@@ -47,6 +47,7 @@ public sealed class PublicRouteIntegrationTests : IClassFixture<PublicRouteInteg
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains("\"status\":\"Healthy\"", payload);
+        Assert.Contains("\"deploymentVersion\":", payload);
         Assert.Contains("\"resourcesValidated\":true", payload);
         Assert.Contains("\"creatorContentValidated\":true", payload);
     }

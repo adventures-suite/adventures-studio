@@ -1,3 +1,4 @@
+using System.Reflection;
 using TheSimontonAdventures.Web.Components;
 using TheSimontonAdventures.Web.Creators;
 using TheSimontonAdventures.Web.Resources;
@@ -118,6 +119,10 @@ app.MapGet(
         var response = new
         {
             status = readinessState.IsReady ? "Healthy" : "Unhealthy",
+            deploymentVersion =
+                typeof(Program).Assembly
+                    .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+                    .InformationalVersion ?? "unknown",
             resourcesValidated = readinessState.ResourcesValidated,
             creatorContentValidated = readinessState.CreatorContentValidated
         };

@@ -61,6 +61,7 @@ jobs:
           --no-restore
           --runtime "${{ env.RUNTIME }}"
           --self-contained true
+          -p:SourceRevisionId="${{ github.sha }}"
           --output "${{ env.PUBLISH_DIR }}"
 
       - name: Create immutable deployment package
@@ -164,8 +165,9 @@ jobs:
 
           for attempt in {1..18}; do
             if HEALTH_RESPONSE="$(curl --fail --show-error --silent "$HEALTH_URL")" && \
-               jq -e \
+               jq -e --arg expected_sha "${{ github.sha }}" \
                  '.status == "Healthy" and
+                  (.deploymentVersion | endswith($expected_sha)) and
                   .resourcesValidated == true and
                   .creatorContentValidated == true' \
                  >/dev/null <<<"$HEALTH_RESPONSE"; then
