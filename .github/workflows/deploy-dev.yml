@@ -15,6 +15,7 @@ env:
   DOTNET_VERSION: "10.0.x"
   PROJECT: src/TheSimontonAdventures.Web/TheSimontonAdventures.Web.csproj
   PUBLISH_DIR: ./artifacts/publish
+  RUNTIME: linux-x64
 
 jobs:
   build-and-deploy:
@@ -32,7 +33,9 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore
-        run: dotnet restore TheSimontonAdventures.slnx
+        run: |
+          dotnet restore TheSimontonAdventures.slnx
+          dotnet restore "${{ env.PROJECT }}" --runtime "${{ env.RUNTIME }}"
 
       - name: Build
         run: >
@@ -53,7 +56,9 @@ jobs:
           dotnet publish
           "${{ env.PROJECT }}"
           --configuration Release
-          --no-build
+          --no-restore
+          --runtime "${{ env.RUNTIME }}"
+          --self-contained true
           --output "${{ env.PUBLISH_DIR }}"
 
       - name: Azure Login
@@ -63,7 +68,7 @@ jobs:
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Configure Creator assignment
+      - name: Configure application
         env:
           AZURE_DEFAULT_CREATOR_ID: ${{ vars.AZURE_DEFAULT_CREATOR_ID }}
         run: |
@@ -78,8 +83,29 @@ jobs:
             --settings CreatorResolution__AzureDefaultCreatorId="$AZURE_DEFAULT_CREATOR_ID" \
             --output none
 
+          az webapp config set \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --name "${{ vars.AZURE_WEBAPP_NAME }}" \
+            --startup-file "./TheSimontonAdventures.Web" \
+            --output none
+
       - name: Deploy Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ vars.AZURE_WEBAPP_NAME }}
           package: ${{ env.PUBLISH_DIR }}
+
+      - name: Verify deployment
+        run: |
+          APP_HOSTNAME="$(az webapp show \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --name "${{ vars.AZURE_WEBAPP_NAME }}" \
+            --query defaultHostName \
+            --output tsv)"
+
+          curl --fail --show-error --silent \
+            --retry 12 \
+            --retry-delay 10 \
+            --retry-all-errors \
+            "https://$APP_HOSTNAME/" \
+            --output /dev/null
