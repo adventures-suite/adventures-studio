@@ -1,6 +1,7 @@
 @using TheSimontonAdventures.Web.Models
 @using TheSimontonAdventures.Web.Services
 @inject ITravelContentService TravelContentService
+@inject ICreatorContextAccessor CreatorContextAccessor
 
 @if (_isLoading)
 {
@@ -97,7 +98,8 @@ else if (_volumes.Count > 0)
     protected override async Task OnInitializedAsync()
     {
         _volumes =
-            await TravelContentService.GetPublicVolumesAsync();
+            await TravelContentService.GetPublicVolumesAsync(
+                CreatorContextAccessor.Current.Id);
 
         _isLoading = false;
     }

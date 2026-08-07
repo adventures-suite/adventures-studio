@@ -5,6 +5,7 @@
 @using TheSimontonAdventures.Web.Components.Journeys
 
 @inject ITravelContentService TravelContentService
+@inject ICreatorContextAccessor CreatorContextAccessor
 
 <PageTitle>@PageTitle</PageTitle>
 
@@ -38,7 +39,7 @@ else
             <div class="volume-hero__content">
 
                 <span class="volume-eyebrow">
-                    The Simonton Adventures
+                    @CreatorContextAccessor.Current.GetSiteName()
                 </span>
 
                 <h1>
@@ -94,6 +95,9 @@ else
     [Parameter]
     public string VolumeSlug { get; set; } = string.Empty;
 
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
     private TheSimontonAdventures.Web.Models.Volume? _volume;
 
     private Journey? _journey;
@@ -105,8 +109,8 @@ else
 
     private string PageTitle =>
         _volume is null
-            ? "Adventure"
-            : _volume.Title;
+            ? $"Adventure | {CreatorContextAccessor.Current.GetSiteName()}"
+            : $"{_volume.Title} | {CreatorContextAccessor.Current.GetSiteName()}";
 
     protected override async Task OnParametersSetAsync()
     {
@@ -117,10 +121,14 @@ else
 
         try
         {
-            _volume = await TravelContentService.GetVolumeAsync(VolumeSlug);
+            _volume = await TravelContentService.GetVolumeAsync(
+                CreatorContextAccessor.Current.Id,
+                VolumeSlug);
 
-            if (_volume is null)
+            if (_volume is null || !PublicContentPolicy.IsPublic(_volume))
             {
+                _volume = null;
+                MarkNotFound();
                 return;
             }
 
@@ -132,12 +140,19 @@ else
             if (featuredJourneyReference is not null)
             {
                 _journey = await TravelContentService.GetJourneyAsync(
+                    CreatorContextAccessor.Current.Id,
                     _volume.Slug,
                     featuredJourneyReference.Slug);
+
+                if (!PublicContentPolicy.IsPublic(_volume, _journey))
+                {
+                    _journey = null;
+                }
             }
 
             var destinations =
-                await TravelContentService.GetDestinationsForVolumeAsync(
+                await TravelContentService.GetPublishedDestinationsForVolumeAsync(
+                    CreatorContextAccessor.Current.Id,
                     _volume.Slug);
 
             _destinationCards = destinations
@@ -148,6 +163,14 @@ else
         finally
         {
             _isLoading = false;
+        }
+    }
+
+    private void MarkNotFound()
+    {
+        if (HttpContext is not null && !HttpContext.Response.HasStarted)
+        {
+            HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
         }
     }
 

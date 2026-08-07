@@ -1,17 +1,28 @@
 @rendermode InteractiveServer
+@inject ITravelContentService TravelContentService
 
 <header class="site-header">
     <div class="site-header__inner">
         <a class="site-header__brand"
            href="/"
-           aria-label="Adventures Studio home">
+           aria-label="@($"{CreatorContext.GetSiteName()} home")">
+            @if (!string.IsNullOrWhiteSpace(CreatorContext.Brand.LogoUrl))
+            {
+                <img class="site-header__brand-logo"
+                     src="@CreatorContext.Brand.LogoUrl"
+                     alt="" />
+            }
+
             <span class="site-header__brand-name">
-                Adventures Studio
+                @CreatorContext.GetSiteName()
             </span>
 
-            <span class="site-header__brand-tagline">
-                Inspiration to unforgettable experiences
-            </span>
+            @if (!string.IsNullOrWhiteSpace(CreatorContext.Brand.Tagline))
+            {
+                <span class="site-header__brand-tagline">
+                    @CreatorContext.Brand.Tagline
+                </span>
+            }
         </a>
 
         <button class="site-header__menu-button"
@@ -34,26 +45,43 @@
                 Home
             </NavLink>
 
-            <NavLink href="/volumes/italy-greece-croatia"
-                     @onclick="CloseMenu">
-                Explore
-            </NavLink>
+            @if (_exploreUrl is not null)
+            {
+                <NavLink href="@_exploreUrl"
+                         @onclick="CloseMenu">
+                    Explore
+                </NavLink>
+            }
 
-            <NavLink href="/platform/adventures-companion"
-                     @onclick="CloseMenu">
-                Adventures Companion
-            </NavLink>
+            @if (CreatorContext.Features.EnableCompanion)
+            {
+                <NavLink href="/platform/adventures-companion"
+                         @onclick="CloseMenu">
+                    Adventures Companion
+                </NavLink>
+            }
 
-            <NavLink href="/about"
-                     @onclick="CloseMenu">
-                About
-            </NavLink>
+            @if (CreatorContext.Features.EnableAbout)
+            {
+                <NavLink href="/about"
+                         @onclick="CloseMenu">
+                    About
+                </NavLink>
+            }
         </nav>
     </div>
 </header>
 
 @code {
+    /// <summary>
+    /// Gets or sets the immutable Creator Context transferred into this
+    /// interactive component boundary.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public CreatorContext CreatorContext { get; set; } = null!;
+
     private bool _isMenuOpen;
+    private string? _exploreUrl;
 
     private string NavigationClass =>
         _isMenuOpen
@@ -68,5 +96,17 @@
     private void CloseMenu()
     {
         _isMenuOpen = false;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var creatorId = CreatorContext.Id;
+        var volume = await TravelContentService.GetCurrentVolumeAsync(creatorId)
+            ?? (await TravelContentService.GetPublicVolumesAsync(creatorId))
+                .FirstOrDefault();
+
+        _exploreUrl = volume is null
+            ? null
+            : TravelRoutes.Volume(volume.Slug);
     }
 }

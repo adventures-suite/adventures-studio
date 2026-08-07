@@ -33,6 +33,13 @@
         transform 160ms ease;
 }
 
+.site-header__brand-logo {
+    width: auto;
+    max-width: 12rem;
+    height: 2.5rem;
+    object-fit: contain;
+}
+
 .site-header__brand:hover {
     opacity: 0.82;
     transform: translateY(-1px);
@@ -85,7 +92,7 @@
     height: 2px;
     border-radius: 999px;
     content: "";
-    background: #16202a;
+    background: var(--creator-accent);
     transform: scaleX(0);
     transform-origin: center;
     transition: transform 180ms ease;

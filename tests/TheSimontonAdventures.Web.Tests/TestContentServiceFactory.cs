@@ -1,4 +1,5 @@
 using Microsoft.Extensions.FileProviders;
+using TheSimontonAdventures.Web.Creators;
 using TheSimontonAdventures.Web.Services;
 
 namespace TheSimontonAdventures.Web.Tests;
@@ -15,13 +16,37 @@ internal static class TestContentServiceFactory
     /// <returns>A service that reads the copied repository content.</returns>
     internal static JsonTravelContentService Create()
     {
+        var hostEnvironment = CreateHostEnvironment();
+
         return new JsonTravelContentService(
-            new TestHostEnvironment
-            {
-                ContentRootPath = AppContext.BaseDirectory,
-                ContentRootFileProvider =
-                    new PhysicalFileProvider(AppContext.BaseDirectory)
-            });
+            hostEnvironment,
+            new JsonCreatorService(hostEnvironment));
+    }
+
+    /// <summary>
+    /// Creates a host environment rooted at the test output directory.
+    /// </summary>
+    /// <param name="environmentName">
+    /// The environment name exposed to services; Development is used when
+    /// omitted.
+    /// </param>
+    /// <param name="contentRootPath">
+    /// An optional content root; the copied test output is used when omitted.
+    /// </param>
+    /// <returns>A host environment suitable for JSON-backed service tests.</returns>
+    internal static IHostEnvironment CreateHostEnvironment(
+        string? environmentName = null,
+        string? contentRootPath = null)
+    {
+        var resolvedContentRoot = contentRootPath ?? AppContext.BaseDirectory;
+
+        return new TestHostEnvironment
+        {
+            EnvironmentName = environmentName ?? Environments.Development,
+            ContentRootPath = resolvedContentRoot,
+            ContentRootFileProvider =
+                new PhysicalFileProvider(resolvedContentRoot)
+        };
     }
 
     private sealed class TestHostEnvironment : IHostEnvironment

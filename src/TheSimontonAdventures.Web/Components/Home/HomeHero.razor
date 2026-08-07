@@ -8,11 +8,11 @@
 
     <div class="home-hero__content">
         <span class="home-hero__eyebrow">
-            Adventures Studio
+            @Eyebrow
         </span>
 
         <h1>
-            Transforming inspiration into unforgettable experiences.
+            @EffectiveHeadline
         </h1>
 
         <p>
@@ -29,6 +29,14 @@
 </section>
 
 @code {
+    /// <summary>Gets or sets the Creator name shown above the hero heading.</summary>
+    [Parameter]
+    public string Eyebrow { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the Creator-owned hero headline.</summary>
+    [Parameter]
+    public string Headline { get; set; } = string.Empty;
+
     /// <summary>Gets or sets the background image shown by the homepage hero.</summary>
     [Parameter]
     public string HeroImage { get; set; } =
@@ -42,5 +50,9 @@
     /// <summary>Gets or sets the route opened by the primary hero action.</summary>
     [Parameter]
     public string PrimaryActionUrl { get; set; } =
-        "/volumes/italy-greece-croatia";
+        "/";
+
+    private string EffectiveHeadline => string.IsNullOrWhiteSpace(Headline)
+        ? "Transforming inspiration into unforgettable experiences."
+        : Headline;
 }

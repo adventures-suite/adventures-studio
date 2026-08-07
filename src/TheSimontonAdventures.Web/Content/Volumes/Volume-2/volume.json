@@ -48,7 +48,7 @@
     {
       "title": "Philipsburg",
       "subtitle": "St. Maarten",
-      "countrySlug": "st. maarten",
+      "countrySlug": "st-maarten",
       "destinationSlug": "philipsburg",
       "travelMode": "Cruise",
       "travelDescription": "Royal Caribbean Mediterranean cruise",
@@ -57,7 +57,7 @@
     {
       "title": "Charlotte Amalie",
       "subtitle": "St. Thomas",
-      "countrySlug": "st. thomas",
+      "countrySlug": "st-thomas",
       "destinationSlug": "charlotte-amalie",
       "travelMode": "Cruise",
       "travelDescription": "Royal Caribbean Mediterranean cruise",
@@ -87,27 +87,21 @@
       "featured": false
     },
     {
-      "countrySlug": "usa",
-      "destinationSlug": "miami",
+      "countrySlug": "st-maarten",
+      "destinationSlug": "philipsburg",
       "displayOrder": 3,
       "featured": false
     },
     {
-      "countrySlug": "st. maarten",
-      "destinationSlug": "philipsburg",
-      "displayOrder": 4,
-      "featured": false
-    },
-    {
-      "countrySlug": "st. thomas",
+      "countrySlug": "st-thomas",
       "destinationSlug": "charlotte-amalie",
-      "displayOrder": 5,
+      "displayOrder": 4,
       "featured": false
     },
     {
       "countrySlug": "bahamas",
       "destinationSlug": "perfect-day-cococay",
-      "displayOrder": 6,
+      "displayOrder": 5,
       "featured": false
     }
   ]

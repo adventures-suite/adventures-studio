@@ -1,6 +1,7 @@
 @using TheSimontonAdventures.Web.Models
 @using TheSimontonAdventures.Web.Services
 @inject ITravelContentService TravelContentService
+@inject ICreatorContextAccessor CreatorContextAccessor
 
 @if (_destinations.Count > 0)
 {
@@ -75,7 +76,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _volume = await TravelContentService.GetCurrentVolumeAsync();
+        _volume = await TravelContentService.GetCurrentVolumeAsync(
+            CreatorContextAccessor.Current.Id);
 
         if (_volume is null)
         {
@@ -84,6 +86,7 @@
 
         var destinations =
             await TravelContentService.GetFeaturedDestinationsAsync(
+                CreatorContextAccessor.Current.Id,
                 _volume.Slug);
 
         _destinations = destinations

@@ -1,75 +1,57 @@
 @page "/about"
+@inject ICreatorContextAccessor CreatorContextAccessor
+@inject ITravelContentService TravelContentService
+@using TheSimontonAdventures.Web.Models
 
-<PageTitle>About | The Simonton Adventures</PageTitle>
+<PageTitle>About | @CreatorContextAccessor.Current.GetSiteName()</PageTitle>
 
-@*
-    The About page introduces Steve and Dianne and explains the purpose of
-    The Simonton Adventures.
+@if (!CreatorContextAccessor.Current.Features.EnableAbout || _profile is null)
+{
+    <main class="about-page" style="@AboutHeroStyle">
+        <section class="about-hero">
+            <div class="about-content">
+                <p class="about-eyebrow">@CreatorContextAccessor.Current.GetSiteName()</p>
+                <h1>About this Creator</h1>
+                <p class="about-lead">
+                    @CreatorContextAccessor.Current.Brand.Tagline
+                </p>
+            </div>
+        </section>
+    </main>
+}
+else
+{
+    <main class="about-page" style="@AboutHeroStyle">
+        <section class="about-hero">
+            <div class="about-content">
+                <p class="about-eyebrow">@CreatorContextAccessor.Current.GetSiteName()</p>
+                <h1>@_profile.Headline</h1>
+                <p class="about-lead">@_profile.Lead</p>
+            </div>
+        </section>
 
-    This page is intentionally simple so it can serve as a visible end-to-end
-    deployment test for the AdventuresSuite GitHub Actions and Azure pipeline.
-*@
+        <section class="about-story">
+            <div class="about-content about-reading-width">
+                <h2>@_profile.StoryTitle</h2>
 
-<main class="about-page">
-    <section class="about-hero">
-        <div class="about-content">
-            <p class="about-eyebrow">The Simonton Adventures</p>
+                @foreach (var paragraph in _profile.IntroductionParagraphs)
+                {
+                    <p>@paragraph</p>
+                }
 
-            <h1>Life is better when we explore it together.</h1>
+                @if (!string.IsNullOrWhiteSpace(_profile.Highlight))
+                {
+                    <p class="about-highlight">@_profile.Highlight</p>
+                }
 
-            <p class="about-lead">
-                We are Steve and Dianne Simonton, and some of our favorite
-                memories have been made while discovering new places together.
-            </p>
-        </div>
-    </section>
-
-    <section class="about-story">
-        <div class="about-content about-reading-width">
-            <h2>About Us</h2>
-
-            <p>
-                We love traveling, learning the history behind the places we
-                visit, taking photographs, sharing great meals, and turning
-                those experiences into stories that our family can keep.
-            </p>
-
-            <p>
-                Every trip gives us another opportunity to laugh, explore,
-                learn something new, and create memories together.
-            </p>
-
-            <p class="about-highlight">
-                Steve would also like the official record to reflect that his
-                wife is incredibly hot, and traveling the world with her is
-                his favorite adventure.
-            </p>
-
-            <p>
-                What started as a simple idea to preserve our own memories slowly became
-                something much bigger. As we planned our trips, captured photographs,
-                organized reservations, wrote stories, and designed our books, we kept
-                asking ourselves why there wasn't one place that brought everything
-                together.
-            </p>
-
-            <p>
-                That question eventually inspired a much bigger vision&mdash;to build a
-                platform that could help anyone preserve meaningful adventures, not just
-                ours. That vision became <strong>AdventuresSuite</strong>, the platform
-                powering The Simonton Adventures and, someday, many other creators who
-                want to transform their journeys into lasting legacies.
-            </p>
-
-            <p>
-                The Simonton Adventures is our story. AdventuresSuite is the platform
-                that grew from it. Together they represent our belief that every
-                meaningful adventure deserves to be remembered, shared, and passed on to
-                future generations.
-            </p>
-        </div>
-    </section>
-</main>
+                @foreach (var paragraph in _profile.StoryParagraphs)
+                {
+                    <p>@paragraph</p>
+                }
+            </div>
+        </section>
+    </main>
+}
 
 <style>
     .about-page {
@@ -80,7 +62,7 @@
                 rgba(26, 35, 39, 0.88),
                 rgba(26, 35, 39, 0.55)
             ),
-            url('/images/volumes/volume-1/greece/athens/athens.jpeg')
+            var(--about-hero-image)
                 center / cover no-repeat fixed;
         color: #f7f4ee;
     }
@@ -148,3 +130,24 @@
         font-style: italic;
     }
 </style>
+
+@code {
+    private CreatorProfile? _profile;
+
+    private string AboutHeroImageUrl =>
+        string.IsNullOrWhiteSpace(_profile?.HeroImageUrl)
+            ? CreatorContextAccessor.Current.Brand.HomeHeroImageUrl
+            : _profile.HeroImageUrl;
+
+    private string AboutHeroStyle =>
+        $"--about-hero-image: url('{AboutHeroImageUrl}')";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (CreatorContextAccessor.Current.Features.EnableAbout)
+        {
+            _profile = await TravelContentService.GetCreatorProfileAsync(
+                CreatorContextAccessor.Current.Id);
+        }
+    }
+}

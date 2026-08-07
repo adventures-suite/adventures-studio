@@ -1,3 +1,5 @@
+@inject ICreatorContextAccessor CreatorContextAccessor
+
 <section id="our-story" class="home-story">
     <div class="home-story__content">
         <div class="home-story__copy">
@@ -11,20 +13,21 @@
             </p>
 
             <p>
-                The Simonton Adventures began as a way to preserve those memories.
+                @CreatorContextAccessor.Current.GetSiteName() began as a way to preserve those memories.
                 Over time, it became something more: a collection of stories,
                 photography, reflections, and resources designed to inspire others
                 to begin journeys of their own.
             </p>
 
-            <p class="home-story__signature">
-                Steve &amp; Dianne
-            </p>
+            @if (!string.IsNullOrWhiteSpace(Signature))
+            {
+                <p class="home-story__signature">@Signature</p>
+            }
         </div>
 
         <figure class="home-story__media">
-            <img src="/images/home/our-story.jpeg"
-                 alt="Steve and Dianne sharing a memorable moment during their travels"
+            <img src="@ImageUrl"
+                 alt="@ImageAlt"
                  loading="lazy" />
 
             <figcaption>
@@ -33,3 +36,17 @@
         </figure>
     </div>
 </section>
+
+@code {
+    /// <summary>Gets or sets the optional Creator-authored signature.</summary>
+    [Parameter]
+    public string Signature { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the Creator-authored story image URL.</summary>
+    [Parameter]
+    public string ImageUrl { get; set; } = "/images/home/our-story.jpeg";
+
+    /// <summary>Gets or sets accessible alternative text for the story image.</summary>
+    [Parameter]
+    public string ImageAlt { get; set; } = "Creators sharing a memorable journey";
+}

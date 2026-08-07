@@ -1,10 +1,41 @@
 ﻿@page "/"
 
 @using TheSimontonAdventures.Web.Components.Home
+@inject ICreatorContextAccessor CreatorContextAccessor
+@inject ITravelContentService TravelContentService
 
-<PageTitle>Adventures Studio</PageTitle>
+<PageTitle>@CreatorContextAccessor.Current.GetDefaultSeoTitle()</PageTitle>
 
 <HomeHero
-    HeroImage="/images/home/adventures-studio-hero.jpeg"
-    HeroImageAlt="A sweeping Mediterranean travel scene"
-    PrimaryActionUrl="/volumes/italy-greece-croatia" />
+    Eyebrow="@CreatorContextAccessor.Current.GetSiteName()"
+    Headline="@CreatorContextAccessor.Current.Brand.Tagline"
+    HeroImage="@HeroImage"
+    HeroImageAlt="@HeroImageAlt"
+    PrimaryActionUrl="@_primaryActionUrl" />
+
+@code {
+    private string _primaryActionUrl = "/";
+
+    private string HeroImage =>
+        string.IsNullOrWhiteSpace(CreatorContextAccessor.Current.Brand.HomeHeroImageUrl)
+            ? "/images/home/adventures-studio-hero.jpeg"
+            : CreatorContextAccessor.Current.Brand.HomeHeroImageUrl;
+
+    private string HeroImageAlt =>
+        string.IsNullOrWhiteSpace(CreatorContextAccessor.Current.Brand.HomeHeroImageAlt)
+            ? "A memorable travel experience"
+            : CreatorContextAccessor.Current.Brand.HomeHeroImageAlt;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var creatorId = CreatorContextAccessor.Current.Id;
+        var volume = await TravelContentService.GetCurrentVolumeAsync(creatorId)
+            ?? (await TravelContentService.GetPublicVolumesAsync(creatorId))
+                .FirstOrDefault();
+
+        if (volume is not null)
+        {
+            _primaryActionUrl = TravelRoutes.Volume(volume.Slug);
+        }
+    }
+}

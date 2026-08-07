@@ -1,6 +1,7 @@
 @using TheSimontonAdventures.Web.Models
 @using TheSimontonAdventures.Web.Services
 @inject ITravelContentService TravelContentService
+@inject ICreatorContextAccessor CreatorContextAccessor
 
 @if (_previous is not null || _next is not null)
 {
@@ -48,7 +49,8 @@
         _previous = null;
         _next = null;
 
-        var destinations = await TravelContentService.GetDestinationsForVolumeAsync(
+        var destinations = await TravelContentService.GetPublishedDestinationsForVolumeAsync(
+            CreatorContextAccessor.Current.Id,
             Destination.VolumeSlug);
 
         var currentIndex = destinations.ToList().FindIndex(item =>

@@ -1,13 +1,8 @@
 @page "/volumes/{VolumeSlug}/{CountrySlug}/{DestinationSlug}"
-@rendermode InteractiveServer
-
 @using TheSimontonAdventures.Web.Models
 @using TheSimontonAdventures.Web.Components.Platform
-@using Microsoft.Extensions.Options
-@using TheSimontonAdventures.Web.Configuration
-
 @inject ITravelContentService TravelContentService
-@inject IOptions<PlatformOptions> PlatformOptions
+@inject ICreatorContextAccessor CreatorContextAccessor
 
 <PageTitle>@PageTitle</PageTitle>
 
@@ -46,7 +41,7 @@ else
 
         <DestinationMap Map="_destination.Map" />
 
-        @if (PlatformOptions.Value.EnableCompanion)
+        @if (CreatorContextAccessor.Current.Features.EnableCompanion)
         {
             <AdventuresCompanion DestinationName="@_destination.Title" />
         }
@@ -70,22 +65,42 @@ else
     [Parameter]
     public string DestinationSlug { get; set; } = string.Empty;
 
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
     private Destination? _destination;
     private bool _isLoading;
 
     private string PageTitle =>
         _destination is null
-            ? "Destination | The Simonton Adventures"
-            : $"{_destination.Title} | The Simonton Adventures";
+            ? $"Destination | {CreatorContextAccessor.Current.GetSiteName()}"
+            : $"{_destination.Title} | " +
+              CreatorContextAccessor.Current.GetSiteName();
 
     protected override async Task OnParametersSetAsync()
     {
         _isLoading = true;
 
-        _destination = await TravelContentService.GetDestinationAsync(
+        var creatorId = CreatorContextAccessor.Current.Id;
+        var volume = await TravelContentService.GetVolumeAsync(
+            creatorId,
+            VolumeSlug);
+        var destination = await TravelContentService.GetDestinationAsync(
+            creatorId,
             VolumeSlug,
             CountrySlug,
             DestinationSlug);
+
+        _destination = PublicContentPolicy.IsPublic(volume, destination)
+            ? destination
+            : null;
+
+        if (_destination is null
+            && HttpContext is not null
+            && !HttpContext.Response.HasStarted)
+        {
+            HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
+        }
 
         _isLoading = false;
     }

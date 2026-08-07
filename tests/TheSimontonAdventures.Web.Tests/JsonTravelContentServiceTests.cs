@@ -1,3 +1,4 @@
+using TheSimontonAdventures.Web.Creators;
 using TheSimontonAdventures.Web.Models;
 
 namespace TheSimontonAdventures.Web.Tests;
@@ -8,6 +9,27 @@ namespace TheSimontonAdventures.Web.Tests;
 /// </summary>
 public sealed class JsonTravelContentServiceTests
 {
+    private static readonly CreatorId FlagshipCreatorId =
+        new("creator_tsa_01");
+
+    /// <summary>
+    /// Ensures Creator-authored About content loads through the scoped Content
+    /// Engine and references the corrected hero asset.
+    /// </summary>
+    [Fact]
+    public async Task GetCreatorProfileAsync_Flagship_LoadsCorrectedAboutContent()
+    {
+        var service = TestContentServiceFactory.Create();
+
+        var profile = await service.GetCreatorProfileAsync(FlagshipCreatorId);
+
+        Assert.NotNull(profile);
+        Assert.Equal("Life is better when we explore it together.", profile.Headline);
+        Assert.Equal(
+            "/images/volumes/volume-1/greece/athens/athens-wide.jpeg",
+            profile.HeroImageUrl);
+    }
+
     /// <summary>
     /// Ensures every committed volume manifest can be deserialized.
     /// </summary>
@@ -16,7 +38,7 @@ public sealed class JsonTravelContentServiceTests
     {
         var service = TestContentServiceFactory.Create();
 
-        var volumes = await service.GetVolumesAsync();
+        var volumes = await service.GetVolumesAsync(FlagshipCreatorId);
 
         Assert.Equal(3, volumes.Count);
         Assert.Equal([1, 2, 3], volumes.Select(volume => volume.Number));
@@ -33,7 +55,7 @@ public sealed class JsonTravelContentServiceTests
     public async Task VolumeDestinationReferences_ResolveToMatchingDestinations()
     {
         var service = TestContentServiceFactory.Create();
-        var volumes = await service.GetVolumesAsync();
+        var volumes = await service.GetVolumesAsync(FlagshipCreatorId);
 
         foreach (var volume in volumes.Where(volume =>
             volume.Status is VolumeStatus.Current or VolumeStatus.Published))
@@ -41,6 +63,7 @@ public sealed class JsonTravelContentServiceTests
             foreach (var reference in volume.Destinations)
             {
                 var destination = await service.GetDestinationAsync(
+                    FlagshipCreatorId,
                     volume.Slug,
                     reference.CountrySlug,
                     reference.DestinationSlug);
@@ -61,13 +84,14 @@ public sealed class JsonTravelContentServiceTests
     public async Task VolumeJourneyReferences_ResolveToMatchingJourneys()
     {
         var service = TestContentServiceFactory.Create();
-        var volumes = await service.GetVolumesAsync();
+        var volumes = await service.GetVolumesAsync(FlagshipCreatorId);
 
         foreach (var volume in volumes)
         {
             foreach (var reference in volume.Journeys)
             {
                 var journey = await service.GetJourneyAsync(
+                    FlagshipCreatorId,
                     volume.Slug,
                     reference.Slug);
 
@@ -85,7 +109,7 @@ public sealed class JsonTravelContentServiceTests
     public async Task PublishedDestinationQrSlugs_ArePresentAndUnique()
     {
         var service = TestContentServiceFactory.Create();
-        var volumes = await service.GetPublicVolumesAsync();
+        var volumes = await service.GetPublicVolumesAsync(FlagshipCreatorId);
         var qrSlugs = new List<string>();
 
         foreach (var volume in volumes)
@@ -93,6 +117,7 @@ public sealed class JsonTravelContentServiceTests
             foreach (var reference in volume.Destinations)
             {
                 var destination = await service.GetDestinationAsync(
+                    FlagshipCreatorId,
                     volume.Slug,
                     reference.CountrySlug,
                     reference.DestinationSlug);
@@ -119,8 +144,8 @@ public sealed class JsonTravelContentServiceTests
     {
         var service = TestContentServiceFactory.Create();
 
-        var current = await service.GetCurrentVolumeAsync();
-        var publicVolumes = await service.GetPublicVolumesAsync();
+        var current = await service.GetCurrentVolumeAsync(FlagshipCreatorId);
+        var publicVolumes = await service.GetPublicVolumesAsync(FlagshipCreatorId);
 
         Assert.NotNull(current);
         Assert.Equal(VolumeStatus.Current, current.Status);
@@ -138,6 +163,7 @@ public sealed class JsonTravelContentServiceTests
         var service = TestContentServiceFactory.Create();
 
         var destinations = await service.GetDestinationsForVolumeAsync(
+            FlagshipCreatorId,
             "italy-greece-croatia");
 
         Assert.Equal(
@@ -164,6 +190,7 @@ public sealed class JsonTravelContentServiceTests
 
         var destinations =
             await service.GetPublishedDestinationsForVolumeAsync(
+                FlagshipCreatorId,
                 "italy-greece-croatia");
 
         Assert.NotEmpty(destinations);
@@ -180,6 +207,7 @@ public sealed class JsonTravelContentServiceTests
         var service = TestContentServiceFactory.Create();
 
         var destinations = await service.GetFeaturedDestinationsAsync(
+            FlagshipCreatorId,
             "italy-greece-croatia");
 
         Assert.NotEmpty(destinations);
@@ -202,6 +230,7 @@ public sealed class JsonTravelContentServiceTests
         var service = TestContentServiceFactory.Create();
 
         var destinations = await service.GetDestinationsForVolumeAsync(
+            FlagshipCreatorId,
             "not-a-real-volume");
 
         Assert.Empty(destinations);

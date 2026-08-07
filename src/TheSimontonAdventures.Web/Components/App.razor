@@ -1,5 +1,7 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿@inject ICreatorContextAccessor CreatorContextAccessor
+
+<!DOCTYPE html>
+<html lang="@CreatorContextAccessor.Current.Locale">
 
 <head>
     <meta charset="utf-8" />
@@ -10,7 +12,9 @@
     <link rel="stylesheet" href="@Assets["app.css"]" />
     <link rel="stylesheet" href="@Assets["TheSimontonAdventures.Web.styles.css"]" />
     <ImportMap />
-    <link rel="icon" type="image/png" href="favicon.png" />
+    <meta name="description"
+          content="@CreatorContextAccessor.Current.GetDefaultSeoDescription()" />
+    <link rel="icon" href="@FaviconUrl" />
     <HeadOutlet />
 </head>
 
@@ -21,3 +25,10 @@
 </body>
 
 </html>
+
+@code {
+    private string FaviconUrl =>
+        string.IsNullOrWhiteSpace(CreatorContextAccessor.Current.Brand.FaviconUrl)
+            ? "/favicon.png"
+            : CreatorContextAccessor.Current.Brand.FaviconUrl;
+}

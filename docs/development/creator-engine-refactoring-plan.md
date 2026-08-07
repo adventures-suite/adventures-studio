@@ -52,7 +52,11 @@ Keep `contentRoot` pointing to the existing `Content/Volumes` directory.
 Acceptance criteria:
 
 - Creator identity is not derived from slug or domain.
+- Default, empty, whitespace-only, and malformed Creator identities are
+  rejected.
 - The flagship Creator manifest loads and validates.
+- `contentRoot` is relative, resolves beneath the approved application content
+  root, and rejects rooted or parent-traversing paths.
 - Public Creator types have XML documentation.
 - Invalid and duplicate domains are rejected by validation tests.
 - Existing pages continue to work.
@@ -150,6 +154,8 @@ Acceptance criteria:
 
 ## Phase 6: Creator-Driven Presentation
 
+**Implementation status:** Complete in the current working branch.
+
 Move shared presentation assumptions into Creator configuration:
 
 - Display name
@@ -179,7 +185,24 @@ Acceptance criteria:
 - No shared component assumes the flagship Creator or adventure.
 - Feature configuration cannot bleed between Creator requests.
 
+Implementation notes:
+
+- Shared document metadata, header, footer, navigation, current-adventure
+  selection, and feature visibility consume the resolved Creator Context.
+- Creator colors and typography use validated structured tokens rather than
+  arbitrary CSS.
+- Global platform feature switches were removed; Creator manifests now own
+  Companion, reservation, and telemetry availability.
+- Creator-authored About copy and media load from Creator-scoped JSON content;
+  the shared About component contains no flagship story or asset assumptions.
+- Public Razor routes apply volume, destination, and journey publication state
+  and return HTTP 404 for content outside the public boundary.
+- Azure's environment-provided default hostname maps to an explicitly
+  configured Creator identity without embedding Azure resource names in source.
+
 ## Phase 7: Indexing, Caching, and Validation
+
+**Implementation status:** Complete in the current working branch.
 
 After creator-scoped behavior is correct, introduce an immutable JSON index or
 cache if profiling justifies it.
@@ -195,6 +218,21 @@ Requirements:
 
 Do not add caching before isolation tests exist.
 
+Implementation notes:
+
+- Creator manifests are loaded once into an immutable registry indexed by
+  stable Creator identity and normalized approved domain.
+- Startup validation runs for every registered Creator before requests are
+  served and emits Creator-scoped diagnostic codes.
+- Duplicate volume slugs, duplicate content references, duplicate public QR
+  slugs, invalid media paths, broken required references, and multiple current
+  volumes are startup-blocking errors.
+- Missing optional media and unauthored references in draft or planned volumes
+  are observable warnings.
+- No Content Engine response cache was introduced because profiling has not
+  demonstrated a need. Any future content cache must use keys beginning with
+  Creator identity and must preserve publication state.
+
 ## Phase 8: Optional Physical Content Migration
 
 Only after the preceding phases are stable, consider moving content to:
@@ -205,6 +243,15 @@ Content/Creators/{creator}/Adventures/{adventure}/...
 
 Perform the move separately from contract refactoring so failures are easy to
 diagnose. Preserve canonical public routes and permanent QR addresses.
+
+## Phase 9: Permanent Local Demo Creator
+
+**Implementation status:** Complete in the current working branch.
+
+The development environment includes a permanent second Creator with distinct
+branding, features, content, and a shared `athens` public slug. It resolves only
+through the explicit `demo.localhost` development alias and cannot resolve in
+Production. See `docs/development/local-demo-creator.md` for browser testing.
 
 ## Verification Required for Every Phase
 

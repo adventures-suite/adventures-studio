@@ -1,6 +1,6 @@
 # Domain Model
 
-**Version:** 1.1
+**Version:** 1.2
 
 **Status:** Approved
 
@@ -46,7 +46,7 @@ The Adventure remains the source of truth.
 
 # Core Domain
 
-Publisher
+Creator
 
 ↓
 
@@ -80,13 +80,14 @@ Every future capability within Adventures Studio should naturally fit somewhere 
 
 ---
 
-# Publisher
+# Creator
 
-A Publisher owns Adventures.
+A Creator is the tenant and ownership boundary for Adventures and related
+content.
 
 Examples include:
 
-- Adventures Studio
+- The Simonton Adventures
 - Independent Travelers
 - Families
 - Professional Photographers
@@ -94,9 +95,11 @@ Examples include:
 - Tour Companies
 - Destination Organizations
 
-The platform should never assume Adventures Studio is the only publisher.
+The platform must not assume The Simonton Adventures is the only Creator.
 
-Publishers create Adventures.
+Creators create and own Adventures. A Creator may publish its own content or
+grant publishing capabilities to authorized Users. Publisher describes that
+role or capability; it is not a separate ownership boundary.
 
 ---
 
@@ -412,25 +415,26 @@ The Adventure remains the source of truth.
 
 # User
 
-A User owns one or more Adventures.
+A User is an authenticated person who may receive permissions within one or
+more Creators.
 
 Future roles include:
 
 - Traveler
-- Creator
+- Owner
 - Editor
 - Contributor
 - Administrator
 
-Users own content.
+Users act on Creator-owned content according to their permissions.
 
-The platform never owns user content.
+User identity does not establish a separate content-ownership boundary.
 
 ---
 
 # Organization
 
-Organizations may own multiple Adventures.
+An Organization that owns Adventures is represented by a Creator.
 
 Examples:
 
@@ -441,7 +445,8 @@ Examples:
 - Mission Organization
 - University
 
-Organizations support collaboration.
+Organizations support collaboration through Users and permissions within that
+Creator.
 
 ---
 
@@ -465,13 +470,13 @@ AI may interact with:
 
 AI never owns content.
 
-Users own content.
+Creators own content.
 
 ---
 
 # Relationships
 
-Publisher
+Creator
 
 └── Adventures
 
@@ -503,7 +508,14 @@ Publisher
 
 # Ownership Rules
 
-Publisher owns Adventures.
+Creator owns Adventures and all Creator-specific content.
+
+Publisher is a role or capability exercised within Creator scope.
+
+Users receive permissions within one or more Creators and do not create a
+parallel ownership boundary.
+
+Organizations that own content are represented by Creators.
 
 Adventure owns:
 

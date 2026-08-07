@@ -1,6 +1,5 @@
-using Microsoft.Extensions.Options;
 using QRCoder;
-using TheSimontonAdventures.Web.Configuration;
+using TheSimontonAdventures.Web.Creators;
 
 namespace TheSimontonAdventures.Web.Services;
 
@@ -9,21 +8,20 @@ namespace TheSimontonAdventures.Web.Services;
 /// </summary>
 public sealed class QrCodeService : IQrCodeService
 {
-    private readonly PlatformOptions _options;
-
-    /// <summary>Initializes a QR service with validated platform configuration.</summary>
-    /// <param name="options">The configured public platform options.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="options"/> is null.</exception>
-    public QrCodeService(IOptions<PlatformOptions> options)
-    {
-        ArgumentNullException.ThrowIfNull(options);
-
-        _options = options.Value;
-    }
-
     /// <inheritdoc />
-    public string BuildPublicUrl(string qrSlug)
+    public string BuildPublicUrl(
+        CreatorContext creatorContext,
+        string qrSlug)
     {
+        ArgumentNullException.ThrowIfNull(creatorContext);
+
+        if (creatorContext.Id == default)
+        {
+            throw new ArgumentException(
+                "Creator Context must contain a non-default identity.",
+                nameof(creatorContext));
+        }
+
         if (string.IsNullOrWhiteSpace(qrSlug))
         {
             throw new ArgumentException(
@@ -31,22 +29,37 @@ public sealed class QrCodeService : IQrCodeService
                 nameof(qrSlug));
         }
 
-        if (string.IsNullOrWhiteSpace(_options.PublicBaseUrl))
+        if (!CreatorHost.TryNormalize(
+            creatorContext.PrimaryDomain,
+            out var primaryDomain))
         {
-            throw new InvalidOperationException(
-                "Platform:PublicBaseUrl has not been configured.");
+            throw new ArgumentException(
+                "Creator Context must contain a valid primary domain.",
+                nameof(creatorContext));
         }
 
-        var baseUrl = _options.PublicBaseUrl.TrimEnd('/');
         var normalizedSlug = qrSlug.Trim().Trim('/');
 
-        return $"{baseUrl}/go/{normalizedSlug}";
+        if (normalizedSlug.Length == 0
+            || normalizedSlug.Contains('/')
+            || normalizedSlug.Contains('\\')
+            || normalizedSlug.Contains('?')
+            || normalizedSlug.Contains('#'))
+        {
+            throw new ArgumentException(
+                "A single-segment QR slug is required.",
+                nameof(qrSlug));
+        }
+
+        return $"https://{primaryDomain}/go/{Uri.EscapeDataString(normalizedSlug)}";
     }
 
     /// <inheritdoc />
-    public string GenerateSvg(string qrSlug)
+    public string GenerateSvg(
+        CreatorContext creatorContext,
+        string qrSlug)
     {
-        var publicUrl = BuildPublicUrl(qrSlug);
+        var publicUrl = BuildPublicUrl(creatorContext, qrSlug);
 
         using var qrCodeData = QRCodeGenerator.GenerateQrCode(
             publicUrl,
@@ -62,9 +75,11 @@ public sealed class QrCodeService : IQrCodeService
     }
 
     /// <inheritdoc />
-    public byte[] GeneratePng(string qrSlug)
+    public byte[] GeneratePng(
+        CreatorContext creatorContext,
+        string qrSlug)
     {
-        var publicUrl = BuildPublicUrl(qrSlug);
+        var publicUrl = BuildPublicUrl(creatorContext, qrSlug);
 
         using var qrCodeData = QRCodeGenerator.GenerateQrCode(
             publicUrl,

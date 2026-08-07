@@ -1,19 +1,17 @@
+using TheSimontonAdventures.Web.Creators;
 using TheSimontonAdventures.Web.Models;
 using TheSimontonAdventures.Web.Routing;
 
 namespace TheSimontonAdventures.Web.Services;
 
 /// <summary>
-/// Resolves stable public slugs to published AdventuresSuite content by using
-/// the existing travel-content service as the initial content source.
+/// Resolves Creator-scoped public slugs to published AdventuresSuite content.
 /// </summary>
 /// <remarks>
 /// This service is the first implementation of the Address Engine abstraction.
 ///
-/// It intentionally wraps <see cref="ITravelContentService"/> rather than
-/// duplicating JSON-loading or file-system logic. This allows existing content
-/// infrastructure to remain operational while public-address resolution evolves
-/// into a reusable platform capability.
+/// It intentionally uses the Creator-scoped <see cref="ITravelContentService"/>
+/// rather than duplicating JSON-loading or file-system logic.
 ///
 /// The initial implementation supports published destinations. Additional
 /// addressable content types, including experiences, journeys, reflections,
@@ -22,7 +20,7 @@ namespace TheSimontonAdventures.Web.Services;
 public sealed class AddressableContentService : IAddressableContentService
 {
     /// <summary>
-    /// Provides access to the existing JSON-backed travel content.
+    /// Provides Creator-scoped access to published travel content.
     /// </summary>
     private readonly ITravelContentService _travelContentService;
 
@@ -31,8 +29,8 @@ public sealed class AddressableContentService : IAddressableContentService
     /// <see cref="AddressableContentService"/> class.
     /// </summary>
     /// <param name="travelContentService">
-    /// The existing content service used to retrieve volumes, destinations,
-    /// and destination QR routes.
+    /// The Creator-scoped Content Engine used to retrieve published
+    /// destinations.
     /// </param>
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="travelContentService"/> is
@@ -48,9 +46,12 @@ public sealed class AddressableContentService : IAddressableContentService
 
     /// <inheritdoc />
     public async Task<AddressableContentRoute?> ResolveAsync(
+        CreatorId creatorId,
         string slug,
         CancellationToken cancellationToken = default)
     {
+        EnsureCreatorScope(creatorId);
+
         // Empty public addresses are invalid and should not be passed to the
         // underlying content service.
         if (string.IsNullOrWhiteSpace(slug))
@@ -58,68 +59,64 @@ public sealed class AddressableContentService : IAddressableContentService
             return null;
         }
 
-        // Normalize user-supplied input so route resolution is not affected by
-        // accidental leading or trailing whitespace.
-        var normalizedSlug = slug.Trim();
+        if (!TryNormalizeRequestedSlug(slug, out var normalizedSlug))
+        {
+            return null;
+        }
 
-        var destinationRoute =
-            await _travelContentService.GetDestinationRouteByQrSlugAsync(
+        var routes = await GetAllAsync(creatorId, cancellationToken);
+
+        return routes.FirstOrDefault(route =>
+            string.Equals(
+                route.Slug,
                 normalizedSlug,
-                cancellationToken);
-
-        if (destinationRoute is null)
-        {
-            return null;
-        }
-
-        var destination =
-            await _travelContentService.GetDestinationAsync(
-                destinationRoute.VolumeSlug,
-                destinationRoute.CountrySlug,
-                destinationRoute.DestinationSlug,
-                cancellationToken);
-
-        // The existing QR-route lookup identifies a destination route, but the
-        // Content Engine remains authoritative for publication state and public
-        // metadata.
-        if (destination is null || !destination.Published)
-        {
-            return null;
-        }
-
-        return CreateDestinationRoute(destination);
+                StringComparison.OrdinalIgnoreCase)
+            || route.Aliases.Any(alias => string.Equals(
+                alias,
+                normalizedSlug,
+                StringComparison.OrdinalIgnoreCase)));
     }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<AddressableContentRoute>> GetAllAsync(
+        CreatorId creatorId,
         CancellationToken cancellationToken = default)
     {
-        var publicVolumes =
-            await _travelContentService.GetPublicVolumesAsync(
-                cancellationToken);
-
+        EnsureCreatorScope(creatorId);
+        var publicVolumes = await _travelContentService.GetPublicVolumesAsync(
+            creatorId,
+            cancellationToken);
         var routes = new List<AddressableContentRoute>();
+        var registeredSlugs = new Dictionary<string, string>(
+            StringComparer.OrdinalIgnoreCase);
 
         foreach (var volume in publicVolumes)
         {
             cancellationToken.ThrowIfCancellationRequested();
-
-            var destinations =
-                await _travelContentService
-                    .GetPublishedDestinationsForVolumeAsync(
-                        volume.Slug,
-                        cancellationToken);
+            var destinations = await _travelContentService
+                .GetPublishedDestinationsForVolumeAsync(
+                    creatorId,
+                    volume.Slug,
+                    cancellationToken);
 
             foreach (var destination in destinations)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                if (string.IsNullOrWhiteSpace(destination.QrSlug))
+                if (!destination.Published)
                 {
                     continue;
                 }
 
-                routes.Add(CreateDestinationRoute(destination));
+                var route = CreateDestinationRoute(creatorId, destination);
+                RegisterSlug(registeredSlugs, route.Slug, route.Slug);
+
+                foreach (var alias in route.Aliases)
+                {
+                    RegisterSlug(registeredSlugs, alias, route.Slug);
+                }
+
+                routes.Add(route);
             }
         }
 
@@ -134,6 +131,7 @@ public sealed class AddressableContentService : IAddressableContentService
     /// Creates a platform-neutral public route from an existing destination
     /// content model.
     /// </summary>
+    /// <param name="creatorId">The Creator that owns the destination.</param>
     /// <param name="destination">
     /// The published destination to convert into an addressable route.
     /// </param>
@@ -142,11 +140,20 @@ public sealed class AddressableContentService : IAddressableContentService
     /// stable QR slug and current canonical application route.
     /// </returns>
     private static AddressableContentRoute CreateDestinationRoute(
+        CreatorId creatorId,
         Destination destination)
     {
+        var primarySlug = NormalizeContentSlug(
+            destination.QrSlug,
+            destination.Slug);
+        var aliases = destination.QrAliases
+            .Select(alias => NormalizeContentSlug(alias, destination.Slug))
+            .ToArray();
+
         return new AddressableContentRoute
         {
-            Slug = destination.QrSlug,
+            CreatorId = creatorId,
+            Slug = primarySlug,
             Title = destination.Title,
             ContentType = AddressableContentType.Destination,
             TargetUrl = TravelRoutes.Destination(
@@ -154,7 +161,55 @@ public sealed class AddressableContentService : IAddressableContentService
                 destination.CountrySlug,
                 destination.Slug),
             Published = destination.Published,
-            Aliases = []
+            Aliases = aliases
         };
+    }
+
+    private static void EnsureCreatorScope(CreatorId creatorId)
+    {
+        if (creatorId == default)
+        {
+            throw new ArgumentException(
+                "A non-default Creator identity is required.",
+                nameof(creatorId));
+        }
+    }
+
+    private static bool TryNormalizeRequestedSlug(
+        string slug,
+        out string normalizedSlug)
+    {
+        normalizedSlug = slug.Trim().Trim('/');
+
+        return normalizedSlug.Length > 0
+            && !normalizedSlug.Contains('/')
+            && !normalizedSlug.Contains('\\')
+            && !normalizedSlug.Contains('?')
+            && !normalizedSlug.Contains('#');
+    }
+
+    private static string NormalizeContentSlug(
+        string slug,
+        string destinationSlug)
+    {
+        if (!TryNormalizeRequestedSlug(slug, out var normalizedSlug))
+        {
+            throw new InvalidDataException(
+                $"Destination '{destinationSlug}' has an invalid public slug.");
+        }
+
+        return normalizedSlug;
+    }
+
+    private static void RegisterSlug(
+        IDictionary<string, string> registeredSlugs,
+        string slug,
+        string primarySlug)
+    {
+        if (!registeredSlugs.TryAdd(slug, primarySlug))
+        {
+            throw new InvalidDataException(
+                $"Public slug or alias '{slug}' is duplicated within the Creator.");
+        }
     }
 }

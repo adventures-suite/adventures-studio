@@ -1,0 +1,56 @@
+{
+  "volumeSlug": "demo-aegean-notebook",
+  "country": "Greece",
+  "countrySlug": "greece",
+  "city": "Athens",
+  "slug": "athens",
+  "qrSlug": "athens",
+  "title": "Athens Field Notes",
+  "subtitle": "The same public slug, owned by a different Creator",
+  "summary": "This concise destination proves that two Creators can independently own Athens without sharing content, branding, navigation, or public-address targets.",
+  "heroImage": "/images/volumes/volume-1/greece/athens/hero.jpeg",
+  "heroImageAlt": "The Acropolis overlooking Athens",
+  "published": true,
+  "featured": true,
+  "homepageOrder": 1,
+  "homepageImage": "/images/volumes/volume-1/greece/athens/homepage2.jpeg",
+  "homepageSummary": "A permanent browser-visible fixture for Creator isolation.",
+  "sections": [
+    {
+      "heading": "Why this Creator exists",
+      "paragraphs": [
+        "Aegean Field Notes is deliberately small and development-only. It follows the same Creator, Content, Address, QR, and Presentation Engine paths as the flagship site.",
+        "Its Athens slug intentionally overlaps the flagship Creator. The request host determines which Creator owns the address and which destination is rendered."
+      ],
+      "imageSrc": "/images/volumes/volume-1/greece/athens/acropolis.jpeg",
+      "imageAlt": "The Acropolis used by the development Creator fixture",
+      "imageCaption": "Shared platform media with independently owned demo content"
+    }
+  ],
+  "reflections": [],
+  "facts": [
+    {
+      "label": "Creator",
+      "value": "Aegean Field Notes"
+    },
+    {
+      "label": "Environment",
+      "value": "Development only"
+    },
+    {
+      "label": "Isolation key",
+      "value": "CreatorId + public slug"
+    }
+  ],
+  "highlights": [],
+  "tips": [],
+  "gallery": [
+    {
+      "src": "/images/volumes/volume-1/greece/athens/acropolis.jpeg",
+      "alt": "The Acropolis in Athens",
+      "caption": "Demo Creator media presentation",
+      "displayOrder": 1
+    }
+  ],
+  "resources": []
+}

@@ -83,6 +83,10 @@ and brand configuration are required boundaries.
 Prefer a strongly typed `CreatorId` throughout engine contracts so it cannot be
 confused with a slug or domain.
 
+The default value of `CreatorId`, an empty value, or a whitespace-only value is
+invalid. Manifest loading and public construction boundaries must reject these
+values rather than allowing an unscoped identity to enter an engine contract.
+
 ## Initial JSON Manifest
 
 The first Creator manifest should be stored as content rather than hard-coded:
@@ -118,9 +122,18 @@ Example logical structure:
 Development aliases such as `localhost` belong in environment-specific
 configuration or an explicitly development-only manifest override.
 
+A manifest may set `developmentOnly` for permanent local fixtures. Such a
+Creator remains available to startup validation but must be rejected by both
+registered-domain and alias resolution outside the Development environment.
+
 The initial `contentRoot` may point to the existing volume directory. Physical
 content reorganization is deliberately deferred until logical Creator scoping
 is working and tested.
+
+`contentRoot` is a storage locator and therefore part of the tenant-isolation
+boundary. The initial JSON implementation must require a normalized, relative
+application-content path. It must reject rooted paths, parent-directory
+traversal, and any resolved path outside the approved application content root.
 
 ## Contracts
 
@@ -194,6 +207,12 @@ Reverse-proxy forwarded-host handling may be enabled only through ASP.NET Core's
 trusted forwarded-header configuration. Do not trust arbitrary forwarded-host
 headers.
 
+Azure App Service supplies its environment-specific default host through the
+trusted `WEBSITE_HOSTNAME` process setting. Creator resolution maps that host to
+the explicitly configured `CreatorResolution:AzureDefaultCreatorId`; Azure app
+names and hostnames are never embedded in source. Custom domains remain owned by
+Creator manifests.
+
 ## Content Engine Integration
 
 The current `ITravelContentService` implicitly accesses one global collection.
@@ -256,6 +275,24 @@ domains, and feature availability must not remain in `PlatformOptions` once the
 Creator Engine owns them.
 
 Prefer structured brand values over arbitrary Creator-supplied CSS.
+
+The JSON-backed implementation exposes default SEO text, validated hexadecimal
+primary and accent colors, and an approved typography token through
+`CreatorBrand`. Shared presentation must apply safe fallbacks to Creator display
+identity when optional brand text is absent. Locale controls document language,
+and time zone controls Creator-local presentation such as copyright year.
+
+## Indexing and Startup Validation
+
+The JSON-backed Creator service builds one immutable deployed-manifest registry
+per application process. Creator identity and normalized approved domains are
+indexed during the same load that enforces global registration uniqueness.
+
+Before the application accepts requests, every registered Creator's content is
+validated within that Creator boundary. Errors prevent startup; warnings keep
+intentional draft and planned placeholders observable without blocking the
+flagship site. Content response caching remains deferred until profiling shows
+a concrete need. Future cache keys must begin with stable Creator identity.
 
 ## Storage Evolution
 

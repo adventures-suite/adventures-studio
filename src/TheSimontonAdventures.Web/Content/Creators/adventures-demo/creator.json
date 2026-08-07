@@ -1,0 +1,33 @@
+{
+  "id": "creator_demo_01",
+  "slug": "adventures-demo",
+  "displayName": "Adventures Demo",
+  "status": "Active",
+  "developmentOnly": true,
+  "primaryDomain": "demo.adventuressuite.test",
+  "domains": [
+    "demo.adventuressuite.test"
+  ],
+  "locale": "en-GB",
+  "timeZone": "Europe/Athens",
+  "contentRoot": "Content/DemoCreators/adventures-demo/Volumes",
+  "brand": {
+    "siteName": "Aegean Field Notes",
+    "tagline": "A development-only Creator exploring one city at a time",
+    "faviconUrl": "/favicon.png",
+    "homeHeroImageUrl": "/images/volumes/volume-1/greece/athens/athens-wide.jpeg",
+    "homeHeroImageAlt": "Athens and the Acropolis beneath a wide blue sky",
+    "copyrightNotice": "Aegean Field Notes Demo",
+    "defaultSeoTitle": "Aegean Field Notes — Creator Demo",
+    "defaultSeoDescription": "A development-only AdventuresSuite Creator used to verify tenant-scoped branding, content, addresses, and features.",
+    "primaryColor": "#123c4a",
+    "accentColor": "#e58b3a",
+    "typography": "Modern"
+  },
+  "features": {
+    "enableAbout": false,
+    "enableCompanion": false,
+    "enableReservations": false,
+    "enableTelemetry": false
+  }
+}

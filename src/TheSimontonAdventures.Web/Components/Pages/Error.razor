@@ -1,7 +1,8 @@
 ﻿@page "/Error"
 @using System.Diagnostics
+@inject ICreatorContextAccessor CreatorContextAccessor
 
-<PageTitle>Error</PageTitle>
+<PageTitle>Error | @CreatorContextAccessor.Current.GetSiteName()</PageTitle>
 
 <h1 class="text-danger">Error.</h1>
 <h2 class="text-danger">An error occurred while processing your request.</h2>

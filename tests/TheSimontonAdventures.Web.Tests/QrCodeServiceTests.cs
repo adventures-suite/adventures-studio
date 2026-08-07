@@ -1,48 +1,75 @@
-using Microsoft.Extensions.Options;
-using TheSimontonAdventures.Web.Configuration;
+using TheSimontonAdventures.Web.Creators;
 using TheSimontonAdventures.Web.Services;
 
 namespace TheSimontonAdventures.Web.Tests;
 
 /// <summary>
-/// Verifies public URL normalization and QR image generation.
+/// Verifies Creator-owned public URL construction and QR image generation.
 /// </summary>
 public sealed class QrCodeServiceTests
 {
     /// <summary>
-    /// Ensures public URLs normalize surrounding slashes and whitespace.
+    /// Ensures public URLs use the resolved Creator's normalized primary domain.
     /// </summary>
     [Fact]
-    public void BuildPublicUrl_NormalizesBaseUrlAndSlug()
+    public void BuildPublicUrl_UsesCreatorPrimaryDomain()
     {
-        var service = CreateService("https://example.com/");
+        var service = new QrCodeService();
+        var context = CreateContext("Creator.Example.COM.");
 
-        var url = service.BuildPublicUrl(" /venice/ ");
+        var url = service.BuildPublicUrl(context, " /venice/ ");
 
-        Assert.Equal("https://example.com/go/venice", url);
+        Assert.Equal("https://creator.example.com/go/venice", url);
     }
 
     /// <summary>
-    /// Ensures empty slugs are rejected rather than producing invalid QR links.
+    /// Ensures two Creators encode the same slug beneath their own durable
+    /// public domains.
     /// </summary>
     [Fact]
-    public void BuildPublicUrl_EmptySlug_ThrowsArgumentException()
+    public void BuildPublicUrl_SharedSlug_UsesEachCreatorDomain()
     {
-        var service = CreateService("https://example.com");
+        var service = new QrCodeService();
 
-        Assert.Throws<ArgumentException>(() => service.BuildPublicUrl(" "));
+        var firstUrl = service.BuildPublicUrl(
+            CreateContext("one.example.com", "creator_one_01"),
+            "acropolis");
+        var secondUrl = service.BuildPublicUrl(
+            CreateContext("two.example.com", "creator_two_01"),
+            "acropolis");
+
+        Assert.Equal("https://one.example.com/go/acropolis", firstUrl);
+        Assert.Equal("https://two.example.com/go/acropolis", secondUrl);
     }
 
     /// <summary>
-    /// Ensures QR generation requires a configured public base URL.
+    /// Ensures empty and multi-segment slugs are rejected rather than producing
+    /// invalid QR links.
+    /// </summary>
+    [Theory]
+    [InlineData(" ")]
+    [InlineData("folder/slug")]
+    [InlineData("slug?query")]
+    [InlineData("slug#fragment")]
+    public void BuildPublicUrl_InvalidSlug_ThrowsArgumentException(string slug)
+    {
+        var service = new QrCodeService();
+
+        Assert.Throws<ArgumentException>(() =>
+            service.BuildPublicUrl(CreateContext("example.com"), slug));
+    }
+
+    /// <summary>
+    /// Ensures QR generation requires a valid resolved Creator Context.
     /// </summary>
     [Fact]
-    public void BuildPublicUrl_MissingBaseUrl_ThrowsInvalidOperationException()
+    public void BuildPublicUrl_DefaultCreatorId_ThrowsArgumentException()
     {
-        var service = CreateService(string.Empty);
+        var service = new QrCodeService();
+        var context = CreateContext("example.com", creatorId: null);
 
-        Assert.Throws<InvalidOperationException>(() =>
-            service.BuildPublicUrl("venice"));
+        Assert.Throws<ArgumentException>(() =>
+            service.BuildPublicUrl(context, "venice"));
     }
 
     /// <summary>
@@ -51,10 +78,11 @@ public sealed class QrCodeServiceTests
     [Fact]
     public void GenerateImages_ProducesSvgAndPngData()
     {
-        var service = CreateService("https://example.com");
+        var service = new QrCodeService();
+        var context = CreateContext("example.com");
 
-        var svg = service.GenerateSvg("venice");
-        var png = service.GeneratePng("venice");
+        var svg = service.GenerateSvg(context, "venice");
+        var png = service.GeneratePng(context, "venice");
 
         Assert.Contains("<svg", svg, StringComparison.OrdinalIgnoreCase);
         Assert.True(png.Length > 8);
@@ -63,13 +91,22 @@ public sealed class QrCodeServiceTests
             png[..8]);
     }
 
-    private static QrCodeService CreateService(string publicBaseUrl)
+    private static CreatorContext CreateContext(
+        string primaryDomain,
+        string? creatorId = "creator_test_01")
     {
-        return new QrCodeService(
-            Options.Create(
-                new PlatformOptions
-                {
-                    PublicBaseUrl = publicBaseUrl
-                }));
+        return new CreatorContext
+        {
+            Id = creatorId is null ? default : new CreatorId(creatorId),
+            Slug = "test-creator",
+            DisplayName = "Test Creator",
+            RequestedHost = primaryDomain,
+            PrimaryDomain = primaryDomain,
+            Brand = new CreatorBrand(),
+            Features = new CreatorFeatures(),
+            Locale = "en-US",
+            TimeZone = "UTC",
+            ContentRoot = "Content/Volumes"
+        };
     }
 }

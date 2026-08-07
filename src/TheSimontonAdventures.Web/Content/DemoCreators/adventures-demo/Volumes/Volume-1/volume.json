@@ -1,0 +1,31 @@
+{
+  "number": 1,
+  "slug": "demo-aegean-notebook",
+  "title": "Aegean Notebook",
+  "subtitle": "A permanent multi-Creator development fixture",
+  "description": "A small, intentionally distinct adventure used to verify that AdventuresSuite resolves and renders the correct Creator from the request host.",
+  "coverImage": "/images/volumes/volume-1/greece/athens/homepage2.jpeg",
+  "heroImage": "/images/volumes/volume-1/greece/athens/athens-wide.jpeg",
+  "travelDates": "Development fixture",
+  "statusMessage": "Visible only through the explicit demo Creator host",
+  "status": "Current",
+  "journeyStops": [
+    {
+      "title": "Athens",
+      "subtitle": "A focused Creator-isolation test",
+      "countrySlug": "greece",
+      "destinationSlug": "athens",
+      "travelMode": "Walking",
+      "travelDescription": "Exploring the historic centre on foot",
+      "displayOrder": 1
+    }
+  ],
+  "journeys": [],
+  "destinations": [
+    {
+      "countrySlug": "greece",
+      "destinationSlug": "athens",
+      "displayOrder": 1
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 @using TheSimontonAdventures.Web.Models
 @using TheSimontonAdventures.Web.Services
 @inject ITravelContentService TravelContentService
+@inject ICreatorContextAccessor CreatorContextAccessor
 
 @if (_volume is not null && _volume.JourneyStops.Count > 0)
 {
@@ -8,11 +9,10 @@
         <div class="home-journey__header">
             <p class="home-journey__eyebrow">The Journey</p>
 
-            <h2>From Phoenix to the Mediterranean</h2>
+            <h2>@_volume.Title</h2>
 
             <p>
-                Follow the route through Italy, Croatia, and Greece,
-                with each stop becoming another chapter in the adventure.
+                Follow each stop as another chapter in this Creator's adventure.
             </p>
         </div>
 
@@ -41,6 +41,9 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        _volume = await TravelContentService.GetCurrentVolumeAsync();
+        var volume = await TravelContentService.GetVolumeAsync(
+            CreatorContextAccessor.Current.Id,
+            VolumeSlug);
+        _volume = PublicContentPolicy.IsPublic(volume) ? volume : null;
     }
 }

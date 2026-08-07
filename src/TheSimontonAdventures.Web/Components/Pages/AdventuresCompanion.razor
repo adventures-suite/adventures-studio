@@ -1,24 +1,21 @@
 @page "/platform/adventures-companion"
 
-@using Microsoft.Extensions.Options
-@using TheSimontonAdventures.Web.Configuration
+@inject ICreatorContextAccessor CreatorContextAccessor
 
-@inject IOptions<PlatformOptions> PlatformOptions
+<PageTitle>Adventures Companion | @CreatorContextAccessor.Current.GetSiteName()</PageTitle>
 
-<PageTitle>Adventures Companion | Adventures Studio</PageTitle>
-
-@if (!PlatformOptions.Value.EnableCompanion)
+@if (!CreatorContextAccessor.Current.Features.EnableCompanion)
 {
     <main class="companion-page">
         <section class="companion-status">
             <span class="companion-section__eyebrow">
-                Adventures Studio
+                @CreatorContextAccessor.Current.GetSiteName()
             </span>
 
             <h1>Adventures Companion is not currently available.</h1>
 
             <p>
-                This experience is part of the long-term Adventures Studio platform
+                This experience is part of the long-term AdventuresSuite platform
                 vision and will be introduced in a future release.
             </p>
 
@@ -34,7 +31,7 @@ else
     <main class="companion-page">
         <section class="companion-hero">
             <span class="companion-hero__eyebrow">
-                Adventures Studio
+                @CreatorContextAccessor.Current.GetSiteName()
             </span>
 
             <h1>
@@ -127,7 +124,7 @@ else
             <h2>Coming in a future release</h2>
 
             <p>
-                Adventures Companion is part of the long-term Adventures Studio
+                Adventures Companion is part of the long-term AdventuresSuite
                 platform vision. The current destination experience is laying the
                 foundation for what comes next.
             </p>

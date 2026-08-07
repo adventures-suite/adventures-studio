@@ -24,6 +24,9 @@ public sealed class Destination
     /// <summary>Gets the stable public slug encoded by printed QR codes.</summary>
     public string QrSlug { get; init; } = string.Empty;
 
+    /// <summary>Gets historical public slugs that resolve to this destination.</summary>
+    public IReadOnlyList<string> QrAliases { get; init; } = [];
+
     /// <summary>Gets the primary editorial title.</summary>
     public string Title { get; init; } = string.Empty;
 

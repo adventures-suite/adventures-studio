@@ -1,6 +1,7 @@
 using TheSimontonAdventures.Web.Components;
-using TheSimontonAdventures.Web.Configuration;
+using TheSimontonAdventures.Web.Creators;
 using TheSimontonAdventures.Web.Services;
+using TheSimontonAdventures.Web.Validation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,24 +10,19 @@ builder.Services
     .AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// Bind and validate the platform-wide configuration settings.
-//
-// Environment variables may override these values at deployment time.
-// For example, Azure App Service uses:
-// Platform__PublicBaseUrl
-builder.Services
-    .AddOptions<PlatformOptions>()
-    .Bind(builder.Configuration.GetSection(PlatformOptions.SectionName))
-    .ValidateDataAnnotations()
-    .Validate(
-        options => Uri.TryCreate(
-            options.PublicBaseUrl,
-            UriKind.Absolute,
-            out var uri) &&
-            (uri.Scheme == Uri.UriSchemeHttp ||
-             uri.Scheme == Uri.UriSchemeHttps),
-        $"{PlatformOptions.SectionName}:PublicBaseUrl must be a valid HTTP or HTTPS URL.")
-    .ValidateOnStart();
+// Bind environment-specific Creator host aliases. The resolver ignores these
+// mappings outside Development so production hosts always require an explicit
+// approved-domain registration.
+builder.Services.Configure<CreatorResolutionOptions>(
+    builder.Configuration.GetSection(CreatorResolutionOptions.SectionName));
+
+// Register the Creator Engine retrieval and host-resolution foundation. Request
+// context establishment is introduced separately in the middleware phase.
+builder.Services.AddSingleton<ICreatorService, JsonCreatorService>();
+builder.Services.AddSingleton<ICreatorResolver, CreatorResolver>();
+builder.Services.AddScoped<CreatorContextAccessor>();
+builder.Services.AddScoped<ICreatorContextAccessor>(services =>
+    services.GetRequiredService<CreatorContextAccessor>());
 
 // Register the existing JSON-backed travel-content implementation.
 //
@@ -50,6 +46,11 @@ builder.Services.AddSingleton<
     IQrCodeService,
     QrCodeService>();
 
+// Warm the immutable Creator registry and validate Creator-scoped content
+// before requests can observe duplicate addresses or broken public references.
+builder.Services.AddSingleton<ICreatorContentValidator, CreatorContentValidator>();
+builder.Services.AddHostedService<CreatorContentValidationHostedService>();
+
 var app = builder.Build();
 
 // Configure production-only error handling and HTTP Strict Transport Security.
@@ -64,10 +65,9 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-// Re-execute unsuccessful requests through the shared not-found page.
-app.UseStatusCodePagesWithReExecute(
-    "/not-found",
-    createScopeForStatusCodePages: true);
+// Resolve the explicitly approved request host before status-page re-execution,
+// static assets, endpoints, or shared UI can expose Creator-owned content.
+app.UseMiddleware<CreatorResolutionMiddleware>();
 
 // Redirect HTTP requests to HTTPS.
 app.UseHttpsRedirection();
@@ -95,10 +95,12 @@ app.MapGet(
     async (
         string slug,
         IAddressableContentService addressableContentService,
+        ICreatorContextAccessor creatorContextAccessor,
         CancellationToken cancellationToken) =>
     {
         var route =
             await addressableContentService.ResolveAsync(
+                creatorContextAccessor.Current.Id,
                 slug,
                 cancellationToken);
 
@@ -128,6 +130,7 @@ app.MapGet(
     async (
         string slug,
         IAddressableContentService addressableContentService,
+        ICreatorContextAccessor creatorContextAccessor,
         IQrCodeService qrCodeService,
         CancellationToken cancellationToken) =>
     {
@@ -135,6 +138,7 @@ app.MapGet(
         // unpublished targets must not produce public QR assets.
         var route =
             await addressableContentService.ResolveAsync(
+                creatorContextAccessor.Current.Id,
                 slug,
                 cancellationToken);
 
@@ -144,7 +148,9 @@ app.MapGet(
                 $"No published content was found for public slug '{slug}'.");
         }
 
-        var svg = qrCodeService.GenerateSvg(route.Slug);
+        var svg = qrCodeService.GenerateSvg(
+            creatorContextAccessor.Current,
+            route.Slug);
 
         return Results.Text(
             svg,
@@ -163,6 +169,7 @@ app.MapGet(
     async (
         string slug,
         IAddressableContentService addressableContentService,
+        ICreatorContextAccessor creatorContextAccessor,
         IQrCodeService qrCodeService,
         CancellationToken cancellationToken) =>
     {
@@ -170,6 +177,7 @@ app.MapGet(
         // for missing or unpublished content.
         var route =
             await addressableContentService.ResolveAsync(
+                creatorContextAccessor.Current.Id,
                 slug,
                 cancellationToken);
 
@@ -179,7 +187,9 @@ app.MapGet(
                 $"No published content was found for public slug '{slug}'.");
         }
 
-        var png = qrCodeService.GeneratePng(route.Slug);
+        var png = qrCodeService.GeneratePng(
+            creatorContextAccessor.Current,
+            route.Slug);
 
         return Results.File(
             png,

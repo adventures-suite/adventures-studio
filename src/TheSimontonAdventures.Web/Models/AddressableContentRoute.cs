@@ -1,3 +1,5 @@
+using TheSimontonAdventures.Web.Creators;
+
 namespace TheSimontonAdventures.Web.Models;
 
 /// <summary>
@@ -14,6 +16,9 @@ namespace TheSimontonAdventures.Web.Models;
 /// </remarks>
 public sealed class AddressableContentRoute
 {
+    /// <summary>Gets the stable identity of the Creator that owns this address.</summary>
+    public required CreatorId CreatorId { get; init; }
+
     /// <summary>
     /// Gets the stable public slug used to address the target.
     /// </summary>

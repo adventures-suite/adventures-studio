@@ -1,4 +1,5 @@
 @using TheSimontonAdventures.Web.Models
+@rendermode InteractiveServer
 
 @if (Images.Count > 0)
 {
@@ -38,12 +39,6 @@
         </div>
     </section>
 
-    @if (_isLightboxOpen)
-    {
-        <p style="color: red; font-weight: bold;">
-            Lightbox open — image @(_currentIndex + 1)
-        </p>
-    }
     <PhotographyLightbox
         IsOpen="_isLightboxOpen"
         Images="orderedImages"

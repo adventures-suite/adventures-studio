@@ -40,10 +40,10 @@
       "title": "Alicante",
       "subtitle": "Spain",
       "countrySlug": "spain",
-      "destinationSlug": "palma-de-mallorca",
+      "destinationSlug": "alicante",
       "travelMode": "Cruise",
       "travelDescription": "Royal Caribbean Transatlantic cruise",
-      "displayOrder": 3
+      "displayOrder": 4
     },
     {
       "title": "Malaga",
@@ -52,7 +52,7 @@
       "destinationSlug": "malaga",
       "travelMode": "Cruise",
       "travelDescription": "Royal Caribbean Transatlantic cruise",
-      "displayOrder": 4
+      "displayOrder": 5
     },
     {
       "title": "Fort Lauderdale",
@@ -60,44 +60,38 @@
       "countrySlug": "usa",
       "destinationSlug": "fort-lauderdale",
       "icon": "◇",
-      "displayOrder": 5
+      "displayOrder": 6
     }
   ],
   "destinations": [
     {
-      "countrySlug": "usa",
-      "destinationSlug": "miami",
+      "countrySlug": "spain",
+      "destinationSlug": "barcelona",
       "displayOrder": 1,
       "featured": false
     },
     {
-      "countrySlug": "usa",
-      "destinationSlug": "key-west",
+      "countrySlug": "spain",
+      "destinationSlug": "palma-de-mallorca",
       "displayOrder": 2,
       "featured": false
     },
     {
-      "countrySlug": "usa",
-      "destinationSlug": "miami",
+      "countrySlug": "spain",
+      "destinationSlug": "alicante",
       "displayOrder": 3,
       "featured": false
     },
     {
-      "countrySlug": "st. maarten",
-      "destinationSlug": "philipsburg",
+      "countrySlug": "spain",
+      "destinationSlug": "malaga",
       "displayOrder": 4,
       "featured": false
     },
     {
-      "countrySlug": "st. thomas",
-      "destinationSlug": "charlotte-amalie",
+      "countrySlug": "usa",
+      "destinationSlug": "fort-lauderdale",
       "displayOrder": 5,
-      "featured": false
-    },
-    {
-      "countrySlug": "bahamas",
-      "destinationSlug": "perfect-day-cococay",
-      "displayOrder": 6,
       "featured": false
     }
   ]

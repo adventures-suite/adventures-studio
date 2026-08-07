@@ -1,0 +1,33 @@
+{
+  "id": "creator_tsa_01",
+  "slug": "the-simonton-adventures",
+  "displayName": "The Simonton Adventures",
+  "status": "Active",
+  "primaryDomain": "thesimontonadventures.com",
+  "domains": [
+    "thesimontonadventures.com",
+    "www.thesimontonadventures.com"
+  ],
+  "locale": "en-US",
+  "timeZone": "America/Phoenix",
+  "contentRoot": "Content/Volumes",
+  "brand": {
+    "siteName": "The Simonton Adventures",
+    "tagline": "Inspiration to unforgettable experiences",
+    "faviconUrl": "/favicon.png",
+    "homeHeroImageUrl": "/images/home/adventures-studio-hero.jpeg",
+    "homeHeroImageAlt": "A sweeping Mediterranean travel scene",
+    "copyrightNotice": "The Simonton Adventures",
+    "defaultSeoTitle": "The Simonton Adventures",
+    "defaultSeoDescription": "Meaningful journeys, trusted travel guidance, and stories designed to inspire unforgettable experiences.",
+    "primaryColor": "#1a2327",
+    "accentColor": "#9a6e3a",
+    "typography": "Classic"
+  },
+  "features": {
+    "enableAbout": true,
+    "enableCompanion": true,
+    "enableReservations": false,
+    "enableTelemetry": false
+  }
+}
