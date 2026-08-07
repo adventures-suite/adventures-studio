@@ -127,15 +127,28 @@ jobs:
         run: |
           echo "DEPLOYMENT_STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
 
-          az webapp deploy \
-            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
-            --name "${{ vars.AZURE_WEBAPP_NAME }}" \
-            --src-path "${{ env.PACKAGE_DIR }}/${{ env.PACKAGE_NAME }}" \
-            --type zip \
-            --clean true \
-            --restart true \
-            --track-status true \
-            --output none
+          for attempt in 1 2 3; do
+            if az webapp deploy \
+              --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+              --name "${{ vars.AZURE_WEBAPP_NAME }}" \
+              --src-path "${{ env.PACKAGE_DIR }}/${{ env.PACKAGE_NAME }}" \
+              --type zip \
+              --clean true \
+              --restart true \
+              --track-status true \
+              --output none; then
+              break
+            fi
+
+            if [ "$attempt" -eq 3 ]; then
+              echo "::error::Azure package deployment failed after 3 attempts."
+              exit 1
+            fi
+
+            retry_delay=$((attempt * 20))
+            echo "::warning::Azure package deployment attempt $attempt failed; retrying the same package in $retry_delay seconds."
+            sleep "$retry_delay"
+          done
 
           echo "DEPLOYMENT_COMPLETED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
 
