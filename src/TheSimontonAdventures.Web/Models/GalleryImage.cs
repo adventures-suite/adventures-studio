@@ -14,6 +14,12 @@ public sealed class GalleryImage
     /// <summary>Gets Resource Engine-authored alternative text used by presentation.</summary>
     public string AlternativeText { get; init; } = string.Empty;
 
+    /// <summary>Gets the Resource Engine-authored public attribution.</summary>
+    public string Attribution { get; init; } = string.Empty;
+
+    /// <summary>Gets the Resource Engine-authored copyright notice.</summary>
+    public string Copyright { get; init; } = string.Empty;
+
     /// <summary>Gets the optional editorial caption.</summary>
     public string Caption { get; init; } = string.Empty;
 

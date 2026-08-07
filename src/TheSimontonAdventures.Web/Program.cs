@@ -61,6 +61,27 @@ builder.Services.AddHostedService<CreatorContentValidationHostedService>();
 
 var app = builder.Build();
 
+// Emit one structured startup event after hosted validation has completed and
+// the server is ready to accept traffic. Deployment identifiers are supplied
+// by CI and remain "local" for developer-started instances.
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+    var readinessState =
+        app.Services.GetRequiredService<ApplicationReadinessState>();
+
+    app.Logger.LogInformation(
+        "Application started for deployment {CommitSha} (workflow run " +
+        "{RunId}, attempt {RunAttempt}) in {Environment}. Resource validation: " +
+        "{ResourcesValidated}; Creator content validation: " +
+        "{CreatorContentValidated}.",
+        app.Configuration["Deployment:CommitSha"] ?? "local",
+        app.Configuration["Deployment:RunId"] ?? "local",
+        app.Configuration["Deployment:RunAttempt"] ?? "local",
+        app.Environment.EnvironmentName,
+        readinessState.ResourcesValidated,
+        readinessState.CreatorContentValidated);
+});
+
 // Configure production-only error handling and HTTP Strict Transport Security.
 if (!app.Environment.IsDevelopment())
 {

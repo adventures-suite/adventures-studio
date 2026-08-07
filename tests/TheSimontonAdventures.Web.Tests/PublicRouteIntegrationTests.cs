@@ -84,6 +84,8 @@ public sealed class PublicRouteIntegrationTests : IClassFixture<PublicRouteInteg
 
         Assert.Contains("/images/volumes/volume-1/italy/venice/canal-hero.jpeg", html);
         Assert.Contains("A canal in Venice", html);
+        Assert.Contains("Photo: The Simonton Adventures", html);
+        Assert.Contains("Copyright The Simonton Adventures", html);
         Assert.DoesNotContain("athens-wide.jpeg", html);
     }
 

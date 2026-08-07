@@ -30,9 +30,33 @@
                              loading="lazy" />
                     </button>
 
-                    @if (!string.IsNullOrWhiteSpace(image.Caption))
+                    @if (!string.IsNullOrWhiteSpace(image.Caption)
+                        || !string.IsNullOrWhiteSpace(image.Attribution)
+                        || !string.IsNullOrWhiteSpace(image.Copyright))
                     {
-                        <figcaption>@image.Caption</figcaption>
+                        <figcaption>
+                            @if (!string.IsNullOrWhiteSpace(image.Caption))
+                            {
+                                <span class="destination-gallery__caption">
+                                    @image.Caption
+                                </span>
+                            }
+
+                            @if (!string.IsNullOrWhiteSpace(image.Attribution)
+                                || !string.IsNullOrWhiteSpace(image.Copyright))
+                            {
+                                <small class="destination-gallery__credit">
+                                    @if (!string.IsNullOrWhiteSpace(image.Attribution))
+                                    {
+                                        <span>Photo: @image.Attribution</span>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(image.Copyright))
+                                    {
+                                        <span>@image.Copyright</span>
+                                    }
+                                </small>
+                            }
+                        </figcaption>
                     }
                 </figure>
             }

@@ -35,10 +35,27 @@
                 <figcaption class="lightbox-caption">
                     @if (!string.IsNullOrWhiteSpace(Current.Caption))
                     {
-                        <span>@Current.Caption</span>
+                        <span class="lightbox-caption__text">
+                            @Current.Caption
+                        </span>
                     }
 
-                    <small>
+                    @if (!string.IsNullOrWhiteSpace(Current.Attribution)
+                        || !string.IsNullOrWhiteSpace(Current.Copyright))
+                    {
+                        <small class="lightbox-caption__credit">
+                            @if (!string.IsNullOrWhiteSpace(Current.Attribution))
+                            {
+                                <span>Photo: @Current.Attribution</span>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Current.Copyright))
+                            {
+                                <span>@Current.Copyright</span>
+                            }
+                        </small>
+                    }
+
+                    <small class="lightbox-caption__position">
                         @(CurrentIndex + 1) of @Images.Count
                     </small>
                 </figcaption>

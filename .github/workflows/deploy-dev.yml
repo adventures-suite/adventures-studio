@@ -98,6 +98,10 @@ jobs:
             --name "${{ vars.AZURE_WEBAPP_NAME }}" \
             --settings \
               CreatorResolution__AzureDefaultCreatorId="$AZURE_DEFAULT_CREATOR_ID" \
+              Deployment__CommitSha="${{ github.sha }}" \
+              Deployment__RunId="${{ github.run_id }}" \
+              Deployment__RunAttempt="${{ github.run_attempt }}" \
+              WEBSITE_HEALTHCHECK_MAXPINGFAILURES=3 \
               WEBSITE_RUN_FROM_PACKAGE=1 \
             --output none
 
@@ -105,10 +109,24 @@ jobs:
             --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
             --name "${{ vars.AZURE_WEBAPP_NAME }}" \
             --startup-file "./TheSimontonAdventures.Web" \
+            --generic-configurations '{"healthCheckPath":"/health"}' \
             --output none
+
+          CONFIGURED_HEALTH_PATH="$(az webapp config show \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --name "${{ vars.AZURE_WEBAPP_NAME }}" \
+            --query healthCheckPath \
+            --output tsv)"
+
+          if [ "$CONFIGURED_HEALTH_PATH" != "/health" ]; then
+            echo "::error::App Service Health Check is not configured for /health."
+            exit 1
+          fi
 
       - name: Deploy Web App
         run: |
+          echo "DEPLOYMENT_STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+
           az webapp deploy \
             --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
             --name "${{ vars.AZURE_WEBAPP_NAME }}" \
@@ -118,6 +136,8 @@ jobs:
             --restart true \
             --track-status true \
             --output none
+
+          echo "DEPLOYMENT_COMPLETED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
 
       - name: Verify deployment
         run: |
@@ -137,6 +157,19 @@ jobs:
                   .creatorContentValidated == true' \
                  >/dev/null <<<"$HEALTH_RESPONSE"; then
               echo "Deployment is healthy and startup validation succeeded."
+
+              {
+                echo "## Dev deployment"
+                echo ""
+                echo "- Commit: \`${{ github.sha }}\`"
+                echo "- Package: \`${{ env.PACKAGE_NAME }}\`"
+                echo "- Started: \`$DEPLOYMENT_STARTED_AT\`"
+                echo "- Completed: \`$DEPLOYMENT_COMPLETED_AT\`"
+                echo "- Health endpoint: \`$HEALTH_URL\`"
+                echo "- Resource validation: passed"
+                echo "- Creator content validation: passed"
+              } >> "$GITHUB_STEP_SUMMARY"
+
               exit 0
             fi
 
@@ -146,3 +179,20 @@ jobs:
 
           echo "::error::Deployment did not become healthy after 3 minutes."
           exit 1
+
+      - name: Capture deployment diagnostics
+        if: failure()
+        run: |
+          echo "## Failed dev deployment" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Commit: \`${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Package: \`${{ env.PACKAGE_NAME }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Workflow run: \`${{ github.run_id }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo '```json' >> "$GITHUB_STEP_SUMMARY"
+          az webapp log deployment list \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --name "${{ vars.AZURE_WEBAPP_NAME }}" \
+            --query '[0].{id:id,status:status,message:message,start:start_time,end:end_time}' \
+            --output json >> "$GITHUB_STEP_SUMMARY" || true
+          echo '```' >> "$GITHUB_STEP_SUMMARY"

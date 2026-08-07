@@ -135,6 +135,8 @@ else
                 ResourceId = image.ResourceId,
                 PublicUrl = resource?.PublicUrl ?? string.Empty,
                 AlternativeText = resource?.Resource.AlternativeText ?? string.Empty,
+                Attribution = resource?.Resource.Attribution ?? string.Empty,
+                Copyright = resource?.Resource.Copyright ?? string.Empty,
                 Caption = image.Caption,
                 DisplayOrder = image.DisplayOrder
             };

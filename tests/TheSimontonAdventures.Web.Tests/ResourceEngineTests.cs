@@ -52,6 +52,27 @@ public sealed class ResourceEngineTests
     }
 
     [Fact]
+    public async Task DeliveryUrlIsSuppliedByProviderRatherThanContentStorageLocation()
+    {
+        var service = CreateService(new CdnTestResourceProvider());
+
+        var resource = await service.GetByIdAsync(
+            new CreatorId("creator_tsa_01"),
+            new ResourceId("resource_home_hero"));
+        var resolved = await service.ResolvePublicAsync(
+            new CreatorId("creator_tsa_01"),
+            new ResourceId("resource_home_hero"));
+
+        Assert.NotNull(resource);
+        Assert.NotNull(resolved);
+        Assert.Equal("/images/home/adventures-studio-hero.jpeg", resource.StorageLocation);
+        Assert.Equal(
+            "https://cdn.example.test/creator_tsa_01/resource_home_hero",
+            resolved.PublicUrl);
+        Assert.DoesNotContain(resource.StorageLocation, resolved.PublicUrl);
+    }
+
+    [Fact]
     public async Task ResolvedResourceIncludesAuthoritativeAccessibilityMetadata()
     {
         var resolved = await CreateService().ResolvePublicAsync(
@@ -82,6 +103,24 @@ public sealed class ResourceEngineTests
         }
     }
 
+    [Fact]
+    public void PresentationComponentsDoNotDependOnProviderStorageDetails()
+    {
+        var componentsRoot = Path.Combine(FindApplicationRoot(), "Components");
+        var forbidden = new[] { "StorageLocation", "wwwroot", "\"/images/" };
+
+        foreach (var path in Directory.EnumerateFiles(
+            componentsRoot,
+            "*.razor",
+            SearchOption.AllDirectories))
+        {
+            var component = File.ReadAllText(path);
+            Assert.DoesNotContain(
+                forbidden,
+                value => component.Contains(value, StringComparison.Ordinal));
+        }
+    }
+
     [Theory]
     [InlineData("Resource-1")]
     [InlineData("1_resource")]
@@ -89,12 +128,13 @@ public sealed class ResourceEngineTests
     public void ResourceIdentityRejectsUnstableValues(string value) =>
         Assert.Throws<ArgumentException>(() => new ResourceId(value));
 
-    private static JsonResourceService CreateService()
+    private static JsonResourceService CreateService(
+        IResourceProvider? provider = null)
     {
         var contentRoot = FindApplicationRoot();
         var environment = new TestWebHostEnvironment(contentRoot);
         var creatorService = new JsonCreatorService(environment);
-        var provider = new LocalPublicResourceProvider(environment);
+        provider ??= new LocalPublicResourceProvider(environment);
         return new JsonResourceService(creatorService, [provider], environment);
     }
 
@@ -123,5 +163,13 @@ public sealed class ResourceEngineTests
         public string EnvironmentName { get; set; } = Environments.Development;
         public string WebRootPath { get; set; } = Path.Combine(contentRootPath, "wwwroot");
         public IFileProvider WebRootFileProvider { get; set; } = new PhysicalFileProvider(Path.Combine(contentRootPath, "wwwroot"));
+    }
+
+    private sealed class CdnTestResourceProvider : IResourceProvider
+    {
+        public string Key => "local-public";
+
+        public string GetPublicUrl(ResourceRecord resource) =>
+            $"https://cdn.example.test/{resource.CreatorId}/{resource.Id}";
     }
 }

@@ -69,10 +69,21 @@
 }
 
 .lightbox-caption {
+    display: grid;
+    gap: .45rem;
+    margin-top: 1rem;
+    color: white;
+    text-align: center;
+}
 
-    margin-top:1rem;
+.lightbox-caption__credit {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .25rem 1rem;
+    justify-content: center;
+    color: rgba(255, 255, 255, .72);
+}
 
-    color:white;
-
-    text-align:center;
+.lightbox-caption__position {
+    color: rgba(255, 255, 255, .58);
 }
