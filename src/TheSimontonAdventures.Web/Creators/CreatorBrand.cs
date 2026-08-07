@@ -24,6 +24,15 @@ public sealed class CreatorBrand
     /// <summary>Gets accessible alternative text for the homepage hero image.</summary>
     public string HomeHeroImageAlt { get; init; } = string.Empty;
 
+    /// <summary>Gets the Creator-authored homepage hero headline.</summary>
+    public string HomeHeroHeadline { get; init; } = string.Empty;
+
+    /// <summary>Gets the Creator-authored homepage hero description.</summary>
+    public string HomeHeroDescription { get; init; } = string.Empty;
+
+    /// <summary>Gets the Creator-authored homepage hero action label.</summary>
+    public string HomeHeroActionLabel { get; init; } = string.Empty;
+
     /// <summary>Gets the copyright notice shown in Creator-branded output.</summary>
     public string CopyrightNotice { get; init; } = string.Empty;
 

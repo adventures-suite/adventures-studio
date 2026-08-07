@@ -61,6 +61,23 @@ public static class CreatorManifestValidator
 
     private static void ValidateBrand(CreatorBrand brand)
     {
+        ValidateRequiredValue(brand.SiteName, "Creator brand site name");
+        ValidateRequiredValue(brand.Tagline, "Creator brand tagline");
+        ValidateRequiredValue(
+            brand.HomeHeroImageUrl,
+            "Creator homepage hero image URL");
+        ValidateRequiredValue(
+            brand.HomeHeroImageAlt,
+            "Creator homepage hero image alternative text");
+        ValidateRequiredValue(
+            brand.HomeHeroHeadline,
+            "Creator homepage hero headline");
+        ValidateRequiredValue(
+            brand.HomeHeroDescription,
+            "Creator homepage hero description");
+        ValidateRequiredValue(
+            brand.HomeHeroActionLabel,
+            "Creator homepage hero action label");
         ValidateHexColor(brand.PrimaryColor, "Creator brand primary color");
         ValidateHexColor(brand.AccentColor, "Creator brand accent color");
 

@@ -63,6 +63,21 @@ jobs:
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Configure Creator assignment
+        env:
+          AZURE_DEFAULT_CREATOR_ID: ${{ vars.AZURE_DEFAULT_CREATOR_ID }}
+        run: |
+          if [ -z "$AZURE_DEFAULT_CREATOR_ID" ]; then
+            echo "::error::Set AZURE_DEFAULT_CREATOR_ID in the GitHub dev environment."
+            exit 1
+          fi
+
+          az webapp config appsettings set \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --name "${{ vars.AZURE_WEBAPP_NAME }}" \
+            --settings CreatorResolution__AzureDefaultCreatorId="$AZURE_DEFAULT_CREATOR_ID" \
+            --output none
+
       - name: Deploy Web App
         uses: azure/webapps-deploy@v3
         with:

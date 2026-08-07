@@ -1,0 +1,15 @@
+{
+  "number": 2,
+  "slug": "demo-draft-notebook",
+  "title": "Demo Draft Notebook",
+  "subtitle": "A non-public route integration fixture",
+  "description": "This draft volume verifies that public routes enforce publication state.",
+  "coverImage": "/images/volumes/volume-1/greece/athens/homepage2.jpeg",
+  "heroImage": "/images/volumes/volume-1/greece/athens/athens-wide.jpeg",
+  "travelDates": "Unpublished",
+  "statusMessage": "Draft",
+  "status": "Draft",
+  "journeyStops": [],
+  "journeys": [],
+  "destinations": []
+}

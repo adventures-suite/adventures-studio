@@ -199,6 +199,13 @@ Implementation notes:
   and return HTTP 404 for content outside the public boundary.
 - Azure's environment-provided default hostname maps to an explicitly
   configured Creator identity without embedding Azure resource names in source.
+  The assignment is supplied through the GitHub dev Environment as
+  `CreatorResolution__AzureDefaultCreatorId`, not global `appsettings.json`.
+- Homepage headline, description, action label, hero image, and alternative text
+  are required Creator-owned manifest values; shared presentation supplies no
+  flagship fallbacks.
+- The unused shared `HomeStory` component was removed until Creator-authored
+  story data has a defined content contract and consumer.
 
 ## Phase 7: Indexing, Caching, and Validation
 
@@ -243,6 +250,11 @@ Content/Creators/{creator}/Adventures/{adventure}/...
 
 Perform the move separately from contract refactoring so failures are easy to
 diagnose. Preserve canonical public routes and permanent QR addresses.
+
+The current shared `wwwroot` remains a public-only compatibility store and does
+not enforce Creator ownership. Do not place private or Creator-protected media
+there. Ownership, publication authorization, and storage-independent delivery
+belong to the future Resource Engine and are outside this refactor.
 
 ## Phase 9: Permanent Local Demo Creator
 

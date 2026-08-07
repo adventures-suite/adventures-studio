@@ -26,6 +26,11 @@
       "countrySlug": "greece",
       "destinationSlug": "athens",
       "displayOrder": 1
+    },
+    {
+      "countrySlug": "greece",
+      "destinationSlug": "unpublished-preview",
+      "displayOrder": 2
     }
   ]
 }

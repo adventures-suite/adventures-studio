@@ -209,9 +209,29 @@ headers.
 
 Azure App Service supplies its environment-specific default host through the
 trusted `WEBSITE_HOSTNAME` process setting. Creator resolution maps that host to
-the explicitly configured `CreatorResolution:AzureDefaultCreatorId`; Azure app
+the explicitly configured `CreatorResolution:AzureDefaultCreatorId`. The Azure
+assignment is deployment configuration and must be supplied as
+`CreatorResolution__AzureDefaultCreatorId` by the GitHub Environment or Azure
+App Service; it must not be stored in global application settings. Azure app
 names and hostnames are never embedded in source. Custom domains remain owned by
 Creator manifests.
+
+## Current Public Resource Boundary
+
+The current `wwwroot` directory is a shared public-static-resource store. Files
+placed there are addressable without Creator-aware lookup, and the directory
+does not yet enforce Creator ownership, publication state, authorization, or
+access isolation.
+
+Only media intended to be public across the deployed application may be stored
+in `wwwroot`. Private, embargoed, licensed-for-limited-use, or otherwise
+Creator-protected media must not be added there. Creator content may reference
+these public files, but that reference does not establish resource ownership.
+
+True resource ownership, protected delivery, storage abstraction, and
+authorization are deferred to the Resource Engine. Its initial implementation
+will wrap existing local assets before any migration to Azure Blob Storage or a
+CDN.
 
 ## Content Engine Integration
 

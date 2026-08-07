@@ -202,3 +202,8 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.Run();
+
+/// <summary>
+/// Exposes the top-level application entry point to the integration-test host.
+/// </summary>
+public partial class Program;

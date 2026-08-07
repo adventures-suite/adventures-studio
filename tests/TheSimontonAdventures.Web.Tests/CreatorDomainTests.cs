@@ -189,7 +189,53 @@ public sealed class CreatorDomainTests
     public void Validate_InvalidBrandColor_ThrowsInvalidDataException()
     {
         var creator = CreateValidCreator(
-            brand: new CreatorBrand { PrimaryColor = "red; display:none" });
+            brand: CreateValidBrand(primaryColor: "red; display:none"));
+
+        Assert.Throws<InvalidDataException>(() =>
+            CreatorManifestValidator.Validate(
+                creator,
+                AppContext.BaseDirectory));
+    }
+
+    /// <summary>
+    /// Ensures shared homepage rendering never depends on platform-owned copy
+    /// or media fallbacks.
+    /// </summary>
+    [Theory]
+    [InlineData("image")]
+    [InlineData("image-alt")]
+    [InlineData("headline")]
+    [InlineData("description")]
+    [InlineData("action-label")]
+    public void Validate_MissingHomepagePresentationField_ThrowsInvalidDataException(
+        string missingField)
+    {
+        var validBrand = CreateValidBrand();
+        var brand = new CreatorBrand
+        {
+            SiteName = validBrand.SiteName,
+            Tagline = validBrand.Tagline,
+            HomeHeroImageUrl = missingField == "image"
+                ? string.Empty
+                : validBrand.HomeHeroImageUrl,
+            HomeHeroImageAlt = missingField == "image-alt"
+                ? string.Empty
+                : validBrand.HomeHeroImageAlt,
+            HomeHeroHeadline = missingField == "headline"
+                ? string.Empty
+                : validBrand.HomeHeroHeadline,
+            HomeHeroDescription = missingField == "description"
+                ? string.Empty
+                : validBrand.HomeHeroDescription,
+            HomeHeroActionLabel = missingField == "action-label"
+                ? string.Empty
+                : validBrand.HomeHeroActionLabel,
+            PrimaryColor = validBrand.PrimaryColor,
+            AccentColor = validBrand.AccentColor,
+            Typography = validBrand.Typography
+        };
+
+        var creator = CreateValidCreator(brand: brand);
 
         Assert.Throws<InvalidDataException>(() =>
             CreatorManifestValidator.Validate(
@@ -237,10 +283,23 @@ public sealed class CreatorDomainTests
             Status = CreatorStatus.Active,
             PrimaryDomain = primaryDomain,
             Domains = domains ?? ["example.com"],
-            Brand = brand ?? new CreatorBrand(),
+            Brand = brand ?? CreateValidBrand(),
             Locale = locale,
             TimeZone = timeZone,
             ContentRoot = contentRoot
         };
     }
+
+    private static CreatorBrand CreateValidBrand(
+        string primaryColor = "#1a2327") => new()
+        {
+            SiteName = "Test Creator",
+            Tagline = "Test journeys",
+            HomeHeroImageUrl = "/images/test-hero.jpeg",
+            HomeHeroImageAlt = "A test journey",
+            HomeHeroHeadline = "A Creator-owned test headline",
+            HomeHeroDescription = "Creator-owned test homepage copy.",
+            HomeHeroActionLabel = "Explore",
+            PrimaryColor = primaryColor
+        };
 }

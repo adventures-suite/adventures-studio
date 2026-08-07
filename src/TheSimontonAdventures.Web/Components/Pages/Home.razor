@@ -8,23 +8,15 @@
 
 <HomeHero
     Eyebrow="@CreatorContextAccessor.Current.GetSiteName()"
-    Headline="@CreatorContextAccessor.Current.Brand.Tagline"
-    HeroImage="@HeroImage"
-    HeroImageAlt="@HeroImageAlt"
+    Headline="@CreatorContextAccessor.Current.Brand.HomeHeroHeadline"
+    Description="@CreatorContextAccessor.Current.Brand.HomeHeroDescription"
+    HeroImage="@CreatorContextAccessor.Current.Brand.HomeHeroImageUrl"
+    HeroImageAlt="@CreatorContextAccessor.Current.Brand.HomeHeroImageAlt"
+    PrimaryActionLabel="@CreatorContextAccessor.Current.Brand.HomeHeroActionLabel"
     PrimaryActionUrl="@_primaryActionUrl" />
 
 @code {
     private string _primaryActionUrl = "/";
-
-    private string HeroImage =>
-        string.IsNullOrWhiteSpace(CreatorContextAccessor.Current.Brand.HomeHeroImageUrl)
-            ? "/images/home/adventures-studio-hero.jpeg"
-            : CreatorContextAccessor.Current.Brand.HomeHeroImageUrl;
-
-    private string HeroImageAlt =>
-        string.IsNullOrWhiteSpace(CreatorContextAccessor.Current.Brand.HomeHeroImageAlt)
-            ? "A memorable travel experience"
-            : CreatorContextAccessor.Current.Brand.HomeHeroImageAlt;
 
     protected override async Task OnInitializedAsync()
     {

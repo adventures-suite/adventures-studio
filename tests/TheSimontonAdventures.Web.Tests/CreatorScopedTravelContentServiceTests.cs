@@ -223,6 +223,16 @@ public sealed class CreatorScopedTravelContentServiceTests
                 Status = CreatorStatus.Active,
                 PrimaryDomain = $"{slug}.example.test",
                 Domains = [$"{slug}.example.test"],
+                Brand = new CreatorBrand
+                {
+                    SiteName = title,
+                    Tagline = "Creator-scoped test content",
+                    HomeHeroImageUrl = "https://example.test/hero.jpg",
+                    HomeHeroImageAlt = "A test journey",
+                    HomeHeroHeadline = "An independently owned journey",
+                    HomeHeroDescription = "Creator-owned integration test copy.",
+                    HomeHeroActionLabel = "Explore"
+                },
                 ContentRoot = $"Content/{slug}/Volumes"
             };
             var volume = new Volume

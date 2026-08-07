@@ -12,17 +12,14 @@
         </span>
 
         <h1>
-            @EffectiveHeadline
+            @Headline
         </h1>
 
-        <p>
-            Discover meaningful journeys, trusted guidance, and stories designed
-            to help you experience the world with confidence.
-        </p>
+        <p>@Description</p>
 
         <a class="home-hero__action"
            href="@PrimaryActionUrl">
-            Begin the Adventure
+            @PrimaryActionLabel
             <span aria-hidden="true">→</span>
         </a>
     </div>
@@ -37,22 +34,23 @@
     [Parameter]
     public string Headline { get; set; } = string.Empty;
 
+    /// <summary>Gets or sets the Creator-owned hero description.</summary>
+    [Parameter]
+    public string Description { get; set; } = string.Empty;
+
     /// <summary>Gets or sets the background image shown by the homepage hero.</summary>
     [Parameter]
-    public string HeroImage { get; set; } =
-        "/images/home/adventures-studio-hero.jpeg";
+    public string HeroImage { get; set; } = string.Empty;
 
     /// <summary>Gets or sets accessible alternative text for the hero image.</summary>
     [Parameter]
-    public string HeroImageAlt { get; set; } =
-        "A memorable travel experience";
+    public string HeroImageAlt { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the Creator-owned primary action label.</summary>
+    [Parameter]
+    public string PrimaryActionLabel { get; set; } = string.Empty;
 
     /// <summary>Gets or sets the route opened by the primary hero action.</summary>
     [Parameter]
-    public string PrimaryActionUrl { get; set; } =
-        "/";
-
-    private string EffectiveHeadline => string.IsNullOrWhiteSpace(Headline)
-        ? "Transforming inspiration into unforgettable experiences."
-        : Headline;
+    public string PrimaryActionUrl { get; set; } = string.Empty;
 }
