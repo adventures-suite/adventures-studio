@@ -3,6 +3,7 @@
 @using TheSimontonAdventures.Web.Models
 @inject ICreatorContextAccessor CreatorContextAccessor
 @inject ITravelContentService TravelContentService
+@inject IResourceService ResourceService
 
 <PageTitle>Adventures | @CreatorContextAccessor.Current.GetSiteName()</PageTitle>
 
@@ -53,9 +54,9 @@
                             <article class="adventure-card">
                                 <a class="adventure-card__media"
                                    href="@TravelRoutes.Volume(volume.Slug)">
-                                    @if (!string.IsNullOrWhiteSpace(volume.CoverImage))
+                                    @if (_coverUrls.TryGetValue(volume.Slug, out var coverUrl))
                                     {
-                                        <img src="@volume.CoverImage"
+                                        <img src="@coverUrl"
                                              alt="Cover image for @volume.Title"
                                              loading="lazy" />
                                     }
@@ -124,12 +125,27 @@
     ];
 
     private IReadOnlyList<Volume> _volumes = [];
+    private IReadOnlyDictionary<string, string> _coverUrls =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
     private bool _isLoading = true;
 
     protected override async Task OnInitializedAsync()
     {
         _volumes = await TravelContentService.GetPublicVolumesAsync(
             CreatorContextAccessor.Current.Id);
+        var covers = await Task.WhenAll(_volumes.Select(async volume => new
+        {
+            volume.Slug,
+            Url = await ResourceService.GetPublicUrlAsync(
+                CreatorContextAccessor.Current.Id,
+                volume.CoverResourceId)
+        }));
+        _coverUrls = covers
+            .Where(item => !string.IsNullOrWhiteSpace(item.Url))
+            .ToDictionary(
+                item => item.Slug,
+                item => item.Url!,
+                StringComparer.OrdinalIgnoreCase);
         _isLoading = false;
     }
 

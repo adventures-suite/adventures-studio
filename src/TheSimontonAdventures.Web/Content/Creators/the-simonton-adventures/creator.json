@@ -15,6 +15,7 @@
     "siteName": "The Simonton Adventures",
     "tagline": "Inspiration to unforgettable experiences",
     "faviconUrl": "/favicon.png",
+    "homeHeroResourceId": "resource_home_hero",
     "homeHeroImageUrl": "/images/home/adventures-studio-hero.jpeg",
     "homeHeroImageAlt": "A sweeping Mediterranean travel scene",
     "homeHeroHeadline": "Transforming inspiration into unforgettable experiences.",

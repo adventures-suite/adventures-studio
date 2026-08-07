@@ -15,6 +15,7 @@
     "siteName": "Aegean Field Notes",
     "tagline": "A development-only Creator exploring one city at a time",
     "faviconUrl": "/favicon.png",
+    "homeHeroResourceId": "resource_home_hero",
     "homeHeroImageUrl": "/images/volumes/volume-1/greece/athens/athens-wide.jpeg",
     "homeHeroImageAlt": "Athens and the Acropolis beneath a wide blue sky",
     "homeHeroHeadline": "Small field notes, independently owned.",

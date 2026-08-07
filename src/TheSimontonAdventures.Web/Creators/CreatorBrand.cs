@@ -1,3 +1,5 @@
+using TheSimontonAdventures.Web.Resources;
+
 namespace TheSimontonAdventures.Web.Creators;
 
 /// <summary>
@@ -18,7 +20,13 @@ public sealed class CreatorBrand
     /// <summary>Gets the root-relative or absolute favicon resource URL.</summary>
     public string FaviconUrl { get; init; } = string.Empty;
 
-    /// <summary>Gets the root-relative or absolute homepage hero image URL.</summary>
+    /// <summary>Gets the stable Creator-owned homepage hero resource identity.</summary>
+    public ResourceId HomeHeroResourceId { get; init; }
+
+    /// <summary>
+    /// Gets the immediately renderable homepage hero URL. Startup validation
+    /// requires this URL to match <see cref="HomeHeroResourceId"/>.
+    /// </summary>
     public string HomeHeroImageUrl { get; init; } = string.Empty;
 
     /// <summary>Gets accessible alternative text for the homepage hero image.</summary>

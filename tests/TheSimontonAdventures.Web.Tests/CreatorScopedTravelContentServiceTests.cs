@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using TheSimontonAdventures.Web.Creators;
 using TheSimontonAdventures.Web.Models;
+using TheSimontonAdventures.Web.Resources;
 using TheSimontonAdventures.Web.Services;
 using TheSimontonAdventures.Web.Validation;
 
@@ -187,6 +188,154 @@ public sealed class CreatorScopedTravelContentServiceTests
         Assert.False(result.HasErrors);
     }
 
+    /// <summary>Ensures a missing homepage resource blocks Creator publication.</summary>
+    [Fact]
+    public async Task ValidateAsync_MissingHomepageResource_ReturnsError()
+    {
+        using var content = new TemporaryCreatorContent();
+        var creatorId = new CreatorId("creator_one_01");
+        await content.AddCreatorAsync(creatorId, "one", "Athens");
+        var validator = content.CreateValidator(new StubResourceService(false));
+
+        var result = await validator.ValidateAsync(creatorId);
+
+        Assert.Contains(result.Issues, issue =>
+            issue.Code == "invalid-homepage-hero-resource"
+            && issue.Severity == ContentValidationSeverity.Error);
+    }
+
+    /// <summary>Ensures a draft homepage resource cannot enter public presentation.</summary>
+    [Fact]
+    public async Task ValidateAsync_DraftHomepageResource_ReturnsError()
+    {
+        using var content = new TemporaryCreatorContent();
+        var creatorId = new CreatorId("creator_one_01");
+        await content.AddCreatorAsync(creatorId, "one", "Athens");
+        var resources = new StubResourceService(false);
+        resources.Add(CreateHeroResource(creatorId, ResourcePublicationStatus.Draft));
+        var validator = content.CreateValidator(resources);
+
+        var result = await validator.ValidateAsync(creatorId);
+
+        Assert.Contains(result.Issues, issue =>
+            issue.Code == "invalid-homepage-hero-resource"
+            && issue.Severity == ContentValidationSeverity.Error);
+    }
+
+    /// <summary>Ensures another Creator's hero cannot satisfy the current Creator's reference.</summary>
+    [Fact]
+    public async Task ValidateAsync_CrossCreatorHomepageResource_ReturnsError()
+    {
+        using var content = new TemporaryCreatorContent();
+        var creatorId = new CreatorId("creator_one_01");
+        await content.AddCreatorAsync(creatorId, "one", "Athens");
+        var resources = new StubResourceService(false);
+        resources.Add(CreateHeroResource(
+            new CreatorId("creator_two_01"),
+            ResourcePublicationStatus.Published));
+        var validator = content.CreateValidator(resources);
+
+        var result = await validator.ValidateAsync(creatorId);
+
+        Assert.Contains(result.Issues, issue =>
+            issue.Code == "invalid-homepage-hero-resource"
+            && issue.CreatorId == creatorId);
+    }
+
+    /// <summary>Ensures a missing volume cover resource blocks publication.</summary>
+    [Fact]
+    public async Task ValidateAsync_MissingVolumeCoverResource_ReturnsError()
+    {
+        using var content = new TemporaryCreatorContent();
+        var creatorId = new CreatorId("creator_one_01");
+        await content.AddCreatorAsync(creatorId, "one", "Athens");
+        var resources = CreateResourcesWithPublishedHomepage(creatorId);
+        var validator = content.CreateValidator(resources);
+
+        var result = await validator.ValidateAsync(creatorId);
+
+        Assert.Contains(result.Issues, issue =>
+            issue.Code == "invalid-resource-reference"
+            && issue.Message.Contains("cover", StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>Ensures a draft volume cover cannot enter public presentation.</summary>
+    [Fact]
+    public async Task ValidateAsync_DraftVolumeCoverResource_ReturnsError()
+    {
+        using var content = new TemporaryCreatorContent();
+        var creatorId = new CreatorId("creator_one_01");
+        await content.AddCreatorAsync(creatorId, "one", "Athens");
+        var resources = CreateResourcesWithPublishedHomepage(creatorId);
+        resources.Add(CreateResource(
+            creatorId,
+            "resource_volume_cover",
+            ResourcePublicationStatus.Draft));
+        var validator = content.CreateValidator(resources);
+
+        var result = await validator.ValidateAsync(creatorId);
+
+        Assert.Contains(result.Issues, issue =>
+            issue.Code == "invalid-resource-reference"
+            && issue.Message.Contains("cover", StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>Ensures another Creator's volume cover cannot satisfy a reference.</summary>
+    [Fact]
+    public async Task ValidateAsync_CrossCreatorVolumeCoverResource_ReturnsError()
+    {
+        using var content = new TemporaryCreatorContent();
+        var creatorId = new CreatorId("creator_one_01");
+        await content.AddCreatorAsync(creatorId, "one", "Athens");
+        var resources = CreateResourcesWithPublishedHomepage(creatorId);
+        resources.Add(CreateResource(
+            new CreatorId("creator_two_01"),
+            "resource_volume_cover",
+            ResourcePublicationStatus.Published));
+        var validator = content.CreateValidator(resources);
+
+        var result = await validator.ValidateAsync(creatorId);
+
+        Assert.Contains(result.Issues, issue =>
+            issue.Code == "invalid-resource-reference"
+            && issue.CreatorId == creatorId);
+    }
+
+    private static StubResourceService CreateResourcesWithPublishedHomepage(
+        CreatorId creatorId)
+    {
+        var resources = new StubResourceService(false);
+        resources.Add(CreateResource(
+            creatorId,
+            "resource_home_hero",
+            ResourcePublicationStatus.Published));
+        return resources;
+    }
+
+    private static ResourceRecord CreateHeroResource(
+        CreatorId creatorId,
+        ResourcePublicationStatus status) =>
+        CreateResource(creatorId, "resource_home_hero", status);
+
+    private static ResourceRecord CreateResource(
+        CreatorId creatorId,
+        string resourceId,
+        ResourcePublicationStatus status) => new()
+        {
+            Id = new ResourceId(resourceId),
+            CreatorId = creatorId,
+            Type = ResourceType.Image,
+            Title = "Test homepage hero",
+            StorageProvider = "test",
+            StorageLocation = "/images/test-hero.jpeg",
+            MediaType = "image/jpeg",
+            AlternativeText = "A test journey",
+            Attribution = "Test Creator",
+            Copyright = "Copyright Test Creator",
+            UsageRights = "Test use",
+            PublicationStatus = status
+        };
+
     private sealed class TemporaryCreatorContent : IDisposable
     {
         internal TemporaryCreatorContent()
@@ -227,7 +376,8 @@ public sealed class CreatorScopedTravelContentServiceTests
                 {
                     SiteName = title,
                     Tagline = "Creator-scoped test content",
-                    HomeHeroImageUrl = "https://example.test/hero.jpg",
+                    HomeHeroResourceId = new ResourceId("resource_home_hero"),
+                    HomeHeroImageUrl = "/images/test-hero.jpeg",
                     HomeHeroImageAlt = "A test journey",
                     HomeHeroHeadline = "An independently owned journey",
                     HomeHeroDescription = "Creator-owned integration test copy.",
@@ -245,6 +395,7 @@ public sealed class CreatorScopedTravelContentServiceTests
                 Slug = "shared-volume",
                 Title = "Shared volume",
                 Status = VolumeStatus.Published,
+                CoverResourceId = new ResourceId("resource_volume_cover"),
                 Destinations =
                 [
                     new VolumeDestinationReference
@@ -287,7 +438,8 @@ public sealed class CreatorScopedTravelContentServiceTests
                 new JsonCreatorService(environment));
         }
 
-        internal CreatorContentValidator CreateValidator()
+        internal CreatorContentValidator CreateValidator(
+            IResourceService? resourceService = null)
         {
             var environment = TestContentServiceFactory.CreateHostEnvironment(
                 contentRootPath: RootPath);
@@ -295,7 +447,8 @@ public sealed class CreatorScopedTravelContentServiceTests
             return new CreatorContentValidator(
                 environment,
                 creatorService,
-                new JsonTravelContentService(environment, creatorService));
+                new JsonTravelContentService(environment, creatorService),
+                resourceService ?? new StubResourceService());
         }
 
         internal void DeleteDestination(string creatorSlug, string destinationSlug)

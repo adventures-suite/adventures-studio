@@ -2,6 +2,7 @@
 @using TheSimontonAdventures.Web.Services
 @inject ITravelContentService TravelContentService
 @inject ICreatorContextAccessor CreatorContextAccessor
+@inject IResourceService ResourceService
 
 @if (_isLoading)
 {
@@ -14,9 +15,9 @@ else if (_volume is not null)
     <section class="current-adventure">
         <div class="current-adventure__content">
             <figure class="current-adventure__media">
-                @if (!string.IsNullOrWhiteSpace(_volume.CoverImage))
+                @if (!string.IsNullOrWhiteSpace(_coverUrl))
                 {
-                    <img src="@_volume.CoverImage"
+                    <img src="@_coverUrl"
                          alt="Cover artwork for @_volume.Title"
                          loading="lazy" />
                 }
@@ -69,12 +70,19 @@ else if (_volume is not null)
 
 @code {
     private Volume? _volume;
+    private string? _coverUrl;
     private bool _isLoading = true;
 
     protected override async Task OnInitializedAsync()
     {
         _volume = await TravelContentService.GetCurrentVolumeAsync(
             CreatorContextAccessor.Current.Id);
+        if (_volume is not null)
+        {
+            _coverUrl = await ResourceService.GetPublicUrlAsync(
+                CreatorContextAccessor.Current.Id,
+                _volume.CoverResourceId);
+        }
         _isLoading = false;
     }
 }

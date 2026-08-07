@@ -18,7 +18,9 @@ public sealed class CreatorContentValidationTests
         var validator = new CreatorContentValidator(
             environment,
             creatorService,
-            TestContentServiceFactory.Create());
+            TestContentServiceFactory.Create(),
+            new StubResourceService(
+                knownHeroUrl: "/images/home/adventures-studio-hero.jpeg"));
 
         var result = await validator.ValidateAsync(
             new CreatorId("creator_tsa_01"));

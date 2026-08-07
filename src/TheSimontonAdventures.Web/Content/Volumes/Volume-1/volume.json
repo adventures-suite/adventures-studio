@@ -5,6 +5,7 @@
   "subtitle": "A Journey Through the Mediterranean",
   "description": "Our journey through the canals, cities, islands and ancient landmarks of Italy, Greece and Croatia.",
   "coverImage": "/images/volumes/volume-1/cover/volume-1-cover.jpeg",
+  "coverResourceId": "resource_volume_one_cover",
   "status": "Current",
   "travelDates": "June 20 – July 5, 2026",
   "statusMessage": "Our current featured Mediterranean adventure",

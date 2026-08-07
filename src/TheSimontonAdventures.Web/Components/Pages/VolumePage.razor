@@ -6,6 +6,7 @@
 
 @inject ITravelContentService TravelContentService
 @inject ICreatorContextAccessor CreatorContextAccessor
+@inject IResourceService ResourceService
 
 <PageTitle>@PageTitle</PageTitle>
 
@@ -27,10 +28,10 @@ else
 
         <section class="volume-hero">
 
-            @if (!string.IsNullOrWhiteSpace(_volume.CoverImage))
+            @if (!string.IsNullOrWhiteSpace(_coverUrl))
             {
                 <div class="volume-hero__image">
-                    <img src="@_volume.CoverImage"
+                    <img src="@_coverUrl"
                          alt="@BuildVolumeHeroAltText()"
                          loading="eager" />
                 </div>
@@ -104,6 +105,8 @@ else
 
     private TheSimontonAdventures.Web.Models.Volume? _volume;
 
+    private string? _coverUrl;
+
     private Journey? _journey;
 
     private IReadOnlyList<VolumeDestinationCard> _destinationCards =
@@ -123,6 +126,7 @@ else
     {
         _isLoading = true;
         _volume = null;
+        _coverUrl = null;
         _journey = null;
         _destinationCards = Array.Empty<VolumeDestinationCard>();
 
@@ -138,6 +142,10 @@ else
                 MarkNotFound();
                 return;
             }
+
+            _coverUrl = await ResourceService.GetPublicUrlAsync(
+                CreatorContextAccessor.Current.Id,
+                _volume.CoverResourceId);
 
             var featuredJourneyReference = _volume.Journeys
                 .Where(reference => reference.Featured)

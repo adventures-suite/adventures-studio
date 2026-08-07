@@ -1,5 +1,6 @@
 using TheSimontonAdventures.Web.Components;
 using TheSimontonAdventures.Web.Creators;
+using TheSimontonAdventures.Web.Resources;
 using TheSimontonAdventures.Web.Services;
 using TheSimontonAdventures.Web.Validation;
 
@@ -45,6 +46,12 @@ builder.Services.AddSingleton<
 builder.Services.AddSingleton<
     IQrCodeService,
     QrCodeService>();
+
+// Introduce storage-independent, Creator-owned resource records while keeping
+// existing public assets in wwwroot as the initial storage provider.
+builder.Services.AddSingleton<IResourceProvider, LocalPublicResourceProvider>();
+builder.Services.AddSingleton<IResourceService, JsonResourceService>();
+builder.Services.AddHostedService<ResourceValidationHostedService>();
 
 // Warm the immutable Creator registry and validate Creator-scoped content
 // before requests can observe duplicate addresses or broken public references.

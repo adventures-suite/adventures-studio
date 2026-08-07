@@ -1,6 +1,7 @@
 @page "/about"
 @inject ICreatorContextAccessor CreatorContextAccessor
 @inject ITravelContentService TravelContentService
+@inject IResourceService ResourceService
 @using TheSimontonAdventures.Web.Models
 
 <PageTitle>About | @CreatorContextAccessor.Current.GetSiteName()</PageTitle>
@@ -133,10 +134,11 @@ else
 
 @code {
     private CreatorProfile? _profile;
+    private string _homepageHeroImageUrl = string.Empty;
 
     private string AboutHeroImageUrl =>
         string.IsNullOrWhiteSpace(_profile?.HeroImageUrl)
-            ? CreatorContextAccessor.Current.Brand.HomeHeroImageUrl
+            ? _homepageHeroImageUrl
             : _profile.HeroImageUrl;
 
     private string AboutHeroStyle =>
@@ -144,6 +146,12 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        _homepageHeroImageUrl = await ResourceService.GetPublicUrlAsync(
+            CreatorContextAccessor.Current.Id,
+            CreatorContextAccessor.Current.Brand.HomeHeroResourceId)
+            ?? throw new InvalidDataException(
+                "The Creator homepage hero resource is not publicly available.");
+
         if (CreatorContextAccessor.Current.Features.EnableAbout)
         {
             _profile = await TravelContentService.GetCreatorProfileAsync(

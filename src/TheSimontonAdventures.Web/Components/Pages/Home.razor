@@ -2,6 +2,7 @@
 
 @using TheSimontonAdventures.Web.Components.Home
 @inject ICreatorContextAccessor CreatorContextAccessor
+@inject IResourceService ResourceService
 
 <PageTitle>@CreatorContextAccessor.Current.GetDefaultSeoTitle()</PageTitle>
 
@@ -9,7 +10,7 @@
     Eyebrow="@CreatorContextAccessor.Current.GetSiteName()"
     Headline="@CreatorContextAccessor.Current.Brand.HomeHeroHeadline"
     Description="@CreatorContextAccessor.Current.Brand.HomeHeroDescription"
-    HeroImage="@CreatorContextAccessor.Current.Brand.HomeHeroImageUrl"
+    HeroImage="@_heroImageUrl"
     HeroImageAlt="@CreatorContextAccessor.Current.Brand.HomeHeroImageAlt"
     PrimaryActionLabel="@CreatorContextAccessor.Current.Brand.HomeHeroActionLabel"
     PrimaryActionUrl="@TravelRoutes.Adventures" />
@@ -27,5 +28,18 @@
         case CreatorHomepageSectionType.FeaturedDestinations:
             <HomeFeaturedDestinations />
             break;
+    }
+}
+
+@code {
+    private string _heroImageUrl = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _heroImageUrl = await ResourceService.GetPublicUrlAsync(
+            CreatorContextAccessor.Current.Id,
+            CreatorContextAccessor.Current.Brand.HomeHeroResourceId)
+            ?? throw new InvalidDataException(
+                "The Creator homepage hero resource is not publicly available.");
     }
 }

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using TheSimontonAdventures.Web.Creators;
+using TheSimontonAdventures.Web.Resources;
 
 namespace TheSimontonAdventures.Web.Tests;
 
@@ -215,9 +216,10 @@ public sealed class CreatorDomainTests
         {
             SiteName = validBrand.SiteName,
             Tagline = validBrand.Tagline,
-            HomeHeroImageUrl = missingField == "image"
-                ? string.Empty
-                : validBrand.HomeHeroImageUrl,
+            HomeHeroResourceId = missingField == "image"
+                ? default
+                : validBrand.HomeHeroResourceId,
+            HomeHeroImageUrl = validBrand.HomeHeroImageUrl,
             HomeHeroImageAlt = missingField == "image-alt"
                 ? string.Empty
                 : validBrand.HomeHeroImageAlt,
@@ -348,6 +350,7 @@ public sealed class CreatorDomainTests
         {
             SiteName = "Test Creator",
             Tagline = "Test journeys",
+            HomeHeroResourceId = new ResourceId("resource_home_hero"),
             HomeHeroImageUrl = "/images/test-hero.jpeg",
             HomeHeroImageAlt = "A test journey",
             HomeHeroHeadline = "A Creator-owned test headline",

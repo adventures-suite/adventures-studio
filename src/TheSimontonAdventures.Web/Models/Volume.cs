@@ -1,3 +1,5 @@
+using TheSimontonAdventures.Web.Resources;
+
 namespace TheSimontonAdventures.Web.Models;
 
 /// <summary>
@@ -24,8 +26,14 @@ public sealed class Volume
     /// <summary>Gets the root-relative book-cover image URL.</summary>
     public string CoverImage { get; init; } = string.Empty;
 
+    /// <summary>Gets the stable Creator-owned cover resource identity.</summary>
+    public ResourceId CoverResourceId { get; init; }
+
     /// <summary>Gets the optional wide hero image URL.</summary>
     public string HeroImage { get; init; } = string.Empty;
+
+    /// <summary>Gets the optional stable Creator-owned wide hero resource identity.</summary>
+    public ResourceId? HeroResourceId { get; init; }
 
     /// <summary>Gets the authored travel date range.</summary>
     public string TravelDates { get; init; } = string.Empty;

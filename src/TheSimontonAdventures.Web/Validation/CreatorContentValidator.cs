@@ -1,5 +1,6 @@
 using TheSimontonAdventures.Web.Creators;
 using TheSimontonAdventures.Web.Models;
+using TheSimontonAdventures.Web.Resources;
 using TheSimontonAdventures.Web.Services;
 
 namespace TheSimontonAdventures.Web.Validation;
@@ -13,23 +14,28 @@ public sealed class CreatorContentValidator : ICreatorContentValidator
     private readonly string _webRoot;
     private readonly ICreatorService _creatorService;
     private readonly ITravelContentService _contentService;
+    private readonly IResourceService _resourceService;
 
     /// <summary>Initializes Creator-scoped deployed-content validation.</summary>
     /// <param name="hostEnvironment">The application host environment.</param>
     /// <param name="creatorService">The Creator registry.</param>
     /// <param name="contentService">The Creator-scoped Content Engine.</param>
+    /// <param name="resourceService">The Creator-scoped Resource Engine.</param>
     public CreatorContentValidator(
         IHostEnvironment hostEnvironment,
         ICreatorService creatorService,
-        ITravelContentService contentService)
+        ITravelContentService contentService,
+        IResourceService resourceService)
     {
         ArgumentNullException.ThrowIfNull(hostEnvironment);
         ArgumentNullException.ThrowIfNull(creatorService);
         ArgumentNullException.ThrowIfNull(contentService);
+        ArgumentNullException.ThrowIfNull(resourceService);
 
         _webRoot = Path.Combine(hostEnvironment.ContentRootPath, "wwwroot");
         _creatorService = creatorService;
         _contentService = contentService;
+        _resourceService = resourceService;
     }
 
     /// <inheritdoc />
@@ -73,11 +79,31 @@ public sealed class CreatorContentValidator : ICreatorContentValidator
 
         ValidateImage(creatorId, creator.Brand.LogoUrl, "Creator logo", issues);
         ValidateImage(creatorId, creator.Brand.FaviconUrl, "Creator favicon", issues);
-        ValidateImage(
+        var homepageHeroUrl = await _resourceService.GetPublicUrlAsync(
             creatorId,
+            creator.Brand.HomeHeroResourceId,
+            cancellationToken);
+        if (homepageHeroUrl is null)
+        {
+            AddIssue(
+                creatorId,
+                ContentValidationSeverity.Error,
+                "invalid-homepage-hero-resource",
+                $"Homepage hero resource '{creator.Brand.HomeHeroResourceId}' is missing, unpublished, or owned by another Creator.",
+                issues);
+        }
+        else if (!string.Equals(
+            homepageHeroUrl,
             creator.Brand.HomeHeroImageUrl,
-            "Creator homepage hero",
-            issues);
+            StringComparison.Ordinal))
+        {
+            AddIssue(
+                creatorId,
+                ContentValidationSeverity.Error,
+                "homepage-hero-resource-url-mismatch",
+                $"Homepage hero URL '{creator.Brand.HomeHeroImageUrl}' does not match resource '{creator.Brand.HomeHeroResourceId}' URL '{homepageHeroUrl}'.",
+                issues);
+        }
         var profile = await _contentService.GetCreatorProfileAsync(
             creatorId,
             cancellationToken);
@@ -93,8 +119,22 @@ public sealed class CreatorContentValidator : ICreatorContentValidator
         foreach (var volume in volumes)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            ValidateImage(creatorId, volume.CoverImage, $"Volume '{volume.Slug}' cover", issues);
-            ValidateImage(creatorId, volume.HeroImage, $"Volume '{volume.Slug}' hero", issues);
+            await ValidateResourceImageAsync(
+                creatorId,
+                volume.CoverResourceId,
+                volume.CoverImage,
+                $"Volume '{volume.Slug}' cover",
+                required: true,
+                issues,
+                cancellationToken);
+            await ValidateResourceImageAsync(
+                creatorId,
+                volume.HeroResourceId,
+                volume.HeroImage,
+                $"Volume '{volume.Slug}' hero",
+                required: false,
+                issues,
+                cancellationToken);
             ValidateDuplicateReferences(creatorId, volume, issues);
 
             var destinations = await _contentService.GetDestinationsForVolumeAsync(
@@ -222,6 +262,47 @@ public sealed class CreatorContentValidator : ICreatorContentValidator
         {
             ValidateImage(creatorId, image.Src, $"Destination '{destination.Slug}' gallery", issues);
         }
+    }
+
+    private async Task ValidateResourceImageAsync(
+        CreatorId creatorId,
+        ResourceId? resourceId,
+        string legacyUrl,
+        string owner,
+        bool required,
+        ICollection<ContentValidationIssue> issues,
+        CancellationToken cancellationToken)
+    {
+        if (resourceId is null || resourceId == default)
+        {
+            if (required || !string.IsNullOrWhiteSpace(legacyUrl))
+            {
+                AddIssue(
+                    creatorId,
+                    ContentValidationSeverity.Error,
+                    "missing-resource-reference",
+                    $"{owner} requires a Creator-owned resource identity.",
+                    issues);
+            }
+
+            return;
+        }
+
+        var publicUrl = await _resourceService.GetPublicUrlAsync(
+            creatorId,
+            resourceId.Value,
+            cancellationToken);
+        if (publicUrl is null)
+        {
+            AddIssue(
+                creatorId,
+                ContentValidationSeverity.Error,
+                "invalid-resource-reference",
+                $"{owner} resource '{resourceId}' is missing, unpublished, or owned by another Creator.",
+                issues);
+            return;
+        }
+
     }
 
     private void ValidateImage(

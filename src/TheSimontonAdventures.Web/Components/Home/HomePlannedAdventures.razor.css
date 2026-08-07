@@ -42,9 +42,33 @@
 }
 
 .home-planned-adventures__grid article {
-    padding: clamp(2rem, 4vw, 3.5rem);
+    overflow: hidden;
     border: var(--border-light);
     background: var(--color-surface);
+}
+
+.home-planned-adventures__media {
+    display: block;
+    overflow: hidden;
+    padding: 0;
+    border: 0;
+    aspect-ratio: 16 / 9;
+}
+
+.home-planned-adventures__media img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 500ms ease;
+}
+
+.home-planned-adventures__media:hover img {
+    transform: scale(1.025);
+}
+
+.home-planned-adventures__body {
+    padding: clamp(2rem, 4vw, 3.5rem);
 }
 
 .home-planned-adventures__status {
@@ -69,7 +93,7 @@
     line-height: var(--line-height-reading);
 }
 
-.home-planned-adventures a {
+.home-planned-adventures a:not(.home-planned-adventures__media) {
     display: inline-flex;
     gap: var(--space-3);
     padding-bottom: var(--space-2);

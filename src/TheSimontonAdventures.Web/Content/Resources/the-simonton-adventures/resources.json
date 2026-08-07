@@ -1,0 +1,62 @@
+{
+  "resources": [
+    {
+      "id": "resource_home_hero",
+      "creatorId": "creator_tsa_01",
+      "type": "Image",
+      "title": "The Simonton Adventures homepage hero",
+      "description": "The primary visual used to introduce the Creator homepage.",
+      "storageProvider": "local-public",
+      "storageLocation": "/images/home/adventures-studio-hero.jpeg",
+      "mediaType": "image/jpeg",
+      "alternativeText": "A sweeping Mediterranean travel scene",
+      "attribution": "The Simonton Adventures",
+      "copyright": "Copyright The Simonton Adventures",
+      "usageRights": "Creator-owned; approved for public AdventuresSuite presentation.",
+      "publicationStatus": "Published"
+    },
+    {
+      "id": "resource_volume_one_cover",
+      "creatorId": "creator_tsa_01",
+      "type": "Image",
+      "title": "Our Mediterranean Adventure cover",
+      "description": "Cover image for the first published Adventure.",
+      "storageProvider": "local-public",
+      "storageLocation": "/images/volumes/volume-1/cover/volume-1-cover.jpeg",
+      "mediaType": "image/jpeg",
+      "alternativeText": "Mediterranean coastal scenery representing the first Adventure",
+      "attribution": "The Simonton Adventures",
+      "copyright": "Copyright The Simonton Adventures",
+      "usageRights": "Creator-owned; approved for public AdventuresSuite presentation.",
+      "publicationStatus": "Published"
+    },
+    {
+      "id": "resource_volume_two_cover",
+      "creatorId": "creator_tsa_01",
+      "type": "Image",
+      "title": "Eastern Caribbean Adventure cover",
+      "storageProvider": "local-public",
+      "storageLocation": "/images/volumes/volume-2/cover/volume-2-cover.jpeg",
+      "mediaType": "image/jpeg",
+      "alternativeText": "Cover artwork for the Eastern Caribbean Adventure",
+      "attribution": "The Simonton Adventures",
+      "copyright": "Copyright The Simonton Adventures",
+      "usageRights": "Creator-owned; approved for public AdventuresSuite presentation.",
+      "publicationStatus": "Published"
+    },
+    {
+      "id": "resource_volume_three_cover",
+      "creatorId": "creator_tsa_01",
+      "type": "Image",
+      "title": "Spain and Trans-Atlantic Adventure cover",
+      "storageProvider": "local-public",
+      "storageLocation": "/images/volumes/volume-3/cover/volume-3-cover.jpeg",
+      "mediaType": "image/jpeg",
+      "alternativeText": "Cover artwork for the Spain and Trans-Atlantic Adventure",
+      "attribution": "The Simonton Adventures",
+      "copyright": "Copyright The Simonton Adventures",
+      "usageRights": "Creator-owned; approved for public AdventuresSuite presentation.",
+      "publicationStatus": "Published"
+    }
+  ]
+}
