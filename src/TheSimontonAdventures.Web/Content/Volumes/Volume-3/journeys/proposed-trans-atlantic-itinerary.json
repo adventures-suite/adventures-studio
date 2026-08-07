@@ -1,0 +1,77 @@
+{
+  "slug": "proposed-trans-atlantic-itinerary",
+  "volumeSlug": "spain-trans-atlantic-cruise",
+  "title": "Proposed Trans-Atlantic Itinerary",
+  "summary": "A working route from Phoenix to Spain, followed by a westbound Atlantic crossing to Florida.",
+  "journeyType": "Editorial",
+  "startLocation": "Phoenix",
+  "endLocation": "Fort Lauderdale",
+  "startDate": "October 25, 2027",
+  "endDate": "November 15, 2027",
+  "published": true,
+  "displayOrder": 1,
+  "segments": [
+    {
+      "from": "Phoenix",
+      "to": "Barcelona",
+      "travelMode": "Flight",
+      "travelDescription": "Air travel to Spain",
+      "countrySlug": "spain",
+      "destinationSlug": "barcelona",
+      "notes": "Flights and the pre-cruise stay remain to be confirmed.",
+      "displayOrder": 1
+    },
+    {
+      "from": "Barcelona",
+      "to": "Palma de Mallorca",
+      "travelMode": "Cruise",
+      "travelDescription": "Royal Caribbean trans-Atlantic cruise",
+      "countrySlug": "spain",
+      "destinationSlug": "palma-de-mallorca",
+      "notes": "Port timing and shore plans may change.",
+      "displayOrder": 2
+    },
+    {
+      "from": "Palma de Mallorca",
+      "to": "Alicante",
+      "travelMode": "Cruise",
+      "travelDescription": "Royal Caribbean trans-Atlantic cruise",
+      "countrySlug": "spain",
+      "destinationSlug": "alicante",
+      "notes": "Excursions remain under consideration.",
+      "displayOrder": 3
+    },
+    {
+      "from": "Alicante",
+      "to": "Malaga",
+      "travelMode": "Cruise",
+      "travelDescription": "Royal Caribbean trans-Atlantic cruise",
+      "countrySlug": "spain",
+      "destinationSlug": "malaga",
+      "notes": "Excursions remain under consideration.",
+      "displayOrder": 4
+    },
+    {
+      "from": "Malaga",
+      "to": "Fort Lauderdale",
+      "travelMode": "Cruise",
+      "travelDescription": "Westbound Atlantic crossing",
+      "waypoints": [
+        {
+          "title": "Canary Islands",
+          "notes": "Proposed Atlantic itinerary stop.",
+          "displayOrder": 1
+        },
+        {
+          "title": "Bermuda",
+          "notes": "Proposed Atlantic itinerary stop.",
+          "displayOrder": 2
+        }
+      ],
+      "countrySlug": "usa",
+      "destinationSlug": "fort-lauderdale",
+      "notes": "The crossing itinerary and intermediate ports are subject to change.",
+      "displayOrder": 5
+    }
+  ]
+}

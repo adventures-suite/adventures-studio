@@ -8,69 +8,13 @@
   "status": "Planned",
   "travelDates": "May 15 – May 22, 2027",
   "statusMessage": "Our planned Key West/Eastern Caribbean cruise",
-  "journeyStops": [
+  "journeys": [
     {
-      "title": "Phoenix",
-      "subtitle": "The journey begins",
-      "countrySlug": "",
-      "destinationSlug": "",
-      "travelMode": "Flight",
-      "travelDescription": "American Airlines to Venice",
+      "slug": "proposed-eastern-caribbean-itinerary",
+      "title": "Proposed Eastern Caribbean Itinerary",
+      "journeyType": "Editorial",
+      "featured": true,
       "displayOrder": 1
-    },
-    {
-      "title": "Miami",
-      "subtitle": "Florida",
-      "countrySlug": "usa",
-      "destinationSlug": "miami",
-      "travelMode": "Car",
-      "travelDescription": "Ground transportation from Miami International Airport",
-      "displayOrder": 2
-    },
-    {
-      "title": "Key West",
-      "subtitle": "Florida",
-      "countrySlug": "usa",
-      "destinationSlug": "key-west",
-      "travelMode": "Car",
-      "travelDescription": "Ground transportation from Miami International Airport",
-      "displayOrder": 3
-    },
-    {
-      "title": "Miami",
-      "subtitle": "Florida",
-      "countrySlug": "usa",
-      "destinationSlug": "miami",
-      "travelMode": "Cruise",
-      "travelDescription": "Royal Caribbean Mediterranean cruise",
-      "displayOrder": 4
-    },
-    {
-      "title": "Philipsburg",
-      "subtitle": "St. Maarten",
-      "countrySlug": "st-maarten",
-      "destinationSlug": "philipsburg",
-      "travelMode": "Cruise",
-      "travelDescription": "Royal Caribbean Mediterranean cruise",
-      "displayOrder": 5
-    },
-    {
-      "title": "Charlotte Amalie",
-      "subtitle": "St. Thomas",
-      "countrySlug": "st-thomas",
-      "destinationSlug": "charlotte-amalie",
-      "travelMode": "Cruise",
-      "travelDescription": "Royal Caribbean Mediterranean cruise",
-      "displayOrder": 6
-    },
-    {
-      "title": "Perfect Day Cococay",
-      "subtitle": "CoCoday  Bahamas",
-      "countrySlug": "bahamas",
-      "destinationSlug": "perfect-day-cococay",
-      "travelMode": "Cruise",
-      "travelDescription": "Royal Caribbean Mediterranean cruise",
-      "displayOrder": 7
     }
   ],
   "destinations": [

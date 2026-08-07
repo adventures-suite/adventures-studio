@@ -42,6 +42,13 @@
     color: rgba(22, 32, 42, 0.7);
 }
 
+.journey-segment-timeline__header .journey-segment-timeline__notice {
+    padding: 1rem 1.1rem;
+    border-left: 3px solid var(--creator-accent);
+    background: rgba(22, 32, 42, 0.04);
+    font-size: 0.94rem;
+}
+
 .journey-segment-timeline__segments {
     position: relative;
     display: grid;
@@ -217,6 +224,13 @@
     border-radius: 999px;
     background: rgba(22, 32, 42, 0.045);
     color: rgba(22, 32, 42, 0.72);
+}
+
+.journey-segment__notes {
+    margin: 0.45rem 0 0;
+    font-size: 0.88rem;
+    line-height: 1.55;
+    color: rgba(22, 32, 42, 0.66);
 }
 
 @media (max-width: 960px) {

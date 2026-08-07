@@ -50,6 +50,8 @@ public static class CreatorManifestValidator
 
         ValidateBrand(creator.Brand);
 
+        ValidateHomepage(creator.Homepage);
+
         if (creator.Features is null)
         {
             throw new InvalidDataException("Creator feature configuration is required.");
@@ -85,6 +87,32 @@ public static class CreatorManifestValidator
         {
             throw new InvalidDataException(
                 "Creator brand typography must be an approved token.");
+        }
+    }
+
+    private static void ValidateHomepage(CreatorHomepage homepage)
+    {
+        if (homepage is null || homepage.Sections.Count == 0)
+        {
+            throw new InvalidDataException(
+                "Creator homepage composition must contain at least one section.");
+        }
+
+        var sections = new HashSet<CreatorHomepageSectionType>();
+
+        foreach (var section in homepage.Sections)
+        {
+            if (!Enum.IsDefined(section))
+            {
+                throw new InvalidDataException(
+                    $"Creator homepage section '{section}' is not supported.");
+            }
+
+            if (!sections.Add(section))
+            {
+                throw new InvalidDataException(
+                    $"Creator homepage section '{section}' is duplicated.");
+            }
         }
     }
 

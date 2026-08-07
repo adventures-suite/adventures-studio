@@ -1,5 +1,4 @@
 @rendermode InteractiveServer
-@inject ITravelContentService TravelContentService
 
 <header class="site-header">
     <div class="site-header__inner">
@@ -45,13 +44,10 @@
                 Home
             </NavLink>
 
-            @if (_exploreUrl is not null)
-            {
-                <NavLink href="@_exploreUrl"
-                         @onclick="CloseMenu">
-                    Explore
-                </NavLink>
-            }
+            <NavLink href="@TravelRoutes.Adventures"
+                     @onclick="CloseMenu">
+                Adventures
+            </NavLink>
 
             @if (CreatorContext.Features.EnableCompanion)
             {
@@ -81,7 +77,6 @@
     public CreatorContext CreatorContext { get; set; } = null!;
 
     private bool _isMenuOpen;
-    private string? _exploreUrl;
 
     private string NavigationClass =>
         _isMenuOpen
@@ -98,15 +93,4 @@
         _isMenuOpen = false;
     }
 
-    protected override async Task OnInitializedAsync()
-    {
-        var creatorId = CreatorContext.Id;
-        var volume = await TravelContentService.GetCurrentVolumeAsync(creatorId)
-            ?? (await TravelContentService.GetPublicVolumesAsync(creatorId))
-                .FirstOrDefault();
-
-        _exploreUrl = volume is null
-            ? null
-            : TravelRoutes.Volume(volume.Slug);
-    }
 }

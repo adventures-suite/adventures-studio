@@ -1,0 +1,66 @@
+@using TheSimontonAdventures.Web.Components.Journeys
+@using TheSimontonAdventures.Web.Models
+
+<section class="planned-adventure" aria-labelledby="planning-status-title">
+    <div class="planned-adventure__summary">
+        <div>
+            <p class="planned-adventure__eyebrow">Planning status</p>
+            <h2 id="planning-status-title">@Volume.Status.GetDisplayLabel()</h2>
+        </div>
+
+        <dl>
+            @if (!string.IsNullOrWhiteSpace(Volume.TravelDates))
+            {
+                <div>
+                    <dt>Proposed dates</dt>
+                    <dd>@Volume.TravelDates</dd>
+                </div>
+            }
+            <div>
+                <dt>Current status</dt>
+                <dd>@GetPlanningMessage()</dd>
+            </div>
+        </dl>
+    </div>
+
+    @if (ConsideredDestinations.Count > 0)
+    {
+        <div class="planned-adventure__destinations">
+            <p class="planned-adventure__eyebrow">Under consideration</p>
+            <h2>Destinations in the plan</h2>
+            <ul>
+                @foreach (var destination in ConsideredDestinations)
+                {
+                    <li>@destination</li>
+                }
+            </ul>
+        </div>
+    }
+</section>
+
+<JourneySegmentTimeline Journey="@Journey"
+                        Eyebrow="Proposed itinerary"
+                        ShowTentativeNotice="true"
+                        ShowSegmentNotes="true" />
+
+@code {
+    /// <summary>Gets or sets the planned public Adventure.</summary>
+    [Parameter, EditorRequired]
+    public Volume Volume { get; set; } = null!;
+
+    /// <summary>Gets or sets the Journey Engine itinerary being planned.</summary>
+    [Parameter, EditorRequired]
+    public Journey Journey { get; set; } = null!;
+
+    private IReadOnlyList<string> ConsideredDestinations => Journey.Segments
+        .Where(segment => !string.IsNullOrWhiteSpace(segment.DestinationSlug))
+        .OrderBy(segment => segment.DisplayOrder)
+        .Select(segment => segment.To)
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToArray();
+
+    private string GetPlanningMessage() =>
+        string.IsNullOrWhiteSpace(Volume.StatusMessage)
+            ? "Itinerary details are being developed."
+            : Volume.StatusMessage;
+}

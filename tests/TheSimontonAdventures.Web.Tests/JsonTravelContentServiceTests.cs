@@ -103,6 +103,40 @@ public sealed class JsonTravelContentServiceTests
     }
 
     /// <summary>
+    /// Ensures planned Adventures use the Journey Engine itinerary contract
+    /// instead of the legacy overview-stop representation.
+    /// </summary>
+    [Fact]
+    public async Task PlannedVolumes_UseJourneyEngineSegments()
+    {
+        var service = TestContentServiceFactory.Create();
+        var volumes = await service.GetVolumesAsync(FlagshipCreatorId);
+        var plannedVolumes = volumes
+            .Where(volume => volume.Status == VolumeStatus.Planned)
+            .ToArray();
+
+        Assert.NotEmpty(plannedVolumes);
+
+        foreach (var volume in plannedVolumes)
+        {
+            Assert.Empty(volume.JourneyStops);
+            var reference = Assert.Single(volume.Journeys);
+            Assert.True(reference.Featured);
+
+            var journey = await service.GetJourneyAsync(
+                FlagshipCreatorId,
+                volume.Slug,
+                reference.Slug);
+
+            Assert.NotNull(journey);
+            Assert.True(journey.Published);
+            Assert.NotEmpty(journey.Segments);
+            Assert.All(journey.Segments, segment =>
+                Assert.False(string.IsNullOrWhiteSpace(segment.TravelDescription)));
+        }
+    }
+
+    /// <summary>
     /// Ensures public QR slugs are present and unique without regard to casing.
     /// </summary>
     [Fact]

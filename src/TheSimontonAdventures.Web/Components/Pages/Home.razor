@@ -2,7 +2,6 @@
 
 @using TheSimontonAdventures.Web.Components.Home
 @inject ICreatorContextAccessor CreatorContextAccessor
-@inject ITravelContentService TravelContentService
 
 <PageTitle>@CreatorContextAccessor.Current.GetDefaultSeoTitle()</PageTitle>
 
@@ -13,21 +12,20 @@
     HeroImage="@CreatorContextAccessor.Current.Brand.HomeHeroImageUrl"
     HeroImageAlt="@CreatorContextAccessor.Current.Brand.HomeHeroImageAlt"
     PrimaryActionLabel="@CreatorContextAccessor.Current.Brand.HomeHeroActionLabel"
-    PrimaryActionUrl="@_primaryActionUrl" />
+    PrimaryActionUrl="@TravelRoutes.Adventures" />
 
-@code {
-    private string _primaryActionUrl = "/";
-
-    protected override async Task OnInitializedAsync()
+@foreach (var section in CreatorContextAccessor.Current.Homepage.Sections)
+{
+    switch (section)
     {
-        var creatorId = CreatorContextAccessor.Current.Id;
-        var volume = await TravelContentService.GetCurrentVolumeAsync(creatorId)
-            ?? (await TravelContentService.GetPublicVolumesAsync(creatorId))
-                .FirstOrDefault();
-
-        if (volume is not null)
-        {
-            _primaryActionUrl = TravelRoutes.Volume(volume.Slug);
-        }
+        case CreatorHomepageSectionType.CurrentAdventure:
+            <CurrentAdventure />
+            break;
+        case CreatorHomepageSectionType.PlannedAdventures:
+            <HomePlannedAdventures />
+            break;
+        case CreatorHomepageSectionType.FeaturedDestinations:
+            <HomeFeaturedDestinations />
+            break;
     }
 }

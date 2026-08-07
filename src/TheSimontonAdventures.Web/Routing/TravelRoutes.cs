@@ -9,6 +9,9 @@ namespace TheSimontonAdventures.Web.Routing;
 /// </remarks>
 public static class TravelRoutes
 {
+    /// <summary>The canonical route for the public Adventures catalog.</summary>
+    public const string Adventures = "/adventures";
+
     /// <summary>
     /// Builds the canonical route for a volume.
     /// </summary>

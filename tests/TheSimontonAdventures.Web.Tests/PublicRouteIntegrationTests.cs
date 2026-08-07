@@ -98,6 +98,81 @@ public sealed class PublicRouteIntegrationTests : IClassFixture<PublicRouteInteg
     }
 
     /// <summary>
+    /// Ensures each Creator controls both the selected homepage sections and
+    /// their render order.
+    /// </summary>
+    [Fact]
+    public async Task HomepageComposition_IsOrderedAndCreatorScoped()
+    {
+        using var flagship = await SendAsync("localhost", "/");
+        using var demo = await SendAsync("demo.localhost", "/");
+        var flagshipHtml = await flagship.Content.ReadAsStringAsync();
+        var demoHtml = await demo.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, flagship.StatusCode);
+        var currentIndex = flagshipHtml.IndexOf(
+            "current-adventure",
+            StringComparison.Ordinal);
+        var plannedIndex = flagshipHtml.IndexOf(
+            "home-planned-adventures",
+            StringComparison.Ordinal);
+        var featuredIndex = flagshipHtml.IndexOf(
+            "home-destinations",
+            StringComparison.Ordinal);
+        Assert.True(currentIndex >= 0);
+        Assert.True(plannedIndex > currentIndex);
+        Assert.True(featuredIndex > plannedIndex);
+
+        Assert.Equal(HttpStatusCode.OK, demo.StatusCode);
+        Assert.Contains("current-adventure", demoHtml);
+        Assert.DoesNotContain("home-planned-adventures", demoHtml);
+        Assert.DoesNotContain("home-destinations", demoHtml);
+    }
+
+    /// <summary>
+    /// Ensures the Adventures catalog contains only public volumes owned by
+    /// the Creator resolved from the request host.
+    /// </summary>
+    [Fact]
+    public async Task AdventuresCatalog_IsCreatorScopedAndExcludesDraftVolumes()
+    {
+        using var flagship = await SendAsync("localhost", "/adventures");
+        using var demo = await SendAsync("demo.localhost", "/adventures");
+        var flagshipHtml = await flagship.Content.ReadAsStringAsync();
+        var demoHtml = await demo.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, flagship.StatusCode);
+        Assert.Contains("Italy, Greece &amp; Croatia", flagshipHtml);
+        Assert.DoesNotContain("Aegean Notebook", flagshipHtml);
+
+        Assert.Equal(HttpStatusCode.OK, demo.StatusCode);
+        Assert.Contains("Aegean Notebook", demoHtml);
+        Assert.DoesNotContain("Demo Draft Notebook", demoHtml);
+        Assert.DoesNotContain("Italy, Greece &amp; Croatia", demoHtml);
+    }
+
+    /// <summary>
+    /// Ensures a planned Adventure exposes its proposed Journey Engine
+    /// itinerary, planning state, and change-sensitive guidance.
+    /// </summary>
+    [Fact]
+    public async Task PlannedAdventure_RendersPlanningExperience()
+    {
+        using var response = await SendAsync(
+            "localhost",
+            "/volumes/key-west-eastern-caribbean-cruise");
+        var html = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("Planned Adventure", html);
+        Assert.Contains("Proposed itinerary", html);
+        Assert.Contains("Destinations in the plan", html);
+        Assert.Contains("Perfect Day CocoCay", html);
+        Assert.Contains("details may change", html, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Flight and arrival details remain to be confirmed", html);
+    }
+
+    /// <summary>
     /// Ensures identical public slugs redirect within the independently resolved
     /// Creator boundary.
     /// </summary>

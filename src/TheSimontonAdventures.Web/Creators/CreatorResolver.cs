@@ -172,6 +172,7 @@ public sealed class CreatorResolver : ICreatorResolver
             RequestedHost = requestedHost,
             PrimaryDomain = creator.PrimaryDomain,
             Brand = creator.Brand,
+            Homepage = creator.Homepage,
             Features = creator.Features,
             Locale = creator.Locale,
             TimeZone = creator.TimeZone,

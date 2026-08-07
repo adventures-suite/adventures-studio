@@ -32,6 +32,9 @@ public sealed class Creator
     /// <summary>Gets the Creator's structured presentation configuration.</summary>
     public CreatorBrand Brand { get; init; } = new();
 
+    /// <summary>Gets the Creator-owned homepage composition.</summary>
+    public CreatorHomepage Homepage { get; init; } = new();
+
     /// <summary>Gets the Creator-scoped feature configuration.</summary>
     public CreatorFeatures Features { get; init; } = new();
 

@@ -27,6 +27,11 @@
     "accentColor": "#e58b3a",
     "typography": "Modern"
   },
+  "homepage": {
+    "sections": [
+      "CurrentAdventure"
+    ]
+  },
   "features": {
     "enableAbout": false,
     "enableCompanion": false,

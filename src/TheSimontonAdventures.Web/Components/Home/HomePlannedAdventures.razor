@@ -1,0 +1,54 @@
+@using TheSimontonAdventures.Web.Models
+@inject ITravelContentService TravelContentService
+@inject ICreatorContextAccessor CreatorContextAccessor
+
+@if (_volumes.Count > 0)
+{
+    <section class="home-planned-adventures">
+        <header class="home-planned-adventures__header">
+            <p>On the horizon</p>
+            <h2>Planned Adventures</h2>
+            <p>Preview the journeys taking shape and follow their evolving itineraries.</p>
+        </header>
+
+        <div class="home-planned-adventures__grid">
+            @foreach (var volume in _volumes)
+            {
+                <article>
+                    <p class="home-planned-adventures__status">
+                        @volume.Status.GetDisplayLabel()
+                    </p>
+                    <h3>@volume.Title</h3>
+                    @if (!string.IsNullOrWhiteSpace(volume.TravelDates))
+                    {
+                        <p class="home-planned-adventures__dates">@volume.TravelDates</p>
+                    }
+                    <p>@volume.Description</p>
+                    <a href="@TravelRoutes.Volume(volume.Slug)">
+                        View the plan <span aria-hidden="true">→</span>
+                    </a>
+                </article>
+            }
+        </div>
+
+        <a class="home-planned-adventures__all" href="@TravelRoutes.Adventures">
+            View all Adventures <span aria-hidden="true">→</span>
+        </a>
+    </section>
+}
+
+@code {
+    private IReadOnlyList<Volume> _volumes = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var volumes = await TravelContentService.GetPublicVolumesAsync(
+            CreatorContextAccessor.Current.Id);
+
+        _volumes = volumes
+            .Where(volume => volume.Status is
+                VolumeStatus.Planned or VolumeStatus.Upcoming)
+            .OrderBy(volume => volume.Number)
+            .ToArray();
+    }
+}

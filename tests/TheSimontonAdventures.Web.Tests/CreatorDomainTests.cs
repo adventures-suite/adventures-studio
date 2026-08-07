@@ -243,6 +243,54 @@ public sealed class CreatorDomainTests
                 AppContext.BaseDirectory));
     }
 
+    /// <summary>Ensures a Creator explicitly owns its homepage composition.</summary>
+    [Fact]
+    public void Validate_EmptyHomepageComposition_ThrowsInvalidDataException()
+    {
+        var creator = CreateValidCreator(homepage: new CreatorHomepage());
+
+        Assert.Throws<InvalidDataException>(() =>
+            CreatorManifestValidator.Validate(
+                creator,
+                AppContext.BaseDirectory));
+    }
+
+    /// <summary>Ensures a shared homepage section cannot be rendered twice.</summary>
+    [Fact]
+    public void Validate_DuplicateHomepageSection_ThrowsInvalidDataException()
+    {
+        var creator = CreateValidCreator(
+            homepage: new CreatorHomepage
+            {
+                Sections =
+                [
+                    CreatorHomepageSectionType.CurrentAdventure,
+                    CreatorHomepageSectionType.CurrentAdventure
+                ]
+            });
+
+        Assert.Throws<InvalidDataException>(() =>
+            CreatorManifestValidator.Validate(
+                creator,
+                AppContext.BaseDirectory));
+    }
+
+    /// <summary>Ensures unknown section identifiers fail manifest validation.</summary>
+    [Fact]
+    public void Validate_UnsupportedHomepageSection_ThrowsInvalidDataException()
+    {
+        var creator = CreateValidCreator(
+            homepage: new CreatorHomepage
+            {
+                Sections = [(CreatorHomepageSectionType)999]
+            });
+
+        Assert.Throws<InvalidDataException>(() =>
+            CreatorManifestValidator.Validate(
+                creator,
+                AppContext.BaseDirectory));
+    }
+
     /// <summary>Ensures invalid locales fail before presentation rendering.</summary>
     [Fact]
     public void Validate_InvalidLocale_ThrowsInvalidDataException()
@@ -272,6 +320,7 @@ public sealed class CreatorDomainTests
         IReadOnlyList<string>? domains = null,
         string contentRoot = "Content/Volumes",
         CreatorBrand? brand = null,
+        CreatorHomepage? homepage = null,
         string locale = "en-US",
         string timeZone = "UTC")
     {
@@ -284,6 +333,10 @@ public sealed class CreatorDomainTests
             PrimaryDomain = primaryDomain,
             Domains = domains ?? ["example.com"],
             Brand = brand ?? CreateValidBrand(),
+            Homepage = homepage ?? new CreatorHomepage
+            {
+                Sections = [CreatorHomepageSectionType.CurrentAdventure]
+            },
             Locale = locale,
             TimeZone = timeZone,
             ContentRoot = contentRoot

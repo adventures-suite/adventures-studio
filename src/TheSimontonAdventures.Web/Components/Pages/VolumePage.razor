@@ -78,7 +78,11 @@ else
 
         </section>
 
-        @if (_journey is not null)
+        @if (_journey is not null && IsPlanning)
+        {
+            <PlannedAdventureDetails Volume="@_volume" Journey="@_journey" />
+        }
+        else if (_journey is not null)
         {
             <JourneySegmentTimeline Journey="@_journey" />
         }
@@ -106,6 +110,9 @@ else
         Array.Empty<VolumeDestinationCard>();
 
     private bool _isLoading;
+
+    private bool IsPlanning => _volume?.Status is
+        VolumeStatus.Planned or VolumeStatus.Upcoming;
 
     private string PageTitle =>
         _volume is null

@@ -27,6 +27,13 @@
     "accentColor": "#9a6e3a",
     "typography": "Classic"
   },
+  "homepage": {
+    "sections": [
+      "CurrentAdventure",
+      "PlannedAdventures",
+      "FeaturedDestinations"
+    ]
+  },
   "features": {
     "enableAbout": true,
     "enableCompanion": true,

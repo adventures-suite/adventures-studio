@@ -1,0 +1,77 @@
+.planned-adventure {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-8);
+    margin-top: clamp(4rem, 8vw, 7rem);
+}
+
+.planned-adventure__summary,
+.planned-adventure__destinations {
+    padding: clamp(2rem, 4vw, 3.5rem);
+    border: 1px solid rgba(22, 32, 42, 0.09);
+    border-radius: 1.4rem;
+    background: rgba(255, 255, 255, 0.82);
+}
+
+.planned-adventure__eyebrow {
+    margin: 0 0 var(--space-3);
+    color: var(--creator-accent);
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    letter-spacing: var(--letter-spacing-label);
+    text-transform: uppercase;
+}
+
+.planned-adventure h2 {
+    margin: 0;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    line-height: 1;
+}
+
+.planned-adventure dl {
+    display: grid;
+    gap: var(--space-5);
+    margin: var(--space-8) 0 0;
+}
+
+.planned-adventure dl div {
+    padding-top: var(--space-4);
+    border-top: 1px solid rgba(22, 32, 42, 0.09);
+}
+
+.planned-adventure dt {
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    letter-spacing: 0.08rem;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+}
+
+.planned-adventure dd {
+    margin: var(--space-2) 0 0;
+    line-height: var(--line-height-reading);
+}
+
+.planned-adventure ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin: var(--space-8) 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.planned-adventure li {
+    padding: 0.55rem 0.8rem;
+    border: 1px solid rgba(22, 32, 42, 0.09);
+    border-radius: 999px;
+    background: var(--color-background-alt);
+    font-size: var(--font-size-sm);
+    font-weight: 650;
+}
+
+@media (max-width: 50rem) {
+    .planned-adventure {
+        grid-template-columns: 1fr;
+    }
+}

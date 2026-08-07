@@ -233,6 +233,10 @@ public sealed class CreatorScopedTravelContentServiceTests
                     HomeHeroDescription = "Creator-owned integration test copy.",
                     HomeHeroActionLabel = "Explore"
                 },
+                Homepage = new CreatorHomepage
+                {
+                    Sections = [CreatorHomepageSectionType.CurrentAdventure]
+                },
                 ContentRoot = $"Content/{slug}/Volumes"
             };
             var volume = new Volume

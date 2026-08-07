@@ -24,6 +24,9 @@ public sealed record CreatorContext
     /// <summary>Gets the Creator's structured presentation configuration.</summary>
     public required CreatorBrand Brand { get; init; }
 
+    /// <summary>Gets the Creator-owned homepage composition.</summary>
+    public CreatorHomepage Homepage { get; init; } = new();
+
     /// <summary>Gets the Creator-scoped feature configuration.</summary>
     public required CreatorFeatures Features { get; init; }
 

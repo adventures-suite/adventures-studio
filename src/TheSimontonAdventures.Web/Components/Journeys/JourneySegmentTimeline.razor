@@ -8,7 +8,7 @@
 
         <div class="journey-segment-timeline__header">
             <span class="journey-segment-timeline__eyebrow">
-                Journey
+                @Eyebrow
             </span>
 
             <h2 id="journey-segment-timeline-title">
@@ -19,6 +19,14 @@
             {
                 <p>
                     @Journey.Summary
+                </p>
+            }
+
+            @if (ShowTentativeNotice)
+            {
+                <p class="journey-segment-timeline__notice">
+                    Details may change as this proposed itinerary develops,
+                    including routes, timing, transportation, and destinations.
                 </p>
             }
         </div>
@@ -84,6 +92,14 @@
                                 }
                             </div>
                         }
+
+                        @if (ShowSegmentNotes
+                            && !string.IsNullOrWhiteSpace(segment.Notes))
+                        {
+                            <p class="journey-segment__notes">
+                                @segment.Notes
+                            </p>
+                        }
                     </div>
                 </article>
             }
@@ -95,6 +111,21 @@
     /// <summary>Gets or sets the journey whose ordered segments are rendered.</summary>
     [Parameter]
     public Journey? Journey { get; set; }
+
+    /// <summary>Gets or sets the label introducing the itinerary.</summary>
+    [Parameter]
+    public string Eyebrow { get; set; } = "Journey";
+
+    /// <summary>
+    /// Gets or sets whether the itinerary displays change-sensitive planning
+    /// guidance.
+    /// </summary>
+    [Parameter]
+    public bool ShowTentativeNotice { get; set; }
+
+    /// <summary>Gets or sets whether authored segment notes are displayed.</summary>
+    [Parameter]
+    public bool ShowSegmentNotes { get; set; }
 
     private static string FormatTravelMode(TravelMode travelMode)
     {
