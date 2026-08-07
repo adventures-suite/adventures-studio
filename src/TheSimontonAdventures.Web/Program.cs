@@ -56,6 +56,7 @@ builder.Services.AddHostedService<ResourceValidationHostedService>();
 // Warm the immutable Creator registry and validate Creator-scoped content
 // before requests can observe duplicate addresses or broken public references.
 builder.Services.AddSingleton<ICreatorContentValidator, CreatorContentValidator>();
+builder.Services.AddSingleton<ApplicationReadinessState>();
 builder.Services.AddHostedService<CreatorContentValidationHostedService>();
 
 var app = builder.Build();
@@ -84,6 +85,26 @@ app.UseAntiforgery();
 
 // Expose static assets such as stylesheets, images, and JavaScript files.
 app.MapStaticAssets();
+
+/// <summary>
+/// Reports whether required Creator and Resource validation completed for the
+/// current application instance.
+/// </summary>
+app.MapGet(
+    "/health",
+    (ApplicationReadinessState readinessState) =>
+    {
+        var response = new
+        {
+            status = readinessState.IsReady ? "Healthy" : "Unhealthy",
+            resourcesValidated = readinessState.ResourcesValidated,
+            creatorContentValidated = readinessState.CreatorContentValidated
+        };
+
+        return readinessState.IsReady
+            ? Results.Ok(response)
+            : Results.Json(response, statusCode: StatusCodes.Status503ServiceUnavailable);
+    });
 
 /// <summary>
 /// Resolves a stable public slug and redirects the request to its current

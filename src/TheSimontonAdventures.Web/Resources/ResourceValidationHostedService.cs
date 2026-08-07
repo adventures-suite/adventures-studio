@@ -1,4 +1,5 @@
 using TheSimontonAdventures.Web.Creators;
+using TheSimontonAdventures.Web.Validation;
 
 namespace TheSimontonAdventures.Web.Resources;
 
@@ -7,16 +8,23 @@ public sealed class ResourceValidationHostedService : IHostedService
 {
     private readonly ICreatorService _creatorService;
     private readonly IResourceService _resourceService;
+    private readonly ApplicationReadinessState _readinessState;
     private readonly ILogger<ResourceValidationHostedService> _logger;
 
     /// <summary>Initializes startup resource validation.</summary>
     /// <param name="creatorService">The immutable Creator registry.</param>
     /// <param name="resourceService">The Creator-scoped resource registry.</param>
+    /// <param name="readinessState">The application startup-readiness state.</param>
     /// <param name="logger">The startup diagnostic logger.</param>
-    public ResourceValidationHostedService(ICreatorService creatorService, IResourceService resourceService, ILogger<ResourceValidationHostedService> logger)
+    public ResourceValidationHostedService(
+        ICreatorService creatorService,
+        IResourceService resourceService,
+        ApplicationReadinessState readinessState,
+        ILogger<ResourceValidationHostedService> logger)
     {
         _creatorService = creatorService;
         _resourceService = resourceService;
+        _readinessState = readinessState;
         _logger = logger;
     }
 
@@ -30,6 +38,7 @@ public sealed class ResourceValidationHostedService : IHostedService
             resourceCount += (await _resourceService.GetAllAsync(creator.Id, cancellationToken)).Count;
         }
 
+        _readinessState.MarkResourcesValidated();
         _logger.LogInformation("Validated {ResourceCount} resource record(s) across {CreatorCount} Creator(s).", resourceCount, creators.Count);
     }
 

@@ -15,6 +15,8 @@ env:
   DOTNET_VERSION: "10.0.x"
   PROJECT: src/TheSimontonAdventures.Web/TheSimontonAdventures.Web.csproj
   PUBLISH_DIR: ./artifacts/publish
+  PACKAGE_DIR: ./artifacts/package
+  PACKAGE_NAME: adventures-suite-${{ github.sha }}-${{ github.run_attempt }}.zip
   RUNTIME: linux-x64
 
 jobs:
@@ -61,6 +63,20 @@ jobs:
           --self-contained true
           --output "${{ env.PUBLISH_DIR }}"
 
+      - name: Create immutable deployment package
+        run: |
+          mkdir -p "${{ env.PACKAGE_DIR }}"
+          cd "${{ env.PUBLISH_DIR }}"
+          zip -q -r "$GITHUB_WORKSPACE/${{ env.PACKAGE_DIR }}/${{ env.PACKAGE_NAME }}" .
+
+      - name: Retain deployment package
+        uses: actions/upload-artifact@v4
+        with:
+          name: adventures-suite-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ env.PACKAGE_DIR }}/${{ env.PACKAGE_NAME }}
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Azure Login
         uses: azure/login@v2
         with:
@@ -80,7 +96,9 @@ jobs:
           az webapp config appsettings set \
             --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
             --name "${{ vars.AZURE_WEBAPP_NAME }}" \
-            --settings CreatorResolution__AzureDefaultCreatorId="$AZURE_DEFAULT_CREATOR_ID" \
+            --settings \
+              CreatorResolution__AzureDefaultCreatorId="$AZURE_DEFAULT_CREATOR_ID" \
+              WEBSITE_RUN_FROM_PACKAGE=1 \
             --output none
 
           az webapp config set \
@@ -90,10 +108,16 @@ jobs:
             --output none
 
       - name: Deploy Web App
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: ${{ vars.AZURE_WEBAPP_NAME }}
-          package: ${{ env.PUBLISH_DIR }}
+        run: |
+          az webapp deploy \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --name "${{ vars.AZURE_WEBAPP_NAME }}" \
+            --src-path "${{ env.PACKAGE_DIR }}/${{ env.PACKAGE_NAME }}" \
+            --type zip \
+            --clean true \
+            --restart true \
+            --track-status true \
+            --output none
 
       - name: Verify deployment
         run: |
@@ -103,9 +127,22 @@ jobs:
             --query defaultHostName \
             --output tsv)"
 
-          curl --fail --show-error --silent \
-            --retry 12 \
-            --retry-delay 10 \
-            --retry-all-errors \
-            "https://$APP_HOSTNAME/" \
-            --output /dev/null
+          HEALTH_URL="https://$APP_HOSTNAME/health"
+
+          for attempt in {1..18}; do
+            if HEALTH_RESPONSE="$(curl --fail --show-error --silent "$HEALTH_URL")" && \
+               jq -e \
+                 '.status == "Healthy" and
+                  .resourcesValidated == true and
+                  .creatorContentValidated == true' \
+                 >/dev/null <<<"$HEALTH_RESPONSE"; then
+              echo "Deployment is healthy and startup validation succeeded."
+              exit 0
+            fi
+
+            echo "Health verification attempt $attempt of 18 failed; retrying in 10 seconds."
+            sleep 10
+          done
+
+          echo "::error::Deployment did not become healthy after 3 minutes."
+          exit 1

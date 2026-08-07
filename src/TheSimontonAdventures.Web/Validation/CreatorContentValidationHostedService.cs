@@ -10,19 +10,23 @@ public sealed class CreatorContentValidationHostedService : IHostedService
 {
     private readonly ICreatorService _creatorService;
     private readonly ICreatorContentValidator _validator;
+    private readonly ApplicationReadinessState _readinessState;
     private readonly ILogger<CreatorContentValidationHostedService> _logger;
 
     /// <summary>Initializes startup validation.</summary>
     /// <param name="creatorService">The immutable Creator registry.</param>
     /// <param name="validator">The Creator-scoped content validator.</param>
+    /// <param name="readinessState">The application startup-readiness state.</param>
     /// <param name="logger">The startup diagnostic logger.</param>
     public CreatorContentValidationHostedService(
         ICreatorService creatorService,
         ICreatorContentValidator validator,
+        ApplicationReadinessState readinessState,
         ILogger<CreatorContentValidationHostedService> logger)
     {
         _creatorService = creatorService;
         _validator = validator;
+        _readinessState = readinessState;
         _logger = logger;
     }
 
@@ -67,6 +71,7 @@ public sealed class CreatorContentValidationHostedService : IHostedService
                 "Review the preceding Creator-scoped diagnostics.");
         }
 
+        _readinessState.MarkCreatorContentValidated();
         _logger.LogInformation(
             "Validated {CreatorCount} Creator content snapshot(s).",
             creators.Count);
