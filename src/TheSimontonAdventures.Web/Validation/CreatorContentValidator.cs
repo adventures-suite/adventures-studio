@@ -11,7 +11,6 @@ namespace TheSimontonAdventures.Web.Validation;
 /// </summary>
 public sealed class CreatorContentValidator : ICreatorContentValidator
 {
-    private readonly string _webRoot;
     private readonly ICreatorService _creatorService;
     private readonly ITravelContentService _contentService;
     private readonly IResourceService _resourceService;
@@ -32,7 +31,6 @@ public sealed class CreatorContentValidator : ICreatorContentValidator
         ArgumentNullException.ThrowIfNull(contentService);
         ArgumentNullException.ThrowIfNull(resourceService);
 
-        _webRoot = Path.Combine(hostEnvironment.ContentRootPath, "wwwroot");
         _creatorService = creatorService;
         _contentService = contentService;
         _resourceService = resourceService;
@@ -77,8 +75,20 @@ public sealed class CreatorContentValidator : ICreatorContentValidator
                 issues);
         }
 
-        ValidateImage(creatorId, creator.Brand.LogoUrl, "Creator logo", issues);
-        ValidateImage(creatorId, creator.Brand.FaviconUrl, "Creator favicon", issues);
+        await ValidateResourceImageAsync(
+            creatorId,
+            creator.Brand.LogoResourceId,
+            "Creator logo",
+            required: false,
+            issues,
+            cancellationToken);
+        await ValidateResourceImageAsync(
+            creatorId,
+            creator.Brand.FaviconResourceId,
+            "Creator favicon",
+            required: true,
+            issues,
+            cancellationToken);
         var homepageHeroUrl = await _resourceService.GetPublicUrlAsync(
             creatorId,
             creator.Brand.HomeHeroResourceId,
@@ -92,26 +102,16 @@ public sealed class CreatorContentValidator : ICreatorContentValidator
                 $"Homepage hero resource '{creator.Brand.HomeHeroResourceId}' is missing, unpublished, or owned by another Creator.",
                 issues);
         }
-        else if (!string.Equals(
-            homepageHeroUrl,
-            creator.Brand.HomeHeroImageUrl,
-            StringComparison.Ordinal))
-        {
-            AddIssue(
-                creatorId,
-                ContentValidationSeverity.Error,
-                "homepage-hero-resource-url-mismatch",
-                $"Homepage hero URL '{creator.Brand.HomeHeroImageUrl}' does not match resource '{creator.Brand.HomeHeroResourceId}' URL '{homepageHeroUrl}'.",
-                issues);
-        }
         var profile = await _contentService.GetCreatorProfileAsync(
             creatorId,
             cancellationToken);
-        ValidateImage(
+        await ValidateResourceImageAsync(
             creatorId,
-            profile?.HeroImageUrl,
+            profile?.HeroResourceId,
             "Creator About hero",
-            issues);
+            required: profile?.HeroResourceId is not null,
+            issues,
+            cancellationToken);
 
         var publicQrSlugs = new Dictionary<string, string>(
             StringComparer.OrdinalIgnoreCase);
@@ -122,7 +122,6 @@ public sealed class CreatorContentValidator : ICreatorContentValidator
             await ValidateResourceImageAsync(
                 creatorId,
                 volume.CoverResourceId,
-                volume.CoverImage,
                 $"Volume '{volume.Slug}' cover",
                 required: true,
                 issues,
@@ -130,7 +129,6 @@ public sealed class CreatorContentValidator : ICreatorContentValidator
             await ValidateResourceImageAsync(
                 creatorId,
                 volume.HeroResourceId,
-                volume.HeroImage,
                 $"Volume '{volume.Slug}' hero",
                 required: false,
                 issues,
@@ -167,7 +165,11 @@ public sealed class CreatorContentValidator : ICreatorContentValidator
 
             foreach (var destination in destinations)
             {
-                ValidateDestinationImages(creatorId, destination, issues);
+                await ValidateDestinationImagesAsync(
+                    creatorId,
+                    destination,
+                    issues,
+                    cancellationToken);
 
                 if (volume.Status.IsPubliclyVisible() && destination.Published)
                 {
@@ -245,29 +247,53 @@ public sealed class CreatorContentValidator : ICreatorContentValidator
             issues);
     }
 
-    private void ValidateDestinationImages(
+    private async Task ValidateDestinationImagesAsync(
         CreatorId creatorId,
         Destination destination,
-        ICollection<ContentValidationIssue> issues)
+        ICollection<ContentValidationIssue> issues,
+        CancellationToken cancellationToken)
     {
-        ValidateImage(creatorId, destination.HeroImage, $"Destination '{destination.Slug}' hero", issues);
-        ValidateImage(creatorId, destination.HomepageImage, $"Destination '{destination.Slug}' homepage", issues);
+        await ValidateResourceImageAsync(
+            creatorId,
+            destination.HeroResourceId,
+            $"Destination '{destination.Slug}' hero",
+            required: true,
+            issues,
+            cancellationToken);
+        await ValidateResourceImageAsync(
+            creatorId,
+            destination.HomepageResourceId,
+            $"Destination '{destination.Slug}' homepage",
+            required: true,
+            issues,
+            cancellationToken);
 
         foreach (var section in destination.Sections)
         {
-            ValidateImage(creatorId, section.ImageSrc, $"Destination '{destination.Slug}' section", issues);
+            await ValidateResourceImageAsync(
+                creatorId,
+                section.ImageResourceId,
+                $"Destination '{destination.Slug}' section",
+                required: section.ImageResourceId is not null,
+                issues,
+                cancellationToken);
         }
 
         foreach (var image in destination.Gallery)
         {
-            ValidateImage(creatorId, image.Src, $"Destination '{destination.Slug}' gallery", issues);
+            await ValidateResourceImageAsync(
+                creatorId,
+                image.ResourceId,
+                $"Destination '{destination.Slug}' gallery",
+                required: true,
+                issues,
+                cancellationToken);
         }
     }
 
     private async Task ValidateResourceImageAsync(
         CreatorId creatorId,
         ResourceId? resourceId,
-        string legacyUrl,
         string owner,
         bool required,
         ICollection<ContentValidationIssue> issues,
@@ -275,7 +301,7 @@ public sealed class CreatorContentValidator : ICreatorContentValidator
     {
         if (resourceId is null || resourceId == default)
         {
-            if (required || !string.IsNullOrWhiteSpace(legacyUrl))
+            if (required)
             {
                 AddIssue(
                     creatorId,
@@ -304,57 +330,6 @@ public sealed class CreatorContentValidator : ICreatorContentValidator
         }
 
     }
-
-    private void ValidateImage(
-        CreatorId creatorId,
-        string? imageUrl,
-        string owner,
-        ICollection<ContentValidationIssue> issues)
-    {
-        if (string.IsNullOrWhiteSpace(imageUrl))
-        {
-            return;
-        }
-
-        if (Uri.TryCreate(imageUrl, UriKind.Absolute, out var absoluteUri)
-            && absoluteUri.Scheme is "http" or "https")
-        {
-            return;
-        }
-
-        if (!imageUrl.StartsWith("/", StringComparison.Ordinal)
-            || imageUrl.Contains("..", StringComparison.Ordinal))
-        {
-            AddIssue(
-                creatorId,
-                ContentValidationSeverity.Error,
-                "invalid-image-path",
-                $"{owner} image '{imageUrl}' must be root-relative and non-traversing.",
-                issues);
-            return;
-        }
-
-        var relativePath = imageUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
-        var resolvedPath = Path.GetFullPath(Path.Combine(_webRoot, relativePath));
-        var webRootPrefix = Path.TrimEndingDirectorySeparator(
-            Path.GetFullPath(_webRoot)) + Path.DirectorySeparatorChar;
-
-        if (!resolvedPath.StartsWith(webRootPrefix, PathComparison)
-            || !File.Exists(resolvedPath))
-        {
-            AddIssue(
-                creatorId,
-                ContentValidationSeverity.Warning,
-                "missing-image",
-                $"{owner} image '{imageUrl}' was not found.",
-                issues);
-        }
-    }
-
-    private static StringComparison PathComparison =>
-        OperatingSystem.IsWindows()
-            ? StringComparison.OrdinalIgnoreCase
-            : StringComparison.Ordinal;
 
     private static void RegisterQrSlug(
         CreatorId creatorId,

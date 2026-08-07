@@ -8,15 +8,18 @@
   "title": "Ravenna",
   "subtitle": "Gateway to the Adriatic",
   "summary": "Ravenna marked the transition between our time on land and the beginning of our Mediterranean cruise. Known for its remarkable mosaics and deep history, the city gave us one final glimpse of Italy before we boarded Explorer of the Seas.",
-  "heroImage": "/images/volumes/volume-1/italy/ravenna/hero.jpeg",
-  "heroImageAlt": "Historic architecture and Byzantine mosaics in Ravenna, Italy",
+  "heroResourceId": "resource_ravenna_hero",
   "published": true,
   "featured": true,
   "homepageOrder": 4,
-  "homepageImage": "/images/volumes/volume-1/italy/ravenna/homepage.jpeg",
+  "homepageResourceId": "resource_ravenna_card",
   "homepageSummary": "Discover Ravenna's remarkable mosaics, quiet historic center, and its role as the gateway to our Mediterranean cruise.",
-  "sections": [],
-  "reflections": [],
+  "sections": [
+
+  ],
+  "reflections": [
+
+  ],
   "quote": {
     "text": "Ravenna felt like the pause between two adventures—the end of our Italian journey on land and the beginning of our time at sea.",
     "attribution": "The Simonton Adventures"
@@ -75,12 +78,16 @@
       "description": "Even a short visit can reveal important art, architecture, and history beyond its role as an embarkation city."
     }
   ],
-  "gallery": [],
+  "gallery": [
+
+  ],
   "map": {
     "latitude": 44.4184,
     "longitude": 12.2035,
     "label": "Ravenna, Italy",
     "zoom": 13
   },
-  "resources": []
+  "resources": [
+
+  ]
 }

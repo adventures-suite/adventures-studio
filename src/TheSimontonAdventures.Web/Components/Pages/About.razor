@@ -135,11 +135,12 @@ else
 @code {
     private CreatorProfile? _profile;
     private string _homepageHeroImageUrl = string.Empty;
+    private string _aboutHeroImageUrl = string.Empty;
 
     private string AboutHeroImageUrl =>
-        string.IsNullOrWhiteSpace(_profile?.HeroImageUrl)
+        string.IsNullOrWhiteSpace(_aboutHeroImageUrl)
             ? _homepageHeroImageUrl
-            : _profile.HeroImageUrl;
+            : _aboutHeroImageUrl;
 
     private string AboutHeroStyle =>
         $"--about-hero-image: url('{AboutHeroImageUrl}')";
@@ -156,6 +157,12 @@ else
         {
             _profile = await TravelContentService.GetCreatorProfileAsync(
                 CreatorContextAccessor.Current.Id);
+            if (_profile?.HeroResourceId is not null)
+            {
+                _aboutHeroImageUrl = await ResourceService.GetPublicUrlAsync(
+                    CreatorContextAccessor.Current.Id,
+                    _profile.HeroResourceId.Value) ?? string.Empty;
+            }
         }
     }
 }

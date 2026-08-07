@@ -7,7 +7,7 @@
         {
             var section = Sections[index];
             var sectionNumber = index + 1;
-            var hasImage = !string.IsNullOrWhiteSpace(section.ImageSrc);
+            var hasImage = !string.IsNullOrWhiteSpace(section.ResolvedImageUrl);
             var isReversed = index % 2 == 1;
 
             <section class="destination-story__section
@@ -32,8 +32,8 @@
                 @if (hasImage)
                 {
                     <figure class="destination-story__media">
-                        <img src="@section.ImageSrc"
-                             alt="@section.ImageAlt"
+                        <img src="@section.ResolvedImageUrl"
+                             alt="@section.ResolvedImageAlternativeText"
                              loading="lazy" />
 
                         @if (!string.IsNullOrWhiteSpace(section.ImageCaption))

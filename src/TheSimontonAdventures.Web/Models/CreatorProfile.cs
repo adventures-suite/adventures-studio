@@ -1,3 +1,5 @@
+using TheSimontonAdventures.Web.Resources;
+
 namespace TheSimontonAdventures.Web.Models;
 
 /// <summary>Represents Creator-authored editorial content for the About page.</summary>
@@ -22,5 +24,6 @@ public sealed class CreatorProfile
     public IReadOnlyList<string> StoryParagraphs { get; init; } = [];
 
     /// <summary>Gets the root-relative or absolute About hero image URL.</summary>
-    public string HeroImageUrl { get; init; } = string.Empty;
+    /// <summary>Gets the optional stable Creator-owned About hero resource identity.</summary>
+    public ResourceId? HeroResourceId { get; init; }
 }

@@ -57,6 +57,35 @@ public sealed class PublicRouteIntegrationTests : IClassFixture<PublicRouteInteg
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
+    /// <summary>Ensures destination resources and authoritative alt text reach public HTML.</summary>
+    [Fact]
+    public async Task PublishedDestination_RendersResourceUrlAndAlternativeText()
+    {
+        using var response = await SendAsync(
+            "localhost",
+            "/volumes/italy-greece-croatia/italy/venice");
+        var html = await response.Content.ReadAsStringAsync();
+
+        Assert.Contains("/images/volumes/volume-1/italy/venice/canal-hero.jpeg", html);
+        Assert.Contains("A canal in Venice", html);
+        Assert.DoesNotContain("athens-wide.jpeg", html);
+    }
+
+    /// <summary>Ensures each Creator renders only its independently owned homepage resource.</summary>
+    [Fact]
+    public async Task HomepageResources_AreCreatorScoped()
+    {
+        using var flagship = await SendAsync("localhost", "/");
+        using var demo = await SendAsync("demo.localhost", "/");
+        var flagshipHtml = await flagship.Content.ReadAsStringAsync();
+        var demoHtml = await demo.Content.ReadAsStringAsync();
+
+        Assert.Contains("adventures-studio-hero.jpeg", flagshipHtml);
+        Assert.DoesNotContain("athens-wide.jpeg", flagshipHtml);
+        Assert.Contains("athens-wide.jpeg", demoHtml);
+        Assert.DoesNotContain("adventures-studio-hero.jpeg", demoHtml);
+    }
+
     /// <summary>Ensures an unpublished destination is not served publicly.</summary>
     [Fact]
     public async Task UnpublishedDestination_ReturnsNotFound()

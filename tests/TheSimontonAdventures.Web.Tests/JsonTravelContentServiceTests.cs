@@ -26,8 +26,8 @@ public sealed class JsonTravelContentServiceTests
         Assert.NotNull(profile);
         Assert.Equal("Life is better when we explore it together.", profile.Headline);
         Assert.Equal(
-            "/images/volumes/volume-1/greece/athens/athens-wide.jpeg",
-            profile.HeroImageUrl);
+            new TheSimontonAdventures.Web.Resources.ResourceId("resource_about_hero"),
+            profile.HeroResourceId);
     }
 
     /// <summary>

@@ -8,12 +8,11 @@
   "title": "Athens Field Notes",
   "subtitle": "The same public slug, owned by a different Creator",
   "summary": "This concise destination proves that two Creators can independently own Athens without sharing content, branding, navigation, or public-address targets.",
-  "heroImage": "/images/volumes/volume-1/greece/athens/hero.jpeg",
-  "heroImageAlt": "The Acropolis overlooking Athens",
+  "heroResourceId": "resource_demo_athens_hero",
   "published": true,
   "featured": true,
   "homepageOrder": 1,
-  "homepageImage": "/images/volumes/volume-1/greece/athens/homepage2.jpeg",
+  "homepageResourceId": "resource_demo_athens_card",
   "homepageSummary": "A permanent browser-visible fixture for Creator isolation.",
   "sections": [
     {
@@ -22,12 +21,13 @@
         "Aegean Field Notes is deliberately small and development-only. It follows the same Creator, Content, Address, QR, and Presentation Engine paths as the flagship site.",
         "Its Athens slug intentionally overlaps the flagship Creator. The request host determines which Creator owns the address and which destination is rendered."
       ],
-      "imageSrc": "/images/volumes/volume-1/greece/athens/acropolis.jpeg",
-      "imageAlt": "The Acropolis used by the development Creator fixture",
+      "imageResourceId": "resource_athens_section_01",
       "imageCaption": "Shared platform media with independently owned demo content"
     }
   ],
-  "reflections": [],
+  "reflections": [
+
+  ],
   "facts": [
     {
       "label": "Creator",
@@ -42,15 +42,20 @@
       "value": "CreatorId + public slug"
     }
   ],
-  "highlights": [],
-  "tips": [],
+  "highlights": [
+
+  ],
+  "tips": [
+
+  ],
   "gallery": [
     {
-      "src": "/images/volumes/volume-1/greece/athens/acropolis.jpeg",
-      "alt": "The Acropolis in Athens",
+      "resourceId": "resource_athens_gallery_01",
       "caption": "Demo Creator media presentation",
       "displayOrder": 1
     }
   ],
-  "resources": []
+  "resources": [
+
+  ]
 }

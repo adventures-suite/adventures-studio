@@ -28,11 +28,11 @@ else
 
         <section class="volume-hero">
 
-            @if (!string.IsNullOrWhiteSpace(_coverUrl))
+            @if (_cover is not null)
             {
                 <div class="volume-hero__image">
-                    <img src="@_coverUrl"
-                         alt="@BuildVolumeHeroAltText()"
+                    <img src="@_cover.PublicUrl"
+                         alt="@_cover.Resource.AlternativeText"
                          loading="eager" />
                 </div>
             }
@@ -105,7 +105,7 @@ else
 
     private TheSimontonAdventures.Web.Models.Volume? _volume;
 
-    private string? _coverUrl;
+    private ResolvedResource? _cover;
 
     private Journey? _journey;
 
@@ -126,7 +126,7 @@ else
     {
         _isLoading = true;
         _volume = null;
-        _coverUrl = null;
+        _cover = null;
         _journey = null;
         _destinationCards = Array.Empty<VolumeDestinationCard>();
 
@@ -143,7 +143,7 @@ else
                 return;
             }
 
-            _coverUrl = await ResourceService.GetPublicUrlAsync(
+            _cover = await ResourceService.ResolvePublicAsync(
                 CreatorContextAccessor.Current.Id,
                 _volume.CoverResourceId);
 
@@ -170,8 +170,8 @@ else
                     CreatorContextAccessor.Current.Id,
                     _volume.Slug);
 
-            _destinationCards = destinations
-                .Select(CreateDestinationCard)
+            _destinationCards = (await Task.WhenAll(destinations
+                .Select(CreateDestinationCardAsync)))
                 .OrderBy(card => card.DisplayOrder)
                 .ToArray();
         }
@@ -189,7 +189,7 @@ else
         }
     }
 
-    private VolumeDestinationCard CreateDestinationCard(
+    private async Task<VolumeDestinationCard> CreateDestinationCardAsync(
         Destination destination)
     {
         var reference = _volume!.Destinations.Single(item =>
@@ -202,13 +202,18 @@ else
                 destination.Slug,
                 StringComparison.OrdinalIgnoreCase));
 
+        var cardImage = await ResourceService.ResolvePublicAsync(
+            CreatorContextAccessor.Current.Id,
+            destination.HomepageResourceId);
+
         return new VolumeDestinationCard
         {
             CountrySlug = reference.CountrySlug,
             DestinationSlug = reference.DestinationSlug,
             Title = destination.Title,
             CountryName = destination.Country,
-            HeroImage = destination.GetCardImage(),
+            HeroImage = cardImage?.PublicUrl ?? string.Empty,
+            HeroImageAlt = cardImage?.Resource.AlternativeText ?? string.Empty,
             Summary = destination.GetCardSummary(),
             DisplayOrder = reference.DisplayOrder
         };

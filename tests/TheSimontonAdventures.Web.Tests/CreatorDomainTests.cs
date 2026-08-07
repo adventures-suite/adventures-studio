@@ -204,7 +204,6 @@ public sealed class CreatorDomainTests
     /// </summary>
     [Theory]
     [InlineData("image")]
-    [InlineData("image-alt")]
     [InlineData("headline")]
     [InlineData("description")]
     [InlineData("action-label")]
@@ -216,13 +215,10 @@ public sealed class CreatorDomainTests
         {
             SiteName = validBrand.SiteName,
             Tagline = validBrand.Tagline,
+            FaviconResourceId = validBrand.FaviconResourceId,
             HomeHeroResourceId = missingField == "image"
                 ? default
                 : validBrand.HomeHeroResourceId,
-            HomeHeroImageUrl = validBrand.HomeHeroImageUrl,
-            HomeHeroImageAlt = missingField == "image-alt"
-                ? string.Empty
-                : validBrand.HomeHeroImageAlt,
             HomeHeroHeadline = missingField == "headline"
                 ? string.Empty
                 : validBrand.HomeHeroHeadline,
@@ -350,9 +346,8 @@ public sealed class CreatorDomainTests
         {
             SiteName = "Test Creator",
             Tagline = "Test journeys",
+            FaviconResourceId = new ResourceId("resource_favicon"),
             HomeHeroResourceId = new ResourceId("resource_home_hero"),
-            HomeHeroImageUrl = "/images/test-hero.jpeg",
-            HomeHeroImageAlt = "A test journey",
             HomeHeroHeadline = "A Creator-owned test headline",
             HomeHeroDescription = "Creator-owned test homepage copy.",
             HomeHeroActionLabel = "Explore",

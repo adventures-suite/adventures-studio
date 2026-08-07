@@ -42,6 +42,76 @@
       "copyright": "Copyright Aegean Field Notes Demo",
       "usageRights": "Demo Creator resource approved for public development presentation.",
       "publicationStatus": "Published"
+    },
+    {
+      "id": "resource_demo_athens_hero",
+      "creatorId": "creator_demo_01",
+      "type": "Image",
+      "title": "Demo Athens hero",
+      "storageProvider": "local-public",
+      "storageLocation": "/images/volumes/volume-1/greece/athens/hero.jpeg",
+      "mediaType": "image/jpeg",
+      "alternativeText": "Athens",
+      "attribution": "Aegean Field Notes Demo",
+      "copyright": "Copyright Aegean Field Notes Demo",
+      "usageRights": "Demo Creator public presentation",
+      "publicationStatus": "Published"
+    },
+    {
+      "id": "resource_demo_athens_card",
+      "creatorId": "creator_demo_01",
+      "type": "Image",
+      "title": "Demo Athens card",
+      "storageProvider": "local-public",
+      "storageLocation": "/images/volumes/volume-1/greece/athens/homepage2.jpeg",
+      "mediaType": "image/jpeg",
+      "alternativeText": "Athens field notes",
+      "attribution": "Aegean Field Notes Demo",
+      "copyright": "Copyright Aegean Field Notes Demo",
+      "usageRights": "Demo Creator public presentation",
+      "publicationStatus": "Published"
+    },
+    {
+      "id": "resource_athens_gallery_01",
+      "creatorId": "creator_demo_01",
+      "type": "Image",
+      "title": "Demo Creator media presentation",
+      "storageProvider": "local-public",
+      "storageLocation": "/images/volumes/volume-1/greece/athens/acropolis.jpeg",
+      "mediaType": "image/jpeg",
+      "alternativeText": "The Acropolis in Athens",
+      "attribution": "Aegean Field Notes Demo",
+      "copyright": "Copyright Aegean Field Notes Demo",
+      "usageRights": "Creator-owned public presentation",
+      "publicationStatus": "Published"
+    },
+    {
+      "id": "resource_athens_section_01",
+      "creatorId": "creator_demo_01",
+      "type": "Image",
+      "title": "Shared platform media with independently owned demo content",
+      "storageProvider": "local-public",
+      "storageLocation": "/images/volumes/volume-1/greece/athens/acropolis.jpeg",
+      "mediaType": "image/jpeg",
+      "alternativeText": "The Acropolis used by the development Creator fixture",
+      "attribution": "Aegean Field Notes Demo",
+      "copyright": "Copyright Aegean Field Notes Demo",
+      "usageRights": "Creator-owned public presentation",
+      "publicationStatus": "Published"
+    },
+    {
+      "id": "resource_favicon",
+      "creatorId": "creator_demo_01",
+      "type": "Image",
+      "title": "Aegean Field Notes favicon",
+      "storageProvider": "local-public",
+      "storageLocation": "/favicon.png",
+      "mediaType": "image/png",
+      "alternativeText": "Aegean Field Notes site icon",
+      "attribution": "Aegean Field Notes Demo",
+      "copyright": "Copyright Aegean Field Notes Demo",
+      "usageRights": "Demo Creator public presentation",
+      "publicationStatus": "Published"
     }
   ]
 }

@@ -14,10 +14,8 @@
   "brand": {
     "siteName": "Aegean Field Notes",
     "tagline": "A development-only Creator exploring one city at a time",
-    "faviconUrl": "/favicon.png",
+    "faviconResourceId": "resource_favicon",
     "homeHeroResourceId": "resource_home_hero",
-    "homeHeroImageUrl": "/images/volumes/volume-1/greece/athens/athens-wide.jpeg",
-    "homeHeroImageAlt": "Athens and the Acropolis beneath a wide blue sky",
     "homeHeroHeadline": "Small field notes, independently owned.",
     "homeHeroDescription": "Explore a focused Aegean notebook that proves every Creator controls its own voice, imagery, and public journeys.",
     "homeHeroActionLabel": "Open the Notebook",

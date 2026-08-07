@@ -34,9 +34,10 @@
 }
 
 .site-header__brand-logo {
-    width: auto;
-    max-width: 12rem;
-    height: 2.5rem;
+    width: clamp(10.5rem, 17vw, 13.5rem);
+    max-width: 100%;
+    height: auto;
+    max-height: 3.25rem;
     object-fit: contain;
 }
 
@@ -162,6 +163,11 @@
 
     .site-header__brand-tagline {
         display: none;
+    }
+
+    .site-header__brand-logo {
+        width: 10.5rem;
+        max-height: 3rem;
     }
 
     .site-header__menu-button {

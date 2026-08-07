@@ -1,3 +1,5 @@
+using TheSimontonAdventures.Web.Resources;
+
 namespace TheSimontonAdventures.Web.Models;
 
 /// <summary>
@@ -37,11 +39,10 @@ public sealed class Destination
     public string Summary { get; init; } = string.Empty;
 
     /// <summary>Gets the root-relative hero image URL.</summary>
-    public string HeroImage { get; init; } = string.Empty;
+    /// <summary>Gets the stable Creator-owned hero resource identity.</summary>
+    public ResourceId HeroResourceId { get; init; }
 
     /// <summary>Gets accessible alternative text for the hero image.</summary>
-    public string HeroImageAlt { get; init; } = string.Empty;
-
     /// <summary>Gets whether the destination is available to public consumers.</summary>
     public bool Published { get; init; }
 
@@ -52,7 +53,8 @@ public sealed class Destination
     public int HomepageOrder { get; init; }
 
     /// <summary>Gets the optional image optimized for cards and homepage use.</summary>
-    public string HomepageImage { get; init; } = string.Empty;
+    /// <summary>Gets the stable Creator-owned card-image resource identity.</summary>
+    public ResourceId HomepageResourceId { get; init; }
 
     /// <summary>Gets the optional summary optimized for cards and homepage use.</summary>
     public string HomepageSummary { get; init; } = string.Empty;

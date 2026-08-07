@@ -44,4 +44,24 @@ internal sealed class StubResourceService : IResourceService
                 ? _knownHeroUrl
                 : null);
     }
+
+    public async Task<ResolvedResource?> ResolvePublicAsync(CreatorId creatorId, ResourceId resourceId, CancellationToken cancellationToken = default)
+    {
+        var url = await GetPublicUrlAsync(creatorId, resourceId, cancellationToken);
+        if (url is null)
+        {
+            return null;
+        }
+
+        var resource = await GetByIdAsync(creatorId, resourceId, cancellationToken)
+            ?? new ResourceRecord
+            {
+                Id = resourceId,
+                CreatorId = creatorId,
+                AlternativeText = "Test resource",
+                StorageLocation = url,
+                PublicationStatus = ResourcePublicationStatus.Published
+            };
+        return new ResolvedResource { Resource = resource, PublicUrl = url };
+    }
 }

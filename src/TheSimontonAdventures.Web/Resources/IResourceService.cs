@@ -13,4 +13,7 @@ public interface IResourceService
 
     /// <summary>Resolves a published Creator-owned resource reference to its public URL.</summary>
     Task<string?> GetPublicUrlAsync(CreatorId creatorId, ResourceId resourceId, CancellationToken cancellationToken = default);
+
+    /// <summary>Resolves a published resource together with its authoritative metadata.</summary>
+    Task<ResolvedResource?> ResolvePublicAsync(CreatorId creatorId, ResourceId resourceId, CancellationToken cancellationToken = default);
 }

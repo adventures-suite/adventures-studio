@@ -16,13 +16,13 @@
             @foreach (var volume in _volumes)
             {
                 <article>
-                    @if (_coverUrls.TryGetValue(volume.Slug, out var coverUrl))
+                    @if (_covers.TryGetValue(volume.Slug, out var cover))
                     {
                         <a class="home-planned-adventures__media"
                            href="@TravelRoutes.Volume(volume.Slug)"
                            aria-label="View @volume.Title">
-                            <img src="@coverUrl"
-                                 alt="Cover artwork for @volume.Title"
+                            <img src="@cover.PublicUrl"
+                                 alt="@cover.Resource.AlternativeText"
                                  loading="lazy" />
                         </a>
                     }
@@ -53,8 +53,8 @@
 
 @code {
     private IReadOnlyList<Volume> _volumes = [];
-    private IReadOnlyDictionary<string, string> _coverUrls =
-        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+    private IReadOnlyDictionary<string, ResolvedResource> _covers =
+        new Dictionary<string, ResolvedResource>(StringComparer.OrdinalIgnoreCase);
 
     protected override async Task OnInitializedAsync()
     {
@@ -70,15 +70,15 @@
         var covers = await Task.WhenAll(_volumes.Select(async volume => new
         {
             volume.Slug,
-            Url = await ResourceService.GetPublicUrlAsync(
+            Resource = await ResourceService.ResolvePublicAsync(
                 CreatorContextAccessor.Current.Id,
                 volume.CoverResourceId)
         }));
-        _coverUrls = covers
-            .Where(item => !string.IsNullOrWhiteSpace(item.Url))
+        _covers = covers
+            .Where(item => item.Resource is not null)
             .ToDictionary(
                 item => item.Slug,
-                item => item.Url!,
+                item => item.Resource!,
                 StringComparer.OrdinalIgnoreCase);
     }
 }

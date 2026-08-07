@@ -8,18 +8,31 @@
   "title": "Unpublished Preview",
   "subtitle": "A route-publication integration fixture",
   "summary": "This test-only demo destination must never be exposed publicly.",
-  "heroImage": "/images/volumes/volume-1/greece/athens/hero.jpeg",
-  "heroImageAlt": "Athens used as an unpublished preview fixture",
+  "heroResourceId": "resource_demo_athens_hero",
   "published": false,
   "featured": false,
   "homepageOrder": 2,
-  "homepageImage": "/images/volumes/volume-1/greece/athens/homepage2.jpeg",
+  "homepageResourceId": "resource_demo_athens_card",
   "homepageSummary": "An unpublished route fixture.",
-  "sections": [],
-  "reflections": [],
-  "facts": [],
-  "highlights": [],
-  "tips": [],
-  "gallery": [],
-  "resources": []
+  "sections": [
+
+  ],
+  "reflections": [
+
+  ],
+  "facts": [
+
+  ],
+  "highlights": [
+
+  ],
+  "tips": [
+
+  ],
+  "gallery": [
+
+  ],
+  "resources": [
+
+  ]
 }

@@ -8,12 +8,11 @@
   "title": "Explorer of the Seas",
   "subtitle": "Our Home Across the Mediterranean",
   "summary": "Explorer of the Seas carried us from Ravenna across the Adriatic and Aegean, connecting four remarkable ports with the pleasures of life at sea. Between destinations, the ship became its own chapter of our adventure—sunny afternoons on deck, dinners with friends, glowing sunsets, and an ever-changing view beyond the rail.",
-  "heroImage": "/images/volumes/volume-1/at-sea/explorer-of-the-seas/ship-at-ravenna.jpeg",
-  "heroImageAlt": "Royal Caribbean's Explorer of the Seas docked beside the blue water at Ravenna",
+  "heroResourceId": "resource_explorer_hero",
   "published": true,
   "featured": true,
   "homepageOrder": 5,
-  "homepageImage": "/images/volumes/volume-1/at-sea/explorer-of-the-seas/ship-at-ravenna.jpeg",
+  "homepageResourceId": "resource_explorer_hero",
   "homepageSummary": "Come aboard for seven nights of sea views, shared meals, sunny decks, and unforgettable Mediterranean sunsets.",
   "sections": [
     {
@@ -22,8 +21,7 @@
         "After our days traveling through Italy, the sight of Explorer of the Seas waiting at the Ravenna cruise terminal marked a complete change of pace. The ship would be our home for the next seven nights and our connection to Croatia and Greece.",
         "Stepping aboard replaced train schedules and hotel changes with a single familiar room, a view of the sea, and the anticipation of waking in a new place. The cruise was not simply transportation between destinations; it became a destination of its own."
       ],
-      "imageSrc": "/images/volumes/volume-1/at-sea/explorer-of-the-seas/ship-at-ravenna.jpeg",
-      "imageAlt": "Explorer of the Seas waiting at the cruise terminal in Ravenna",
+      "imageResourceId": "resource_explorer_of_the_seas_section_01",
       "imageCaption": "Our Mediterranean home waiting in Ravenna"
     },
     {
@@ -32,8 +30,7 @@
         "Inside, the Royal Promenade felt like a brightly lit street running through the center of the ship. Shops, cafés, balconies, stairways, and gathering places created an energy that was entirely different from the quiet horizon outside.",
         "It quickly became one of our familiar landmarks. We passed through it on the way to dinner, paused there for a photograph together, and watched the ship settle into its own rhythm after each day ashore."
       ],
-      "imageSrc": "/images/volumes/volume-1/at-sea/explorer-of-the-seas/promenade-together.jpeg",
-      "imageAlt": "Steve and Dianne together inside the colorful Royal Promenade aboard Explorer of the Seas",
+      "imageResourceId": "resource_explorer_of_the_seas_section_02",
       "imageCaption": "Together on the Royal Promenade"
     },
     {
@@ -42,8 +39,7 @@
         "Sea days gave us permission to slow down. The pool deck filled with music, conversation, and sunlight while the deep-blue Mediterranean stretched beyond every railing.",
         "Those hours between ports mattered. Resting together on deck, watching the wake trail toward the horizon, and sharing an unhurried meal with friends balanced the busy walking days in Dubrovnik, Athens, Santorini, and Split."
       ],
-      "imageSrc": "/images/volumes/volume-1/at-sea/explorer-of-the-seas/pool-deck-together.jpeg",
-      "imageAlt": "Steve and Dianne relaxing together on the sunny pool deck",
+      "imageResourceId": "resource_explorer_of_the_seas_section_03",
       "imageCaption": "Slowing down between Mediterranean ports"
     },
     {
@@ -52,8 +48,7 @@
         "At the end of the day, the ship offered a front-row seat to the changing sky. Islands became silhouettes, the water reflected warm bands of color, and the sun disappeared behind the horizon as Explorer continued toward the next port.",
         "These were some of the quietest moments of the trip. Standing beside the ship and watching the Mediterranean fade into evening made the distance between destinations feel less like empty space and more like part of the story."
       ],
-      "imageSrc": "/images/volumes/volume-1/at-sea/explorer-of-the-seas/sunset-at-sea.jpeg",
-      "imageAlt": "A glowing Mediterranean sunset viewed beside a lifeboat on Explorer of the Seas",
+      "imageResourceId": "resource_explorer_of_the_seas_section_04",
       "imageCaption": "The Mediterranean settling into evening"
     }
   ],
@@ -133,56 +128,47 @@
   ],
   "gallery": [
     {
-      "src": "/images/volumes/volume-1/at-sea/explorer-of-the-seas/ship-at-ravenna.jpeg",
-      "alt": "Explorer of the Seas docked at Ravenna beneath a brilliant blue sky",
+      "resourceId": "resource_explorer_of_the_seas_gallery_01",
       "caption": "Explorer of the Seas waiting to begin our cruise",
       "displayOrder": 1
     },
     {
-      "src": "/images/volumes/volume-1/at-sea/explorer-of-the-seas/royal-promenade.jpeg",
-      "alt": "The illuminated multi-level Royal Promenade aboard Explorer of the Seas",
+      "resourceId": "resource_explorer_of_the_seas_gallery_02",
       "caption": "The Royal Promenade at the heart of the ship",
       "displayOrder": 2
     },
     {
-      "src": "/images/volumes/volume-1/at-sea/explorer-of-the-seas/promenade-together.jpeg",
-      "alt": "Steve and Dianne smiling together on the Royal Promenade",
+      "resourceId": "resource_explorer_of_the_seas_gallery_03",
       "caption": "Our first promenade selfie",
       "displayOrder": 3
     },
     {
-      "src": "/images/volumes/volume-1/at-sea/explorer-of-the-seas/pool-deck-together.jpeg",
-      "alt": "Steve and Dianne relaxing together in the sunshine on deck",
+      "resourceId": "resource_explorer_of_the_seas_gallery_04",
       "caption": "A quiet moment together on the pool deck",
       "displayOrder": 4
     },
     {
-      "src": "/images/volumes/volume-1/at-sea/explorer-of-the-seas/pool-deck.jpeg",
-      "alt": "The busy pool deck aboard Explorer of the Seas surrounded by blue water",
+      "resourceId": "resource_explorer_of_the_seas_gallery_05",
       "caption": "A sunny afternoon at sea",
       "displayOrder": 5
     },
     {
-      "src": "/images/volumes/volume-1/at-sea/explorer-of-the-seas/wake-at-sea.jpeg",
-      "alt": "The bright white wake of Explorer of the Seas stretching across deep-blue water",
+      "resourceId": "resource_explorer_of_the_seas_gallery_06",
       "caption": "Our path across the Mediterranean",
       "displayOrder": 6
     },
     {
-      "src": "/images/volumes/volume-1/at-sea/explorer-of-the-seas/sunset-at-sea.jpeg",
-      "alt": "Sunset over distant islands beside Explorer of the Seas",
+      "resourceId": "resource_explorer_of_the_seas_gallery_07",
       "caption": "Evening light along the ship",
       "displayOrder": 7
     },
     {
-      "src": "/images/volumes/volume-1/at-sea/explorer-of-the-seas/dinner-with-friends.jpeg",
-      "alt": "Steve and Dianne sharing dinner with friends beside large windows overlooking the sea",
+      "resourceId": "resource_explorer_of_the_seas_gallery_08",
       "caption": "Dinner with friends and the sea beyond",
       "displayOrder": 8
     },
     {
-      "src": "/images/volumes/volume-1/at-sea/explorer-of-the-seas/towel-animal.jpeg",
-      "alt": "A playful elephant towel animal arranged on the cabin bed",
+      "resourceId": "resource_explorer_of_the_seas_gallery_09",
       "caption": "A cheerful surprise waiting in our cabin",
       "displayOrder": 9
     }
@@ -193,5 +179,7 @@
     "label": "Adriatic and Aegean Seas",
     "zoom": 4
   },
-  "resources": []
+  "resources": [
+
+  ]
 }

@@ -20,6 +20,9 @@ public sealed class VolumeDestinationCard
     /// <summary>Gets the selected card image URL.</summary>
     public string HeroImage { get; init; } = string.Empty;
 
+    /// <summary>Gets authoritative alternative text for the card image.</summary>
+    public string HeroImageAlt { get; init; } = string.Empty;
+
     /// <summary>Gets the selected card summary.</summary>
     public string Summary { get; init; } = string.Empty;
 

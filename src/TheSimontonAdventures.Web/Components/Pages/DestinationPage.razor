@@ -3,6 +3,7 @@
 @using TheSimontonAdventures.Web.Components.Platform
 @inject ITravelContentService TravelContentService
 @inject ICreatorContextAccessor CreatorContextAccessor
+@inject IResourceService ResourceService
 
 <PageTitle>@PageTitle</PageTitle>
 
@@ -21,7 +22,9 @@ else if (_destination is null)
 }
 else
 {
-    <DestinationHero Destination="_destination" />
+    <DestinationHero Destination="_destination"
+                     HeroImageUrl="@(_heroImage?.PublicUrl ?? string.Empty)"
+                     HeroImageAlt="@(_heroImage?.Resource.AlternativeText ?? string.Empty)" />
 
     <main class="destination-content">
         <DestinationIntroduction Destination="_destination" />
@@ -29,7 +32,7 @@ else
         <DestinationJourneyTimeline Destination="_destination" />
 
         <DestinationStory
-            Sections="_destination.Sections"
+            Sections="_storySections"
             Reflections="_destination.Reflections" />
 
         <DestinationGuide
@@ -37,7 +40,7 @@ else
             Highlights="_destination.Highlights"
             Tips="_destination.Tips" />
 
-        <DestinationGallery Images="_destination.Gallery" />
+        <DestinationGallery Images="_galleryImages" />
 
         <DestinationMap Map="_destination.Map" />
 
@@ -69,6 +72,9 @@ else
     private HttpContext? HttpContext { get; set; }
 
     private Destination? _destination;
+    private ResolvedResource? _heroImage;
+    private IReadOnlyList<GalleryImage> _galleryImages = [];
+    private IReadOnlyList<DestinationSection> _storySections = [];
     private bool _isLoading;
 
     private string PageTitle =>
@@ -95,6 +101,18 @@ else
             ? destination
             : null;
 
+        _heroImage = _destination is null
+            ? null
+            : await ResourceService.ResolvePublicAsync(
+                creatorId,
+                _destination.HeroResourceId);
+        _galleryImages = _destination is null
+            ? []
+            : await ResolveGalleryImagesAsync(creatorId, _destination.Gallery);
+        _storySections = _destination is null
+            ? []
+            : await ResolveStorySectionsAsync(creatorId, _destination.Sections);
+
         if (_destination is null
             && HttpContext is not null
             && !HttpContext.Response.HasStarted)
@@ -103,5 +121,46 @@ else
         }
 
         _isLoading = false;
+    }
+
+    private async Task<IReadOnlyList<GalleryImage>> ResolveGalleryImagesAsync(
+        CreatorId creatorId,
+        IReadOnlyList<GalleryImage> images)
+    {
+        var resolved = await Task.WhenAll(images.Select(async image =>
+        {
+            var resource = await ResourceService.ResolvePublicAsync(creatorId, image.ResourceId);
+            return new GalleryImage
+            {
+                ResourceId = image.ResourceId,
+                PublicUrl = resource?.PublicUrl ?? string.Empty,
+                AlternativeText = resource?.Resource.AlternativeText ?? string.Empty,
+                Caption = image.Caption,
+                DisplayOrder = image.DisplayOrder
+            };
+        }));
+        return resolved;
+    }
+
+    private async Task<IReadOnlyList<DestinationSection>> ResolveStorySectionsAsync(
+        CreatorId creatorId,
+        IReadOnlyList<DestinationSection> sections)
+    {
+        var resolved = await Task.WhenAll(sections.Select(async section =>
+        {
+            var resource = section.ImageResourceId is null
+                ? null
+                : await ResourceService.ResolvePublicAsync(creatorId, section.ImageResourceId.Value);
+            return new DestinationSection
+            {
+                Heading = section.Heading,
+                Paragraphs = section.Paragraphs,
+                ImageResourceId = section.ImageResourceId,
+                ResolvedImageUrl = resource?.PublicUrl ?? string.Empty,
+                ResolvedImageAlternativeText = resource?.Resource.AlternativeText ?? string.Empty,
+                ImageCaption = section.ImageCaption
+            };
+        }));
+        return resolved;
     }
 }

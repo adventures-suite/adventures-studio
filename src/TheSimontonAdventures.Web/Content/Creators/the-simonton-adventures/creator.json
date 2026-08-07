@@ -14,10 +14,9 @@
   "brand": {
     "siteName": "The Simonton Adventures",
     "tagline": "Inspiration to unforgettable experiences",
-    "faviconUrl": "/favicon.png",
+    "logoResourceId": "resource_logo_primary",
+    "faviconResourceId": "resource_favicon",
     "homeHeroResourceId": "resource_home_hero",
-    "homeHeroImageUrl": "/images/home/adventures-studio-hero.jpeg",
-    "homeHeroImageAlt": "A sweeping Mediterranean travel scene",
     "homeHeroHeadline": "Transforming inspiration into unforgettable experiences.",
     "homeHeroDescription": "Discover meaningful journeys, trusted guidance, and stories designed to help you experience the world with confidence.",
     "homeHeroActionLabel": "Begin the Adventure",

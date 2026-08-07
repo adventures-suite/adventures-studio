@@ -5,27 +5,15 @@
   "city": "Santorini",
   "slug": "santorini",
   "qrSlug": "santorini",
-
   "title": "Santorini",
-
   "subtitle": "Island of Sunsets",
-
   "summary": "Santorini looked almost unreal from the moment it appeared on the horizon. Whitewashed villages clung to volcanic cliffs above the deep blue Aegean, while the island's black earth, red shoreline, and immense flooded caldera told the dramatic story beneath its postcard beauty.",
-
-  "heroImage": "/images/volumes/volume-1/greece/santorini/hero.jpeg",
-
-  "heroImageAlt": "Whitewashed buildings and blue-domed churches overlooking the Aegean Sea in Santorini",
-
+  "heroResourceId": "resource_santorini_hero",
   "published": true,
-
   "featured": true,
-
   "homepageOrder": 8,
-
-  "homepageImage": "/images/volumes/volume-1/greece/santorini/oia-overlook-web.png",
-
+  "homepageResourceId": "resource_santorini_card",
   "homepageSummary": "Follow whitewashed villages along the caldera rim to volcanic beaches and unforgettable Aegean overlooks.",
-
   "sections": [
     {
       "heading": "Approaching the Caldera",
@@ -33,8 +21,7 @@
         "The first view of Santorini came from the water. The cliffs rose sharply above the caldera, crowned by white villages that seemed almost impossibly high above us.",
         "It was one of the most dramatic arrivals of the trip. Before we had even stepped onto the island, Santorini had already created a sense of anticipation."
       ],
-      "imageSrc": "/images/volumes/volume-1/greece/santorini/caldera-panorama-web.png",
-      "imageAlt": "Santorini's broad flooded caldera surrounded by layered volcanic cliffs",
+      "imageResourceId": "resource_santorini_section_01",
       "imageCaption": "The immense blue caldera at the center of Santorini"
     },
     {
@@ -44,8 +31,7 @@
         "Traveling across the island revealed traditional villages, volcanic terrain, vineyards, and beaches shaped by the island's geological history. Walking the caldera rim brought those contrasts together: dazzling white paths and buildings above dark cliffs and impossibly blue water.",
         "Oia rewarded every turn with another composition of curved rooftops, narrow passages, and distant villages balanced along the cliffs. The famous scenery felt even more remarkable when we could place ourselves inside it."
       ],
-      "imageSrc": "/images/volumes/volume-1/greece/santorini/dianne-caldera-walk-web.png",
-      "imageAlt": "Dianne walking a white stone path above Santorini's caldera",
+      "imageResourceId": "resource_santorini_section_02",
       "imageCaption": "Following the cliffside path through Oia"
     },
     {
@@ -54,8 +40,7 @@
         "The colors of Santorini seemed especially vivid: white walls, blue water, dark volcanic stone, red cliffs, and the warm tones of the late afternoon sun.",
         "Those contrasts gave the island its unmistakable character. It was beautiful in photographs, but being surrounded by those colors and landscapes made the experience feel much richer."
       ],
-      "imageSrc": "/images/volumes/volume-1/greece/santorini/red-beach-coast-web.png",
-      "imageAlt": "Red volcanic cliffs curving around clear turquoise water at Santorini's Red Beach",
+      "imageResourceId": "resource_santorini_section_03",
       "imageCaption": "The volcanic colors and rugged shoreline of Red Beach"
     },
     {
@@ -64,12 +49,10 @@
         "Some views called for a photograph, while others made us stop and simply look. Standing together above the caldera, with the volcanic islands spread across the water, gave us both kinds of moment at once.",
         "Santorini's scale is difficult to understand from the village streets alone. From the overlooks, the shape of the ancient eruption became visible in the cliffs and islands surrounding us, turning a beautiful view into a reminder of the forces that created it."
       ],
-      "imageSrc": "/images/volumes/volume-1/greece/santorini/couple-caldera-overlook.jpeg",
-      "imageAlt": "Dianne and Steve embracing while looking across Santorini's blue caldera",
+      "imageResourceId": "resource_santorini_section_04",
       "imageCaption": "Sharing a quiet view across the caldera"
     }
   ],
-
   "reflections": [
     {
       "afterSection": 1,
@@ -86,12 +69,10 @@
       "signature": "— Steve"
     }
   ],
-
   "quote": {
     "text": "Santorini looked exactly like the postcards—until we experienced it ourselves. Then it became something far more memorable.",
     "attribution": "The Simonton Adventures"
   },
-
   "facts": [
     {
       "label": "Location",
@@ -110,7 +91,6 @@
       "value": "Wine produced from volcanic soil"
     }
   ],
-
   "highlights": [
     {
       "title": "The Caldera",
@@ -129,7 +109,6 @@
       "description": "Red and dark-sand beaches reveal the geological forces that shaped the island."
     }
   ],
-
   "tips": [
     {
       "title": "Plan around cruise crowds",
@@ -148,82 +127,70 @@
       "description": "Narrow roads, summer traffic, and cruise-day demand can make travel across the island slower than expected."
     }
   ],
-
   "gallery": [
     {
-      "src": "/images/volumes/volume-1/greece/santorini/caldera-wide.jpeg",
-      "alt": "Santorini's volcanic cliffs and white villages viewed across the caldera",
+      "resourceId": "resource_santorini_gallery_01",
       "caption": "Santorini rising above the caldera",
       "displayOrder": 1
     },
     {
-      "src": "/images/volumes/volume-1/greece/santorini/cliffside-village-web.png",
-      "alt": "Whitewashed Santorini village stretching along a dark volcanic ridge",
+      "resourceId": "resource_santorini_gallery_02",
       "caption": "White villages balanced along the volcanic cliffs",
       "displayOrder": 2
     },
     {
-      "src": "/images/volumes/volume-1/greece/santorini/oia-overlook-web.png",
-      "alt": "Dianne and Steve overlooking Oia's white buildings and the deep blue Aegean",
+      "resourceId": "resource_santorini_gallery_03",
       "caption": "Together above Oia and the Aegean",
       "displayOrder": 3
     },
     {
-      "src": "/images/volumes/volume-1/greece/santorini/dianne-caldera-walk-web.png",
-      "alt": "Dianne pausing on a cliffside walkway above Santorini's caldera",
+      "resourceId": "resource_santorini_gallery_04",
       "caption": "Walking the bright paths above the caldera",
       "displayOrder": 4
     },
     {
-      "src": "/images/volumes/volume-1/greece/santorini/dianne-oia-portrait-web.png",
-      "alt": "Portrait of Dianne with Oia's whitewashed village and caldera behind her",
+      "resourceId": "resource_santorini_gallery_05",
       "caption": "Dianne in the heart of Oia",
       "displayOrder": 5
     },
     {
-      "src": "/images/volumes/volume-1/greece/santorini/caldera-panorama-web.png",
-      "alt": "Wide blue expanse of Santorini's caldera beneath a cloudless sky",
+      "resourceId": "resource_santorini_gallery_06",
       "caption": "The caldera stretching toward the horizon",
       "displayOrder": 6
     },
     {
-      "src": "/images/volumes/volume-1/greece/santorini/couple-caldera-overlook.jpeg",
-      "alt": "Dianne and Steve looking together across the caldera and volcanic islands",
+      "resourceId": "resource_santorini_gallery_07",
       "caption": "A quiet moment above the caldera",
       "displayOrder": 7
     },
     {
-      "src": "/images/volumes/volume-1/greece/santorini/volcanic-beach-portrait-web.png",
-      "alt": "Dianne and Steve standing beneath a towering wall of dark volcanic ash",
+      "resourceId": "resource_santorini_gallery_08",
       "caption": "The scale of Santorini's volcanic landscape",
       "displayOrder": 8
     },
     {
-      "src": "/images/volumes/volume-1/greece/santorini/red-beach-coast-web.png",
-      "alt": "Clear turquoise water meeting the rust-red cliffs of Santorini's Red Beach",
+      "resourceId": "resource_santorini_gallery_09",
       "caption": "Red Beach in vivid volcanic color",
       "displayOrder": 9
     },
     {
-      "src": "/images/volumes/volume-1/greece/santorini/pyrgos.jpeg",
-      "alt": "Traditional white buildings climbing the hillside village of Pyrgos",
+      "resourceId": "resource_santorini_gallery_10",
       "caption": "The quieter streets of Pyrgos",
       "displayOrder": 10
     },
     {
-      "src": "/images/volumes/volume-1/greece/santorini/red-beach.jpeg",
-      "alt": "Santorini's red volcanic cliffs descending toward the sea",
+      "resourceId": "resource_santorini_gallery_11",
       "caption": "The island's volcanic shoreline",
       "displayOrder": 11
     }
   ],
-
   "map": {
     "latitude": 36.3932,
     "longitude": 25.4615,
     "label": "Santorini, Greece",
     "zoom": 11
   },
+  "resources": [
 
-  "resources": []
+  ]
 }

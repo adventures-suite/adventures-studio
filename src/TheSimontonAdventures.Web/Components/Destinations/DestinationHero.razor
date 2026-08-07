@@ -2,7 +2,7 @@
 
 <section class="destination-hero"
          style="@GetBackgroundStyle()"
-         aria-label="@Destination.HeroImageAlt">
+         aria-label="@HeroImageAlt">
 
     <div class="destination-hero__overlay"></div>
 
@@ -31,8 +31,16 @@
     [Parameter, EditorRequired]
     public Destination Destination { get; set; } = null!;
 
+    /// <summary>Gets or sets the Resource Engine-resolved hero image URL.</summary>
+    [Parameter]
+    public string HeroImageUrl { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets authoritative Resource Engine alternative text.</summary>
+    [Parameter]
+    public string HeroImageAlt { get; set; } = string.Empty;
+
     private string GetBackgroundStyle() =>
-        string.IsNullOrWhiteSpace(Destination.HeroImage)
+        string.IsNullOrWhiteSpace(HeroImageUrl)
             ? string.Empty
-            : $"background-image: url('{Destination.HeroImage}');";
+            : $"background-image: url('{HeroImageUrl}');";
 }

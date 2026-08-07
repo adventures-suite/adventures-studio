@@ -51,6 +51,37 @@ public sealed class ResourceEngineTests
         Assert.Equal("/images/home/adventures-studio-hero.jpeg", url);
     }
 
+    [Fact]
+    public async Task ResolvedResourceIncludesAuthoritativeAccessibilityMetadata()
+    {
+        var resolved = await CreateService().ResolvePublicAsync(
+            new CreatorId("creator_tsa_01"),
+            new ResourceId("resource_venice_hero"));
+
+        Assert.NotNull(resolved);
+        Assert.Equal("A canal in Venice", resolved.Resource.AlternativeText);
+        Assert.Equal("image/jpeg", resolved.Resource.MediaType);
+        Assert.False(string.IsNullOrWhiteSpace(resolved.Resource.UsageRights));
+    }
+
+    [Fact]
+    public void ContentManifestsContainNoRawPresentationImageFields()
+    {
+        var contentRoot = Path.Combine(FindApplicationRoot(), "Content");
+        var forbidden = new[]
+        {
+            "\"heroImage\"", "\"homepageImage\"", "\"coverImage\"",
+            "\"imageSrc\"", "\"heroImageUrl\"", "\"homeHeroImageUrl\""
+        };
+
+        foreach (var path in Directory.EnumerateFiles(contentRoot, "*.json", SearchOption.AllDirectories)
+            .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}Resources{Path.DirectorySeparatorChar}")))
+        {
+            var json = File.ReadAllText(path);
+            Assert.DoesNotContain(forbidden, field => json.Contains(field, StringComparison.Ordinal));
+        }
+    }
+
     [Theory]
     [InlineData("Resource-1")]
     [InlineData("1_resource")]

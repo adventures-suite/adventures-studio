@@ -10,8 +10,8 @@
     Eyebrow="@CreatorContextAccessor.Current.GetSiteName()"
     Headline="@CreatorContextAccessor.Current.Brand.HomeHeroHeadline"
     Description="@CreatorContextAccessor.Current.Brand.HomeHeroDescription"
-    HeroImage="@_heroImageUrl"
-    HeroImageAlt="@CreatorContextAccessor.Current.Brand.HomeHeroImageAlt"
+    HeroImage="@(_hero?.PublicUrl ?? string.Empty)"
+    HeroImageAlt="@(_hero?.Resource.AlternativeText ?? string.Empty)"
     PrimaryActionLabel="@CreatorContextAccessor.Current.Brand.HomeHeroActionLabel"
     PrimaryActionUrl="@TravelRoutes.Adventures" />
 
@@ -32,11 +32,11 @@
 }
 
 @code {
-    private string _heroImageUrl = string.Empty;
+    private ResolvedResource? _hero;
 
     protected override async Task OnInitializedAsync()
     {
-        _heroImageUrl = await ResourceService.GetPublicUrlAsync(
+        _hero = await ResourceService.ResolvePublicAsync(
             CreatorContextAccessor.Current.Id,
             CreatorContextAccessor.Current.Brand.HomeHeroResourceId)
             ?? throw new InvalidDataException(

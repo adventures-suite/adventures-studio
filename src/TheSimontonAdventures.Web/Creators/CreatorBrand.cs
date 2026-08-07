@@ -14,11 +14,11 @@ public sealed class CreatorBrand
     /// <summary>Gets the Creator's concise public positioning statement.</summary>
     public string Tagline { get; init; } = string.Empty;
 
-    /// <summary>Gets the root-relative or absolute logo resource URL.</summary>
-    public string LogoUrl { get; init; } = string.Empty;
+    /// <summary>Gets the optional stable Creator-owned logo resource identity.</summary>
+    public ResourceId? LogoResourceId { get; init; }
 
-    /// <summary>Gets the root-relative or absolute favicon resource URL.</summary>
-    public string FaviconUrl { get; init; } = string.Empty;
+    /// <summary>Gets the stable Creator-owned favicon resource identity.</summary>
+    public ResourceId FaviconResourceId { get; init; }
 
     /// <summary>Gets the stable Creator-owned homepage hero resource identity.</summary>
     public ResourceId HomeHeroResourceId { get; init; }
@@ -27,11 +27,6 @@ public sealed class CreatorBrand
     /// Gets the immediately renderable homepage hero URL. Startup validation
     /// requires this URL to match <see cref="HomeHeroResourceId"/>.
     /// </summary>
-    public string HomeHeroImageUrl { get; init; } = string.Empty;
-
-    /// <summary>Gets accessible alternative text for the homepage hero image.</summary>
-    public string HomeHeroImageAlt { get; init; } = string.Empty;
-
     /// <summary>Gets the Creator-authored homepage hero headline.</summary>
     public string HomeHeroHeadline { get; init; } = string.Empty;
 

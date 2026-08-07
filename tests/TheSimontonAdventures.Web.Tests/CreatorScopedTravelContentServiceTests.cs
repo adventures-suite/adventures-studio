@@ -166,9 +166,9 @@ public sealed class CreatorScopedTravelContentServiceTests
             && issue.Severity == ContentValidationSeverity.Error);
     }
 
-    /// <summary>Ensures missing optional local media remains an observable warning.</summary>
+    /// <summary>Ensures a missing section resource blocks startup.</summary>
     [Fact]
-    public async Task ValidateAsync_MissingLocalImage_ReturnsWarning()
+    public async Task ValidateAsync_MissingSectionResource_ReturnsError()
     {
         using var content = new TemporaryCreatorContent();
         var creatorId = new CreatorId("creator_one_01");
@@ -177,15 +177,16 @@ public sealed class CreatorScopedTravelContentServiceTests
             "one",
             "Athens",
             homepageImage: "/images/missing.jpg");
-        var validator = content.CreateValidator();
+        var validator = content.CreateValidator(new StubResourceService(false));
 
         var result = await validator.ValidateAsync(creatorId);
 
         Assert.Contains(result.Issues, issue =>
             issue.CreatorId == creatorId
-            && issue.Code == "missing-image"
-            && issue.Severity == ContentValidationSeverity.Warning);
-        Assert.False(result.HasErrors);
+            && issue.Code == "invalid-resource-reference"
+            && issue.Message.Contains("section", StringComparison.OrdinalIgnoreCase)
+            && issue.Severity == ContentValidationSeverity.Error);
+        Assert.True(result.HasErrors);
     }
 
     /// <summary>Ensures a missing homepage resource blocks Creator publication.</summary>
@@ -376,9 +377,8 @@ public sealed class CreatorScopedTravelContentServiceTests
                 {
                     SiteName = title,
                     Tagline = "Creator-scoped test content",
+                    FaviconResourceId = new ResourceId("resource_favicon"),
                     HomeHeroResourceId = new ResourceId("resource_home_hero"),
-                    HomeHeroImageUrl = "/images/test-hero.jpeg",
-                    HomeHeroImageAlt = "A test journey",
                     HomeHeroHeadline = "An independently owned journey",
                     HomeHeroDescription = "Creator-owned integration test copy.",
                     HomeHeroActionLabel = "Explore"
@@ -414,7 +414,18 @@ public sealed class CreatorScopedTravelContentServiceTests
                 Slug = destinationSlug,
                 QrSlug = "shared-qr",
                 Title = title,
-                HomepageImage = homepageImage,
+                HeroResourceId = new ResourceId("resource_destination_hero"),
+                HomepageResourceId = new ResourceId("resource_destination_card"),
+                Sections = string.IsNullOrWhiteSpace(homepageImage)
+                    ? []
+                    :
+                    [
+                        new DestinationSection
+                        {
+                            Heading = "Test section",
+                            ImageResourceId = new ResourceId("resource_missing_section")
+                        }
+                    ],
                 Published = true
             };
 

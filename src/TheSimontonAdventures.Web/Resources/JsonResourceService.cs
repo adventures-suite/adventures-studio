@@ -40,6 +40,10 @@ public sealed class JsonResourceService : IResourceService
 
     /// <inheritdoc />
     public async Task<string?> GetPublicUrlAsync(CreatorId creatorId, ResourceId resourceId, CancellationToken cancellationToken = default)
+        => (await ResolvePublicAsync(creatorId, resourceId, cancellationToken))?.PublicUrl;
+
+    /// <inheritdoc />
+    public async Task<ResolvedResource?> ResolvePublicAsync(CreatorId creatorId, ResourceId resourceId, CancellationToken cancellationToken = default)
     {
         var resource = await GetByIdAsync(creatorId, resourceId, cancellationToken);
         if (resource is null || resource.PublicationStatus != ResourcePublicationStatus.Published)
@@ -47,7 +51,11 @@ public sealed class JsonResourceService : IResourceService
             return null;
         }
 
-        return _providers[resource.StorageProvider].GetPublicUrl(resource);
+        return new ResolvedResource
+        {
+            Resource = resource,
+            PublicUrl = _providers[resource.StorageProvider].GetPublicUrl(resource)
+        };
     }
 
     private async Task<ResourceRegistry> GetRegistryAsync(CreatorId creatorId, CancellationToken cancellationToken)
@@ -113,6 +121,19 @@ public sealed class JsonResourceService : IResourceService
                 || !_providers.TryGetValue(resource.StorageProvider, out var provider))
             {
                 throw new InvalidDataException($"Resource '{resource.Id}' has incomplete metadata or an unknown provider.");
+            }
+
+            var expectedMediaType = Path.GetExtension(resource.StorageLocation).ToLowerInvariant() switch
+            {
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".svg" => "image/svg+xml",
+                _ => null
+            };
+            if (expectedMediaType is null
+                || !string.Equals(resource.MediaType, expectedMediaType, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidDataException($"Resource '{resource.Id}' media type does not match its storage file extension.");
             }
 
             // Provider validation proves that public references are safe and resolvable at startup.

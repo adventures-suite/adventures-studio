@@ -8,12 +8,11 @@
   "title": "Dubrovnik",
   "subtitle": "The Pearl of the Adriatic",
   "summary": "Dubrovnik announced itself from the water, where a modern bridge and rugged mountains framed our arrival. Inside the Old Town, sea-worn fortifications, sunlit limestone streets, sacred spaces, and one unforgettable staircase revealed a city built in layers above the Adriatic.",
-  "heroImage": "/images/volumes/volume-1/croatia/dubrovnik/harbor-arrival.jpeg",
-  "heroImageAlt": "The Franjo Tudman Bridge spanning Dubrovnik's blue harbor beneath rugged mountains",
+  "heroResourceId": "resource_dubrovnik_hero",
   "published": true,
   "featured": true,
   "homepageOrder": 6,
-  "homepageImage": "/images/volumes/volume-1/croatia/dubrovnik/fort-lovrijenac.jpeg",
+  "homepageResourceId": "resource_dubrovnik_card",
   "homepageSummary": "Arrive by sea, trace Dubrovnik's mighty fortifications, and climb into the limestone heart of the Old Town.",
   "sections": [
     {
@@ -22,8 +21,7 @@
         "Our first view of Dubrovnik came across the water. The Franjo Tudman Bridge stretched above the harbor while boats rested along the shore and mountains rose behind the city, giving the arrival a scale that photographs could barely contain.",
         "From the ship, the harbor felt like a threshold between the open Adriatic and the historic city waiting beyond it. Dianne paused at the rail to take it in, a quiet moment before the pace and crowds of the Old Town took over."
       ],
-      "imageSrc": "/images/volumes/volume-1/croatia/dubrovnik/dianne-harbor-view.jpeg",
-      "imageAlt": "Dianne watching Dubrovnik's harbor and mountain-lined coast from the ship",
+      "imageResourceId": "resource_dubrovnik_section_01",
       "imageCaption": "A first look at Dubrovnik from the water"
     },
     {
@@ -32,8 +30,7 @@
         "Dubrovnik's defenses dominate the coastline. Fort Lovrijenac rises directly from the rock, and the massive walls seem to grow from the clear water below rather than merely stand beside it.",
         "Up close, the fortifications carried the weight of the city's history. Their towers, weathered stone, and commanding position explained how the former Republic of Ragusa protected both its independence and its harbor for centuries."
       ],
-      "imageSrc": "/images/volumes/volume-1/croatia/dubrovnik/fort-lovrijenac.jpeg",
-      "imageAlt": "Fort Lovrijenac rising from a rocky headland above clear Adriatic water",
+      "imageResourceId": "resource_dubrovnik_section_02",
       "imageCaption": "Fort Lovrijenac guarding Dubrovnik's coast"
     },
     {
@@ -42,8 +39,7 @@
         "Passing the fortifications brought us into a different world of pale stone buildings, shaded corners, churches, and streets polished by generations of footsteps. Even with the midday activity, the architecture kept drawing our attention upward and away from the crowd.",
         "A church interior offered a moment of stillness and vivid color. Gold details, deep blue curtains, painted icons, and the Last Supper above the sanctuary revealed another side of a city often defined by its exterior walls."
       ],
-      "imageSrc": "/images/volumes/volume-1/croatia/dubrovnik/church-interior.jpeg",
-      "imageAlt": "Ornate church sanctuary in Dubrovnik with gold icon panels and deep blue curtains",
+      "imageResourceId": "resource_dubrovnik_section_03",
       "imageCaption": "Color and quiet inside one of Dubrovnik's churches"
     },
     {
@@ -52,8 +48,7 @@
         "The Jesuit Steps rose steeply between warm stone facades toward the Church of Saint Ignatius. Their graceful Baroque design was impressive, but under the bright sun the climb quickly became a more personal test of determination.",
         "They earned a nickname in our travel story: the Stairs of Shame. It was the kind of shared challenge that became funnier with every retelling and ensured that this corner of Dubrovnik would be remembered as clearly as its grandest views."
       ],
-      "imageSrc": "/images/volumes/volume-1/croatia/dubrovnik/jesuit-steps.jpeg",
-      "imageAlt": "Broad Baroque Jesuit Steps climbing between sunlit stone buildings in Dubrovnik",
+      "imageResourceId": "resource_dubrovnik_section_04",
       "imageCaption": "The memorable climb toward Saint Ignatius"
     }
   ],
@@ -133,50 +128,42 @@
   ],
   "gallery": [
     {
-      "src": "/images/volumes/volume-1/croatia/dubrovnik/harbor-arrival.jpeg",
-      "alt": "Franjo Tudman Bridge crossing Dubrovnik's harbor with mountains beyond",
+      "resourceId": "resource_dubrovnik_gallery_01",
       "caption": "Sailing into Dubrovnik's mountain-framed harbor",
       "displayOrder": 1
     },
     {
-      "src": "/images/volumes/volume-1/croatia/dubrovnik/dianne-harbor-view.jpeg",
-      "alt": "Dianne looking from the ship toward Dubrovnik's blue harbor and bridge",
+      "resourceId": "resource_dubrovnik_gallery_02",
       "caption": "Taking in our first view of Dubrovnik",
       "displayOrder": 2
     },
     {
-      "src": "/images/volumes/volume-1/croatia/dubrovnik/fort-lovrijenac.jpeg",
-      "alt": "Fort Lovrijenac perched on rock above turquoise Adriatic water",
+      "resourceId": "resource_dubrovnik_gallery_03",
       "caption": "Fort Lovrijenac above the sea",
       "displayOrder": 3
     },
     {
-      "src": "/images/volumes/volume-1/croatia/dubrovnik/coastal-fortifications.jpeg",
-      "alt": "Round stone tower and city walls meeting the clear Adriatic coastline",
+      "resourceId": "resource_dubrovnik_gallery_04",
       "caption": "Dubrovnik's defenses built into the rocky shore",
       "displayOrder": 4
     },
     {
-      "src": "/images/volumes/volume-1/croatia/dubrovnik/old-city-entrance.jpeg",
-      "alt": "Dubrovnik fortifications and stone buildings near a busy Old City entrance",
+      "resourceId": "resource_dubrovnik_gallery_05",
       "caption": "Approaching the walls of the Old City",
       "displayOrder": 5
     },
     {
-      "src": "/images/volumes/volume-1/croatia/dubrovnik/church-interior.jpeg",
-      "alt": "Colorful painted icons and gold ornament inside a Dubrovnik church",
+      "resourceId": "resource_dubrovnik_gallery_06",
       "caption": "Sacred art inside the Old City",
       "displayOrder": 6
     },
     {
-      "src": "/images/volumes/volume-1/croatia/dubrovnik/jesuit-steps.jpeg",
-      "alt": "Sunlit Jesuit Steps rising through Dubrovnik's limestone streets",
+      "resourceId": "resource_dubrovnik_gallery_07",
       "caption": "The Jesuit Steps before the crowd arrived",
       "displayOrder": 7
     },
     {
-      "src": "/images/volumes/volume-1/croatia/dubrovnik/jesuit-steps-crowd.jpeg",
-      "alt": "Travelers filling the Jesuit Steps between Dubrovnik's stone buildings",
+      "resourceId": "resource_dubrovnik_gallery_08",
       "caption": "A much busier climb through the Old City",
       "displayOrder": 8
     }
@@ -187,5 +174,7 @@
     "label": "Dubrovnik, Croatia",
     "zoom": 14
   },
-  "resources": []
+  "resources": [
+
+  ]
 }

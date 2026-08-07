@@ -65,17 +65,16 @@ public static class CreatorManifestValidator
     {
         ValidateRequiredValue(brand.SiteName, "Creator brand site name");
         ValidateRequiredValue(brand.Tagline, "Creator brand tagline");
+        if (brand.FaviconResourceId == default)
+        {
+            throw new InvalidDataException(
+                "Creator favicon resource identity is required.");
+        }
         if (brand.HomeHeroResourceId == default)
         {
             throw new InvalidDataException(
                 "Creator homepage hero resource identity is required.");
         }
-        ValidateRequiredValue(
-            brand.HomeHeroImageUrl,
-            "Creator homepage hero image URL");
-        ValidateRequiredValue(
-            brand.HomeHeroImageAlt,
-            "Creator homepage hero image alternative text");
         ValidateRequiredValue(
             brand.HomeHeroHeadline,
             "Creator homepage hero headline");

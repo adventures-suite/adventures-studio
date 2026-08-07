@@ -1,26 +1,29 @@
 @rendermode InteractiveServer
+@inject IResourceService ResourceService
 
 <header class="site-header">
     <div class="site-header__inner">
         <a class="site-header__brand"
            href="/"
            aria-label="@($"{CreatorContext.GetSiteName()} home")">
-            @if (!string.IsNullOrWhiteSpace(CreatorContext.Brand.LogoUrl))
+            @if (!string.IsNullOrWhiteSpace(_logoUrl))
             {
                 <img class="site-header__brand-logo"
-                     src="@CreatorContext.Brand.LogoUrl"
+                     src="@_logoUrl"
                      alt="" />
             }
-
-            <span class="site-header__brand-name">
-                @CreatorContext.GetSiteName()
-            </span>
-
-            @if (!string.IsNullOrWhiteSpace(CreatorContext.Brand.Tagline))
+            else
             {
-                <span class="site-header__brand-tagline">
-                    @CreatorContext.Brand.Tagline
+                <span class="site-header__brand-name">
+                    @CreatorContext.GetSiteName()
                 </span>
+
+                @if (!string.IsNullOrWhiteSpace(CreatorContext.Brand.Tagline))
+                {
+                    <span class="site-header__brand-tagline">
+                        @CreatorContext.Brand.Tagline
+                    </span>
+                }
             }
         </a>
 
@@ -77,6 +80,16 @@
     public CreatorContext CreatorContext { get; set; } = null!;
 
     private bool _isMenuOpen;
+    private string _logoUrl = string.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _logoUrl = CreatorContext.Brand.LogoResourceId is null
+            ? string.Empty
+            : await ResourceService.GetPublicUrlAsync(
+                CreatorContext.Id,
+                CreatorContext.Brand.LogoResourceId.Value) ?? string.Empty;
+    }
 
     private string NavigationClass =>
         _isMenuOpen

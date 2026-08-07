@@ -23,10 +23,10 @@
                     <button class="destination-gallery__button"
                             type="button"
                             @onclick="() => OpenLightbox(imageIndex)"
-                            aria-label="Open @image.Alt in full-screen viewer">
+                            aria-label="Open @image.AlternativeText in full-screen viewer">
 
-                        <img src="@image.Src"
-                             alt="@image.Alt"
+                        <img src="@image.PublicUrl"
+                             alt="@image.AlternativeText"
                              loading="lazy" />
                     </button>
 
