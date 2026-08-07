@@ -73,6 +73,58 @@ Approved
 
 ## 2026-08-07
 
+### Planning Is Private and AI Uses a Proposal Boundary
+
+Decision:
+
+AdventuresSuite will introduce a Planning Engine as the authoritative owner of
+private, structured Adventure Plans. An AdventurePlan is operational planning
+state and is distinct from a public Adventure, Volume, Journey, Destination, or
+other Content Engine record.
+
+Every planning record, repository operation, AI request, proposal, cache key,
+index, and background operation must preserve stable Creator identity. Planning
+data is private by default and may contain traveler information, reservation
+references, budgets, private notes, and unpublished dates.
+
+Public content is created only through an explicit, Creator-approved
+publication transformation that selects safe fields. The platform must not
+publish a private aggregate directly or infer publication from planning status.
+
+The AI Planning Copilot is not a system of record. It returns validated,
+structured proposals against a known plan version. A Creator reviews and
+accepts or rejects proposed operations before the Planning Engine applies them
+transactionally. Provider-specific SDKs, prompts, model names, and response
+types remain behind platform adapters.
+
+Interactive planning data will move to durable database storage when the
+persistence phase begins because it requires authorization, transactions,
+concurrency control, audit history, and private records. Existing public
+editorial content may remain JSON during the transition.
+
+Reason:
+
+Separating private operational planning from public storytelling prevents
+accidental disclosure and allows each model to evolve for its actual purpose.
+Requiring human approval for AI proposals preserves Creator judgment, makes
+changes auditable, and prevents a model or provider format from becoming the
+platform's domain or mutation boundary.
+
+Detailed direction is defined in:
+
+- `docs/architecture/planning-engine.md`
+- `docs/architecture/ai-planning-copilot.md`
+- `docs/product/creator-planning-workspace.md`
+- `docs/development/planning-engine-implementation-plan.md`
+
+Status:
+
+Approved
+
+---
+
+## 2026-08-07
+
 ### Subscriptions and Notifications Are a Platform Engine
 
 Decision:

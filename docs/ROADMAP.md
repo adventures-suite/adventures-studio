@@ -41,6 +41,44 @@ Every release should noticeably improve the customer experience.
 
 ---
 
+# Current Strategic Initiative
+
+## Plan an Adventure with AI
+
+AdventuresSuite will now expand beyond public web presentation into private,
+structured planning. The first reference scenario is The Simonton Adventures'
+2027 Spain and trans-Atlantic Adventure.
+
+The implementation proceeds through gated increments:
+
+1. Planning and AI architecture
+2. Planning domain model
+3. Database-backed, Creator-scoped persistence
+4. Identity and authorization
+5. Minimal Creator Planning Workspace
+6. AI proposal and approval foundation
+7. Proposed itinerary, conflict review, and planning-task assistance
+8. Grounded travel research
+9. Adventures Companion
+10. Explicit preserve-and-publish transformation
+
+The governing principle is:
+
+> AI proposes; the Creator decides; the Planning Engine commits.
+
+Planning data is private by default. It does not become public merely because
+an Adventure is Planned, Upcoming, or Current. Public content requires an
+explicit Creator-approved publication operation.
+
+Detailed scope and phase gates are defined in:
+
+- `docs/architecture/planning-engine.md`
+- `docs/architecture/ai-planning-copilot.md`
+- `docs/product/creator-planning-workspace.md`
+- `docs/development/planning-engine-implementation-plan.md`
+
+---
+
 # Version 1.0
 
 ## Public Launch

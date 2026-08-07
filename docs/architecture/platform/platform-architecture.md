@@ -58,6 +58,7 @@ It provides capabilities for:
 - Branding
 - Content management
 - Resource management
+- Private Adventure planning
 - Public addressing
 - QR generation
 - Rendering
@@ -105,6 +106,7 @@ A Creator owns:
 - Domains
 - Content
 - Resources
+- Private Adventure Plans
 - Media
 - Products
 - Publishing configuration
@@ -520,7 +522,33 @@ Rendering Context
 
 to produce an appropriate presentation.
 
-### 10.7 Discovery Engine
+### 10.7 Planning Engine
+
+The Planning Engine owns private, structured Adventure Plans used during Dream,
+Plan, and Travel.
+
+Responsibilities include:
+
+- Adventure Plans and planning status
+- Travelers and planning preferences
+- Destination visits and local date/time context
+- Daily itineraries and activities
+- Transportation and accommodations
+- Reservation planning state
+- Tasks, notes, packing, and budgets
+- Planning validation, audit history, and concurrency
+- Explicit selection of planning facts for later publication
+
+Planning records are Creator-owned and private by default. They are distinct
+from public Content Engine records. Planning status never grants public
+visibility, and the Planning Engine does not publish content directly.
+
+The AI Engine may produce structured proposals for a plan, but only the
+Planning Engine can apply Creator-approved operations to authoritative state.
+
+Detailed direction is defined in `docs/architecture/planning-engine.md`.
+
+### 10.8 Discovery Engine
 
 The Discovery Engine helps users find and explore content.
 
@@ -537,7 +565,7 @@ Potential capabilities include:
 - Planning suggestions
 - Future personalized discovery
 
-### 10.8 Commerce Engine
+### 10.9 Commerce Engine
 
 The Commerce Engine owns Creator storefront catalogs and commercial
 transactions for products derived from AdventuresSuite Publications and
@@ -560,7 +588,7 @@ capabilities and coordinates approved providers.
 Detailed direction is defined in `docs/architecture/commerce-engine.md` and
 `docs/architecture/photography-commerce-and-licensing.md`.
 
-### 10.9 Subscription and Notification Engine
+### 10.10 Subscription and Notification Engine
 
 The Subscription and Notification Engine owns Creator-audience subscription
 relationships and subscriber-facing delivery orchestration.
@@ -588,7 +616,7 @@ audience data.
 Detailed direction is defined in
 `docs/architecture/subscription-notification-engine.md`.
 
-### 10.10 AI Engine
+### 10.11 AI Engine
 
 The AI Engine provides reusable artificial-intelligence capabilities across AdventuresSuite.
 
@@ -625,6 +653,11 @@ It must not bypass:
 - Platform safety controls
 
 The AI Engine should preserve the Creator's voice and assist rather than replace the Creator.
+
+For Planning Engine mutations, the AI Engine returns structured proposals. It
+does not write authoritative plans directly. Proposal review, stale-version
+detection, Creator approval, and transactional application are platform
+boundaries defined in `docs/architecture/ai-planning-copilot.md`.
 
 ```text
 Creator Context
@@ -999,6 +1032,7 @@ AdventuresSuite follows these principles:
 - The platform is multi-tenant.
 - Every Creator owns its brand, content, resources, and audience.
 - Every creator-owned object is scoped to a Creator.
+- Private planning state is distinct from public editorial content.
 - Every major responsibility has one owning Engine.
 - Features compose capabilities.
 - Engines expose abstractions.
@@ -1039,6 +1073,7 @@ Core platform capabilities are organized through:
 Creator Engine
 Content Engine
 Resource Engine
+Planning Engine
 Address Engine
 QR Engine
 Rendering Engine

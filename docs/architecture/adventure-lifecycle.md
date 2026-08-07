@@ -133,6 +133,16 @@ Weather
 
 The AI assists throughout planning.
 
+The Planning Engine owns the private, structured Adventure Plan. Planning
+status does not grant public visibility. Published Adventure, Volume, Journey,
+and Destination records remain Content Engine material created through an
+explicit, Creator-approved publication transformation.
+
+AI works through proposals against a known plan version. It may suggest an
+itinerary, identify conflicts, or add unresolved planning tasks, but it does not
+write authoritative plan state. A Creator must review and approve proposed
+operations before the Planning Engine commits them.
+
 Destination plans use date-only arrival and departure values. They describe
 the expected local calendar dates and may change as the itinerary develops.
 They are not instants and are not converted between time zones.
@@ -141,6 +151,10 @@ Journey visits add operational local timing for a particular itinerary. Cruise
 port calls may include arrival, gangway down, gangway up, and departure times.
 These remain provisional during planning, use the destination's IANA time
 zone, and must not be copied into the reusable Destination as permanent timing.
+
+Private planning information such as traveler details, confirmation references,
+budgets, internal notes, and unpublished operational changes does not enter a
+public rendering or notification event by default.
 
 ---
 
@@ -312,6 +326,8 @@ AdventuresSuite
 
 Adventure Advisor
 
+Planning Engine
+
 Travel
 
 AdventuresSuite
@@ -463,6 +479,18 @@ Remember
 Historian
 
 AI evolves with the Adventure.
+
+During Plan, the authoritative interaction is:
+
+```text
+Creator intent
+    ↓
+AI proposal
+    ↓
+Creator review
+    ↓
+Planning Engine commit
+```
 
 ---
 

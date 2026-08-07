@@ -17,6 +17,28 @@
 - Follow docs/architecture/creator-engine.md and
   docs/development/creator-engine-refactoring-plan.md when changing tenancy.
 
+## Planning and AI
+
+- Read docs/architecture/planning-engine.md,
+  docs/architecture/ai-planning-copilot.md, and
+  docs/development/planning-engine-implementation-plan.md before changing
+  planning or AI behavior.
+- Treat private AdventurePlan data as distinct from public Content Engine
+  records.
+- Require Creator identity in every planning, persistence, AI, cache,
+  background-work, and indexing operation.
+- Keep planning data private unless an explicit publication operation selects
+  approved fields for public content.
+- Treat AI output as untrusted structured proposals, never as authoritative
+  plan state.
+- Require Creator review before an AI proposal can mutate a plan.
+- Keep domain and application contracts independent of AI providers, model
+  names, prompts, EF Core, and Razor components.
+- Use date-only values for travel calendar dates, IANA identifiers for local
+  time zones, and UTC timestamps for system audit events.
+- Implement Planning Engine phases in order and do not combine them into a
+  broad rewrite.
+
 ## Documentation
 
 - XML document all public classes, methods, and properties.
