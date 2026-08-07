@@ -7,16 +7,72 @@
   "qrSlug": "tuscany",
   "title": "Tuscany",
   "subtitle": "Rolling Hills and Timeless Vineyards",
-  "summary": "Tuscany gave us a slower rhythm after the energy of Florence. Vineyards, stone villages, quiet roads, and long views across the countryside made the day feel less like sightseeing and more like stepping into the Italy we had imagined for years.",
-  "heroImage": "/images/volumes/volume-1/italy/tuscany/hero.jpeg",
-  "heroImageAlt": "Rolling hills, vineyards, and a historic countryside estate in Tuscany",
+  "summary": "Tuscany gave us a slower rhythm after the energy of Florence. A road through the vines led us into rolling hills, olive groves, cypress-lined gardens, and a working winery where the landscape and the traditions behind each bottle became part of the same story.",
+  "heroImage": "/images/volumes/volume-1/italy/tuscany/vineyard-road.jpeg",
+  "heroImageAlt": "A gravel road descending through Tuscan vineyards toward rolling green hills",
   "published": true,
   "featured": true,
   "homepageOrder": 3,
-  "homepageImage": "",
-  "homepageSummary": "Explore the rolling hills, vineyards, historic villages, and relaxed pace that make Tuscany feel timeless.",
-  "sections": [],
-  "reflections": [],
+  "homepageImage": "/images/volumes/volume-1/italy/tuscany/villa-garden.jpeg",
+  "homepageSummary": "Follow the vineyard roads into rolling hills, a working winery, and the quiet gardens of a Tuscan estate.",
+  "sections": [
+    {
+      "heading": "Leaving the City Behind",
+      "paragraphs": [
+        "The change of pace began as Florence faded behind us. Busy streets gave way to winding country roads, and the view opened into green hills patterned with vineyards, olive groves, stone homes, and dark rows of cypress trees.",
+        "It was the Tuscany we had pictured for years, but being surrounded by it felt different from seeing it in photographs. The landscape seemed to invite us to stop measuring the day by landmarks and simply enjoy where the road led next."
+      ],
+      "imageSrc": "/images/volumes/volume-1/italy/tuscany/countryside-overlook.jpeg",
+      "imageAlt": "Dianne looking across a broad Tuscan valley from a stone terrace",
+      "imageCaption": "Taking in the hills beyond the vineyard"
+    },
+    {
+      "heading": "Walking Through the Vineyard",
+      "paragraphs": [
+        "Rows of vines stretched across the hillside beneath a brilliant blue sky. Walking among them brought the scale of the vineyard into focus, from clusters of grapes tucked beneath the leaves to the olive trees and distant ridgelines surrounding the property.",
+        "The experience made the countryside feel tangible. Tuscany was no longer just a beautiful backdrop; it was a cultivated landscape shaped by seasons, patient work, and traditions passed from one generation to the next."
+      ],
+      "imageSrc": "/images/volumes/volume-1/italy/tuscany/vineyard-rows.jpeg",
+      "imageAlt": "Long rows of grapevines spreading across a sunny Tuscan hillside",
+      "imageCaption": "Vines and olive groves beneath the Tuscan sun"
+    },
+    {
+      "heading": "From Vine to Cellar",
+      "paragraphs": [
+        "Inside the winery, the scenery gave way to polished steel tanks, brick-vaulted rooms, and rows of wooden barrels. Seeing each stage of the process connected the grapes outside with the wine aging quietly below the estate.",
+        "The cellar carried its own sense of time. Everything about it encouraged patience—the cool rooms, the carefully marked barrels, and the understanding that some experiences cannot be rushed."
+      ],
+      "imageSrc": "/images/volumes/volume-1/italy/tuscany/wine-barrels.jpeg",
+      "imageAlt": "Large wooden wine barrels resting beneath the brick-vaulted ceiling of a Tuscan cellar",
+      "imageCaption": "Wine aging beneath centuries-old brick arches"
+    },
+    {
+      "heading": "A Villa Above the Hills",
+      "paragraphs": [
+        "Beyond the cellar, the estate unfolded into formal gardens, lemon trees, fountains, and a cypress avenue pointing toward the horizon. Every doorway seemed to frame another view of the countryside.",
+        "This was the part of Tuscany that stayed with us most: the balance between cultivated beauty and an easy, unhurried way of living. We left with photographs, but also with the feeling that we had briefly stepped into a much slower clock."
+      ],
+      "imageSrc": "/images/volumes/volume-1/italy/tuscany/garden-through-doors.jpeg",
+      "imageAlt": "A formal Tuscan garden and distant hills framed by tall glass villa doors",
+      "imageCaption": "The countryside framed by the villa doors"
+    }
+  ],
+  "reflections": [
+    {
+      "afterSection": 1,
+      "author": "Dianne",
+      "title": "From Dianne's Journal",
+      "text": "Standing above the valley, I wanted to remember every layer of the view—the vines, the olive trees, the stone house, and the hills disappearing into the distance.",
+      "signature": "❤️ Dianne"
+    },
+    {
+      "afterSection": 3,
+      "author": "Steve",
+      "title": "Steve's Notes",
+      "text": "The winery made the landscape mean more. Seeing the vines, the equipment, and the cellar together showed how much work and patience sit behind a single glass of wine.",
+      "signature": "— Steve"
+    }
+  ],
   "quote": {
     "text": "Tuscany reminded us that some of the best travel moments happen when there is nowhere else you need to be.",
     "attribution": "The Simonton Adventures"
@@ -75,7 +131,74 @@
       "description": "Some of Tuscany's most memorable moments may come from smaller villages, local farms, and quiet overlooks."
     }
   ],
-  "gallery": [],
+  "gallery": [
+    {
+      "src": "/images/volumes/volume-1/italy/tuscany/vineyard-road.jpeg",
+      "alt": "Gravel road winding between vineyard rows toward the Tuscan hills",
+      "caption": "The road into the vineyard",
+      "displayOrder": 1
+    },
+    {
+      "src": "/images/volumes/volume-1/italy/tuscany/vineyard-rows.jpeg",
+      "alt": "Orderly vineyard rows stretching beneath a deep blue sky",
+      "caption": "Vines stretching across the hillside",
+      "displayOrder": 2
+    },
+    {
+      "src": "/images/volumes/volume-1/italy/tuscany/grapes-on-vine.jpeg",
+      "alt": "Clusters of green grapes growing beneath sunlit leaves",
+      "caption": "A closer look at the season's grapes",
+      "displayOrder": 3
+    },
+    {
+      "src": "/images/volumes/volume-1/italy/tuscany/vineyard-selfie.jpeg",
+      "alt": "Dianne and Steve smiling together among rows of Tuscan grapevines",
+      "caption": "Together in the vineyard",
+      "displayOrder": 4
+    },
+    {
+      "src": "/images/volumes/volume-1/italy/tuscany/countryside-overlook.jpeg",
+      "alt": "Dianne looking over green hills and a stone estate from a terrace",
+      "caption": "A view worth slowing down for",
+      "displayOrder": 5
+    },
+    {
+      "src": "/images/volumes/volume-1/italy/tuscany/winery-production.jpeg",
+      "alt": "Winery guide explaining the production process among stainless-steel tanks",
+      "caption": "Learning how the vineyard becomes wine",
+      "displayOrder": 6
+    },
+    {
+      "src": "/images/volumes/volume-1/italy/tuscany/wine-barrels.jpeg",
+      "alt": "Tuscan wine barrels stacked beneath a warm brick-vaulted ceiling",
+      "caption": "Inside the quiet barrel cellar",
+      "displayOrder": 7
+    },
+    {
+      "src": "/images/volumes/volume-1/italy/tuscany/villa-garden.jpeg",
+      "alt": "Formal villa garden overlooking olive groves and country homes",
+      "caption": "Gardens opening onto the countryside",
+      "displayOrder": 8
+    },
+    {
+      "src": "/images/volumes/volume-1/italy/tuscany/cypress-avenue.jpeg",
+      "alt": "Long gravel avenue bordered by tall Tuscan cypress trees",
+      "caption": "A classic cypress-lined avenue",
+      "displayOrder": 9
+    },
+    {
+      "src": "/images/volumes/volume-1/italy/tuscany/garden-through-doors.jpeg",
+      "alt": "Sunlit formal garden viewed through open doors inside a Tuscan villa",
+      "caption": "A garden framed by the villa",
+      "displayOrder": 10
+    },
+    {
+      "src": "/images/volumes/volume-1/italy/tuscany/tuscan-villa.jpeg",
+      "alt": "Warm ochre Tuscan villa rising behind lemon trees and cypress",
+      "caption": "The timeless colors of a Tuscan estate",
+      "displayOrder": 11
+    }
+  ],
   "map": {
     "latitude": 43.7711,
     "longitude": 11.2486,

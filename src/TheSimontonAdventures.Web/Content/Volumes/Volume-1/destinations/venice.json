@@ -7,24 +7,24 @@
   "qrSlug": "venice",
   "title": "Venice",
   "subtitle": "The Floating City",
-  "summary": "Our Mediterranean adventure began in Venice, where canals replaced roads, centuries of history surrounded every corner, and every quiet walk revealed another unforgettable view. From the moment we stepped onto our private water taxi, Venice felt unlike anywhere we had ever visited.",
-  "heroImage": "/images/volumes/volume-1/italy/venice/hero.jpeg",
-  "heroImageAlt": "Historic canal in Venice lined with colorful buildings and gondolas",
+  "summary": "Our Mediterranean adventure began in Venice, where canals replaced roads and centuries of history appeared around every corner. Arriving by private water taxi gave us an unforgettable introduction to a city best experienced slowly—from its grand waterways and ornate architecture to its quiet lanes and evenings beside the water.",
+  "heroImage": "/images/volumes/volume-1/italy/venice/canal-hero.jpeg",
+  "heroImageAlt": "Water taxi crossing a vivid turquoise canal between historic Venetian buildings",
   "published": true,
   "featured": true,
   "homepageOrder": 1,
-  "homepageImage": "/images/volumes/volume-1/italy/venice/homepage.jpeg",
-  "homepageSummary": "Begin our adventure in Venice, where winding canals, hidden alleyways, unforgettable meals, and timeless beauty created the perfect first chapter.",
+  "homepageImage": "/images/volumes/volume-1/italy/venice/bridge-arrival.jpeg",
+  "homepageSummary": "Begin our adventure in Venice with a water-taxi arrival, winding canals, quiet alleyways, unforgettable meals, and timeless beauty.",
   "sections": [
     {
-      "heading": "Our First Glimpse of Venice",
+      "heading": "Arriving by Water",
       "paragraphs": [
         "After landing in Venice, everything about travel suddenly changed. Roads disappeared, boats replaced cars, and our private water taxi became the first chapter of an adventure we had dreamed about for months.",
         "As we cruised through the canals toward our hotel, historic buildings rose directly from the water and gondolas quietly passed beneath centuries-old bridges. Within minutes, we realized Venice wasn't simply another city—it was an experience unlike anywhere else in the world."
       ],
-      "imageSrc": "/images/volumes/volume-1/italy/venice/water-taxi.jpeg",
-      "imageAlt": "Private water taxi traveling through the canals of Venice",
-      "imageCaption": "Our first journey through the canals of Venice"
+      "imageSrc": "/images/volumes/volume-1/italy/venice/water-taxi-arrival.jpeg",
+      "imageAlt": "Dianne seated inside a private water taxi crossing the Venetian lagoon",
+      "imageCaption": "Our Venice adventure began on the water"
     },
     {
       "heading": "Getting Lost on Purpose",
@@ -32,19 +32,29 @@
         "Some of our favorite memories came without an itinerary. We wandered through quiet alleyways, crossed countless bridges, and discovered charming canals where very few tourists seemed to venture.",
         "Every turn revealed another postcard view. Small cafés, colorful buildings, flower-filled balconies, and peaceful canals reminded us that Venice rewards those willing to slow down and simply explore."
       ],
-      "imageSrc": "/images/volumes/volume-1/italy/venice/canal-walk.jpeg",
-      "imageAlt": "Quiet canal surrounded by historic Venetian buildings",
-      "imageCaption": "Exploring Venice one bridge at a time"
+      "imageSrc": "/images/volumes/volume-1/italy/venice/golden-canal.jpeg",
+      "imageAlt": "A quiet Venice canal glowing in warm late-afternoon light",
+      "imageCaption": "Golden light along one of Venice's quieter canals"
     },
     {
-      "heading": "Evenings We Will Never Forget",
+      "heading": "The Art of Lingering",
       "paragraphs": [
         "Our evenings quickly became our favorite part of Venice. Sitting outside along the canals, enjoying incredible Italian food while gondolas quietly drifted past, created memories that photographs could never fully capture.",
         "It wasn't just the scenery that made Venice special. It was sharing those moments together—the conversations, the laughter, and the realization that this incredible journey was only beginning."
       ],
-      "imageSrc": "/images/volumes/volume-1/italy/venice/canal-restaurant.jpeg",
-      "imageAlt": "Outdoor restaurant beside a Venice canal at sunset",
-      "imageCaption": "Dinner beside the canals"
+      "imageSrc": "/images/volumes/volume-1/italy/venice/courtyard-dining.jpeg",
+      "imageAlt": "Tables arranged beneath warm lights in a quiet Venetian courtyard",
+      "imageCaption": "A tucked-away courtyard ready for the evening"
+    },
+    {
+      "heading": "Beauty in Every Detail",
+      "paragraphs": [
+        "Venice rewarded us whenever we remembered to look up. Beyond the canals were graceful courtyards, richly decorated interiors, weathered facades, and architectural details shaped by generations of artists and craftspeople.",
+        "That contrast became part of the city's magic: a quiet brick alley could open into an elegant square, while an unassuming doorway could reveal a room glowing with color and gold. Venice felt less like a collection of landmarks and more like one continuous work of art."
+      ],
+      "imageSrc": "/images/volumes/volume-1/italy/venice/gilded-ceiling.jpeg",
+      "imageAlt": "Ornate gilded ceiling filled with painted panels and carved details",
+      "imageCaption": "Venice's artistry rewards a closer look"
     }
   ],
   "facts": [
@@ -123,22 +133,70 @@
   },
   "gallery": [
     {
-      "src": "/images/volumes/volume-1/italy/venice/water-taxi.jpeg",
-      "alt": "Private water taxi traveling through Venice",
-      "caption": "Our first arrival in Venice",
+      "src": "/images/volumes/volume-1/italy/venice/water-taxi-arrival.jpeg",
+      "alt": "Dianne seated in a private water taxi on the Venetian lagoon",
+      "caption": "Beginning our Venice adventure by water taxi",
       "displayOrder": 1
     },
     {
-      "src": "/images/volumes/volume-1/italy/venice/canal-walk.jpeg",
-      "alt": "Quiet Venetian canal lined with historic buildings",
-      "caption": "Exploring hidden canals",
+      "src": "/images/volumes/volume-1/italy/venice/lagoon-skyline.jpeg",
+      "alt": "Venice skyline viewed across the lagoon beneath a blue sky",
+      "caption": "Our first view of Venice from the lagoon",
       "displayOrder": 2
     },
     {
-      "src": "/images/volumes/volume-1/italy/venice/canal-restaurant.jpeg",
-      "alt": "Outdoor restaurant beside a Venice canal",
-      "caption": "Dinner beside the canals",
+      "src": "/images/volumes/volume-1/italy/venice/bridge-arrival.jpeg",
+      "alt": "View from a water taxi approaching a broad arched bridge in Venice",
+      "caption": "Passing beneath the bridges of Venice",
       "displayOrder": 3
+    },
+    {
+      "src": "/images/volumes/volume-1/italy/venice/golden-canal.jpeg",
+      "alt": "Quiet Venetian canal reflecting warm sunlight between historic buildings",
+      "caption": "Golden light on a quiet canal",
+      "displayOrder": 4
+    },
+    {
+      "src": "/images/volumes/volume-1/italy/venice/quiet-alley.jpeg",
+      "alt": "Narrow brick alley winding between old buildings in Venice",
+      "caption": "Getting lost on purpose",
+      "displayOrder": 5
+    },
+    {
+      "src": "/images/volumes/volume-1/italy/venice/historic-courtyard.jpeg",
+      "alt": "Sunlit courtyard framed by historic Venetian architecture",
+      "caption": "Architecture around every corner",
+      "displayOrder": 6
+    },
+    {
+      "src": "/images/volumes/volume-1/italy/venice/gilded-ceiling.jpeg",
+      "alt": "Gilded Venetian ceiling with elaborate painted panels",
+      "caption": "A remarkable ceiling filled with color and gold",
+      "displayOrder": 7
+    },
+    {
+      "src": "/images/volumes/volume-1/italy/venice/courtyard-dining.jpeg",
+      "alt": "Outdoor restaurant tables beneath warm lights in a secluded courtyard",
+      "caption": "A quiet courtyard prepared for dinner",
+      "displayOrder": 8
+    },
+    {
+      "src": "/images/volumes/volume-1/italy/venice/waterside-aperitivo.jpeg",
+      "alt": "Drinks served at a table overlooking the water in Venice",
+      "caption": "Taking time to enjoy the view",
+      "displayOrder": 9
+    },
+    {
+      "src": "/images/volumes/volume-1/italy/venice/canal-blue-hour.jpeg",
+      "alt": "Venetian canal and historic buildings illuminated at blue hour",
+      "caption": "The canals after sunset",
+      "displayOrder": 10
+    },
+    {
+      "src": "/images/volumes/volume-1/italy/venice/canal-hero.jpeg",
+      "alt": "Water taxi traveling along a turquoise canal lined with Venetian facades",
+      "caption": "Venice in motion",
+      "displayOrder": 11
     }
   ],
   "map": {

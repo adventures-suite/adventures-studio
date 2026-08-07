@@ -7,14 +7,14 @@
   "qrSlug": "florence",
   "title": "Florence",
   "subtitle": "Heart of the Renaissance",
-  "summary": "Florence felt like a city designed to be explored slowly. Around nearly every corner, we found another church, piazza, sculpture, or view that reminded us how deeply the Renaissance shaped this place. It was elegant without feeling distant, historic without feeling frozen in time, and filled with moments that made us stop and simply take it all in.",
-  "heroImage": "/images/volumes/volume-1/italy/florence/hero.jpeg",
-  "heroImageAlt": "A panoramic view of Florence with the Cathedral of Santa Maria del Fiore rising above the city",
+  "summary": "Florence felt like a city designed to be explored slowly. Its piazzas, churches, sculptures, and painted interiors brought the Renaissance into the rhythm of everyday life, while walks beside the Arno and evenings in the historic center revealed a city that remained warm, lively, and deeply personal.",
+  "heroImage": "/images/volumes/volume-1/italy/florence/duomo-complex.jpeg",
+  "heroImageAlt": "The marble facades of Florence Cathedral, Giotto's Campanile, and the Baptistery beneath a textured sky",
   "published": true,
   "featured": true,
   "homepageOrder": 2,
-  "homepageImage": "/images/volumes/volume-1/italy/florence/homepage.jpeg",
-  "homepageSummary": "Walk through the art, architecture, and timeless streets of the Renaissance.",
+  "homepageImage": "/images/volumes/volume-1/italy/florence/ponte-vecchio-arno.jpeg",
+  "homepageSummary": "Walk through Renaissance art and architecture, pause beside the Arno, and watch Florence come alive after dark.",
   "sections": [
     {
       "heading": "Arriving in the Renaissance",
@@ -22,9 +22,9 @@
         "Florence immediately felt different from Venice. The canals and quiet passageways were replaced by broad piazzas, stone buildings, busy streets, and the unmistakable dome of the cathedral rising above the city.",
         "As we walked toward the historic center, it became clear that Florence was not simply a city with important art. Art, architecture, and history were woven into the experience of moving through the city itself."
       ],
-      "imageSrc": "/images/volumes/volume-1/italy/florence/duomo-wide.jpeg",
-      "imageAlt": "The Cathedral of Santa Maria del Fiore and its dome in Florence",
-      "imageCaption": "The Duomo rising above the historic center of Florence"
+      "imageSrc": "/images/volumes/volume-1/italy/florence/renaissance-courtyard.jpeg",
+      "imageAlt": "Dianne admiring an ornate Renaissance courtyard with painted walls and carved columns",
+      "imageCaption": "Discovering layers of art inside a Renaissance courtyard"
     },
     {
       "heading": "Standing Before David",
@@ -32,7 +32,7 @@
         "Michelangelo's David was one of the landmarks we had anticipated most. We had seen photographs countless times, but seeing the sculpture in person made us understand why it has remained so powerful for centuries.",
         "The scale, detail, and expression were extraordinary. More than a famous work of art, David felt like a human presence in the room—confident, alert, and frozen in the moment before action."
       ],
-      "imageSrc": "/images/volumes/volume-1/italy/florence/david.jpeg",
+      "imageSrc": "/images/volumes/volume-1/italy/florence/michelangelo-david.jpeg",
       "imageAlt": "Michelangelo's David displayed inside the Accademia Gallery in Florence",
       "imageCaption": "Michelangelo's David inside the Accademia Gallery"
     },
@@ -42,9 +42,19 @@
         "Some of our favorite moments in Florence came when we were no longer rushing toward a landmark. Walking near the Arno River in the evening gave us time to appreciate the softer side of the city.",
         "The light changed across the buildings, the bridges reflected on the water, and Florence seemed to settle into a quieter rhythm. It was the kind of moment that made us want to slow down and stay a little longer."
       ],
-      "imageSrc": "/images/volumes/volume-1/italy/florence/arno-evening.png",
-      "imageAlt": "The Arno River and Ponte Vecchio during the evening in Florence",
-      "imageCaption": "Evening light along the Arno River"
+      "imageSrc": "/images/volumes/volume-1/italy/florence/ponte-vecchio-arno.jpeg",
+      "imageAlt": "Ponte Vecchio and riverside buildings reflected in the calm Arno River",
+      "imageCaption": "Ponte Vecchio reflected in the Arno"
+    },
+    {
+      "heading": "Florence After Dark",
+      "paragraphs": [
+        "After sunset, Florence took on a different character. The stone walls of Palazzo Vecchio glowed under warm lights, fountains and sculptures stood out against the night sky, and the piazzas remained full of people enjoying the cooler evening air.",
+        "These unhurried nighttime walks gave us space to revisit places we had seen during the day. With fewer distractions and nowhere else to be, we could enjoy the atmosphere, share a gelato, and let the city provide the evening's itinerary."
+      ],
+      "imageSrc": "/images/volumes/volume-1/italy/florence/signoria-at-night.jpeg",
+      "imageAlt": "Palazzo Vecchio and Piazza della Signoria illuminated at night",
+      "imageCaption": "Piazza della Signoria glowing after dark"
     }
   ],
   "facts": [
@@ -123,22 +133,70 @@
   },
   "gallery": [
     {
-      "src": "/images/volumes/volume-1/italy/florence/duomo-wide.jpeg",
-      "alt": "The Cathedral of Santa Maria del Fiore in Florence",
-      "caption": "The Duomo rising above Florence",
+      "src": "/images/volumes/volume-1/italy/florence/duomo-complex.jpeg",
+      "alt": "Florence Cathedral, Giotto's Campanile, and the Baptistery beneath a blue sky",
+      "caption": "Our first view of the Duomo complex",
       "displayOrder": 1
     },
     {
-      "src": "/images/volumes/volume-1/italy/florence/david.jpeg",
-      "alt": "Michelangelo's David inside the Accademia Gallery",
-      "caption": "Michelangelo's David",
+      "src": "/images/volumes/volume-1/italy/florence/piazza-signoria.jpeg",
+      "alt": "Dianne standing in the sunlit Piazza della Signoria",
+      "caption": "Taking in Piazza della Signoria",
       "displayOrder": 2
     },
     {
-      "src": "/images/volumes/volume-1/italy/florence/arno-evening.png",
-      "alt": "Evening light along the Arno River in Florence",
-      "caption": "Evening along the Arno",
+      "src": "/images/volumes/volume-1/italy/florence/renaissance-courtyard.jpeg",
+      "alt": "Dianne looking across an ornate Renaissance courtyard",
+      "caption": "Art and architecture in every direction",
       "displayOrder": 3
+    },
+    {
+      "src": "/images/volumes/volume-1/italy/florence/decorated-ceiling.jpeg",
+      "alt": "Vaulted ceiling covered with intricate Renaissance paintings and decorative patterns",
+      "caption": "Remembering to look up",
+      "displayOrder": 4
+    },
+    {
+      "src": "/images/volumes/volume-1/italy/florence/michelangelo-david.jpeg",
+      "alt": "Michelangelo's marble David displayed beneath the Accademia Gallery rotunda",
+      "caption": "Standing before Michelangelo's David",
+      "displayOrder": 5
+    },
+    {
+      "src": "/images/volumes/volume-1/italy/florence/frescoed-chapel.jpeg",
+      "alt": "Historic chapel whose walls are covered with colorful Renaissance frescoes",
+      "caption": "Stories preserved in painted walls",
+      "displayOrder": 6
+    },
+    {
+      "src": "/images/volumes/volume-1/italy/florence/church-interior.jpeg",
+      "alt": "Florentine church interior with high vaulted arches and a glowing stained-glass window",
+      "caption": "Quiet moments inside Florence's churches",
+      "displayOrder": 7
+    },
+    {
+      "src": "/images/volumes/volume-1/italy/florence/ponte-vecchio-arno.jpeg",
+      "alt": "Ponte Vecchio and colorful riverside buildings reflected in the Arno",
+      "caption": "Ponte Vecchio reflected in the river",
+      "displayOrder": 8
+    },
+    {
+      "src": "/images/volumes/volume-1/italy/florence/gelato-stop.jpeg",
+      "alt": "A cup of Italian gelato displayed beside stacked waffle cones",
+      "caption": "A well-earned gelato stop",
+      "displayOrder": 9
+    },
+    {
+      "src": "/images/volumes/volume-1/italy/florence/signoria-at-night.jpeg",
+      "alt": "Palazzo Vecchio and the Piazza della Signoria illuminated at night",
+      "caption": "The piazza takes on a new character at night",
+      "displayOrder": 10
+    },
+    {
+      "src": "/images/volumes/volume-1/italy/florence/evening-selfie.jpeg",
+      "alt": "Dianne and Steve smiling together beside the illuminated Neptune fountain",
+      "caption": "An evening together in the heart of Florence",
+      "displayOrder": 11
     }
   ],
   "map": {
