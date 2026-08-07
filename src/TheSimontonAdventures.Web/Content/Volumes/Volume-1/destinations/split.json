@@ -7,16 +7,72 @@
   "qrSlug": "split",
   "title": "Split",
   "subtitle": "Ancient City by the Sea",
-  "summary": "Split blended everyday life with nearly two thousand years of history. Ancient Roman walls surrounded lively cafés, narrow streets, and waterfront promenades, creating a city that felt both timeless and wonderfully alive.",
-  "heroImage": "/images/volumes/volume-1/croatia/split/hero.jpeg",
-  "heroImageAlt": "The waterfront and historic center of Split, Croatia",
+  "summary": "Split welcomed us from across its brilliant blue harbor, then drew us into a city where Roman columns, medieval stonework, family homes, cafés, and narrow passages all shared the same ancient walls. Diocletian's Palace was not a monument separated from daily life—it was the living heart of it.",
+  "heroImage": "/images/volumes/volume-1/croatia/split/harbor-panorama.jpeg",
+  "heroImageAlt": "Split's waterfront, historic center, and mountains viewed across the blue harbor",
   "published": true,
   "featured": true,
   "homepageOrder": 8,
-  "homepageImage": "",
-  "homepageSummary": "Walk through a living Roman palace where history, local culture, and the Adriatic Sea come together.",
-  "sections": [],
-  "reflections": [],
+  "homepageImage": "/images/volumes/volume-1/croatia/split/harbor-panorama.jpeg",
+  "homepageSummary": "Cross the harbor and step inside a Roman palace that has evolved into the lively, lived-in heart of modern Split.",
+  "sections": [
+    {
+      "heading": "A City Between Mountains and Sea",
+      "paragraphs": [
+        "Split first appeared across a sweep of intensely blue water, its waterfront gathered beneath a long ridge of pale mountains. From the harbor, the city's layers were already visible: working docks in the foreground, the palm-lined Riva along the shore, and the bell tower rising above terracotta roofs.",
+        "Once ashore, we paused beside the promenade before entering the old city. The relaxed cafés and bright Adriatic light made the Riva feel like Split's front porch—a place where travelers arrived and local life unfolded at an unhurried pace."
+      ],
+      "imageSrc": "/images/volumes/volume-1/croatia/split/riva-together.jpeg",
+      "imageAlt": "Steve and Dianne together at a waterfront café beside Split's palm-lined Riva",
+      "imageCaption": "Beginning our day beside the Riva"
+    },
+    {
+      "heading": "Inside a Living Roman Palace",
+      "paragraphs": [
+        "Diocletian's Palace did not feel like a ruin with a city built around it. The palace had become the city. Roman columns framed a crowded Peristyle, ancient walls supported later buildings, and every passage seemed to connect one century with another.",
+        "The most remarkable details were often the ordinary ones: shuttered windows set into massive stone blocks, balconies above Roman masonry, and homes still occupying spaces shaped nearly two thousand years ago. History here was not preserved behind glass; it continued to be used."
+      ],
+      "imageSrc": "/images/volumes/volume-1/croatia/split/peristyle.jpeg",
+      "imageAlt": "The columned Peristyle of Diocletian's Palace filled with visitors beneath a blue sky",
+      "imageCaption": "Roman architecture at the center of modern Split"
+    },
+    {
+      "heading": "The Cathedral Above the Palace",
+      "paragraphs": [
+        "The Cathedral of Saint Domnius carried another of Split's extraordinary transformations. What began as Emperor Diocletian's mausoleum eventually became a Christian cathedral, while its tall bell tower grew into the defining landmark of the old city.",
+        "Seen above the layered palace walls, the tower made the city's long history feel almost tangible. Roman foundations, medieval additions, and present-day life occupied the same view, each era adapting what the previous one had left behind."
+      ],
+      "imageSrc": "/images/volumes/volume-1/croatia/split/cathedral-bell-tower.jpeg",
+      "imageAlt": "Dianne looking toward the Cathedral of Saint Domnius bell tower above ancient palace walls",
+      "imageCaption": "Layers of Split beneath the cathedral bell tower"
+    },
+    {
+      "heading": "Following the Narrow Streets",
+      "paragraphs": [
+        "Beyond the grand palace spaces, Split became intimate. We followed polished lanes into quiet courtyards, passed green shutters and sun-warmed stone, and looked up through narrow passages where plants and laundry softened the ancient walls.",
+        "Those smaller streets revealed the character we remembered most clearly. The palace was monumental, but it was also colorful, imperfect, and deeply human—a place where wandering without a route felt like the best way to understand it."
+      ],
+      "imageSrc": "/images/volumes/volume-1/croatia/split/colorful-alley.jpeg",
+      "imageAlt": "A narrow residential alley in Split with warm walls, stone steps, and a red gate",
+      "imageCaption": "Everyday life tucked inside the old city's walls"
+    }
+  ],
+  "reflections": [
+    {
+      "afterSection": 2,
+      "author": "Dianne",
+      "title": "From Dianne's Journal",
+      "text": "Walking through the palace changed the way I imagined an ancient site. It was full of movement and ordinary life, with homes and cafés woven directly into walls that had already stood for centuries.",
+      "signature": "❤️ Dianne"
+    },
+    {
+      "afterSection": 4,
+      "author": "Steve",
+      "title": "Steve's Notes",
+      "text": "Split rewarded every turn. The grand Roman spaces were unforgettable, but the quiet courtyards and lived-in passages made the city feel real rather than frozen in history.",
+      "signature": "— Steve"
+    }
+  ],
   "quote": {
     "text": "Split reminded us that history doesn't have to be behind museum glass. Here, people still live inside it every day.",
     "attribution": "The Simonton Adventures"
@@ -75,7 +131,74 @@
       "description": "Some of the city's most memorable discoveries happen away from the busiest streets."
     }
   ],
-  "gallery": [],
+  "gallery": [
+    {
+      "src": "/images/volumes/volume-1/croatia/split/harbor-panorama.jpeg",
+      "alt": "Split's waterfront and mountain backdrop viewed across the harbor",
+      "caption": "Split gathered between the Adriatic and the mountains",
+      "displayOrder": 1
+    },
+    {
+      "src": "/images/volumes/volume-1/croatia/split/riva-together.jpeg",
+      "alt": "Steve and Dianne at a café beside Split's palm-lined waterfront",
+      "caption": "Together beside the Riva",
+      "displayOrder": 2
+    },
+    {
+      "src": "/images/volumes/volume-1/croatia/split/old-town-lane.jpeg",
+      "alt": "Visitors walking through a narrow stone lane in Split's Old Town",
+      "caption": "Following the busy lanes into the old city",
+      "displayOrder": 3
+    },
+    {
+      "src": "/images/volumes/volume-1/croatia/split/palace-homes.jpeg",
+      "alt": "Green shutters and balconies built into the ancient stone walls of Diocletian's Palace",
+      "caption": "Centuries of daily life written into the palace walls",
+      "displayOrder": 4
+    },
+    {
+      "src": "/images/volumes/volume-1/croatia/split/peristyle.jpeg",
+      "alt": "Roman columns and historic buildings surrounding the crowded Peristyle in Split",
+      "caption": "The Peristyle at the heart of Diocletian's Palace",
+      "displayOrder": 5
+    },
+    {
+      "src": "/images/volumes/volume-1/croatia/split/palace-together.jpeg",
+      "alt": "Steve and Dianne together beneath ancient arches inside Diocletian's Palace",
+      "caption": "Together inside the living palace",
+      "displayOrder": 6
+    },
+    {
+      "src": "/images/volumes/volume-1/croatia/split/among-the-ruins.jpeg",
+      "alt": "Dianne looking upward while standing among ancient stone remains in Split",
+      "caption": "Taking in the scale of the palace ruins",
+      "displayOrder": 7
+    },
+    {
+      "src": "/images/volumes/volume-1/croatia/split/stone-courtyard.jpeg",
+      "alt": "A quiet stone courtyard with green shutters in Split's historic center",
+      "caption": "A quiet courtyard beyond the busiest streets",
+      "displayOrder": 8
+    },
+    {
+      "src": "/images/volumes/volume-1/croatia/split/cathedral-bell-tower.jpeg",
+      "alt": "Dianne viewing the Cathedral of Saint Domnius bell tower above Roman masonry",
+      "caption": "The bell tower rising above layers of history",
+      "displayOrder": 9
+    },
+    {
+      "src": "/images/volumes/volume-1/croatia/split/lived-in-passage.jpeg",
+      "alt": "A narrow stone passage with plants and homes above an archway in Split",
+      "caption": "A lived-in passage within the palace walls",
+      "displayOrder": 10
+    },
+    {
+      "src": "/images/volumes/volume-1/croatia/split/colorful-alley.jpeg",
+      "alt": "Warm orange walls, stone steps, and a red gate in a narrow Split alley",
+      "caption": "Color and character in the old city's smallest spaces",
+      "displayOrder": 11
+    }
+  ],
   "map": {
     "latitude": 43.5081,
     "longitude": 16.4402,
