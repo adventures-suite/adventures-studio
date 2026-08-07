@@ -1,10 +1,10 @@
 # Adventure Lifecycle
 
-**Version:** 1.0
+**Version:** 1.1
 
 **Status:** Approved
 
-**Last Updated:** July 31, 2026
+**Last Updated:** August 7, 2026
 
 ---
 
@@ -61,6 +61,9 @@ Share
 Remember
 
 Each stage builds naturally upon the previous one.
+
+Subscribers may follow a Creator or Adventure across these stages. Following is
+a cross-cutting audience relationship rather than a separate lifecycle stage.
 
 ---
 
@@ -381,6 +384,35 @@ Published Adventures
 Future Adventures
 
 The homepage should evolve automatically as Adventure status changes.
+
+---
+
+# Subscriber Experience Across the Lifecycle
+
+Subscribers should be able to follow meaningful public progress without being
+notified about internal authoring activity.
+
+Examples include:
+
+Dream and Plan
+
+New Adventure announcements and Creator-selected planning updates.
+
+Upcoming and Travel
+
+Approaching departure, Adventure start, and meaningful active-travel updates.
+
+Preserve and Publish
+
+New stories, destinations, galleries, editions, and completed publications.
+
+Share and Remember
+
+New resources, retrospective stories, and significant Creator-designated
+revisions.
+
+Notifications occur only after successful publication or another explicit
+public event. Minor corrections may be published silently.
 
 ---
 

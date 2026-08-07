@@ -1,6 +1,6 @@
 # AdventuresSuite Platform Architecture
 
-**Version:** 1.0
+**Version:** 1.2
 
 **Status:** Draft
 
@@ -66,6 +66,8 @@ It provides capabilities for:
 - Planning
 - Media
 - Analytics
+- Audience subscriptions and notifications
+- Creator storefronts and commerce
 - Artificial intelligence
 - Future platform services
 
@@ -535,7 +537,58 @@ Potential capabilities include:
 - Planning suggestions
 - Future personalized discovery
 
-### 10.8 AI Engine
+### 10.8 Commerce Engine
+
+The Commerce Engine owns Creator storefront catalogs and commercial
+transactions for products derived from AdventuresSuite Publications and
+Resources.
+
+Responsibilities include:
+
+- Creator-scoped catalogs and storefront configuration
+- Products, Offers, prices, availability, and terms
+- Orders, refunds, and commercial audit history
+- Digital Entitlements and protected delivery coordination
+- Physical fulfillment coordination
+- Payment, tax, and fulfillment provider adapters
+- Creator-scoped revenue and commerce reporting
+
+The Commerce Engine does not own Adventure source content, Publication
+artifacts, Resource rights, or physical manufacturing. It references those
+capabilities and coordinates approved providers.
+
+Detailed direction is defined in `docs/architecture/commerce-engine.md` and
+`docs/architecture/photography-commerce-and-licensing.md`.
+
+### 10.9 Subscription and Notification Engine
+
+The Subscription and Notification Engine owns Creator-audience subscription
+relationships and subscriber-facing delivery orchestration.
+
+Responsibilities include:
+
+- Verified subscriptions and consent evidence
+- Creator and Adventure subscription targets
+- Subscriber preferences and unsubscribe enforcement
+- Notification policies
+- Durable publication events
+- Audience selection
+- Delivery orchestration, retries, suppression, and deduplication
+- Creator-scoped delivery history and aggregate insights
+
+The Engine responds to meaningful completed publications and explicit public
+events. It does not notify subscribers for draft saves, previews, or internal
+authoring changes.
+
+Every audience relationship, event, template, background operation, and delivery
+must preserve Creator identity and tenant isolation. Subscriber identity may be
+shared by the platform, but one Creator must never receive another Creator's
+audience data.
+
+Detailed direction is defined in
+`docs/architecture/subscription-notification-engine.md`.
+
+### 10.10 AI Engine
 
 The AI Engine provides reusable artificial-intelligence capabilities across AdventuresSuite.
 
@@ -585,6 +638,7 @@ Platform permissions
 AI Engine
         ↓
 Assistance, discovery, planning, enrichment, or companion experience
+```
 
 ---
 
@@ -799,6 +853,10 @@ Important rules include:
 - Search indexes preserve Creator boundaries.
 - Analytics preserve tenant boundaries.
 - Background processing preserves Creator context.
+- Subscriptions, notification events, and delivery history preserve Creator
+  identity and consent boundaries.
+- Catalogs, Products, Offers, Orders, Entitlements, and fulfillment operations
+  preserve Creator identity and customer authorization boundaries.
 
 Tenant isolation must be enforced by platform design rather than by developer convention alone.
 
@@ -985,6 +1043,8 @@ Address Engine
 QR Engine
 Rendering Engine
 Discovery Engine
+Commerce Engine
+Subscription and Notification Engine
 AI Engine
 ```
 

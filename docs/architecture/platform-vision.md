@@ -1,6 +1,6 @@
-# Adventures Studio Platform Vision
+# AdventuresSuite Platform Vision
 
-**Version:** 1.1
+**Version:** 1.3
 
 **Status:** Approved
 
@@ -192,6 +192,26 @@ One creator becomes inspiration for another.
 This continuous cycle strengthens the platform over time.
 
 Publishing should become as natural as preserving memories.
+
+Creators should be able to build lasting, permission-based relationships with
+people who choose to follow their work. Subscribers may follow a Creator and,
+over time, individual Adventures as they move from planning through experience,
+publication, and preservation.
+
+AdventuresSuite should notify subscribers about meaningful published changes,
+not every draft edit. Consent, preferences, privacy, and immediate unsubscribe
+are platform responsibilities, while each Creator retains editorial control
+over which public updates are announced.
+
+Creators should also be able to turn approved Publications and photography into
+commercial products without disconnecting them from their originating
+Adventures. Initial Creator storefronts should focus on EPUB, PDF, printed books,
+and curated photography prints.
+
+Photography may become physical art or a separately licensed digital asset.
+Print ownership and usage rights are distinct. AdventuresSuite must preserve
+Creator branding, copyright, releases, product quality, customer trust, and
+provider independence throughout the commercial experience.
 
 ---
 

@@ -1,6 +1,6 @@
 # Domain Model
 
-**Version:** 1.2
+**Version:** 1.4
 
 **Status:** Approved
 
@@ -447,6 +447,106 @@ Examples:
 
 Organizations support collaboration through Users and permissions within that
 Creator.
+
+---
+
+# Subscriber
+
+A Subscriber is a person who has established a verified audience relationship
+with one or more Creators.
+
+A Subscriber is not automatically a Creator User and receives no authoring
+permissions. Subscriber identity may be platform-wide, while each audience
+relationship remains isolated by Creator.
+
+---
+
+# Subscription
+
+A Subscription records a Subscriber's consent to follow a Creator, Adventure,
+or future supported target.
+
+A Subscription belongs to a Creator boundary and includes its target, state,
+consent evidence, delivery preferences, and lifecycle timestamps.
+
+The first supported target should be Creator. Adventure-level following should
+be introduced after the foundation is proven.
+
+---
+
+# Notification Event
+
+A Notification Event records a meaningful subscriber-relevant public change,
+such as a new Adventure announcement, lifecycle transition, or publication.
+
+Draft saves and internal authoring changes are not Notification Events.
+
+Notification Events are durable and auditable. Delivery is asynchronous and
+must preserve Creator identity, consent, deduplication, and delivery history.
+
+---
+
+# Publication
+
+A Publication is an approved output derived from an Adventure, such as a web
+edition, EPUB, PDF, print-ready book, or photography collection.
+
+A Publication is not automatically a commercial Product.
+
+---
+
+# Edition
+
+An Edition identifies a particular version, format, language, or release of a
+Publication. Its generated files are protected or public Resources according to
+their publication and commercial state.
+
+---
+
+# Product
+
+A Product is a Creator-owned commercial item offered through a storefront. It
+may reference one or more Publications, Resources, services, or physical product
+configurations.
+
+Products do not own Adventure source content.
+
+---
+
+# Offer
+
+An Offer defines the price, currency, availability, market, effective dates,
+terms, and purchasable configuration of a Product.
+
+---
+
+# Order
+
+An Order records a customer transaction and its payment and fulfillment state.
+Orders retain a stable AdventuresSuite identity independent of external payment
+and fulfillment provider identifiers.
+
+---
+
+# Entitlement
+
+An Entitlement records a customer's right to access a purchased digital
+Publication, Resource, or protected experience.
+
+---
+
+# Fulfillment
+
+Fulfillment delivers a purchased Product. It may grant protected digital access
+or coordinate manufacture and shipment through a provider-neutral adapter.
+
+---
+
+# License
+
+A License records defined usage rights granted for a Resource such as a
+photograph. Purchasing a physical print does not grant copyright or reproduction
+rights unless an explicit License states otherwise.
 
 ---
 

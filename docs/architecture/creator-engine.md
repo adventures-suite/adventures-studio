@@ -39,6 +39,7 @@ The Creator Engine owns:
 - Host-to-Creator resolution
 - Creator Context creation
 - Creator brand configuration
+- Creator-owned homepage composition
 - Creator locale and time zone
 - Creator-scoped feature configuration
 
@@ -71,6 +72,7 @@ public sealed class Creator
     public IReadOnlyList<string> Domains { get; init; } = [];
     public CreatorStatus Status { get; init; } = CreatorStatus.Draft;
     public CreatorBrand Brand { get; init; } = new();
+    public CreatorHomepage Homepage { get; init; } = new();
     public CreatorFeatures Features { get; init; } = new();
     public string Locale { get; init; } = "en-US";
     public string TimeZone { get; init; } = "UTC";
@@ -115,9 +117,22 @@ Example logical structure:
   "timeZone": "America/Phoenix",
   "contentRoot": "Content/Volumes",
   "brand": {},
+  "homepage": {
+    "sections": [
+      "CurrentAdventure",
+      "PlannedAdventures",
+      "FeaturedDestinations"
+    ]
+  },
   "features": {}
 }
 ```
+
+Homepage composition is an ordered list of supported shared-section tokens.
+The Creator selects which sections appear and their order; shared Razor
+components own the implementation. Manifest validation rejects an empty list,
+unknown tokens, and duplicates so presentation cannot silently fall back to a
+flagship layout.
 
 Development aliases such as `localhost` belong in environment-specific
 configuration or an explicitly development-only manifest override.
@@ -184,6 +199,7 @@ downstream capabilities need, such as:
 - Requested host
 - Primary domain
 - Brand configuration
+- Homepage composition
 - Locale and time zone
 - Feature availability
 - Content-root identity during the JSON transition

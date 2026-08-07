@@ -1,10 +1,10 @@
 # AdventuresSuite Roadmap
 
-**Version:** 1.0
+**Version:** 1.2
 
 **Status:** Living Document
 
-**Last Updated:** July 31, 2026
+**Last Updated:** August 7, 2026
 
 ---
 
@@ -156,6 +156,43 @@ No more JSON editing.
 
 # Version 2.5
 
+## Subscription and Notification Engine
+
+Creators build permission-based relationships with subscribers who choose to
+follow their public work.
+
+Foundation
+
+- Publication domain events
+- Creator-scoped Subscriber and Subscription records
+- Verified consent and one-click unsubscribe
+- Notification preferences and policies
+- Transactional outbox and durable asynchronous delivery
+- Delivery history, retry, suppression, and deduplication
+
+Initial experience
+
+- Subscribe to a Creator by email
+- Creator-controlled publish-and-notify or silent publication
+- New Adventure and meaningful publication notifications
+- Subscriber preference management
+- Creator-scoped aggregate audience insights
+
+Next
+
+- Follow a specific Adventure
+- Lifecycle notifications from planning through publication
+- Digest delivery
+- In-application and mobile notifications
+
+Implementation depends on identity, database-backed publication, security, and
+consent foundations. The architecture is defined before Creator Workspace so
+publication workflows emit the correct durable events from the beginning.
+
+---
+
+# Version 2.6
+
 ## Adventure Advisor
 
 AI becomes deeply integrated.
@@ -216,7 +253,35 @@ Collaboration
 
 ## Marketplace
 
-Potential additions
+The Commerce Engine begins as focused Creator storefronts before expanding into
+a broader marketplace.
+
+Commerce foundation
+
+- Publication and Edition contracts
+- Creator-scoped Product catalogs and Offers
+- Merchant-of-record decision
+- Orders, refunds, and commercial audit history
+- Customer Entitlements and protected digital delivery
+- Provider-neutral payment and fulfillment adapters
+
+Initial products
+
+- EPUB and PDF editions
+- Printed books
+- Curated photography prints
+- Creator-branded storefront presentation
+
+Photography expansion
+
+- Resource rights and release records
+- Print-readiness validation and approved derivatives
+- Professional-laboratory fulfillment pilot
+- Neutral or Creator-branded packaging where partners support it
+- Physical samples and quality approval
+- Standardized photography licensing after legal review
+
+Potential later additions
 
 Themes
 
@@ -231,6 +296,11 @@ Professional layouts
 Partner integrations
 
 Travel planning packages
+
+The initial photography fulfillment workflow may be manual while quality,
+packaging, support, margin, and demand are validated. Automated integration must
+use a provider-neutral boundary rather than binding AdventuresSuite directly to
+Bay Photo or another laboratory.
 
 ---
 

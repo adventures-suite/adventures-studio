@@ -234,10 +234,23 @@ Potential marketplace products include:
 - Planning resources
 - Maps
 - Premium destination guides
+- EPUB and PDF editions
+- Printed books
+- Curated photography prints
+- Photography licenses
 
 Marketplace revenue should strengthen the ecosystem.
 
 It should never compromise customer trust.
+
+Creator storefronts should precede a broad marketplace. The first commercial
+experience should focus on products directly derived from a Creator's approved
+Publications and Resources.
+
+Before implementation, Adventures Studio must explicitly decide whether it or
+each Creator is the merchant of record. That decision determines responsibility
+for tax, refunds, disputes, fraud, customer support, Creator payouts, financial
+reporting, and consumer protection.
 
 ---
 
@@ -273,6 +286,10 @@ Potential partners include:
 - Educational institutions
 
 Partnerships should always improve the customer experience.
+
+Print and fulfillment providers must be integrated through replaceable platform
+adapters. White-label claims must distinguish generic unbranded packaging from
+custom Adventures Studio or Creator-branded packaging.
 
 Never interrupt it.
 
