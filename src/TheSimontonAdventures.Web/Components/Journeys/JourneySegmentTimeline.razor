@@ -1,5 +1,8 @@
 @using TheSimontonAdventures.Web.Models
 @using TheSimontonAdventures.Web.Components.Shared
+@using TheSimontonAdventures.Web.Creators
+@using TheSimontonAdventures.Web.Presentation
+@inject ICreatorContextAccessor CreatorContextAccessor
 
 @if (Journey is not null && Journey.Segments.Count > 0)
 {
@@ -70,7 +73,24 @@
                             </span>
                         }
 
-                        @if (!string.IsNullOrWhiteSpace(
+                        @if (segment.VisitSchedule is not null)
+                        {
+                            <span class="journey-segment__dates">
+                                @segment.VisitSchedule.FormatDateRange(
+                                    CreatorContextAccessor.Current.Locale)
+                            </span>
+
+                            var gangwayWindow =
+                                segment.VisitSchedule.FormatGangwayWindow(
+                                    CreatorContextAccessor.Current.Locale);
+                            @if (!string.IsNullOrWhiteSpace(gangwayWindow))
+                            {
+                                <span class="journey-segment__gangway">
+                                    @gangwayWindow
+                                </span>
+                            }
+                        }
+                        else if (!string.IsNullOrWhiteSpace(
                             segment.DepartureDate))
                         {
                             <span class="journey-segment__dates">

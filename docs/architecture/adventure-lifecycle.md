@@ -133,6 +133,15 @@ Weather
 
 The AI assists throughout planning.
 
+Destination plans use date-only arrival and departure values. They describe
+the expected local calendar dates and may change as the itinerary develops.
+They are not instants and are not converted between time zones.
+
+Journey visits add operational local timing for a particular itinerary. Cruise
+port calls may include arrival, gangway down, gangway up, and departure times.
+These remain provisional during planning, use the destination's IANA time
+zone, and must not be copied into the reusable Destination as permanent timing.
+
 ---
 
 # Adventure Status
@@ -184,6 +193,10 @@ Journal prompts
 Daily summaries
 
 Travel continues until the adventure ends.
+
+After travel, a destination may record the authoritative date-only range that
+was actually visited. Planned and visited ranges remain separate so the
+preserved story can reflect what occurred without rewriting the original plan.
 
 ---
 
@@ -413,6 +426,13 @@ revisions.
 
 Notifications occur only after successful publication or another explicit
 public event. Minor corrections may be published silently.
+
+Destination audit timestamps and publication timestamps are content metadata,
+not deployment metadata. During JSON-backed authoring they are maintained by
+authors and must change only for meaningful content or publication activity.
+They become system-controlled with database-backed publishing. In particular,
+`LastPublishedAtUtc` does not automatically produce a subscriber notification;
+notification requires an explicit public domain event and applicable policy.
 
 ---
 

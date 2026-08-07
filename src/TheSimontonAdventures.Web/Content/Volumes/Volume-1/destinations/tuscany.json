@@ -8,6 +8,7 @@
   "title": "Tuscany",
   "subtitle": "Rolling Hills and Timeless Vineyards",
   "summary": "Tuscany gave us a slower rhythm after the energy of Florence. A road through the vines led us into rolling hills, olive groves, cypress-lined gardens, and a working winery where the landscape and the traditions behind each bottle became part of the same story.",
+  "timeZone": "Europe/Rome",
   "heroResourceId": "resource_tuscany_hero",
   "published": true,
   "featured": true,

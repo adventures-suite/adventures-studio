@@ -165,6 +165,10 @@ public sealed class CreatorContentValidator : ICreatorContentValidator
 
             foreach (var destination in destinations)
             {
+                ValidateDestinationTemporalMetadata(
+                    creatorId,
+                    destination,
+                    issues);
                 await ValidateDestinationImagesAsync(
                     creatorId,
                     destination,
@@ -209,6 +213,14 @@ public sealed class CreatorContentValidator : ICreatorContentValidator
                         "missing-journey-reference",
                         $"Volume '{volume.Slug}' references missing journey " +
                         $"'{reference.Slug}'.",
+                        issues);
+                }
+                else
+                {
+                    ValidateJourneyVisitSchedules(
+                        creatorId,
+                        volume,
+                        journey,
                         issues);
                 }
             }
@@ -257,14 +269,14 @@ public sealed class CreatorContentValidator : ICreatorContentValidator
             creatorId,
             destination.HeroResourceId,
             $"Destination '{destination.Slug}' hero",
-            required: true,
+            required: destination.Published,
             issues,
             cancellationToken);
         await ValidateResourceImageAsync(
             creatorId,
             destination.HomepageResourceId,
             $"Destination '{destination.Slug}' homepage",
-            required: true,
+            required: destination.Published,
             issues,
             cancellationToken);
 
@@ -291,6 +303,349 @@ public sealed class CreatorContentValidator : ICreatorContentValidator
         }
     }
 
+    private static void ValidateDestinationTemporalMetadata(
+        CreatorId creatorId,
+        Destination destination,
+        ICollection<ContentValidationIssue> issues)
+    {
+        var identity = RouteKey(destination.CountrySlug, destination.Slug);
+
+        if (!string.IsNullOrWhiteSpace(destination.TimeZone)
+            && !IsValidIanaTimeZone(destination.TimeZone))
+        {
+            AddDestinationIssue(
+                creatorId,
+                identity,
+                "invalid-destination-time-zone",
+                $"time zone '{destination.TimeZone}' is not a valid IANA identifier",
+                issues);
+        }
+
+        ValidateDateRange(
+            creatorId,
+            identity,
+            "planned",
+            destination.PlannedArrivalDate,
+            destination.PlannedDepartureDate,
+            issues);
+        ValidateDateRange(
+            creatorId,
+            identity,
+            "visited",
+            destination.VisitedFrom,
+            destination.VisitedTo,
+            issues);
+
+        ValidateUtcTimestamp(
+            creatorId,
+            identity,
+            "createdAtUtc",
+            destination.CreatedAtUtc,
+            issues);
+        ValidateUtcTimestamp(
+            creatorId,
+            identity,
+            "updatedAtUtc",
+            destination.UpdatedAtUtc,
+            issues);
+        ValidateUtcTimestamp(
+            creatorId,
+            identity,
+            "publishedAtUtc",
+            destination.PublishedAtUtc,
+            issues);
+        ValidateUtcTimestamp(
+            creatorId,
+            identity,
+            "lastPublishedAtUtc",
+            destination.LastPublishedAtUtc,
+            issues);
+
+        ValidateTimestampOrder(
+            creatorId,
+            identity,
+            "updatedAtUtc",
+            destination.UpdatedAtUtc,
+            "createdAtUtc",
+            destination.CreatedAtUtc,
+            issues);
+        ValidateTimestampOrder(
+            creatorId,
+            identity,
+            "publishedAtUtc",
+            destination.PublishedAtUtc,
+            "createdAtUtc",
+            destination.CreatedAtUtc,
+            issues);
+
+        if (destination.LastPublishedAtUtc is not null
+            && destination.PublishedAtUtc is null)
+        {
+            AddDestinationIssue(
+                creatorId,
+                identity,
+                "missing-first-publication-timestamp",
+                "lastPublishedAtUtc requires publishedAtUtc",
+                issues);
+        }
+        else
+        {
+            ValidateTimestampOrder(
+                creatorId,
+                identity,
+                "lastPublishedAtUtc",
+                destination.LastPublishedAtUtc,
+                "publishedAtUtc",
+                destination.PublishedAtUtc,
+                issues);
+        }
+    }
+
+    private static bool IsValidIanaTimeZone(string timeZone)
+    {
+        if (!TimeZoneInfo.TryConvertIanaIdToWindowsId(timeZone, out _))
+        {
+            return false;
+        }
+
+        try
+        {
+            _ = TimeZoneInfo.FindSystemTimeZoneById(timeZone);
+            return true;
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            return false;
+        }
+        catch (InvalidTimeZoneException)
+        {
+            return false;
+        }
+    }
+
+    private static void ValidateDateRange(
+        CreatorId creatorId,
+        string destinationIdentity,
+        string rangeName,
+        DateOnly? from,
+        DateOnly? to,
+        ICollection<ContentValidationIssue> issues)
+    {
+        if (from.HasValue != to.HasValue)
+        {
+            AddDestinationIssue(
+                creatorId,
+                destinationIdentity,
+                $"incomplete-{rangeName}-date-range",
+                $"the {rangeName} date range requires both dates",
+                issues);
+            return;
+        }
+
+        if (from is not null && to < from)
+        {
+            AddDestinationIssue(
+                creatorId,
+                destinationIdentity,
+                $"reversed-{rangeName}-date-range",
+                $"the {rangeName} end date cannot precede its start date",
+                issues);
+        }
+    }
+
+    private static void ValidateUtcTimestamp(
+        CreatorId creatorId,
+        string destinationIdentity,
+        string propertyName,
+        DateTimeOffset? value,
+        ICollection<ContentValidationIssue> issues)
+    {
+        if (value is not null && value.Value.Offset != TimeSpan.Zero)
+        {
+            AddDestinationIssue(
+                creatorId,
+                destinationIdentity,
+                "non-utc-content-timestamp",
+                $"{propertyName} must have a zero UTC offset",
+                issues);
+        }
+    }
+
+    private static void ValidateTimestampOrder(
+        CreatorId creatorId,
+        string destinationIdentity,
+        string laterPropertyName,
+        DateTimeOffset? later,
+        string earlierPropertyName,
+        DateTimeOffset? earlier,
+        ICollection<ContentValidationIssue> issues)
+    {
+        if (later is not null && earlier is not null && later < earlier)
+        {
+            AddDestinationIssue(
+                creatorId,
+                destinationIdentity,
+                "invalid-content-timestamp-order",
+                $"{laterPropertyName} cannot precede {earlierPropertyName}",
+                issues);
+        }
+    }
+
+    private static void AddDestinationIssue(
+        CreatorId creatorId,
+        string destinationIdentity,
+        string code,
+        string detail,
+        ICollection<ContentValidationIssue> issues) =>
+        AddIssue(
+            creatorId,
+            ContentValidationSeverity.Error,
+            code,
+            $"Creator '{creatorId}' destination '{destinationIdentity}': {detail}.",
+            issues);
+
+    private static void ValidateJourneyVisitSchedules(
+        CreatorId creatorId,
+        Volume volume,
+        Journey journey,
+        ICollection<ContentValidationIssue> issues)
+    {
+        foreach (var segment in journey.Segments.Where(segment =>
+            segment.VisitSchedule is not null))
+        {
+            var schedule = segment.VisitSchedule!;
+            var identity =
+                $"volume '{volume.Slug}' journey '{journey.Slug}' " +
+                $"segment {segment.DisplayOrder}";
+
+            if (string.IsNullOrWhiteSpace(schedule.TimeZone)
+                || !IsValidIanaTimeZone(schedule.TimeZone))
+            {
+                AddJourneyScheduleIssue(
+                    creatorId,
+                    identity,
+                    "invalid-visit-time-zone",
+                    $"time zone '{schedule.TimeZone}' is not a valid IANA identifier",
+                    issues);
+            }
+
+            if (schedule.PlannedArrivalDate is null
+                || schedule.PlannedDepartureDate is null)
+            {
+                AddJourneyScheduleIssue(
+                    creatorId,
+                    identity,
+                    "incomplete-visit-date-range",
+                    "visitSchedule requires plannedArrivalDate and plannedDepartureDate",
+                    issues);
+                continue;
+            }
+
+            if (schedule.PlannedDepartureDate < schedule.PlannedArrivalDate)
+            {
+                AddJourneyScheduleIssue(
+                    creatorId,
+                    identity,
+                    "reversed-visit-date-range",
+                    "plannedDepartureDate cannot precede plannedArrivalDate",
+                    issues);
+                continue;
+            }
+
+            if (schedule.PlannedGangwayDownTime.HasValue
+                != schedule.PlannedGangwayUpTime.HasValue)
+            {
+                AddJourneyScheduleIssue(
+                    creatorId,
+                    identity,
+                    "incomplete-gangway-window",
+                    "gangway down and gangway up times must be supplied together",
+                    issues);
+            }
+
+            ValidateVisitScheduleOrder(
+                creatorId,
+                identity,
+                schedule,
+                issues);
+        }
+    }
+
+    private static void ValidateVisitScheduleOrder(
+        CreatorId creatorId,
+        string identity,
+        JourneyVisitSchedule schedule,
+        ICollection<ContentValidationIssue> issues)
+    {
+        var arrivalDate = schedule.PlannedArrivalDate!.Value;
+        var departureDate = schedule.PlannedDepartureDate!.Value;
+        DateTime? arrival = schedule.PlannedArrivalTime is null
+            ? null
+            : arrivalDate.ToDateTime(schedule.PlannedArrivalTime.Value);
+        DateTime? gangwayDown = schedule.PlannedGangwayDownTime is null
+            ? null
+            : arrivalDate.ToDateTime(schedule.PlannedGangwayDownTime.Value);
+        DateTime? gangwayUp = schedule.PlannedGangwayUpTime is null
+            ? null
+            : departureDate.ToDateTime(schedule.PlannedGangwayUpTime.Value);
+        DateTime? departure = schedule.PlannedDepartureTime is null
+            ? null
+            : departureDate.ToDateTime(schedule.PlannedDepartureTime.Value);
+
+        if (arrival is not null && departure is not null && departure < arrival)
+        {
+            AddJourneyScheduleIssue(
+                creatorId,
+                identity,
+                "reversed-visit-schedule",
+                "planned departure cannot precede planned arrival",
+                issues);
+        }
+
+        if (arrival is not null && gangwayDown is not null && gangwayDown < arrival)
+        {
+            AddJourneyScheduleIssue(
+                creatorId,
+                identity,
+                "gangway-before-arrival",
+                "gangway down cannot precede planned arrival",
+                issues);
+        }
+
+        if (gangwayDown is not null && gangwayUp is not null && gangwayUp < gangwayDown)
+        {
+            AddJourneyScheduleIssue(
+                creatorId,
+                identity,
+                "reversed-gangway-window",
+                "gangway up cannot precede gangway down",
+                issues);
+        }
+
+        if (gangwayUp is not null && departure is not null && gangwayUp > departure)
+        {
+            AddJourneyScheduleIssue(
+                creatorId,
+                identity,
+                "gangway-after-departure",
+                "gangway up cannot follow planned departure",
+                issues);
+        }
+    }
+
+    private static void AddJourneyScheduleIssue(
+        CreatorId creatorId,
+        string identity,
+        string code,
+        string detail,
+        ICollection<ContentValidationIssue> issues) =>
+        AddIssue(
+            creatorId,
+            ContentValidationSeverity.Error,
+            code,
+            $"Creator '{creatorId}' {identity}: {detail}.",
+            issues);
+
     private async Task ValidateResourceImageAsync(
         CreatorId creatorId,
         ResourceId? resourceId,
@@ -299,7 +654,7 @@ public sealed class CreatorContentValidator : ICreatorContentValidator
         ICollection<ContentValidationIssue> issues,
         CancellationToken cancellationToken)
     {
-        if (resourceId is null || resourceId == default)
+        if (resourceId is null || resourceId.Value == default)
         {
             if (required)
             {

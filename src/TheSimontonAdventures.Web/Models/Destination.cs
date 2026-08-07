@@ -1,4 +1,5 @@
 using TheSimontonAdventures.Web.Resources;
+using System.Text.Json.Serialization;
 
 namespace TheSimontonAdventures.Web.Models;
 
@@ -58,6 +59,48 @@ public sealed class Destination
 
     /// <summary>Gets the optional summary optimized for cards and homepage use.</summary>
     public string HomepageSummary { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Gets the optional IANA time-zone identifier for the destination.
+    /// </summary>
+    [JsonPropertyName("timeZone")]
+    public string TimeZone { get; init; } = string.Empty;
+
+    /// <summary>Gets the expected first date at the destination.</summary>
+    [JsonPropertyName("plannedArrivalDate")]
+    public DateOnly? PlannedArrivalDate { get; init; }
+
+    /// <summary>Gets the expected final date at the destination.</summary>
+    [JsonPropertyName("plannedDepartureDate")]
+    public DateOnly? PlannedDepartureDate { get; init; }
+
+    /// <summary>Gets the first date actually spent at the destination.</summary>
+    [JsonPropertyName("visitedFrom")]
+    public DateOnly? VisitedFrom { get; init; }
+
+    /// <summary>Gets the final date actually spent at the destination.</summary>
+    [JsonPropertyName("visitedTo")]
+    public DateOnly? VisitedTo { get; init; }
+
+    /// <summary>Gets the UTC timestamp when this content record was authored.</summary>
+    [JsonPropertyName("createdAtUtc")]
+    [JsonConverter(typeof(UtcDateTimeOffsetJsonConverter))]
+    public DateTimeOffset? CreatedAtUtc { get; init; }
+
+    /// <summary>Gets the UTC timestamp of the latest meaningful authored change.</summary>
+    [JsonPropertyName("updatedAtUtc")]
+    [JsonConverter(typeof(UtcDateTimeOffsetJsonConverter))]
+    public DateTimeOffset? UpdatedAtUtc { get; init; }
+
+    /// <summary>Gets the UTC timestamp of the destination's first publication.</summary>
+    [JsonPropertyName("publishedAtUtc")]
+    [JsonConverter(typeof(UtcDateTimeOffsetJsonConverter))]
+    public DateTimeOffset? PublishedAtUtc { get; init; }
+
+    /// <summary>Gets the UTC timestamp of the latest meaningful publication.</summary>
+    [JsonPropertyName("lastPublishedAtUtc")]
+    [JsonConverter(typeof(UtcDateTimeOffsetJsonConverter))]
+    public DateTimeOffset? LastPublishedAtUtc { get; init; }
 
     /// <summary>Gets the ordered editorial story sections.</summary>
     public List<DestinationSection> Sections { get; init; } = [];

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using TheSimontonAdventures.Web.Creators;
 using TheSimontonAdventures.Web.Models;
@@ -164,6 +165,239 @@ public sealed class CreatorScopedTravelContentServiceTests
             issue.CreatorId == creatorId
             && issue.Code == "missing-destination-reference"
             && issue.Severity == ContentValidationSeverity.Error);
+    }
+
+    /// <summary>Ensures a valid IANA destination time zone passes validation.</summary>
+    [Fact]
+    public async Task ValidateAsync_ValidIanaTimeZone_ReturnsNoTimeZoneError()
+    {
+        using var content = new TemporaryCreatorContent();
+        var creatorId = new CreatorId("creator_one_01");
+        await content.AddCreatorAsync(creatorId, "one", "Athens");
+        content.UpdateDestination("one", "athens", manifest =>
+            manifest["timeZone"] = "Europe/Athens");
+
+        var result = await content.CreateValidator().ValidateAsync(creatorId);
+
+        Assert.DoesNotContain(
+            result.Issues,
+            issue => issue.Code == "invalid-destination-time-zone");
+    }
+
+    /// <summary>Ensures an invalid zone is not replaced with Creator defaults.</summary>
+    [Fact]
+    public async Task ValidateAsync_InvalidTimeZone_ReturnsScopedError()
+    {
+        using var content = new TemporaryCreatorContent();
+        var creatorId = new CreatorId("creator_one_01");
+        await content.AddCreatorAsync(creatorId, "one", "Athens");
+        content.UpdateDestination("one", "athens", manifest =>
+            manifest["timeZone"] = "Mars/Olympus_Mons");
+
+        var result = await content.CreateValidator().ValidateAsync(creatorId);
+
+        var issue = Assert.Single(result.Issues, issue =>
+            issue.Code == "invalid-destination-time-zone");
+        Assert.Equal(creatorId, issue.CreatorId);
+        Assert.Contains("greece/athens", issue.Message);
+    }
+
+    /// <summary>Ensures reversed planned and visited ranges are rejected.</summary>
+    [Theory]
+    [InlineData("plannedArrivalDate", "plannedDepartureDate", "reversed-planned-date-range")]
+    [InlineData("visitedFrom", "visitedTo", "reversed-visited-date-range")]
+    public async Task ValidateAsync_ReversedDateRange_ReturnsError(
+        string fromProperty,
+        string toProperty,
+        string expectedCode)
+    {
+        using var content = new TemporaryCreatorContent();
+        var creatorId = new CreatorId("creator_one_01");
+        await content.AddCreatorAsync(creatorId, "one", "Athens");
+        content.UpdateDestination("one", "athens", manifest =>
+        {
+            manifest[fromProperty] = "2027-10-29";
+            manifest[toProperty] = "2027-10-25";
+        });
+
+        var result = await content.CreateValidator().ValidateAsync(creatorId);
+
+        Assert.Contains(result.Issues, issue => issue.Code == expectedCode);
+    }
+
+    /// <summary>Ensures either half of a date range cannot be authored alone.</summary>
+    [Theory]
+    [InlineData("plannedArrivalDate", "incomplete-planned-date-range")]
+    [InlineData("plannedDepartureDate", "incomplete-planned-date-range")]
+    [InlineData("visitedFrom", "incomplete-visited-date-range")]
+    [InlineData("visitedTo", "incomplete-visited-date-range")]
+    public async Task ValidateAsync_IncompleteDateRange_ReturnsError(
+        string propertyName,
+        string expectedCode)
+    {
+        using var content = new TemporaryCreatorContent();
+        var creatorId = new CreatorId("creator_one_01");
+        await content.AddCreatorAsync(creatorId, "one", "Athens");
+        content.UpdateDestination("one", "athens", manifest =>
+            manifest[propertyName] = "2027-10-25");
+
+        var result = await content.CreateValidator().ValidateAsync(creatorId);
+
+        Assert.Contains(result.Issues, issue => issue.Code == expectedCode);
+    }
+
+    /// <summary>Ensures every lifecycle timestamp requires a zero UTC offset.</summary>
+    [Theory]
+    [InlineData("createdAtUtc")]
+    [InlineData("updatedAtUtc")]
+    [InlineData("publishedAtUtc")]
+    [InlineData("lastPublishedAtUtc")]
+    public async Task ValidateAsync_NonUtcLifecycleTimestamp_ReturnsError(
+        string propertyName)
+    {
+        using var content = new TemporaryCreatorContent();
+        var creatorId = new CreatorId("creator_one_01");
+        await content.AddCreatorAsync(creatorId, "one", "Athens");
+        content.UpdateDestination("one", "athens", manifest =>
+        {
+            manifest["publishedAtUtc"] = "2026-08-07T18:30:00Z";
+            manifest[propertyName] = "2026-08-07T18:30:00-07:00";
+        });
+
+        var result = await content.CreateValidator().ValidateAsync(creatorId);
+
+        Assert.Contains(
+            result.Issues,
+            issue => issue.Code == "non-utc-content-timestamp"
+                && issue.Message.Contains(propertyName));
+    }
+
+    /// <summary>Ensures authored and publication timestamp ordering is enforced.</summary>
+    [Theory]
+    [InlineData("updatedAtUtc", "createdAtUtc")]
+    [InlineData("publishedAtUtc", "createdAtUtc")]
+    [InlineData("lastPublishedAtUtc", "publishedAtUtc")]
+    public async Task ValidateAsync_ReversedLifecycleTimestamps_ReturnsError(
+        string laterProperty,
+        string earlierProperty)
+    {
+        using var content = new TemporaryCreatorContent();
+        var creatorId = new CreatorId("creator_one_01");
+        await content.AddCreatorAsync(creatorId, "one", "Athens");
+        content.UpdateDestination("one", "athens", manifest =>
+        {
+            manifest[earlierProperty] = "2026-08-08T18:30:00Z";
+            manifest[laterProperty] = "2026-08-07T18:30:00Z";
+        });
+
+        var result = await content.CreateValidator().ValidateAsync(creatorId);
+
+        Assert.Contains(
+            result.Issues,
+            issue => issue.Code == "invalid-content-timestamp-order"
+                && issue.Message.Contains(laterProperty));
+    }
+
+    /// <summary>Ensures latest publication metadata requires first publication.</summary>
+    [Fact]
+    public async Task ValidateAsync_LastPublishedWithoutPublished_ReturnsError()
+    {
+        using var content = new TemporaryCreatorContent();
+        var creatorId = new CreatorId("creator_one_01");
+        await content.AddCreatorAsync(creatorId, "one", "Athens");
+        content.UpdateDestination("one", "athens", manifest =>
+            manifest["lastPublishedAtUtc"] = "2026-08-07T18:30:00Z");
+
+        var result = await content.CreateValidator().ValidateAsync(creatorId);
+
+        Assert.Contains(
+            result.Issues,
+            issue => issue.Code == "missing-first-publication-timestamp");
+    }
+
+    /// <summary>Ensures a valid typed port call is loaded and accepted.</summary>
+    [Fact]
+    public async Task ValidateAsync_ValidJourneyVisitSchedule_ReturnsNoScheduleErrors()
+    {
+        using var content = new TemporaryCreatorContent();
+        var creatorId = new CreatorId("creator_one_01");
+        await content.AddCreatorAsync(creatorId, "one", "Athens");
+        content.AddJourneySchedule("one");
+
+        var journey = await content.CreateService().GetJourneyAsync(
+            creatorId,
+            "shared-volume",
+            "test-journey");
+        var result = await content.CreateValidator().ValidateAsync(creatorId);
+
+        Assert.Equal(
+            new TimeOnly(8, 0),
+            journey?.Segments.Single().VisitSchedule?.PlannedGangwayDownTime);
+        Assert.DoesNotContain(
+            result.Issues,
+            issue => issue.Code.Contains("visit", StringComparison.Ordinal)
+                || issue.Code.Contains("gangway", StringComparison.Ordinal));
+    }
+
+    /// <summary>Ensures visit schedules require a valid IANA time zone.</summary>
+    [Fact]
+    public async Task ValidateAsync_InvalidVisitTimeZone_ReturnsScopedError()
+    {
+        using var content = new TemporaryCreatorContent();
+        var creatorId = new CreatorId("creator_one_01");
+        await content.AddCreatorAsync(creatorId, "one", "Athens");
+        content.AddJourneySchedule("one", schedule =>
+            schedule["timeZone"] = "Ship/Imaginary");
+
+        var result = await content.CreateValidator().ValidateAsync(creatorId);
+
+        var issue = Assert.Single(
+            result.Issues,
+            issue => issue.Code == "invalid-visit-time-zone");
+        Assert.Equal(creatorId, issue.CreatorId);
+        Assert.Contains("test-journey", issue.Message);
+    }
+
+    /// <summary>Ensures typed visit dates are complete and ordered.</summary>
+    [Theory]
+    [InlineData("plannedDepartureDate", null, "incomplete-visit-date-range")]
+    [InlineData("plannedDepartureDate", "2027-05-19", "reversed-visit-date-range")]
+    public async Task ValidateAsync_InvalidVisitDates_ReturnsError(
+        string propertyName,
+        string? value,
+        string expectedCode)
+    {
+        using var content = new TemporaryCreatorContent();
+        var creatorId = new CreatorId("creator_one_01");
+        await content.AddCreatorAsync(creatorId, "one", "Athens");
+        content.AddJourneySchedule("one", schedule =>
+            schedule[propertyName] = value);
+
+        var result = await content.CreateValidator().ValidateAsync(creatorId);
+
+        Assert.Contains(result.Issues, issue => issue.Code == expectedCode);
+    }
+
+    /// <summary>Ensures gangway operations remain within arrival and departure.</summary>
+    [Theory]
+    [InlineData("plannedGangwayUpTime", null, "incomplete-gangway-window")]
+    [InlineData("plannedGangwayDownTime", "06:00:00", "gangway-before-arrival")]
+    [InlineData("plannedGangwayUpTime", "07:30:00", "reversed-gangway-window")]
+    [InlineData("plannedGangwayUpTime", "19:00:00", "gangway-after-departure")]
+    public async Task ValidateAsync_InvalidGangwayWindow_ReturnsError(
+        string propertyName,
+        string? value,
+        string expectedCode)
+    {
+        using var content = new TemporaryCreatorContent();
+        var creatorId = new CreatorId("creator_one_01");
+        await content.AddCreatorAsync(creatorId, "one", "Athens");
+        content.AddJourneySchedule("one", schedule =>
+            schedule[propertyName] = value);
+
+        var result = await content.CreateValidator().ValidateAsync(creatorId);
+
+        Assert.Contains(result.Issues, issue => issue.Code == expectedCode);
     }
 
     /// <summary>Ensures a missing section resource blocks startup.</summary>
@@ -472,6 +706,99 @@ public sealed class CreatorScopedTravelContentServiceTests
                 "Volume-1",
                 "destinations",
                 $"{destinationSlug}.json"));
+        }
+
+        internal void UpdateDestination(
+            string creatorSlug,
+            string destinationSlug,
+            Action<JsonObject> update)
+        {
+            var path = Path.Combine(
+                RootPath,
+                "Content",
+                creatorSlug,
+                "Volumes",
+                "Volume-1",
+                "destinations",
+                $"{destinationSlug}.json");
+            var manifest = JsonNode.Parse(File.ReadAllText(path))?.AsObject()
+                ?? throw new InvalidDataException(
+                    $"Destination fixture '{path}' is not a JSON object.");
+
+            update(manifest);
+            File.WriteAllText(
+                path,
+                manifest.ToJsonString(SerializerOptions));
+        }
+
+        internal void AddJourneySchedule(
+            string creatorSlug,
+            Action<JsonObject>? update = null)
+        {
+            var volumeDirectory = Path.Combine(
+                RootPath,
+                "Content",
+                creatorSlug,
+                "Volumes",
+                "Volume-1");
+            var volumePath = Path.Combine(volumeDirectory, "volume.json");
+            var volume = JsonNode.Parse(File.ReadAllText(volumePath))?.AsObject()
+                ?? throw new InvalidDataException(
+                    $"Volume fixture '{volumePath}' is not a JSON object.");
+            volume["journeys"] = new JsonArray
+            {
+                new JsonObject
+                {
+                    ["slug"] = "test-journey",
+                    ["title"] = "Test journey",
+                    ["journeyType"] = "Editorial",
+                    ["featured"] = true,
+                    ["displayOrder"] = 1
+                }
+            };
+            File.WriteAllText(
+                volumePath,
+                volume.ToJsonString(SerializerOptions));
+
+            var schedule = new JsonObject
+            {
+                ["timeZone"] = "America/St_Thomas",
+                ["plannedArrivalDate"] = "2027-05-20",
+                ["plannedArrivalTime"] = "07:00:00",
+                ["plannedGangwayDownTime"] = "08:00:00",
+                ["plannedGangwayUpTime"] = "17:00:00",
+                ["plannedDepartureDate"] = "2027-05-20",
+                ["plannedDepartureTime"] = "18:00:00"
+            };
+            update?.Invoke(schedule);
+
+            var journey = new JsonObject
+            {
+                ["slug"] = "test-journey",
+                ["volumeSlug"] = "shared-volume",
+                ["title"] = "Test journey",
+                ["journeyType"] = "Editorial",
+                ["published"] = true,
+                ["displayOrder"] = 1,
+                ["segments"] = new JsonArray
+                {
+                    new JsonObject
+                    {
+                        ["from"] = "Miami",
+                        ["to"] = "Charlotte Amalie",
+                        ["travelMode"] = "Cruise",
+                        ["countrySlug"] = "greece",
+                        ["destinationSlug"] = "athens",
+                        ["displayOrder"] = 1,
+                        ["visitSchedule"] = schedule
+                    }
+                }
+            };
+            var journeyDirectory = Path.Combine(volumeDirectory, "journeys");
+            Directory.CreateDirectory(journeyDirectory);
+            File.WriteAllText(
+                Path.Combine(journeyDirectory, "test-journey.json"),
+                journey.ToJsonString(SerializerOptions));
         }
 
         internal void DuplicateVolume(string creatorSlug)

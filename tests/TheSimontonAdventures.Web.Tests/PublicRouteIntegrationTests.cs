@@ -35,6 +35,22 @@ public sealed class PublicRouteIntegrationTests : IClassFixture<PublicRouteInteg
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
+    /// <summary>
+    /// Ensures deployment health reports successful completion of both
+    /// required startup-validation stages.
+    /// </summary>
+    [Fact]
+    public async Task HealthEndpoint_ReportsStartupValidationReadiness()
+    {
+        using var response = await SendAsync("localhost", "/health");
+        var payload = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("\"status\":\"Healthy\"", payload);
+        Assert.Contains("\"resourcesValidated\":true", payload);
+        Assert.Contains("\"creatorContentValidated\":true", payload);
+    }
+
     /// <summary>Ensures a draft Creator-owned volume is not served publicly.</summary>
     [Fact]
     public async Task DraftVolume_ReturnsNotFound()
@@ -197,8 +213,27 @@ public sealed class PublicRouteIntegrationTests : IClassFixture<PublicRouteInteg
         Assert.Contains("Proposed itinerary", html);
         Assert.Contains("Destinations in the plan", html);
         Assert.Contains("Perfect Day CocoCay", html);
+        Assert.Contains("5/15/2027", html);
+        Assert.Contains("5/19/2027", html);
+        Assert.Contains("5/20/2027", html);
+        Assert.Contains("5/22/2027", html);
+        Assert.DoesNotContain("Gangway down", html);
         Assert.Contains("details may change", html, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Flight and arrival details remain to be confirmed", html);
+    }
+
+    /// <summary>
+    /// Ensures a planning-stage destination resolves itinerary references
+    /// without publishing a premature public destination page.
+    /// </summary>
+    [Fact]
+    public async Task PlanningStageDestination_ReturnsNotFound()
+    {
+        using var response = await SendAsync(
+            "localhost",
+            "/volumes/spain-trans-atlantic-cruise/spain/barcelona");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     /// <summary>

@@ -8,6 +8,7 @@
   "title": "Athens Field Notes",
   "subtitle": "The same public slug, owned by a different Creator",
   "summary": "This concise destination proves that two Creators can independently own Athens without sharing content, branding, navigation, or public-address targets.",
+  "timeZone": "Europe/Athens",
   "heroResourceId": "resource_demo_athens_hero",
   "published": true,
   "featured": true,

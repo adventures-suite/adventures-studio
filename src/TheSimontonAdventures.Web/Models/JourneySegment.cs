@@ -31,6 +31,12 @@ public sealed class JourneySegment
     /// <summary>Gets the authored arrival date or time text.</summary>
     public string ArrivalDate { get; init; } = string.Empty;
 
+    /// <summary>
+    /// Gets the typed local visit schedule for the destination reached by this
+    /// segment.
+    /// </summary>
+    public JourneyVisitSchedule? VisitSchedule { get; init; }
+
     /// <summary>Gets the country route segment for a linked destination.</summary>
     public string CountrySlug { get; init; } = string.Empty;
 

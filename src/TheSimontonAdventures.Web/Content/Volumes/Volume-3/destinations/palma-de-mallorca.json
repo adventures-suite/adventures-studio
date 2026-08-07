@@ -1,0 +1,16 @@
+{
+  "volumeSlug": "spain-trans-atlantic-cruise",
+  "country": "Spain",
+  "countrySlug": "spain",
+  "city": "Palma de Mallorca",
+  "slug": "palma-de-mallorca",
+  "qrSlug": "palma-de-mallorca",
+  "title": "Palma de Mallorca",
+  "subtitle": "A proposed Mediterranean port",
+  "summary": "Palma de Mallorca is included in the working cruise itinerary. Port timing and shore plans may change.",
+  "timeZone": "Europe/Madrid",
+  "plannedArrivalDate": "2027-10-30",
+  "plannedDepartureDate": "2027-10-30",
+  "published": false,
+  "featured": false
+}

@@ -1,0 +1,16 @@
+{
+  "volumeSlug": "spain-trans-atlantic-cruise",
+  "country": "Spain",
+  "countrySlug": "spain",
+  "city": "Málaga",
+  "slug": "malaga",
+  "qrSlug": "malaga",
+  "title": "Málaga",
+  "subtitle": "A proposed Spanish port",
+  "summary": "Málaga is included in the working cruise itinerary. Excursions and the final port schedule remain to be confirmed.",
+  "timeZone": "Europe/Madrid",
+  "plannedArrivalDate": "2027-11-01",
+  "plannedDepartureDate": "2027-11-01",
+  "published": false,
+  "featured": false
+}

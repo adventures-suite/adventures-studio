@@ -1,0 +1,16 @@
+{
+  "volumeSlug": "spain-trans-atlantic-cruise",
+  "country": "Spain",
+  "countrySlug": "spain",
+  "city": "Alicante",
+  "slug": "alicante",
+  "qrSlug": "alicante",
+  "title": "Alicante",
+  "subtitle": "A proposed Spanish port",
+  "summary": "Alicante is included in the proposed cruise itinerary. Excursions and other details remain under consideration.",
+  "timeZone": "Europe/Madrid",
+  "plannedArrivalDate": "2027-10-31",
+  "plannedDepartureDate": "2027-10-31",
+  "published": false,
+  "featured": false
+}

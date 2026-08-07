@@ -16,6 +16,13 @@
       "to": "Barcelona",
       "travelMode": "Flight",
       "travelDescription": "Air travel to Spain",
+      "departureDate": "October 25, 2027",
+      "arrivalDate": "October 26, 2027",
+      "visitSchedule": {
+        "timeZone": "Europe/Madrid",
+        "plannedArrivalDate": "2027-10-26",
+        "plannedDepartureDate": "2027-10-29"
+      },
       "countrySlug": "spain",
       "destinationSlug": "barcelona",
       "notes": "Flights and the pre-cruise stay remain to be confirmed.",
@@ -26,6 +33,13 @@
       "to": "Palma de Mallorca",
       "travelMode": "Cruise",
       "travelDescription": "Royal Caribbean trans-Atlantic cruise",
+      "departureDate": "October 29, 2027",
+      "arrivalDate": "October 30, 2027",
+      "visitSchedule": {
+        "timeZone": "Europe/Madrid",
+        "plannedArrivalDate": "2027-10-30",
+        "plannedDepartureDate": "2027-10-30"
+      },
       "countrySlug": "spain",
       "destinationSlug": "palma-de-mallorca",
       "notes": "Port timing and shore plans may change.",
@@ -36,6 +50,13 @@
       "to": "Alicante",
       "travelMode": "Cruise",
       "travelDescription": "Royal Caribbean trans-Atlantic cruise",
+      "departureDate": "October 30, 2027",
+      "arrivalDate": "October 31, 2027",
+      "visitSchedule": {
+        "timeZone": "Europe/Madrid",
+        "plannedArrivalDate": "2027-10-31",
+        "plannedDepartureDate": "2027-10-31"
+      },
       "countrySlug": "spain",
       "destinationSlug": "alicante",
       "notes": "Excursions remain under consideration.",
@@ -46,6 +67,13 @@
       "to": "Malaga",
       "travelMode": "Cruise",
       "travelDescription": "Royal Caribbean trans-Atlantic cruise",
+      "departureDate": "October 31, 2027",
+      "arrivalDate": "November 1, 2027",
+      "visitSchedule": {
+        "timeZone": "Europe/Madrid",
+        "plannedArrivalDate": "2027-11-01",
+        "plannedDepartureDate": "2027-11-01"
+      },
       "countrySlug": "spain",
       "destinationSlug": "malaga",
       "notes": "Excursions remain under consideration.",
@@ -56,6 +84,13 @@
       "to": "Fort Lauderdale",
       "travelMode": "Cruise",
       "travelDescription": "Westbound Atlantic crossing",
+      "departureDate": "November 1, 2027",
+      "arrivalDate": "November 15, 2027",
+      "visitSchedule": {
+        "timeZone": "America/New_York",
+        "plannedArrivalDate": "2027-11-15",
+        "plannedDepartureDate": "2027-11-15"
+      },
       "waypoints": [
         {
           "title": "Canary Islands",

@@ -1,0 +1,16 @@
+{
+  "volumeSlug": "spain-trans-atlantic-cruise",
+  "country": "United States",
+  "countrySlug": "usa",
+  "city": "Fort Lauderdale",
+  "slug": "fort-lauderdale",
+  "qrSlug": "fort-lauderdale",
+  "title": "Fort Lauderdale",
+  "subtitle": "The proposed end of our Atlantic crossing",
+  "summary": "Fort Lauderdale is included as the proposed arrival point for the trans-Atlantic cruise. Post-cruise arrangements remain to be confirmed.",
+  "timeZone": "America/New_York",
+  "plannedArrivalDate": "2027-11-15",
+  "plannedDepartureDate": "2027-11-15",
+  "published": false,
+  "featured": false
+}

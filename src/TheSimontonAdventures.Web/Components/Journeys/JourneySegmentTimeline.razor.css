@@ -208,6 +208,13 @@
     color: rgba(22, 32, 42, 0.64);
 }
 
+.journey-segment__gangway {
+    font-size: 0.82rem;
+    font-weight: 650;
+    line-height: 1.45;
+    color: var(--creator-accent);
+}
+
 .journey-segment__waypoints {
     display: flex;
     flex-wrap: wrap;

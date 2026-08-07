@@ -8,6 +8,7 @@
   "title": "Unpublished Preview",
   "subtitle": "A route-publication integration fixture",
   "summary": "This test-only demo destination must never be exposed publicly.",
+  "timeZone": "Europe/Athens",
   "heroResourceId": "resource_demo_athens_hero",
   "published": false,
   "featured": false,
