@@ -48,8 +48,8 @@
     {
       "title": "Explorer of the Seas",
       "subtitle": "Seven nights across the Adriatic and Aegean",
-      "countrySlug": "",
-      "destinationSlug": "",
+      "countrySlug": "at-sea",
+      "destinationSlug": "explorer-of-the-seas",
       "travelMode": "Cruise",
       "travelDescription": "Royal Caribbean Mediterranean cruise",
       "displayOrder": 5
@@ -149,24 +149,29 @@
       "displayOrder": 4
     },
     {
-      "countrySlug": "croatia",
-      "destinationSlug": "dubrovnik",
+      "countrySlug": "at-sea",
+      "destinationSlug": "explorer-of-the-seas",
       "displayOrder": 5
     },
     {
-      "countrySlug": "greece",
-      "destinationSlug": "athens",
+      "countrySlug": "croatia",
+      "destinationSlug": "dubrovnik",
       "displayOrder": 6
     },
     {
       "countrySlug": "greece",
-      "destinationSlug": "santorini",
+      "destinationSlug": "athens",
       "displayOrder": 7
+    },
+    {
+      "countrySlug": "greece",
+      "destinationSlug": "santorini",
+      "displayOrder": 8
     },
     {
       "countrySlug": "croatia",
       "destinationSlug": "split",
-      "displayOrder": 8
+      "displayOrder": 9
     }
   ]
 }

@@ -172,6 +172,7 @@ public sealed class JsonTravelContentServiceTests
                 "florence",
                 "tuscany",
                 "ravenna",
+                "explorer-of-the-seas",
                 "dubrovnik",
                 "athens",
                 "santorini",
