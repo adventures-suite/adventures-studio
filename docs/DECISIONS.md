@@ -73,6 +73,44 @@ Approved
 
 ## 2026-08-07
 
+### Planning Persistence Uses Azure SQL
+
+Decision:
+
+The Planning Engine will use Azure SQL Database in hosted environments and
+Dapper with `Microsoft.Data.SqlClient` inside its infrastructure adapter.
+Azure App Service will authenticate through Managed Identity; database secrets
+must not be committed or stored in global application settings.
+
+Local development and required database integration tests will use a disposable
+SQL Server container. CI will use the same SQL Server engine family so migrations,
+constraints, concurrency behavior, and provider semantics are tested rather than
+approximated through an in-memory or SQLite substitute.
+
+Planning domain and application contracts remain independent of Dapper,
+`Microsoft.Data.SqlClient`, connection strings, and Azure types. Every repository
+operation and transaction begins with explicit `CreatorId`. The infrastructure
+implementation must enforce Creator-scoped keys, indexes, and predicates even
+when an identifier is unique in the current data set.
+
+Reason:
+
+Azure SQL aligns with the existing App Service and Managed Identity architecture
+and the expected persistence direction of other transactional AdventuresSuite
+engines. Dapper keeps SQL, Creator predicates, transaction boundaries, and
+optimistic-concurrency conditions explicit. A matching local and CI SQL Server
+topology gives higher confidence in migrations and tenant isolation than a
+behaviorally different test provider, while provider-neutral contracts preserve
+the option to replace infrastructure without rewriting the Planning domain.
+
+Status:
+
+Approved
+
+---
+
+## 2026-08-07
+
 ### Planning Is Private and AI Uses a Proposal Boundary
 
 Decision:
