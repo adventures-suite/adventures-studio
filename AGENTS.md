@@ -107,6 +107,27 @@
 - Add redaction, cross-Creator leakage, correlation, and exporter-failure tests
   with new instrumentation.
 
+## Audit and Reporting
+
+- Read `docs/architecture/audit-reporting.md` and
+  `docs/development/audit-reporting-implementation-plan.md` before changing
+  audit records, business events, outbox processing, analytics, projections,
+  reports, evidence exports, retention, or legal-hold behavior.
+- Treat audit and reporting as required platform capabilities for every Engine.
+- Keep audit records, business events, analytics, reporting projections, and
+  operational telemetry logically distinct.
+- Commit required mutation audit intent atomically with authoritative state or
+  through a transactional outbox; never substitute logs or traces.
+- Scope Creator reports at query, key, index, cache, export, and background-work
+  boundaries. Platform-wide reporting requires separate explicit authority.
+- Use versioned, minimal, allowlisted schemas. Never place private content,
+  secrets, tokens, raw claims, raw AI exchanges, or arbitrary payloads in audit,
+  events, analytics, or reports.
+- Build reports from authorized, rebuildable projections rather than broad
+  cross-domain queries over operational tables.
+- Define ownership, purpose, classification, retention, deletion, access,
+  recovery, cost, and compatibility tests before enabling a new data product.
+
 ## Documentation
 
 - XML document all public classes, methods, and properties.

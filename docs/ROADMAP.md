@@ -96,6 +96,24 @@ Detailed scope and phase gates are defined in:
 - `docs/product/creator-planning-workspace.md`
 - `docs/development/planning-engine-implementation-plan.md`
 
+## Platform Audit and Reporting Requirement
+
+Audit and reporting are mandatory foundations across the roadmap, not a later
+dashboard feature. Every Engine must identify its protected actions, durable
+events, reporting projections, prohibited data, retention, and access rules as
+it is implemented.
+
+Delivery proceeds incrementally: shared taxonomy and contracts; append-oriented
+audit persistence and transactional guarantees; identity and authorization
+evidence; versioned business events and outbox delivery; Creator-scoped
+projections; compliance, financial, AI, and platform reports; and a separate
+analytical platform only when measured needs justify it.
+
+This requirement does not broaden Authentication Slice 5A. That slice may add
+only the minimum provider-neutral audit vocabulary and classifications it needs.
+See `docs/architecture/audit-reporting.md` and
+`docs/development/audit-reporting-implementation-plan.md`.
+
 ---
 
 # Version 1.0

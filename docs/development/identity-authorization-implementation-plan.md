@@ -20,6 +20,7 @@ Read first:
 - `docs/architecture/planning-engine.md`
 - `docs/architecture/partner-collaboration-engine.md`
 - `docs/architecture/observability.md`
+- `docs/architecture/audit-reporting.md`
 
 ## Working Rules
 
@@ -35,6 +36,10 @@ Read first:
 - Complete each slice and its negative tests before continuing.
 - Follow the platform telemetry taxonomy; authorization telemetry never replaces
   required audit records.
+- Follow the platform audit and reporting architecture. Slice 5A introduces
+  only the minimum provider-neutral audit vocabulary and authentication action
+  classifications it requires; persistence and reporting remain in their
+  approved incremental slices.
 
 ## Authoritative Immediate Sequence
 

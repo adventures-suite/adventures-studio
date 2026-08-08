@@ -233,4 +233,6 @@ support tooling, or public APIs are introduced or materially changed.
 
 Operational logging, tracing, metrics, redaction, sampling, and telemetry access
 follow `docs/architecture/observability.md`. Security telemetry and durable audit
-records remain distinct even when they share correlation identity.
+records remain distinct even when they share correlation identity. Audit-store
+governance, business events, reporting projections, evidence exports, and
+analytics follow `docs/architecture/audit-reporting.md`.

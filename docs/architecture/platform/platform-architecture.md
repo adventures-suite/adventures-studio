@@ -725,6 +725,31 @@ credentials, raw AI exchanges, or unbounded metric dimensions.
 
 Detailed direction is defined in `docs/architecture/observability.md`.
 
+### 10.15 Audit and Reporting Capability
+
+Audit and reporting are platform must-haves across every Engine. AdventuresSuite
+separates append-oriented security and compliance audit, durable domain events,
+privacy-conscious product analytics, rebuildable reporting projections, and
+best-effort operational telemetry. One signal never silently substitutes for
+another.
+
+Protected mutations commit required audit intent atomically with authoritative
+state or through a transactional outbox. Versioned Engine-owned events drive
+idempotent workflows and projections. Creator reports enforce Creator scope at
+query, key, index, cache, export, and background-work boundaries; platform-wide
+reports require separate explicit authority.
+
+Reports consume authorized, purpose-built projections instead of unrestricted
+cross-domain operational queries. Azure SQL is the initial option for modest
+audit, outbox, and projection needs. A warehouse, lake, or specialized
+analytical store is introduced only when measured scale or analytical complexity
+justifies it and never bypasses Creator isolation, consent, or operational
+authorization.
+
+Detailed direction and incremental delivery gates are defined in
+`docs/architecture/audit-reporting.md` and
+`docs/development/audit-reporting-implementation-plan.md`.
+
 ---
 
 ## 11. Engine Ownership Rule
@@ -1103,6 +1128,9 @@ AdventuresSuite follows these principles:
 - AI assists Creators but does not bypass content ownership, review, or publishing controls.
 - Observability is provider-neutral, privacy-preserving, correlated, and
   operational telemetry never substitutes for durable audit evidence.
+- Audit and reporting are required, governed platform capabilities; reports use
+  authorized, rebuildable projections rather than unrestricted operational
+  queries.
 
 ---
 

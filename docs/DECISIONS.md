@@ -367,6 +367,43 @@ Approved
 
 ## 2026-08-07
 
+### Audit and Reporting Are Required Platform Capabilities
+
+Decision:
+
+Every AdventuresSuite Engine will participate in a governed platform audit and
+reporting model. Append-oriented security and compliance audit, versioned domain
+events, product analytics, rebuildable reporting projections, and operational
+telemetry remain distinct data products with separate reliability, access,
+privacy, retention, and failure semantics.
+
+Required audit intent commits atomically with protected state or through a
+transactional outbox. Durable events are minimal, Creator-scoped, versioned, and
+consumed idempotently. Creator reports read authorized projections rather than
+unrestricted operational tables; platform-wide reports require separate
+authority. Azure SQL is the initial storage option, while analytical platforms
+are deferred until measured scale or query needs justify their governance and
+cost.
+
+The capability is delivered incrementally. Current authentication work adds
+only the provider-neutral audit vocabulary required by its approved slice and
+does not introduce speculative persistence, event infrastructure, or reporting
+UI.
+
+Reason:
+
+Building evidence and reportability into Engine boundaries preserves security,
+Creator isolation, consent, financial reconciliation, AI lineage, and future
+analytics without retrofitting unreliable logs or broad database access later.
+
+Status:
+
+Approved
+
+---
+
+## 2026-08-07
+
 ### Human Authentication Uses Microsoft Entra External ID
 
 Decision:

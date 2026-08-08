@@ -49,6 +49,16 @@ The governing principle is:
 > Logs explain system behavior. Audit records prove protected actions. Neither
 > may expose private Creator content.
 
+## Audit and Reporting
+
+1. `architecture/audit-reporting.md`
+2. `development/audit-reporting-implementation-plan.md`
+3. `architecture/observability.md`
+4. `architecture/security.md`
+
+> Transactional systems record authoritative facts. Reporting systems consume
+> authorized, purpose-built projections.
+
 ## Travel Professional Partnerships
 
 1. `architecture/partner-collaboration-engine.md`

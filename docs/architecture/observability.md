@@ -38,7 +38,8 @@ These records have different purposes and must not be conflated:
 Operational telemetry is not an authoritative audit trail or business-event
 store. Audit and durable business events use their own persistence and delivery
 guarantees. Product analytics requires an approved purpose, consent model, and
-data-minimization review.
+data-minimization review. Platform-wide audit, event, projection, reporting,
+retention, and analytics governance is defined in `audit-reporting.md`.
 
 ## Technical Direction
 
