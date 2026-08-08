@@ -2,6 +2,7 @@ using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -54,6 +55,9 @@ public static class ExternalIdAuthenticationExtensions
         builder.Services.AddSingleton(configuration);
         builder.Services.AddScoped<ExternalIdSessionIssuer>();
         builder.Services.AddScoped<IServerSessionAuthenticator, ServerSessionAuthenticator>();
+        builder.Services.AddCascadingAuthenticationState();
+        builder.Services.AddScoped<AuthenticationStateProvider,
+            AdventuresSuiteCircuitAuthenticationStateProvider>();
         builder.Services.AddSingleton<
             IValidateOptions<CookieAuthenticationOptions>,
             ApplicationCookieOptionsValidator>();
@@ -73,6 +77,7 @@ public static class ExternalIdAuthenticationExtensions
                 options.RequireHttpsMetadata = true;
                 options.BackchannelTimeout = TimeSpan.FromSeconds(30);
                 options.RemoteAuthenticationTimeout = TimeSpan.FromMinutes(5);
+                ConfigureProtocolCookies(options);
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
@@ -130,8 +135,19 @@ public static class ExternalIdAuthenticationExtensions
             options.TokenValidationParameters.RequireSignedTokens = true;
             options.TokenValidationParameters.RequireExpirationTime = true;
             options.TokenValidationParameters.ClockSkew = TimeSpan.FromMinutes(2);
+            ConfigureProtocolCookies(options);
         });
         return builder;
+    }
+
+    private static void ConfigureProtocolCookies(OpenIdConnectOptions options)
+    {
+        options.CorrelationCookie.HttpOnly = true;
+        options.CorrelationCookie.SameSite = SameSiteMode.None;
+        options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.NonceCookie.HttpOnly = true;
+        options.NonceCookie.SameSite = SameSiteMode.None;
+        options.NonceCookie.SecurePolicy = CookieSecurePolicy.Always;
     }
 
     private static OpenIdConnectEvents CreateEvents(AuthenticationConfiguration configuration) => new()

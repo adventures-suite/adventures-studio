@@ -33,6 +33,10 @@ public sealed class PublicRouteIntegrationTests : IClassFixture<PublicRouteInteg
             "/volumes/italy-greece-croatia");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("DENY", response.Headers.GetValues("X-Frame-Options").Single());
+        Assert.Contains(
+            "script-src 'self' 'nonce-",
+            response.Headers.GetValues("Content-Security-Policy").Single());
     }
 
     /// <summary>
@@ -123,6 +127,10 @@ public sealed class PublicRouteIntegrationTests : IClassFixture<PublicRouteInteg
         using var response = await SendAsync("unknown.example", "/");
 
         Assert.Equal(HttpStatusCode.MisdirectedRequest, response.StatusCode);
+        Assert.Equal("nosniff", response.Headers.GetValues("X-Content-Type-Options").Single());
+        Assert.Equal(
+            "strict-origin-when-cross-origin",
+            response.Headers.GetValues("Referrer-Policy").Single());
     }
 
     /// <summary>

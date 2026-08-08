@@ -91,6 +91,12 @@ public sealed class ExternalIdAdapterTests
         Assert.Equal(TimeSpan.FromMinutes(5), options.RemoteAuthenticationTimeout);
         Assert.True(options.ProtocolValidator.RequireNonce);
         Assert.True(options.ProtocolValidator.RequireStateValidation);
+        Assert.True(options.CorrelationCookie.HttpOnly);
+        Assert.Equal(SameSiteMode.None, options.CorrelationCookie.SameSite);
+        Assert.Equal(CookieSecurePolicy.Always, options.CorrelationCookie.SecurePolicy);
+        Assert.True(options.NonceCookie.HttpOnly);
+        Assert.Equal(SameSiteMode.None, options.NonceCookie.SameSite);
+        Assert.Equal(CookieSecurePolicy.Always, options.NonceCookie.SecurePolicy);
         Assert.True(options.TokenValidationParameters.ValidateIssuer);
         Assert.True(options.TokenValidationParameters.ValidateAudience);
         Assert.True(options.TokenValidationParameters.ValidateIssuerSigningKey);

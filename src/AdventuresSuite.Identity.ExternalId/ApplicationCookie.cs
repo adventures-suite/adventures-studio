@@ -165,7 +165,7 @@ internal static class ApplicationCookieConfiguration
         CookieAuthenticationOptions options,
         AuthenticationConfiguration configuration)
     {
-        options.Cookie.Name = "__Host-AdventuresSuite.Session";
+        options.Cookie.Name = BrowserAuthenticationDefaults.ApplicationCookieName;
         options.Cookie.HttpOnly = true;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         options.Cookie.SameSite = SameSiteMode.Lax;
@@ -237,7 +237,7 @@ internal sealed class ApplicationCookieOptionsValidator
             return ValidateOptionsResult.Skip;
         }
 
-        return options.Cookie.Name == "__Host-AdventuresSuite.Session"
+        return options.Cookie.Name == BrowserAuthenticationDefaults.ApplicationCookieName
             && options.Cookie.HttpOnly
             && options.Cookie.SecurePolicy == CookieSecurePolicy.Always
             && options.Cookie.SameSite == SameSiteMode.Lax

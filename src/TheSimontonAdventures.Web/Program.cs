@@ -12,6 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services
     .AddRazorComponents()
     .AddInteractiveServerComponents();
+builder.Services.AddHttpContextAccessor();
 
 // Bind environment-specific Creator host aliases. The resolver ignores these
 // mappings outside Development so production hosts always require an explicit
@@ -68,7 +69,30 @@ builder.Services.AddSingleton<ICreatorContentValidator, CreatorContentValidator>
 builder.Services.AddSingleton<ApplicationReadinessState>();
 builder.Services.AddHostedService<CreatorContentValidationHostedService>();
 
+builder.Services.AddAntiforgery(options =>
+{
+    options.Cookie.Name = builder.Environment.IsDevelopment()
+        ? "AdventuresSuite.Antiforgery.Development"
+        : "__Host-AdventuresSuite.Antiforgery";
+    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
+        ? CookieSecurePolicy.SameAsRequest
+        : CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.Cookie.HttpOnly = true;
+    options.Cookie.Path = "/";
+    options.HeaderName = "X-AdventuresSuite-Antiforgery";
+});
+
+builder.Services.AddHsts(options =>
+{
+    options.MaxAge = TimeSpan.FromDays(365);
+    options.IncludeSubDomains = true;
+    options.Preload = true;
+});
+
 var app = builder.Build();
+var authenticationConfiguration =
+    app.Services.GetRequiredService<AuthenticationConfiguration>();
 
 // Emit one structured startup event after hosted validation has completed and
 // the server is ready to accept traffic. Deployment identifiers are supplied
@@ -98,10 +122,14 @@ if (!app.Environment.IsDevelopment())
         "/Error",
         createScopeForErrors: true);
 
-    // The default HSTS duration is 30 days. This can be adjusted later when
-    // production hosting and custom domains are finalized.
+    // HSTS is deliberately omitted in Development so local HTTP remains usable.
     app.UseHsts();
 }
+
+// Apply browser defenses to dynamic pages, framework endpoints, and static
+// assets, including host denials and fallback responses. HSTS remains
+// production-only through UseHsts above.
+app.UseMiddleware<BrowserSecurityHeadersMiddleware>();
 
 // Resolve the explicitly approved request host before status-page re-execution,
 // static assets, endpoints, or shared UI can expose Creator-owned content.
@@ -110,8 +138,24 @@ app.UseMiddleware<CreatorResolutionMiddleware>();
 // Redirect HTTP requests to HTTPS.
 app.UseHttpsRedirection();
 
-// Enable antiforgery protection for interactive server components.
+// Slice 5F supplies the external authentication services and active
+// configuration. Keeping this branch here fixes authentication ahead of every
+// antiforgery decision without activating private identity in Slice 5E.
+if (authenticationConfiguration.Mode != AuthenticationMode.Disabled)
+{
+    app.UseAuthentication();
+}
+
+// Reject cookie-bearing Blazor negotiate, reconnect, WebSocket, SSE, and long-
+// polling requests unless they carry the exact configured workspace Origin.
+app.UseMiddleware<WorkspaceSignalROriginMiddleware>();
+
+// Validate antiforgery endpoint metadata used by Razor Components and forms.
 app.UseAntiforgery();
+
+// Require antiforgery proof by default for future cookie-authenticated HTTP
+// mutations, even if an endpoint author forgets to add antiforgery metadata.
+app.UseMiddleware<CookieAuthenticatedAntiforgeryMiddleware>();
 
 // Expose static assets such as stylesheets, images, and JavaScript files.
 app.MapStaticAssets();

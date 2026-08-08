@@ -1,5 +1,6 @@
 ﻿@inject ICreatorContextAccessor CreatorContextAccessor
 @inject IResourceService ResourceService
+@inject IHttpContextAccessor HttpContextAccessor
 
 <!DOCTYPE html>
 <html lang="@CreatorContextAccessor.Current.Locale">
@@ -12,7 +13,7 @@
     <link rel="stylesheet" href="@Assets["lib/bootstrap/dist/css/bootstrap.min.css"]" />
     <link rel="stylesheet" href="@Assets["app.css"]" />
     <link rel="stylesheet" href="@Assets["TheSimontonAdventures.Web.styles.css"]" />
-    <ImportMap />
+    <ImportMap AdditionalAttributes="@ImportMapAttributes" />
     <meta name="description"
           content="@CreatorContextAccessor.Current.GetDefaultSeoDescription()" />
     <link rel="icon" href="@FaviconUrl" />
@@ -29,9 +30,16 @@
 
 @code {
     private string FaviconUrl { get; set; } = string.Empty;
+    private IReadOnlyDictionary<string, object>? ImportMapAttributes { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
+        var httpContext = HttpContextAccessor.HttpContext
+            ?? throw new InvalidOperationException("Server rendering requires an HTTP context.");
+        ImportMapAttributes = new Dictionary<string, object>
+        {
+            ["nonce"] = BrowserSecurityHeadersMiddleware.GetNonce(httpContext)
+        };
         FaviconUrl = await ResourceService.GetPublicUrlAsync(
             CreatorContextAccessor.Current.Id,
             CreatorContextAccessor.Current.Brand.FaviconResourceId)
