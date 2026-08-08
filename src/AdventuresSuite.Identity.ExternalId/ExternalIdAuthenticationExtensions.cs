@@ -95,6 +95,7 @@ public static class ExternalIdAuthenticationExtensions
                     }
                 ];
                 options.Events = CreateEvents(configuration);
+                options.AccessDeniedPath = ExternalIdBrowserEndpoints.AccessDeniedPath;
             },
             options => ApplicationCookieConfiguration.Configure(options, configuration),
             Scheme,
@@ -185,10 +186,35 @@ public static class ExternalIdAuthenticationExtensions
                 context.Fail("Authentication failed.");
             }
         },
+        OnTicketReceived = context =>
+        {
+            var sessionFeature = context.HttpContext.Features.Get<ExternalIdSessionFeature>();
+            var cookie = ApplicationCookiePrincipal.Parse(
+                context.Principal,
+                context.HttpContext.RequestServices
+                    .GetRequiredService<IAuthenticationClock>()
+                    .GetUtcNow());
+            if (!IsWorkspaceRequest(context.Request, configuration)
+                || sessionFeature is null
+                || cookie is null
+                || cookie.Ticket != sessionFeature.Ticket)
+            {
+                context.Fail("Authentication failed.");
+            }
+
+            return Task.CompletedTask;
+        },
         OnRemoteFailure = context =>
         {
             context.HandleResponse();
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            if (IsWorkspaceRequest(context.Request, configuration))
+            {
+                context.Response.Redirect(ExternalIdBrowserEndpoints.FailurePath);
+            }
+            else
+            {
+                context.Response.StatusCode = StatusCodes.Status404NotFound;
+            }
             return Task.CompletedTask;
         }
     };

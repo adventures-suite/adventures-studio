@@ -333,6 +333,114 @@ public sealed class ExternalIdAdapterTests
         Assert.False(validation.ShouldRenew);
     }
 
+    /// <summary>Callback completion requires the session created by validated-principal processing.</summary>
+    [Fact]
+    public async Task CallbackCompletion_MissingFreshSession_FailsClosed()
+    {
+        using var certificate = Certificate(Now.AddDays(-1), Now.AddDays(30), true);
+        using var provider = ExternalIdServices(certificate);
+        var options = provider.GetRequiredService<IOptionsMonitor<OpenIdConnectOptions>>()
+            .Get(ExternalIdAuthenticationExtensions.Scheme);
+        var services = new ServiceCollection()
+            .AddSingleton<IAuthenticationClock>(new FixedClock())
+            .BuildServiceProvider();
+        var httpContext = new DefaultHttpContext { RequestServices = services };
+        httpContext.Request.Scheme = "https";
+        httpContext.Request.Host = new HostString("workspace.example.com");
+        var principal = ApplicationCookiePrincipal.Create(
+            new AuthenticationSessionTicket(
+                new UserSessionId("session_external_01"),
+                new UserId("user_external_01"),
+                new SecurityVersion(1)),
+            Now);
+        var context = new TicketReceivedContext(
+            httpContext,
+            new AuthenticationScheme(
+                ExternalIdAuthenticationExtensions.Scheme,
+                null,
+                typeof(OpenIdConnectHandler)),
+            options,
+            new AuthenticationTicket(
+                principal,
+                new AuthenticationProperties(),
+                ExternalIdAuthenticationExtensions.Scheme));
+
+        await options.Events.TicketReceived(context);
+
+        Assert.NotNull(context.Result?.Failure);
+        Assert.Equal("Authentication failed.", context.Result?.Failure?.Message);
+    }
+
+    /// <summary>Callback completion accepts only the exact freshly established session ticket.</summary>
+    [Fact]
+    public async Task CallbackCompletion_ExactFreshSession_Succeeds()
+    {
+        using var certificate = Certificate(Now.AddDays(-1), Now.AddDays(30), true);
+        using var provider = ExternalIdServices(certificate);
+        var options = provider.GetRequiredService<IOptionsMonitor<OpenIdConnectOptions>>()
+            .Get(ExternalIdAuthenticationExtensions.Scheme);
+        var services = new ServiceCollection()
+            .AddSingleton<IAuthenticationClock>(new FixedClock())
+            .BuildServiceProvider();
+        var httpContext = new DefaultHttpContext { RequestServices = services };
+        httpContext.Request.Scheme = "https";
+        httpContext.Request.Host = new HostString("workspace.example.com");
+        var ticket = new AuthenticationSessionTicket(
+            new UserSessionId("session_external_01"),
+            new UserId("user_external_01"),
+            new SecurityVersion(1));
+        httpContext.Features.Set(new ExternalIdSessionFeature(ticket));
+        var context = new TicketReceivedContext(
+            httpContext,
+            new AuthenticationScheme(
+                ExternalIdAuthenticationExtensions.Scheme,
+                null,
+                typeof(OpenIdConnectHandler)),
+            options,
+            new AuthenticationTicket(
+                ApplicationCookiePrincipal.Create(ticket, Now),
+                new AuthenticationProperties(),
+                ExternalIdAuthenticationExtensions.Scheme));
+
+        await options.Events.TicketReceived(context);
+
+        Assert.Null(context.Result?.Failure);
+    }
+
+    /// <summary>Cancellation, timeout, and replay-like protocol failures share one safe outcome.</summary>
+    [Fact]
+    public async Task RemoteFailures_ReturnOneGenericWorkspaceOutcome()
+    {
+        using var certificate = Certificate(Now.AddDays(-1), Now.AddDays(30), true);
+        using var provider = ExternalIdServices(certificate);
+        var options = provider.GetRequiredService<IOptionsMonitor<OpenIdConnectOptions>>()
+            .Get(ExternalIdAuthenticationExtensions.Scheme);
+        var scheme = new AuthenticationScheme(
+            ExternalIdAuthenticationExtensions.Scheme,
+            null,
+            typeof(OpenIdConnectHandler));
+
+        foreach (var failure in new Exception[]
+                 {
+                     new OperationCanceledException("provider details"),
+                     new TimeoutException("provider details"),
+                     new InvalidOperationException("replayed state details")
+                 })
+        {
+            var httpContext = new DefaultHttpContext();
+            httpContext.Request.Scheme = "https";
+            httpContext.Request.Host = new HostString("workspace.example.com");
+            var context = new RemoteFailureContext(httpContext, scheme, options, failure);
+
+            await options.Events.RemoteFailure(context);
+
+            Assert.True(context.Result?.Handled);
+            Assert.Equal(StatusCodes.Status302Found, httpContext.Response.StatusCode);
+            Assert.Equal(ExternalIdBrowserEndpoints.FailurePath, httpContext.Response.Headers.Location);
+            Assert.DoesNotContain("details", httpContext.Response.Headers.Location.ToString());
+        }
+    }
+
     /// <summary>Missing, expired, future, keyless, and incorrectly purposed certificates fail closed.</summary>
     [Fact]
     public void ValidateCertificate_InvalidCertificate_ThrowsSafeFailure()
