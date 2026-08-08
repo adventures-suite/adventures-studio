@@ -36,6 +36,27 @@ Read first:
 - Follow the platform telemetry taxonomy; authorization telemetry never replaces
   required audit records.
 
+## Authoritative Immediate Sequence
+
+Before Phase 3 authentication implementation continues:
+
+1. preserve the completed deployment run, retained package, health payload, and
+   workflow result as release evidence;
+2. implement the App Service immutable-package activation correction as a
+   separate operational commit under `docs/development/deployment.md`;
+3. deploy that correction and prove the expected SHA, Creator validation,
+   Resource validation, repeatable sequencing, diagnostics, and rollback gate;
+4. implement Authentication Integration Slices 5A through 5F in order;
+5. implement Creator membership persistence in Slice 6; and
+6. begin Planning authorization enforcement and protected UI only through
+   Slices 7 and 8 after actor resolution, sessions, and membership persistence
+   are dependable.
+
+Do not fold the package-activation correction into a Slice 5 feature commit.
+Do not begin Planning authorization enforcement merely because authentication
+contracts exist; authenticated actor resolution, revocable application
+sessions, and Creator membership persistence must first pass their gates.
+
 ## Slice 1: Architecture and Threat Model
 
 Scope: identity boundaries, permission vocabulary, policy model, threat model,

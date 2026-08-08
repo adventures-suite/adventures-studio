@@ -32,6 +32,30 @@ Deployment automation must:
 Public health checks return only minimal status. Detailed dependency health and
 startup failures remain access-controlled.
 
+### Immutable Package Activation Gate
+
+App Service package activation is an independently reviewable operational
+boundary. Its workflow correction must remain separate from feature and
+architecture commits. A package deployment is complete only when all of the
+following are proven:
+
+- upload of the uniquely named immutable ZIP completes successfully before an
+  explicit application restart begins;
+- `/health` reports the expected commit SHA from that exact package;
+- Creator and Resource startup validation both succeed;
+- failure diagnostics identify the expected SHA, safely reported SHA, active
+  package pointer, Azure deployment record, and safe startup state without
+  exposing configuration or Creator content;
+- a later deployment repeats the same upload, activation, restart, and
+  verification sequence successfully; and
+- rollback is exercised or otherwise proven possible by activating a previously
+  retained immutable package and verifying its release identity and startup
+  validation.
+
+One successful SHA observation is evidence for that release, not proof that the
+activation sequence is repeatable. Retained packages are release artifacts and
+must remain identifiable by commit and workflow run for diagnosis and rollback.
+
 Application health, release identity, startup validation, and required smoke
 tests are hard promotion gates. Failure to confirm telemetry ingestion because
 the destination is unavailable produces a warning and degraded deployment
