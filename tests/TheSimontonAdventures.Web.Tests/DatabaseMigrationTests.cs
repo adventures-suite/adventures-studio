@@ -14,10 +14,11 @@ public sealed class DatabaseMigrationTests
     {
         var migrations = MigrationCatalog.GetOrderedResourceNames(MigratorAssembly);
 
-        Assert.Equal(3, migrations.Count);
+        Assert.Equal(4, migrations.Count);
         Assert.EndsWith("0001_create_planning_schema.sql", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("0002_create_adventure_plans.sql", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("0003_create_planning_children.sql", migrations[2], StringComparison.Ordinal);
+        Assert.EndsWith("0004_create_authentication_persistence.sql", migrations[3], StringComparison.Ordinal);
         Assert.Equal(migrations.Count, migrations.Distinct(StringComparer.Ordinal).Count());
     }
 
@@ -59,6 +60,23 @@ public sealed class DatabaseMigrationTests
         Assert.Contains("CHECK (Version > 0)", migration, StringComparison.Ordinal);
         Assert.Contains("CreatedAtUtc datetimeoffset(0) NOT NULL", migration, StringComparison.Ordinal);
         Assert.Contains("UpdatedAtUtc datetimeoffset(0) NOT NULL", migration, StringComparison.Ordinal);
+    }
+
+    /// <summary>Ensures authentication persistence preserves exact identity and least privilege.</summary>
+    [Fact]
+    public void AuthenticationSchema_DeclaresExactIdentityAndRuntimeBoundaries()
+    {
+        var migration = ReadMigration("0004_create_authentication_persistence.sql");
+
+        Assert.Contains("CREATE TABLE auth.Users", migration, StringComparison.Ordinal);
+        Assert.Contains("CREATE TABLE auth.ExternalIdentities", migration, StringComparison.Ordinal);
+        Assert.Contains("CREATE TABLE auth.UserSessions", migration, StringComparison.Ordinal);
+        Assert.Contains("Issuer nvarchar(2048) COLLATE Latin1_General_100_BIN2", migration, StringComparison.Ordinal);
+        Assert.Contains("Subject nvarchar(255) COLLATE Latin1_General_100_BIN2", migration, StringComparison.Ordinal);
+        Assert.DoesNotContain("Email", migration, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("GRANT SELECT, INSERT, UPDATE ON SCHEMA::auth", migration, StringComparison.Ordinal);
+        Assert.DoesNotContain("GRANT SELECT, INSERT, UPDATE, DELETE", migration, StringComparison.Ordinal);
+        Assert.Contains("DENY ALTER ON SCHEMA::auth", migration, StringComparison.Ordinal);
     }
 
     private static string ReadMigration(string fileName)

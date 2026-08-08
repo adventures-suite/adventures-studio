@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/AdventuresSuite.DatabaseMigrator/AdventuresSuite.DatabaseMigrator.csproj" />
+    <ProjectReference Include="../../src/AdventuresSuite.Identity.SqlServer/AdventuresSuite.Identity.SqlServer.csproj" />
     <ProjectReference Include="../../src/AdventuresSuite.Planning.SqlServer/AdventuresSuite.Planning.SqlServer.csproj" />
   </ItemGroup>
 

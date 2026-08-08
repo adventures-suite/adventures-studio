@@ -29,20 +29,59 @@ public sealed class SqlMigrationIntegrationTests
         try
         {
             var firstRun = DatabaseMigratorRunner.Migrate(databaseConnectionString);
-            Assert.Equal(3, firstRun.Count);
+            Assert.Equal(4, firstRun.Count);
 
             await VerifySchemaAsync(databaseConnectionString);
             await VerifyConstraintsAsync(databaseConnectionString);
+            await VerifyRuntimePermissionsAsync(databaseConnectionString);
             var signatureBefore = await GetSchemaSignatureAsync(databaseConnectionString);
 
             var secondRun = DatabaseMigratorRunner.Migrate(databaseConnectionString);
 
             Assert.Empty(secondRun);
-            Assert.Equal(3, await ScalarAsync<int>(databaseConnectionString,
+            Assert.Equal(4, await ScalarAsync<int>(databaseConnectionString,
                 "SELECT COUNT(*) FROM dbo.AdventuresSuiteSchemaVersions;"));
             Assert.Equal(signatureBefore, await GetSchemaSignatureAsync(databaseConnectionString));
 
             await VerifyFailedScriptRollbackAsync(databaseConnectionString);
+        }
+        finally
+        {
+            await DropDatabaseAsync(masterConnectionString, databaseName);
+        }
+    }
+
+    /// <summary>Proves a database journaled through migration 0003 upgrades exactly once.</summary>
+    [Fact]
+    public async Task Migration0004_UpgradesExistingPlanningDatabaseExactlyOnce()
+    {
+        var masterConnectionString = Environment.GetEnvironmentVariable(ConnectionVariable);
+        Assert.False(string.IsNullOrWhiteSpace(masterConnectionString),
+            $"Set {ConnectionVariable} for the SQL integration gate.");
+        var databaseName = $"AdventuresSuiteUpgradeTest_{Guid.NewGuid():N}";
+        var connectionString = BuildDatabaseConnectionString(masterConnectionString, databaseName);
+        await CreateDatabaseAsync(masterConnectionString, databaseName);
+        try
+        {
+            var assembly = typeof(MigrationCatalog).Assembly;
+            var baseline = DeployChanges.To.SqlDatabase(connectionString)
+                .WithScriptsEmbeddedInAssembly(assembly, name =>
+                    MigrationCatalog.IsMigrationResource(assembly, name)
+                    && !name.EndsWith("0004_create_authentication_persistence.sql", StringComparison.Ordinal))
+                .JournalToSqlTable("dbo", "AdventuresSuiteSchemaVersions")
+                .WithTransactionPerScript()
+                .Build()
+                .PerformUpgrade();
+            Assert.True(baseline.Successful, baseline.Error?.Message);
+            Assert.Equal(3, await ScalarAsync<int>(connectionString,
+                "SELECT COUNT(*) FROM dbo.AdventuresSuiteSchemaVersions;"));
+
+            Assert.Single(DatabaseMigratorRunner.Migrate(connectionString));
+            Assert.Equal(3, await ScalarAsync<int>(connectionString, """
+                SELECT COUNT(*) FROM sys.tables t JOIN sys.schemas s ON s.schema_id=t.schema_id
+                WHERE s.name='auth';
+                """));
+            Assert.Empty(DatabaseMigratorRunner.Migrate(connectionString));
         }
         finally
         {
@@ -64,6 +103,22 @@ public sealed class SqlMigrationIntegrationTests
             SELECT COUNT(*) FROM sys.tables AS tables
             INNER JOIN sys.schemas AS schemas ON schemas.schema_id = tables.schema_id
             WHERE schemas.name = 'dbo' AND tables.name = 'AdventuresSuiteSchemaVersions';
+            """));
+
+        Assert.Equal(3, await ScalarAsync<int>(connectionString, """
+            SELECT COUNT(*) FROM sys.tables AS tables
+            INNER JOIN sys.schemas AS schemas ON schemas.schema_id = tables.schema_id
+            WHERE schemas.name = 'auth'
+              AND tables.name IN ('Users', 'ExternalIdentities', 'UserSessions');
+            """));
+        Assert.Equal(3, await ScalarAsync<int>(connectionString, """
+            SELECT COUNT(*) FROM sys.columns AS columns
+            INNER JOIN sys.tables AS tables ON tables.object_id = columns.object_id
+            INNER JOIN sys.schemas AS schemas ON schemas.schema_id = tables.schema_id
+            WHERE schemas.name = 'auth'
+              AND ((tables.name = 'ExternalIdentities' AND columns.name IN ('Issuer', 'Subject'))
+                   OR (tables.name = 'Users' AND columns.name = 'UserId'))
+              AND columns.collation_name = 'Latin1_General_100_BIN2';
             """));
 
         var creatorColumns = await ScalarAsync<int>(connectionString, """
@@ -128,6 +183,38 @@ public sealed class SqlMigrationIntegrationTests
         Assert.Equal(0, await ScalarAsync<int>(connectionString, """
             SELECT COUNT(*) FROM dbo.AdventuresSuiteSchemaVersions
             WHERE ScriptName = '9999_failed_rollback_probe.sql';
+            """));
+    }
+
+    private static async Task VerifyRuntimePermissionsAsync(string connectionString)
+    {
+        await ExecuteAsync(connectionString, """
+            CREATE USER authentication_runtime_test WITHOUT LOGIN;
+            ALTER ROLE AdventuresSuiteAuthenticationRuntime ADD MEMBER authentication_runtime_test;
+            EXECUTE AS USER='authentication_runtime_test';
+            INSERT auth.Users (UserId,Status,SecurityVersion,CreatedAtUtc,UpdatedAtUtc)
+            VALUES ('user_runtime_probe','Active',1,'2026-08-08T15:00:00+00:00','2026-08-08T15:00:00+00:00');
+            SELECT COUNT(*) FROM auth.Users WHERE UserId='user_runtime_probe';
+            REVERT;
+            """);
+        Assert.Equal(0, await ScalarAsync<int>(connectionString, """
+            EXECUTE AS USER='authentication_runtime_test';
+            DECLARE @HasAlter int = HAS_PERMS_BY_NAME('auth', 'SCHEMA', 'ALTER');
+            REVERT;
+            SELECT @HasAlter;
+            """));
+        Assert.Equal(0, await ScalarAsync<int>(connectionString, """
+            EXECUTE AS USER='authentication_runtime_test';
+            DECLARE @HasDelete int = HAS_PERMS_BY_NAME('auth.Users', 'OBJECT', 'DELETE');
+            REVERT;
+            SELECT @HasDelete;
+            """));
+        Assert.Equal(0, await ScalarAsync<int>(connectionString, """
+            EXECUTE AS USER='authentication_runtime_test';
+            DECLARE @CanWriteJournal int = HAS_PERMS_BY_NAME(
+                'dbo.AdventuresSuiteSchemaVersions', 'OBJECT', 'INSERT');
+            REVERT;
+            SELECT @CanWriteJournal;
             """));
     }
 
