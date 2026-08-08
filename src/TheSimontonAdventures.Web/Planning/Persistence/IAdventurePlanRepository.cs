@@ -14,8 +14,13 @@ public interface IAdventurePlanRepository
         AdventurePlanId planId,
         CancellationToken cancellationToken = default);
 
-    /// <summary>Lists plans owned by the supplied Creator.</summary>
+    /// <summary>Lists non-archived plans owned by the supplied Creator.</summary>
     Task<IReadOnlyList<AdventurePlan>> ListAsync(
+        CreatorId creatorId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Lists recoverable archived plans owned by the supplied Creator.</summary>
+    Task<IReadOnlyList<AdventurePlan>> ListArchivedAsync(
         CreatorId creatorId,
         CancellationToken cancellationToken = default);
 
