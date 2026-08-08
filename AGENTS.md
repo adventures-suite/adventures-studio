@@ -76,6 +76,27 @@
   matching Planning Engagement.
 - Keep provider claims and framework authorization types out of core contracts.
 
+## Logging and Observability
+
+- Read `docs/architecture/observability.md` and
+  `docs/development/observability-implementation-plan.md` before changing logs,
+  metrics, traces, health checks, telemetry export, dashboards, or alerts.
+- Use structured `ILogger<T>` message templates, `ActivitySource`, and `Meter`;
+  keep vendor SDK types out of core code.
+- Propagate correlation context explicitly. Include Creator, actor, or resource
+  identifiers only when authorized, operationally necessary, and permitted for
+  that signal class; never log private Creator content or sensitive traveler
+  data.
+- Use route templates and stable event names. Do not log raw URLs, request
+  bodies, domain objects, SQL parameters, AI prompts, tokens, or secrets.
+- Keep metric dimensions low-cardinality; never dimension metrics by Creator,
+  user, plan, hostname, or another unbounded identifier.
+- Treat operational telemetry, security telemetry, audit records, business
+  events, and product analytics as different signal types.
+- Operational telemetry is best-effort. Never use it as the durable audit trail.
+- Add redaction, cross-Creator leakage, correlation, and exporter-failure tests
+  with new instrumentation.
+
 ## Documentation
 
 - XML document all public classes, methods, and properties.

@@ -323,3 +323,42 @@ access while allowing authentication providers and framework adapters to evolve.
 Status:
 
 Approved
+
+---
+
+## 2026-08-07
+
+### Observability Is Provider-Neutral and Privacy-Preserving
+
+Decision:
+
+AdventuresSuite will treat observability as a shared platform capability.
+Application code uses standard .NET structured logging, tracing, and metrics
+abstractions with OpenTelemetry as the instrumentation and export boundary.
+Azure Monitor and Application Insights are the initial Azure destination, but
+core contracts remain independent of that provider.
+
+Operational logs, distributed traces, metrics, security telemetry, durable audit
+records, business events, and product analytics are distinct signal types.
+Operational telemetry does not replace audit or business-event persistence.
+
+Telemetry carries consistent service, release, environment, correlation,
+operation, outcome, and carefully controlled opaque Creator context. Private
+Creator content, sensitive traveler information, credentials, raw requests, SQL
+parameters, and raw AI exchanges are prohibited. Metrics use low-cardinality
+dimensions and never use Creator, user, or resource identifiers as dimensions.
+
+Operational export is best-effort and bounded. Required audit behavior remains
+transactional and follows the Identity and Authorization architecture. Azure
+environments use separate destinations, access, retention, sampling, alerts,
+dashboards, and budgets.
+
+Reason:
+
+A consistent observability boundary makes the platform diagnosable and
+operable while preventing vendor coupling, cross-Creator leakage, accidental
+sensitive-data storage, alert noise, and uncontrolled telemetry cost.
+
+Status:
+
+Approved

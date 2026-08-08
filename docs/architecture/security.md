@@ -215,3 +215,7 @@ an attacker cannot turn audit volume into a denial of service.
 Review this model when identity provider, session strategy, membership schema,
 Planning Engagement, protected Resources, AI context, exports, background jobs,
 support tooling, or public APIs are introduced or materially changed.
+
+Operational logging, tracing, metrics, redaction, sampling, and telemetry access
+follow `docs/architecture/observability.md`. Security telemetry and durable audit
+records remain distinct even when they share correlation identity.

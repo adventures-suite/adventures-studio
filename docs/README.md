@@ -38,6 +38,15 @@ The governing principle is:
 > Authentication establishes who the user is. Authorization determines which
 > Creator-owned resource they may access for this operation.
 
+## Logging and Observability
+
+1. `architecture/observability.md`
+2. `development/observability-implementation-plan.md`
+3. `development/deployment.md`
+
+> Logs explain system behavior. Audit records prove protected actions. Neither
+> may expose private Creator content.
+
 ## Travel Professional Partnerships
 
 1. `architecture/partner-collaboration-engine.md`

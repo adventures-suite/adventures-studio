@@ -707,6 +707,24 @@ AI Engine
 Assistance, discovery, planning, enrichment, or companion experience
 ```
 
+### 10.14 Observability Capability
+
+Observability provides consistent logs, traces, metrics, health signals,
+security telemetry, dashboards, alerts, and operational correlation across all
+Engines.
+
+Application code uses standard .NET logging, tracing, and metrics abstractions.
+OpenTelemetry is the provider-neutral instrumentation boundary, with Azure
+Monitor and Application Insights as the initial Azure destination. Operational
+telemetry is distinct from durable audit records, business events, and product
+analytics.
+
+Telemetry preserves Creator isolation and may carry opaque diagnostic identity,
+but it never contains private Creator content, sensitive traveler information,
+credentials, raw AI exchanges, or unbounded metric dimensions.
+
+Detailed direction is defined in `docs/architecture/observability.md`.
+
 ---
 
 ## 11. Engine Ownership Rule
@@ -1080,6 +1098,8 @@ AdventuresSuite follows these principles:
 - Existing working behavior is preserved during migration.
 - Additional infrastructure is added only when justified.
 - AI assists Creators but does not bypass content ownership, review, or publishing controls.
+- Observability is provider-neutral, privacy-preserving, correlated, and
+  operational telemetry never substitutes for durable audit evidence.
 
 ---
 

@@ -19,6 +19,7 @@ Read first:
 - `docs/architecture/creator-engine.md`
 - `docs/architecture/planning-engine.md`
 - `docs/architecture/partner-collaboration-engine.md`
+- `docs/architecture/observability.md`
 
 ## Working Rules
 
@@ -32,6 +33,8 @@ Read first:
 - Provider claims and framework policy types remain in adapters.
 - Full Planning Engagement implementation remains deferred.
 - Complete each slice and its negative tests before continuing.
+- Follow the platform telemetry taxonomy; authorization telemetry never replaces
+  required audit records.
 
 ## Slice 1: Architecture and Threat Model
 
