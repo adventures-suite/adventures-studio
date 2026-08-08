@@ -197,11 +197,21 @@ AI prompts, exception messages, or public exports.
 - Content Engine owns public editorial records and their publication lifecycle.
 - Resource Engine owns files and protected resource metadata.
 - AI Engine produces bounded planning proposals.
+- Partner Collaboration Engine grants invited travel professionals bounded
+  access through a plan-scoped engagement.
+
+Professional collaboration does not create shared ownership. The customer
+Creator remains authoritative, agency membership alone grants no customer
+access, and professional edits default to reviewable proposals. No speculative
+engagement fields belong in the current Planning persistence phase.
 - Rendering Engine presents workspace, companion, and public views.
 - Notification Engine consumes explicit approved public events, not draft saves.
 - Commerce and booking providers remain outside the initial Planning scope.
 
 ## Initial Non-Goals
+
+- Replacing travel agencies, agency CRM systems, GDS platforms, supplier
+  booking systems, or professional commercial workflows.
 
 - autonomous booking or purchasing
 - a complete Creator Studio

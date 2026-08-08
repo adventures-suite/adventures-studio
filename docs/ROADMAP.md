@@ -66,6 +66,25 @@ The governing principle is:
 
 > AI proposes; the Creator decides; the Planning Engine commits.
 
+## Travel Professional Partnership Direction
+
+AdventuresSuite will partner with travel professionals rather than replace
+them. An agency may use a Creator boundary for its brand, staff, templates, and
+Resources, while the customer Creator continues to own each Adventure Plan and
+everything derived from it.
+
+A future plan-scoped `PlanningEngagement` will authorize specific professionals
+to collaborate with least privilege, expiration, revocation, and audit history.
+Professional recommendations default to the shared proposal and approval
+boundary: professional proposal, customer review, Planning Engine commit.
+
+This direction does not interrupt the current Planning persistence phase and
+does not authorize speculative partner schema. See:
+
+- `docs/architecture/partner-collaboration-engine.md`
+- `docs/product/travel-professional-partnership.md`
+- `docs/development/partner-collaboration-implementation-plan.md`
+
 Planning data is private by default. It does not become public merely because
 an Adventure is Planned, Upcoming, or Current. Public content requires an
 explicit Creator-approved publication operation.

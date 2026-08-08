@@ -103,6 +103,11 @@ Core contracts use platform concepts such as planning request, proposal,
 operation, citation, and usage record. Model names, SDK request objects, tool
 formats, and provider-specific response types remain inside adapters.
 
+The proposal boundary is intentionally reusable. AI, travel professionals,
+customers, and future collaborators may author proposals, while source identity
+and authorization remain distinct. Only the Planning Engine applies an
+authorized, approved proposal to authoritative plan state.
+
 The platform should support replacing or combining AI providers without
 changing the Planning domain. Provider selection is configuration, not Creator
 content.

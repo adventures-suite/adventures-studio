@@ -39,6 +39,25 @@
 - Implement Planning Engine phases in order and do not combine them into a
   broad rewrite.
 
+## Partner Collaboration
+
+- Read `docs/architecture/partner-collaboration-engine.md`,
+  `docs/product/travel-professional-partnership.md`, and
+  `docs/development/partner-collaboration-implementation-plan.md` before
+  changing professional collaboration behavior.
+- Treat travel professionals as partners, not as competitors to replace.
+- Keep the customer Creator as owner of the Adventure Plan, memories,
+  Resources, and Publications.
+- Represent an agency as a Creator for its own brand, staff, templates, and
+  Resources; do not add a parallel tenant model.
+- Require an explicit, accepted, active, plan-scoped engagement. Agency
+  membership alone never grants customer access.
+- Default professional changes to proposals and customer approval. Direct-edit
+  access requires a stronger explicit permission and complete audit history.
+- Keep external agency systems behind provider-neutral adapters.
+- Do not add speculative partner fields or tables to the current Planning
+  persistence phase.
+
 ## Documentation
 
 - XML document all public classes, methods, and properties.

@@ -29,6 +29,14 @@ The governing principle is:
 
 > AI proposes; the Creator decides; the Planning Engine commits.
 
+## Travel Professional Partnerships
+
+1. `architecture/partner-collaboration-engine.md`
+2. `product/travel-professional-partnership.md`
+3. `development/partner-collaboration-implementation-plan.md`
+
+> The customer owns the Adventure. The travel professional improves it.
+
 ## Existing Engine Foundations
 
 - `architecture/creator-engine.md`

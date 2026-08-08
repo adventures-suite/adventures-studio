@@ -170,6 +170,18 @@ tasks, and proposal decisions must remain usable on a phone.
 
 ## Explicitly Deferred
 
+### Future Professional Collaboration
+
+A customer may invite a travel professional to collaborate on one Adventure
+Plan through a time-bounded, revocable engagement. The customer remains the
+owner, professional recommendations normally arrive as proposals, and
+co-branding may recognize the agency without displacing the customer identity.
+Agency membership alone never reveals customer data.
+
+AdventuresSuite will not replace agency CRM, GDS, supplier booking, commission,
+or fulfillment systems. Those systems may integrate later through
+provider-neutral boundaries.
+
 - full Creator content editor
 - autonomous booking
 - payment and commerce

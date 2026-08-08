@@ -21,6 +21,7 @@ Read before implementation:
 - `docs/architecture/content-engine.md`
 - `docs/architecture/resource-engine.md`
 - `docs/architecture/adventure-lifecycle.md`
+- `docs/architecture/partner-collaboration-engine.md`
 
 ## Working Rules
 
@@ -36,6 +37,8 @@ Read before implementation:
   exposing a feature.
 - Record decisions when implementation differs from this plan.
 - Do not combine a phase with unrelated presentation or content work.
+- Do not add speculative partner fields or tables during the current Planning
+  persistence work.
 
 ## Phase 0: Architecture and Documentation
 
@@ -348,6 +351,8 @@ These are decided in their owning phases:
 - research providers and acceptable-source policy
 - offline Companion architecture
 - exact private-to-public publication contract
+- travel-professional engagement invitation, permission, expiration, and
+  revocation mechanics
 
 None of these decisions should be embedded accidentally in Phase 1 domain
 types.

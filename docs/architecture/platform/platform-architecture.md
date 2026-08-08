@@ -548,7 +548,23 @@ Planning Engine can apply Creator-approved operations to authoritative state.
 
 Detailed direction is defined in `docs/architecture/planning-engine.md`.
 
-### 10.8 Discovery Engine
+### 10.8 Partner Collaboration Engine
+
+The Partner Collaboration Engine enables a customer to invite a travel
+professional or agency to help with one customer-owned Adventure Plan.
+
+Responsibilities include plan-scoped invitations and engagements, delegated
+permissions, proposals and approvals, expiration, revocation, audit history,
+attribution, and provider-neutral agency integrations.
+
+The customer Creator remains the sole owner. Agency membership alone never
+grants customer access. An engagement is an authorization relationship, not
+shared ownership or a new tenancy model.
+
+Detailed direction is defined in
+`docs/architecture/partner-collaboration-engine.md`.
+
+### 10.9 Discovery Engine
 
 The Discovery Engine helps users find and explore content.
 
@@ -565,7 +581,7 @@ Potential capabilities include:
 - Planning suggestions
 - Future personalized discovery
 
-### 10.9 Commerce Engine
+### 10.10 Commerce Engine
 
 The Commerce Engine owns Creator storefront catalogs and commercial
 transactions for products derived from AdventuresSuite Publications and
@@ -588,7 +604,7 @@ capabilities and coordinates approved providers.
 Detailed direction is defined in `docs/architecture/commerce-engine.md` and
 `docs/architecture/photography-commerce-and-licensing.md`.
 
-### 10.10 Subscription and Notification Engine
+### 10.11 Subscription and Notification Engine
 
 The Subscription and Notification Engine owns Creator-audience subscription
 relationships and subscriber-facing delivery orchestration.
@@ -616,7 +632,7 @@ audience data.
 Detailed direction is defined in
 `docs/architecture/subscription-notification-engine.md`.
 
-### 10.11 AI Engine
+### 10.12 AI Engine
 
 The AI Engine provides reusable artificial-intelligence capabilities across AdventuresSuite.
 

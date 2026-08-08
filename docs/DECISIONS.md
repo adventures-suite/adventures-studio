@@ -251,3 +251,40 @@ and the platform's ability to change partners.
 Status:
 
 Approved
+
+---
+
+## 2026-08-07
+
+### Travel Professionals Are Partners Through Scoped Engagements
+
+Decision:
+
+AdventuresSuite will enable travel professionals and agencies to collaborate on
+customer-owned Adventure Plans as partners. The platform will augment their
+service rather than compete with or replace them.
+
+An agency may be represented by a Creator for its own brand, staff, templates,
+and Resources. The customer remains a separate Creator and sole owner of the
+Adventure Plan, memories, Resources, and Publications. This introduces neither
+shared ownership nor a parallel tenancy boundary.
+
+Access requires an explicit, accepted, active `PlanningEngagement` scoped to one
+customer Creator and one Adventure Plan. Agency membership alone grants no
+customer access. Engagements are least-privilege, time-bounded, revocable, and
+audited. Professional changes default to customer-approved proposals;
+direct-edit permission is a stronger explicit grant.
+
+Agency CRM, GDS, supplier, booking, commission, and fulfillment systems remain
+authoritative for their concerns and integrate through provider-neutral
+adapters. Commercial terms are deferred. Current Planning persistence work will
+not add speculative partner fields or tables.
+
+Reason:
+
+This model gives professionals a richer customer experience while preserving
+Creator ownership, privacy, auditability, and the existing tenant boundary.
+
+Status:
+
+Approved
