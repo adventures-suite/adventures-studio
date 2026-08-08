@@ -22,6 +22,28 @@ public sealed class AuthenticationContractTests
         Assert.NotEqual(first, third);
     }
 
+    /// <summary>Ensures exact external identities behave correctly as hashed keys.</summary>
+    [Fact]
+    public void ExternalIdentityKey_HashingUsesExactOrdinalValues()
+    {
+        var original = Key("https://login.example.com/tenant", "Customer-A");
+        var equal = Key("https://login.example.com/tenant", "Customer-A");
+        var issuerCaseVariant = Key("https://LOGIN.example.com/tenant", "Customer-A");
+        var subjectCaseVariant = Key("https://login.example.com/tenant", "customer-A");
+        var identities = new HashSet<ExternalIdentityKey>
+        {
+            original,
+            equal,
+            issuerCaseVariant,
+            subjectCaseVariant
+        };
+
+        Assert.Equal(original.GetHashCode(), equal.GetHashCode());
+        Assert.Equal(3, identities.Count);
+        Assert.Contains(issuerCaseVariant, identities);
+        Assert.Contains(subjectCaseVariant, identities);
+    }
+
     /// <summary>Ensures identity values reject normalization and unsafe boundaries.</summary>
     [Theory]
     [InlineData(null, "subject")]
@@ -102,6 +124,124 @@ public sealed class AuthenticationContractTests
         Assert.Throws<ArgumentException>(() => new PlatformUser(
             new("user_steve"), PlatformUserStatus.Active, new(1),
             CreatedAt, CreatedAt.AddTicks(-1)));
+    }
+
+    /// <summary>Ensures every allowed lifecycle transition returns the correct snapshot.</summary>
+    [Theory]
+    [InlineData(PlatformUserStatus.Onboarding, PlatformUserStatus.Active)]
+    [InlineData(PlatformUserStatus.Onboarding, PlatformUserStatus.Disabled)]
+    [InlineData(PlatformUserStatus.Active, PlatformUserStatus.Disabled)]
+    [InlineData(PlatformUserStatus.Disabled, PlatformUserStatus.Active)]
+    public void PlatformUser_TransitionTo_AllowedTransitionReturnsNewSnapshot(
+        PlatformUserStatus current,
+        PlatformUserStatus target)
+    {
+        var user = current == PlatformUserStatus.Disabled
+            ? User(current, CreatedAt.AddHours(1))
+            : User(current);
+        var transitionedAt = user.UpdatedAtUtc.AddHours(1);
+
+        var transitioned = user.TransitionTo(target, transitionedAt);
+
+        Assert.NotSame(user, transitioned);
+        Assert.Equal(user.Id, transitioned.Id);
+        Assert.Equal(user.CreatedAtUtc, transitioned.CreatedAtUtc);
+        Assert.Equal(target, transitioned.Status);
+        Assert.Equal(user.SecurityVersion.Next(), transitioned.SecurityVersion);
+        Assert.Equal(transitionedAt, transitioned.UpdatedAtUtc);
+        Assert.Equal(
+            target == PlatformUserStatus.Disabled ? transitionedAt : null,
+            transitioned.DisabledAtUtc);
+    }
+
+    /// <summary>Ensures every unsupported lifecycle transition fails closed.</summary>
+    [Theory]
+    [InlineData(PlatformUserStatus.Onboarding, PlatformUserStatus.Onboarding)]
+    [InlineData(PlatformUserStatus.Active, PlatformUserStatus.Onboarding)]
+    [InlineData(PlatformUserStatus.Active, PlatformUserStatus.Active)]
+    [InlineData(PlatformUserStatus.Disabled, PlatformUserStatus.Onboarding)]
+    [InlineData(PlatformUserStatus.Disabled, PlatformUserStatus.Disabled)]
+    public void PlatformUser_TransitionTo_UnsupportedTransitionThrows(
+        PlatformUserStatus current,
+        PlatformUserStatus target)
+    {
+        var user = current == PlatformUserStatus.Disabled
+            ? User(current, CreatedAt.AddHours(1))
+            : User(current);
+
+        Assert.Throws<InvalidOperationException>(() =>
+            user.TransitionTo(target, user.UpdatedAtUtc.AddMinutes(1)));
+    }
+
+    /// <summary>Ensures transition status and timestamp inputs fail closed.</summary>
+    [Fact]
+    public void PlatformUser_TransitionTo_InvalidInputThrows()
+    {
+        var user = User(PlatformUserStatus.Active);
+
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            user.TransitionTo((PlatformUserStatus)999, CreatedAt.AddMinutes(1)));
+        Assert.Throws<ArgumentException>(() =>
+            user.TransitionTo(PlatformUserStatus.Disabled, CreatedAt));
+        Assert.Throws<ArgumentException>(() =>
+            user.TransitionTo(PlatformUserStatus.Disabled, CreatedAt.AddTicks(-1)));
+        Assert.Throws<ArgumentException>(() =>
+            user.TransitionTo(
+                PlatformUserStatus.Disabled,
+                CreatedAt.AddMinutes(1).ToOffset(TimeSpan.FromHours(-7))));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            User((PlatformUserStatus)999));
+    }
+
+    /// <summary>Ensures disablement and reactivation permanently invalidate older sessions.</summary>
+    [Fact]
+    public void PlatformUser_TransitionsAdvanceSecurityVersionAndInvalidateSessions()
+    {
+        var active = User(PlatformUserStatus.Active);
+        var originalSession = Session(securityVersion: active.SecurityVersion);
+
+        var disabled = active.TransitionTo(
+            PlatformUserStatus.Disabled,
+            CreatedAt.AddHours(1));
+        var disabledVersionSession = Session(securityVersion: disabled.SecurityVersion);
+
+        Assert.Equal(2, disabled.SecurityVersion.Value);
+        Assert.Equal(CreatedAt.AddHours(1), disabled.DisabledAtUtc);
+        Assert.Equal(ApplicationSessionState.UserInactive, originalSession.EvaluateAt(
+            CreatedAt.AddHours(2), TimeSpan.FromHours(4),
+            disabled.Status, disabled.SecurityVersion));
+
+        var reactivated = disabled.TransitionTo(
+            PlatformUserStatus.Active,
+            CreatedAt.AddHours(3));
+
+        Assert.Equal(3, reactivated.SecurityVersion.Value);
+        Assert.Null(reactivated.DisabledAtUtc);
+        Assert.Equal(ApplicationSessionState.SecurityVersionMismatch, originalSession.EvaluateAt(
+            CreatedAt.AddHours(4), TimeSpan.FromHours(6),
+            reactivated.Status, reactivated.SecurityVersion));
+        Assert.Equal(ApplicationSessionState.SecurityVersionMismatch, disabledVersionSession.EvaluateAt(
+            CreatedAt.AddHours(4), TimeSpan.FromHours(6),
+            reactivated.Status, reactivated.SecurityVersion));
+    }
+
+    /// <summary>Ensures security-version overflow cannot return a partial transition.</summary>
+    [Fact]
+    public void PlatformUser_TransitionTo_SecurityVersionOverflowThrows()
+    {
+        var user = new PlatformUser(
+            new("user_steve"),
+            PlatformUserStatus.Active,
+            new(long.MaxValue),
+            CreatedAt,
+            CreatedAt);
+
+        Assert.Throws<InvalidOperationException>(() => user.TransitionTo(
+            PlatformUserStatus.Disabled,
+            CreatedAt.AddMinutes(1)));
+        Assert.Equal(PlatformUserStatus.Active, user.Status);
+        Assert.Equal(long.MaxValue, user.SecurityVersion.Value);
+        Assert.Null(user.DisabledAtUtc);
     }
 
     /// <summary>Ensures implemented authentication audit actions remain explicit.</summary>
@@ -200,6 +340,24 @@ public sealed class AuthenticationContractTests
         Assert.Throws<ArgumentException>(() => session.EvaluateAt(
             CreatedAt.AddTicks(-1), TimeSpan.FromMinutes(30),
             PlatformUserStatus.Active, new(1)));
+        var sessionWithActivity = Session(lastSeenAtUtc: CreatedAt.AddMinutes(10));
+        Assert.Throws<ArgumentException>(() => sessionWithActivity.EvaluateAt(
+            CreatedAt.AddMinutes(9), TimeSpan.FromMinutes(30),
+            PlatformUserStatus.Active, new(1)));
+    }
+
+    /// <summary>Ensures evaluation at the exact latest-activity boundary remains valid.</summary>
+    [Fact]
+    public void ApplicationSession_EvaluateAtLastSeen_IsActive()
+    {
+        var lastSeenAt = CreatedAt.AddMinutes(10);
+        var session = Session(lastSeenAtUtc: lastSeenAt);
+
+        Assert.Equal(ApplicationSessionState.Active, session.EvaluateAt(
+            lastSeenAt,
+            TimeSpan.FromMinutes(30),
+            PlatformUserStatus.Active,
+            new(1)));
     }
 
     /// <summary>Ensures external-provider configuration is complete and immutable.</summary>
@@ -346,13 +504,14 @@ public sealed class AuthenticationContractTests
         disabledAtUtc);
 
     private static ApplicationSession Session(
+        SecurityVersion? securityVersion = null,
         DateTimeOffset? lastSeenAtUtc = null,
         DateTimeOffset? absoluteExpiresAtUtc = null,
         DateTimeOffset? revokedAtUtc = null,
         SessionRevocationReason? revocationReason = null) => new(
         new("session_01"),
         new("user_steve"),
-        new(1),
+        securityVersion ?? new(1),
         CreatedAt,
         lastSeenAtUtc ?? CreatedAt,
         absoluteExpiresAtUtc ?? CreatedAt.AddHours(8),

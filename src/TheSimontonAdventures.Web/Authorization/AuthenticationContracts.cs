@@ -303,6 +303,47 @@ public sealed record PlatformUser
 
     /// <summary>Gets whether this user may use an otherwise valid application session.</summary>
     public bool CanUseSession => Status == PlatformUserStatus.Active;
+
+    /// <summary>Returns a new immutable snapshot after an allowed lifecycle transition.</summary>
+    public PlatformUser TransitionTo(
+        PlatformUserStatus targetStatus,
+        DateTimeOffset transitionedAtUtc)
+    {
+        if (!Enum.IsDefined(Status) || !Enum.IsDefined(targetStatus))
+        {
+            throw new ArgumentOutOfRangeException(nameof(targetStatus));
+        }
+
+        AuthenticationTimestamp.RequireUtc(transitionedAtUtc, nameof(transitionedAtUtc));
+        if (transitionedAtUtc <= UpdatedAtUtc)
+        {
+            throw new ArgumentException(
+                "A user lifecycle transition must occur after the current snapshot update.",
+                nameof(transitionedAtUtc));
+        }
+
+        var isAllowed = (Status, targetStatus) switch
+        {
+            (PlatformUserStatus.Onboarding, PlatformUserStatus.Active) => true,
+            (PlatformUserStatus.Onboarding, PlatformUserStatus.Disabled) => true,
+            (PlatformUserStatus.Active, PlatformUserStatus.Disabled) => true,
+            (PlatformUserStatus.Disabled, PlatformUserStatus.Active) => true,
+            _ => false
+        };
+        if (!isAllowed)
+        {
+            throw new InvalidOperationException(
+                $"The {Status} to {targetStatus} user lifecycle transition is not allowed.");
+        }
+
+        return new PlatformUser(
+            Id,
+            targetStatus,
+            SecurityVersion.Next(),
+            CreatedAtUtc,
+            transitionedAtUtc,
+            targetStatus == PlatformUserStatus.Disabled ? transitionedAtUtc : null);
+    }
 }
 
 /// <summary>Represents a positive user security version.</summary>
@@ -479,10 +520,10 @@ public sealed record ApplicationSession
             throw new ArgumentException("Current user status and security version are required.");
         }
 
-        if (utcNow < CreatedAtUtc)
+        if (utcNow < LastSeenAtUtc)
         {
             throw new ArgumentException(
-                "The session cannot be evaluated before it was created.",
+                "The session cannot be evaluated before its latest recorded activity.",
                 nameof(utcNow));
         }
 
