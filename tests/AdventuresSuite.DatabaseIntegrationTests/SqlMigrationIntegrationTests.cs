@@ -136,7 +136,7 @@ public sealed class SqlMigrationIntegrationTests
         const string sql = """
             SELECT CONCAT('T|', schemas.name, '|', tables.name, '|', columns.column_id,
                           '|', columns.name, '|', types.name, '|', columns.max_length,
-                          '|', columns.is_nullable)
+                          '|', columns.is_nullable) COLLATE DATABASE_DEFAULT
             FROM sys.tables AS tables
             INNER JOIN sys.schemas AS schemas ON schemas.schema_id = tables.schema_id
             INNER JOIN sys.columns AS columns ON columns.object_id = tables.object_id
@@ -145,6 +145,7 @@ public sealed class SqlMigrationIntegrationTests
               AND (schemas.name = 'planning' OR tables.name = 'AdventuresSuiteSchemaVersions')
             UNION ALL
             SELECT CONCAT('O|', schemas.name, '|', objects.name, '|', objects.type, '|', objects.object_id)
+                COLLATE DATABASE_DEFAULT
             FROM sys.objects AS objects
             INNER JOIN sys.schemas AS schemas ON schemas.schema_id = objects.schema_id
             WHERE schemas.name = 'planning'
