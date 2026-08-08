@@ -144,6 +144,24 @@ public sealed class AuthenticationRepositoryIntegrationTests
             Assert.Equal(0, await ScalarAsync<int>(connectionString, "SELECT COUNT(*) FROM auth.Users WHERE UserId='user_rollback';"));
             Assert.Equal(0, await ScalarAsync<int>(connectionString, "SELECT COUNT(*) FROM auth.ExternalIdentities WHERE ExternalIdentityId='identity_rollback';"));
 
+            var sessionRollback = Proposed(
+                "user_session_rollback",
+                "identity_session_rollback",
+                "session-rollback-subject");
+            await using (var transaction = await factory.BeginAsync())
+            {
+                var resolved = await transaction.ResolveOrCreateUserAsync(
+                    sessionRollback.User,
+                    sessionRollback.Identity);
+                await Assert.ThrowsAsync<SqlException>(() => transaction.Sessions.AddAsync(
+                    NewSession(resolved.UserId, sessionRollback.User.SecurityVersion, "session_first"),
+                    resolved.Id));
+            }
+            Assert.Equal(0, await ScalarAsync<int>(connectionString,
+                "SELECT COUNT(*) FROM auth.Users WHERE UserId='user_session_rollback';"));
+            Assert.Equal(0, await ScalarAsync<int>(connectionString,
+                "SELECT COUNT(*) FROM auth.ExternalIdentities WHERE ExternalIdentityId='identity_session_rollback';"));
+
             var failedOperation = Proposed("user_failed_operation", "identity_failed_operation", "failed-operation");
             await using (var transaction = await factory.BeginAsync())
             {

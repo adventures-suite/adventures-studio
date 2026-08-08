@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/AdventuresSuite.DatabaseMigrator/AdventuresSuite.DatabaseMigrator.csproj" />
+    <ProjectReference Include="../../src/AdventuresSuite.Identity.ExternalId/AdventuresSuite.Identity.ExternalId.csproj" />
     <ProjectReference Include="../../src/TheSimontonAdventures.Web/TheSimontonAdventures.Web.csproj" />
   </ItemGroup>
 

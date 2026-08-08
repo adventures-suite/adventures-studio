@@ -357,6 +357,17 @@ public sealed class AuthenticationRuntimeTests
         public PlatformUser? ResolvedUser { get; set; }
         public ExternalIdentityMapping? ResolvedMapping { get; set; }
 
+        public Task<ExternalIdentityMapping> ResolveOrCreateUserAsync(
+            PlatformUser proposedUser,
+            ExternalIdentityMapping proposedExternalIdentity,
+            CancellationToken cancellationToken = default)
+        {
+            ResolvedUser = proposedUser;
+            ResolvedMapping = proposedExternalIdentity;
+            UserRepository.User = proposedUser;
+            return Task.FromResult(proposedExternalIdentity);
+        }
+
         public Task CreateUserWithIdentityAsync(
             PlatformUser user,
             ExternalIdentityMapping externalIdentity,

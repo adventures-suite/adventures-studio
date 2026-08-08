@@ -47,22 +47,12 @@ public sealed class SqlAuthenticationTransactionFactory(string connectionString)
         }
 
         await using var persistence = (SqlAuthenticationTransaction)await BeginAsync(cancellationToken);
-        await persistence.AcquireIdentityLockAsync(proposedExternalIdentity.Key, cancellationToken);
-        var existing = await persistence.ExternalIdentities.GetByKeyAsync(
-            proposedExternalIdentity.Key,
-            cancellationToken);
-        if (existing is not null)
-        {
-            await persistence.CommitAsync(cancellationToken);
-            return existing;
-        }
-
-        await persistence.CreateUserWithIdentityAsync(
+        var resolved = await persistence.ResolveOrCreateUserAsync(
             proposedUser,
             proposedExternalIdentity,
             cancellationToken);
         await persistence.CommitAsync(cancellationToken);
-        return proposedExternalIdentity;
+        return resolved;
     }
 }
 
@@ -84,6 +74,27 @@ internal sealed class SqlAuthenticationTransaction : IAuthenticationPersistenceT
     public IPlatformUserRepository Users { get; }
     public IExternalIdentityRepository ExternalIdentities { get; }
     public IUserSessionRepository Sessions { get; }
+
+    public async Task<ExternalIdentityMapping> ResolveOrCreateUserAsync(
+        PlatformUser proposedUser,
+        ExternalIdentityMapping proposedExternalIdentity,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(proposedUser);
+        ArgumentNullException.ThrowIfNull(proposedExternalIdentity);
+        if (proposedExternalIdentity.UserId != proposedUser.Id)
+            throw new ArgumentException("The proposed external identity must reference the proposed user.");
+
+        await AcquireIdentityLockAsync(proposedExternalIdentity.Key, cancellationToken);
+        var existing = await ExternalIdentities.GetByKeyAsync(
+            proposedExternalIdentity.Key,
+            cancellationToken);
+        if (existing is not null)
+            return existing;
+
+        await CreateUserWithIdentityAsync(proposedUser, proposedExternalIdentity, cancellationToken);
+        return proposedExternalIdentity;
+    }
 
     public async Task CreateUserWithIdentityAsync(
         PlatformUser user,

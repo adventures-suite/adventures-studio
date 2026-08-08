@@ -40,6 +40,15 @@ public interface IAuthenticationPersistenceTransaction : IAsyncDisposable
     /// <summary>Gets application-session persistence operations in this transaction.</summary>
     IUserSessionRepository Sessions { get; }
 
+    /// <summary>
+    /// Resolves an exact external identity or creates its proposed user and
+    /// mapping inside this transaction's atomic boundary.
+    /// </summary>
+    Task<ExternalIdentityMapping> ResolveOrCreateUserAsync(
+        PlatformUser proposedUser,
+        ExternalIdentityMapping proposedExternalIdentity,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Adds a new user and its first exact external identity atomically.</summary>
     Task CreateUserWithIdentityAsync(
         PlatformUser user,
