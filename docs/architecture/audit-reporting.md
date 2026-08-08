@@ -153,6 +153,13 @@ AI prompts and responses, unpublished media, and protected Resources are not
 analytics payloads. A new analytics destination or tracking technology requires
 privacy, security, residency, consent, cost, and vendor review.
 
+Mobile GPS breadcrumb coordinates, timestamps, trails, inferred places, and
+device movements are never operational telemetry or ordinary audit metadata.
+Durable audit may prove consent, access, sharing, export, publication, retention,
+and deletion using opaque identities and safe outcomes without coordinates.
+Creator reporting uses authorized privacy-preserving projections; raw precise
+trails are not a general reporting dataset.
+
 ## Prohibited Data
 
 Audit, events, projections, analytics, and exports must not contain secrets,

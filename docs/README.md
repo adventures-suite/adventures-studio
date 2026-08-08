@@ -67,6 +67,14 @@ The governing principle is:
 
 > The customer owns the Adventure. The travel professional improves it.
 
+## AdventuresCompanion Mobile
+
+1. `architecture/adventures-companion.md`
+2. `product/adventures-companion.md`
+3. `development/adventures-companion-implementation-plan.md`
+
+> The traveler controls capture. Private synchronization is not publication.
+
 ## Existing Engine Foundations
 
 - `architecture/creator-engine.md`

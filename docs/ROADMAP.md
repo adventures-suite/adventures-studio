@@ -66,6 +66,13 @@ The governing principle is:
 
 > AI proposes; the Creator decides; the Planning Engine commits.
 
+AdventuresCompanion is the first approved iOS and Android application. It will
+use .NET MAUI Blazor Hybrid and begin with the active traveler experience:
+offline itinerary access, local-time context, essential references, memory and
+media capture, notifications, and optional traveler-controlled GPS breadcrumbs.
+Location capture is off by default and private until a separate Creator-reviewed
+publication step. See `docs/architecture/adventures-companion.md`.
+
 ## Travel Professional Partnership Direction
 
 AdventuresSuite will partner with travel professionals rather than replace

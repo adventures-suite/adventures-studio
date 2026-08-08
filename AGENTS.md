@@ -128,6 +128,31 @@
 - Define ownership, purpose, classification, retention, deletion, access,
   recovery, cost, and compatibility tests before enabling a new data product.
 
+## AdventuresCompanion Mobile
+
+- Read `docs/architecture/adventures-companion.md`,
+  `docs/product/adventures-companion.md`, and
+  `docs/development/adventures-companion-implementation-plan.md` before changing
+  mobile APIs, MAUI projects, offline synchronization, device storage,
+  notifications, media capture, maps, or location behavior.
+- Treat AdventuresCompanion as the first iOS and Android application and use
+  .NET MAUI Blazor Hybrid with host-independent shared components and
+  platform-specific adapters.
+- Treat the device as an untrusted, intermittently connected client. Reauthorize
+  every API operation with explicit Creator and resource scope.
+- Keep only minimized, encrypted, revocation-aware offline projections; never
+  replicate the Planning database to a device.
+- Keep GPS breadcrumbs off by default. Only the authenticated traveler on that
+  device may explicitly start capture, and capture must be visible, pausable,
+  stoppable, retention-bound, and private until separately published.
+- Never infer location consent from membership, plan participation, terms,
+  notifications, or another user's approval. No actor may remotely enable
+  another person's tracking.
+- Never place precise location in logs, traces, metrics, analytics,
+  notifications, ordinary audit metadata, or public content.
+- Mobile uses public-client browser-delegated authorization code with PKCE; it
+  does not reuse workspace cookies or embed client secrets or certificates.
+
 ## Documentation
 
 - XML document all public classes, methods, and properties.

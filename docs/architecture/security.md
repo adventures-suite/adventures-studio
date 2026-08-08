@@ -173,6 +173,25 @@ avoid unsafe HTML and script injection; sanitize approved rich content;
 anti-forgery remains required; security headers and dependency review; never
 place secrets or excessive private state in browser-readable storage.
 
+### Mobile Location Tracking and Stalking
+
+A malicious, coercive, compromised, or overprivileged actor attempts to enable,
+continue, access, infer, export, or publish another traveler's precise location.
+Background capture or leaked notifications, telemetry, media metadata, backups,
+and offline stores may expose a traveler even when the main application denies
+access.
+
+Controls: location is off by default; only the authenticated traveler on that
+device can grant AdventuresSuite consent and OS permission; explicit
+Adventure-scoped start, visible status, pause, stop, revocation, retention, and
+eligible deletion; no remote enablement; foreground-first delivery; separately
+justified background permission; minimized precision and sampling; encrypted
+local storage and transport; server-side Creator/resource authorization;
+privacy-safe notifications and telemetry; EXIF review; separate sharing and
+publication approval; sensitive-zone and time removal; abuse-case and physical
+device testing. Companion is not represented as an emergency or guaranteed
+tracking service.
+
 ## Authorization Test Matrix
 
 Every protected operation must cover at least:
@@ -229,7 +248,9 @@ an attacker cannot turn audit volume into a denial of service.
 
 Review this model when identity provider, session strategy, membership schema,
 Planning Engagement, protected Resources, AI context, exports, background jobs,
-support tooling, or public APIs are introduced or materially changed.
+support tooling, public APIs, native mobile clients, offline storage, device
+notifications, media capture, or precise location are introduced or materially
+changed.
 
 Operational logging, tracing, metrics, redaction, sampling, and telemetry access
 follow `docs/architecture/observability.md`. Security telemetry and durable audit

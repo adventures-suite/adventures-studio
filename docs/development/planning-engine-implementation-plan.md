@@ -307,6 +307,11 @@ Exit gate:
 
 ## Phase 8: Adventures Companion
 
+Detailed mobile product, architecture, GPS breadcrumb, privacy, offline, and
+delivery gates are defined in `docs/architecture/adventures-companion.md`,
+`docs/product/adventures-companion.md`, and
+`docs/development/adventures-companion-implementation-plan.md`.
+
 Scope:
 
 - today view
@@ -316,6 +321,7 @@ Scope:
 - maps and essential references
 - journaling and photography prompts
 - offline-readiness design
+- optional traveler-controlled GPS breadcrumbs
 
 Acceptance criteria:
 
@@ -323,6 +329,8 @@ Acceptance criteria:
 - sensitive details remain protected
 - time-zone transitions are tested
 - public and private presentation boundaries remain distinct
+- location capture is off by default, explicit, visible, pausable, stoppable,
+  retention-bound, and private until separately approved for publication
 
 ## Phase 9: Preserve and Publish
 

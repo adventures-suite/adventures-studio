@@ -432,3 +432,37 @@ platform's durable identity and authorization model provider-specific.
 Status:
 
 Approved
+
+---
+
+## 2026-08-08
+
+### AdventuresCompanion Is the First Mobile Application
+
+Decision:
+
+AdventuresSuite will introduce iOS and Android through AdventuresCompanion,
+built with .NET MAUI Blazor Hybrid. The first mobile experience supports active
+travel rather than duplicating the full Creator Workspace. It consumes a
+versioned OAuth-protected API, reuses host-independent .NET and Razor assets
+where appropriate, accesses native device capabilities through adapters, and
+maintains only a minimized encrypted offline projection.
+
+Companion may capture GPS breadcrumbs only when the authenticated traveler
+explicitly enables capture on that device and grants operating-system
+permission. Capture is off by default, Adventure-scoped, visible, pausable,
+stoppable, retention-bound, and private. Device permission, AdventuresSuite
+consent, synchronization, collaborator sharing, and publication are separate
+decisions. No other actor can remotely enable tracking, and raw trails cannot be
+published without a privacy-reducing review and transformation.
+
+Reason:
+
+MAUI Blazor Hybrid preserves AdventuresSuite's .NET investment while allowing
+native iOS and Android capabilities. A Companion-first product delivers the
+highest travel value, and explicit traveler control prevents location and
+offline features from becoming surveillance or accidental publication paths.
+
+Status:
+
+Approved

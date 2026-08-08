@@ -750,6 +750,31 @@ Detailed direction and incremental delivery gates are defined in
 `docs/architecture/audit-reporting.md` and
 `docs/development/audit-reporting-implementation-plan.md`.
 
+### 10.16 AdventuresCompanion Mobile Capability
+
+AdventuresCompanion is the first AdventuresSuite native mobile application for
+iOS and Android. It uses .NET MAUI Blazor Hybrid, a versioned mobile API, secure
+public-client authentication, server-side Creator/resource authorization, and
+an encrypted minimized offline projection.
+
+Its initial focus is the active traveler: today and upcoming itinerary,
+local-time context, essential references, tasks, reminders, maps, memory and
+media capture, privacy-safe notifications, and optional traveler-controlled GPS
+breadcrumbs.
+
+Location capture is off by default and cannot be enabled remotely by a Creator,
+administrator, professional, or support actor. Device permission, platform
+capture consent, private synchronization, collaborator sharing, and public
+publication are separate decisions. Raw precise trails remain private
+Plan-associated Companion capture data rather than Planning aggregate children;
+publication transforms deliberately selected trails into privacy-reduced
+Resources.
+
+Detailed direction is defined in
+`docs/architecture/adventures-companion.md`,
+`docs/product/adventures-companion.md`, and
+`docs/development/adventures-companion-implementation-plan.md`.
+
 ---
 
 ## 11. Engine Ownership Rule
@@ -1131,6 +1156,9 @@ AdventuresSuite follows these principles:
 - Audit and reporting are required, governed platform capabilities; reports use
   authorized, rebuildable projections rather than unrestricted operational
   queries.
+- Mobile clients are untrusted and intermittently connected; Companion uses
+  minimized encrypted projections, server-side authorization, and explicit
+  traveler consent for private location capture.
 
 ---
 
