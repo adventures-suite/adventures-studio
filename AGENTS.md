@@ -58,6 +58,24 @@
 - Do not add speculative partner fields or tables to the current Planning
   persistence phase.
 
+## Identity and Authorization
+
+- Read `docs/architecture/identity-authorization.md`,
+  `docs/architecture/security.md`, and
+  `docs/development/identity-authorization-implementation-plan.md` before
+  changing authentication, membership, authorization, sessions, or audit.
+- Authentication establishes human identity; authorization determines whether
+  that user may perform one operation on one Creator-owned resource.
+- Keep User, Creator, membership, workload, and future engagement identities
+  distinct.
+- Enforce authorization below the UI through explicit resource-aware policies.
+- Treat public host resolution as independent from private authorization.
+- Default deny when Creator ownership, membership, or permission cannot be
+  proven.
+- Agency membership never grants customer-plan access without a future active,
+  matching Planning Engagement.
+- Keep provider claims and framework authorization types out of core contracts.
+
 ## Documentation
 
 - XML document all public classes, methods, and properties.

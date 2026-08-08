@@ -288,3 +288,38 @@ Creator ownership, privacy, auditability, and the existing tenant boundary.
 Status:
 
 Approved
+
+---
+
+## 2026-08-07
+
+### Human Authentication and Creator Resource Authorization Are Separate
+
+Decision:
+
+AdventuresSuite will treat human user identity, Creator identity, Creator
+membership, Azure workload identity, and future Planning Engagement identity as
+separate concepts.
+
+Authentication establishes a stable platform user. Authorization evaluates an
+explicit permission for one operation against an authoritatively owned,
+Creator-scoped resource. Authentication, a resolved public host, agency
+membership, or possession of an Adventure Plan identifier does not independently
+grant access.
+
+Core authorization contracts and permission vocabulary remain independent of
+an identity provider and ASP.NET Core. Server-side application and persistence
+boundaries enforce resource-aware policies; UI checks are advisory only. Agency
+membership never grants customer-plan access without a future accepted, active,
+matching Planning Engagement. Proposal permission remains weaker than direct
+edit permission.
+
+Reason:
+
+Separating these identities and decisions prevents cross-Creator disclosure,
+IDOR, host-context confusion, stale membership grants, and accidental agency
+access while allowing authentication providers and framework adapters to evolve.
+
+Status:
+
+Approved

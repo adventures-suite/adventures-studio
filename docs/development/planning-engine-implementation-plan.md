@@ -142,6 +142,22 @@ Exit gate:
 
 ## Phase 3: Identity and Authorization
 
+Begin with the architecture and threat-model slice defined in
+`docs/development/identity-authorization-implementation-plan.md`. Do not begin
+with login screens.
+
+Implementation sequence:
+
+1. architecture decision and threat model;
+2. framework-independent identity and authorization contracts;
+3. policy and permission vocabulary;
+4. authorization test matrix;
+5. identity-provider selection;
+6. authentication integration;
+7. Creator membership persistence;
+8. server-side enforcement;
+9. UI integration and security testing.
+
 Scope:
 
 - platform user identity
@@ -150,6 +166,8 @@ Scope:
 - authorization policies
 - protected workspace routes
 - authenticated audit actor
+- future Planning Engagement permission vocabulary without implementing the
+  Partner Collaboration Engine
 
 Exclusions:
 

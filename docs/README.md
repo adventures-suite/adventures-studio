@@ -29,6 +29,15 @@ The governing principle is:
 
 > AI proposes; the Creator decides; the Planning Engine commits.
 
+## Identity and Authorization
+
+1. `architecture/identity-authorization.md`
+2. `architecture/security.md`
+3. `development/identity-authorization-implementation-plan.md`
+
+> Authentication establishes who the user is. Authorization determines which
+> Creator-owned resource they may access for this operation.
+
 ## Travel Professional Partnerships
 
 1. `architecture/partner-collaboration-engine.md`
