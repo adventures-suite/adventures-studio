@@ -99,8 +99,8 @@ internal sealed class DapperAdventurePlanRepository(
                 plan.WorkingDescription,
                 LifecycleStage = plan.LifecycleStage.ToString(),
                 PlanningStatus = plan.Status.ToString(),
-                StartDate = plan.Dates.Start,
-                EndDate = plan.Dates.End,
+                StartDate = plan.Dates.Start.ToDateTime(TimeOnly.MinValue),
+                EndDate = plan.Dates.End.ToDateTime(TimeOnly.MinValue),
                 Version = plan.Audit.Version,
                 plan.Audit.UpdatedAtUtc,
                 ExpectedVersion = expectedVersion
@@ -130,19 +130,19 @@ internal sealed class DapperAdventurePlanRepository(
 
         foreach (var item in plan.DestinationVisits)
             await ExecuteAsync("INSERT planning.DestinationVisits VALUES (@CreatorId,@PlanId,@Id,@Name,@Start,@End,@Zone,@Sequence,@Notes);",
-                new { owner.CreatorId, owner.PlanId, Id = item.Id.Value, item.Name, Start = item.Dates.Start, End = item.Dates.End, Zone = item.TimeZone.Value, item.Sequence, item.Notes }, cancellationToken);
+                new { owner.CreatorId, owner.PlanId, Id = item.Id.Value, item.Name, Start = item.Dates.Start.ToDateTime(TimeOnly.MinValue), End = item.Dates.End.ToDateTime(TimeOnly.MinValue), Zone = item.TimeZone.Value, item.Sequence, item.Notes }, cancellationToken);
         foreach (var item in plan.ItineraryDays)
             await ExecuteAsync("INSERT planning.ItineraryDays VALUES (@CreatorId,@PlanId,@Id,@VisitId,@Date,@Zone,@Title);",
-                new { owner.CreatorId, owner.PlanId, Id = item.Id.Value, VisitId = item.DestinationVisitId?.Value, item.Date, Zone = item.TimeZone.Value, item.Title }, cancellationToken);
+                new { owner.CreatorId, owner.PlanId, Id = item.Id.Value, VisitId = item.DestinationVisitId?.Value, Date = item.Date.ToDateTime(TimeOnly.MinValue), Zone = item.TimeZone.Value, item.Title }, cancellationToken);
         foreach (var item in plan.Activities)
             await ExecuteAsync("INSERT planning.PlannedActivities VALUES (@CreatorId,@PlanId,@Id,@DayId,@Title,@Start,@End,@Status);",
-                new { owner.CreatorId, owner.PlanId, Id = item.Id.Value, DayId = item.ItineraryDayId.Value, item.Title, Start = item.StartsAtLocal, End = item.EndsAtLocal, Status = item.Status.ToString() }, cancellationToken);
+                new { owner.CreatorId, owner.PlanId, Id = item.Id.Value, DayId = item.ItineraryDayId.Value, item.Title, Start = item.StartsAtLocal?.ToTimeSpan(), End = item.EndsAtLocal?.ToTimeSpan(), Status = item.Status.ToString() }, cancellationToken);
         foreach (var item in plan.Transportation)
             await ExecuteAsync("INSERT planning.TransportationSegments VALUES (@CreatorId,@PlanId,@Id,@Mode,@From,@To,@DepartureDate,@DepartureTime,@DepartureZone,@ArrivalDate,@ArrivalTime,@ArrivalZone,@Status);",
-                new { owner.CreatorId, owner.PlanId, Id = item.Id.Value, item.Mode, item.From, item.To, item.DepartureDate, DepartureTime = item.DepartureTimeLocal, DepartureZone = item.DepartureTimeZone.Value, item.ArrivalDate, ArrivalTime = item.ArrivalTimeLocal, ArrivalZone = item.ArrivalTimeZone.Value, Status = item.Status.ToString() }, cancellationToken);
+                new { owner.CreatorId, owner.PlanId, Id = item.Id.Value, item.Mode, item.From, item.To, DepartureDate = item.DepartureDate.ToDateTime(TimeOnly.MinValue), DepartureTime = item.DepartureTimeLocal?.ToTimeSpan(), DepartureZone = item.DepartureTimeZone.Value, ArrivalDate = item.ArrivalDate.ToDateTime(TimeOnly.MinValue), ArrivalTime = item.ArrivalTimeLocal?.ToTimeSpan(), ArrivalZone = item.ArrivalTimeZone.Value, Status = item.Status.ToString() }, cancellationToken);
         foreach (var item in plan.Accommodations)
             await ExecuteAsync("INSERT planning.Accommodations VALUES (@CreatorId,@PlanId,@Id,@Name,@Start,@End,@Zone,@Status);",
-                new { owner.CreatorId, owner.PlanId, Id = item.Id.Value, item.Name, Start = item.Dates.Start, End = item.Dates.End, Zone = item.TimeZone.Value, Status = item.Status.ToString() }, cancellationToken);
+                new { owner.CreatorId, owner.PlanId, Id = item.Id.Value, item.Name, Start = item.Dates.Start.ToDateTime(TimeOnly.MinValue), End = item.Dates.End.ToDateTime(TimeOnly.MinValue), Zone = item.TimeZone.Value, Status = item.Status.ToString() }, cancellationToken);
         foreach (var item in plan.Reservations)
             await ExecuteAsync("INSERT planning.Reservations VALUES (@CreatorId,@PlanId,@Id,@Subject,@Reference,@Status);",
                 new { owner.CreatorId, owner.PlanId, Id = item.Id.Value, item.Subject, Reference = item.ConfirmationReference, Status = item.Status.ToString() }, cancellationToken);
@@ -151,7 +151,7 @@ internal sealed class DapperAdventurePlanRepository(
                 new { owner.CreatorId, owner.PlanId, Id = item.Id.Value, item.Text }, cancellationToken);
         foreach (var item in plan.Tasks)
             await ExecuteAsync("INSERT planning.PlanningTasks VALUES (@CreatorId,@PlanId,@Id,@Description,@DueDate,@Completed);",
-                new { owner.CreatorId, owner.PlanId, Id = item.Id.Value, item.Description, item.DueDate, Completed = item.IsCompleted }, cancellationToken);
+                new { owner.CreatorId, owner.PlanId, Id = item.Id.Value, item.Description, DueDate = item.DueDate?.ToDateTime(TimeOnly.MinValue), Completed = item.IsCompleted }, cancellationToken);
         foreach (var item in plan.BudgetItems)
             await ExecuteAsync("INSERT planning.BudgetItems VALUES (@CreatorId,@PlanId,@Id,@Description,@Amount,@Currency);",
                 new { owner.CreatorId, owner.PlanId, Id = item.Id.Value, item.Description, item.Amount, Currency = item.CurrencyCode }, cancellationToken);
@@ -192,8 +192,8 @@ internal sealed class DapperAdventurePlanRepository(
         plan.WorkingDescription,
         LifecycleStage = plan.LifecycleStage.ToString(),
         PlanningStatus = plan.Status.ToString(),
-        StartDate = plan.Dates.Start,
-        EndDate = plan.Dates.End,
+        StartDate = plan.Dates.Start.ToDateTime(TimeOnly.MinValue),
+        EndDate = plan.Dates.End.ToDateTime(TimeOnly.MinValue),
         plan.Audit.Version,
         plan.Audit.CreatedAtUtc,
         plan.Audit.UpdatedAtUtc
