@@ -222,7 +222,7 @@ public sealed class SqlMigrationIntegrationTests
              StartDate, EndDate, Version, CreatedAtUtc, UpdatedAtUtc)
         VALUES
             ('creator_alpha', 'plan_shared', 'Valid plan', 'Plan', 'Draft',
-             '2027-10-25', '2027-11-15', 1, '+2026-08-07T20:00:00+00:00', '+2026-08-07T20:00:00+00:00');
+             '2027-10-25', '2027-11-15', 1, '2026-08-07T20:00:00+00:00', '2026-08-07T20:00:00+00:00');
         INSERT planning.DestinationVisits
             (CreatorId, AdventurePlanId, DestinationVisitId, Name, StartDate, EndDate, TimeZone, Sequence)
         VALUES
@@ -245,7 +245,7 @@ public sealed class SqlMigrationIntegrationTests
              StartDate, EndDate, Version, CreatedAtUtc, UpdatedAtUtc)
         VALUES
             ('creator_beta', 'plan_shared', 'Same plan identity', 'Plan', 'Draft',
-             '2027-10-25', '2027-11-15', 1, '+2026-08-07T20:00:00+00:00', '+2026-08-07T20:00:00+00:00');
+             '2027-10-25', '2027-11-15', 1, '2026-08-07T20:00:00+00:00', '2026-08-07T20:00:00+00:00');
         """;
 
     private const string CrossCreatorForeignKeySql = """
@@ -262,7 +262,7 @@ public sealed class SqlMigrationIntegrationTests
              StartDate, EndDate, Version, CreatedAtUtc, UpdatedAtUtc)
         VALUES
             ('creator_alpha', 'plan_bad_status', 'Invalid', 'Plan', 'Unknown',
-             '2027-10-25', '2027-11-15', 1, '+2026-08-07T20:00:00+00:00', '+2026-08-07T20:00:00+00:00');
+             '2027-10-25', '2027-11-15', 1, '2026-08-07T20:00:00+00:00', '2026-08-07T20:00:00+00:00');
         """;
 
     private const string ReversedDatesSql = """
@@ -271,7 +271,7 @@ public sealed class SqlMigrationIntegrationTests
              StartDate, EndDate, Version, CreatedAtUtc, UpdatedAtUtc)
         VALUES
             ('creator_alpha', 'plan_bad_dates', 'Invalid', 'Plan', 'Draft',
-             '2027-11-15', '2027-10-25', 1, '+2026-08-07T20:00:00+00:00', '+2026-08-07T20:00:00+00:00');
+             '2027-11-15', '2027-10-25', 1, '2026-08-07T20:00:00+00:00', '2026-08-07T20:00:00+00:00');
         """;
 
     private const string NonpositiveVersionSql = """
@@ -280,7 +280,7 @@ public sealed class SqlMigrationIntegrationTests
              StartDate, EndDate, Version, CreatedAtUtc, UpdatedAtUtc)
         VALUES
             ('creator_alpha', 'plan_bad_version', 'Invalid', 'Plan', 'Draft',
-             '2027-10-25', '2027-11-15', 0, '+2026-08-07T20:00:00+00:00', '+2026-08-07T20:00:00+00:00');
+             '2027-10-25', '2027-11-15', 0, '2026-08-07T20:00:00+00:00', '2026-08-07T20:00:00+00:00');
         """;
 
     private const string DuplicateSequenceSql = """
