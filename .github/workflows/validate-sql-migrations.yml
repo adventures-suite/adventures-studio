@@ -121,6 +121,7 @@ jobs:
           0002_create_adventure_plans.sql
           0003_create_planning_children.sql
           0004_create_authentication_persistence.sql
+          0005_bind_sessions_to_external_identities.sql
           EOF
 
           diff -u \

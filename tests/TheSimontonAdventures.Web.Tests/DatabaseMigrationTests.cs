@@ -14,11 +14,12 @@ public sealed class DatabaseMigrationTests
     {
         var migrations = MigrationCatalog.GetOrderedResourceNames(MigratorAssembly);
 
-        Assert.Equal(4, migrations.Count);
+        Assert.Equal(5, migrations.Count);
         Assert.EndsWith("0001_create_planning_schema.sql", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("0002_create_adventure_plans.sql", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("0003_create_planning_children.sql", migrations[2], StringComparison.Ordinal);
         Assert.EndsWith("0004_create_authentication_persistence.sql", migrations[3], StringComparison.Ordinal);
+        Assert.EndsWith("0005_bind_sessions_to_external_identities.sql", migrations[4], StringComparison.Ordinal);
         Assert.Equal(migrations.Count, migrations.Distinct(StringComparer.Ordinal).Count());
     }
 

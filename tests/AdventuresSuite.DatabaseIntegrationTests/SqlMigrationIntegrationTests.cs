@@ -29,7 +29,7 @@ public sealed class SqlMigrationIntegrationTests
         try
         {
             var firstRun = DatabaseMigratorRunner.Migrate(databaseConnectionString);
-            Assert.Equal(4, firstRun.Count);
+            Assert.Equal(5, firstRun.Count);
 
             await VerifySchemaAsync(databaseConnectionString);
             await VerifyConstraintsAsync(databaseConnectionString);
@@ -39,7 +39,7 @@ public sealed class SqlMigrationIntegrationTests
             var secondRun = DatabaseMigratorRunner.Migrate(databaseConnectionString);
 
             Assert.Empty(secondRun);
-            Assert.Equal(4, await ScalarAsync<int>(databaseConnectionString,
+            Assert.Equal(5, await ScalarAsync<int>(databaseConnectionString,
                 "SELECT COUNT(*) FROM dbo.AdventuresSuiteSchemaVersions;"));
             Assert.Equal(signatureBefore, await GetSchemaSignatureAsync(databaseConnectionString));
 
@@ -67,7 +67,8 @@ public sealed class SqlMigrationIntegrationTests
             var baseline = DeployChanges.To.SqlDatabase(connectionString)
                 .WithScriptsEmbeddedInAssembly(assembly, name =>
                     MigrationCatalog.IsMigrationResource(assembly, name)
-                    && !name.EndsWith("0004_create_authentication_persistence.sql", StringComparison.Ordinal))
+                    && !name.EndsWith("0004_create_authentication_persistence.sql", StringComparison.Ordinal)
+                    && !name.EndsWith("0005_bind_sessions_to_external_identities.sql", StringComparison.Ordinal))
                 .JournalToSqlTable("dbo", "AdventuresSuiteSchemaVersions")
                 .WithTransactionPerScript()
                 .Build()
@@ -76,7 +77,7 @@ public sealed class SqlMigrationIntegrationTests
             Assert.Equal(3, await ScalarAsync<int>(connectionString,
                 "SELECT COUNT(*) FROM dbo.AdventuresSuiteSchemaVersions;"));
 
-            Assert.Single(DatabaseMigratorRunner.Migrate(connectionString));
+            Assert.Equal(2, DatabaseMigratorRunner.Migrate(connectionString).Count);
             Assert.Equal(3, await ScalarAsync<int>(connectionString, """
                 SELECT COUNT(*) FROM sys.tables t JOIN sys.schemas s ON s.schema_id=t.schema_id
                 WHERE s.name='auth';
@@ -110,6 +111,18 @@ public sealed class SqlMigrationIntegrationTests
             INNER JOIN sys.schemas AS schemas ON schemas.schema_id = tables.schema_id
             WHERE schemas.name = 'auth'
               AND tables.name IN ('Users', 'ExternalIdentities', 'UserSessions');
+            """));
+        Assert.Equal(1, await ScalarAsync<int>(connectionString, """
+            SELECT COUNT(*) FROM sys.columns AS columns
+            INNER JOIN sys.tables AS tables ON tables.object_id = columns.object_id
+            INNER JOIN sys.schemas AS schemas ON schemas.schema_id = tables.schema_id
+            WHERE schemas.name = 'auth' AND tables.name = 'UserSessions'
+              AND columns.name = 'ExternalIdentityId'
+              AND columns.collation_name = 'Latin1_General_100_BIN2';
+            """));
+        Assert.Equal(1, await ScalarAsync<int>(connectionString, """
+            SELECT COUNT(*) FROM sys.foreign_keys
+            WHERE name = 'FK_UserSessions_ExternalIdentity';
             """));
         Assert.Equal(3, await ScalarAsync<int>(connectionString, """
             SELECT COUNT(*) FROM sys.columns AS columns
@@ -228,14 +241,14 @@ public sealed class SqlMigrationIntegrationTests
             INNER JOIN sys.schemas AS schemas ON schemas.schema_id = tables.schema_id
             INNER JOIN sys.columns AS columns ON columns.object_id = tables.object_id
             INNER JOIN sys.types AS types ON types.user_type_id = columns.user_type_id
-            WHERE schemas.name IN ('planning', 'dbo')
-              AND (schemas.name = 'planning' OR tables.name = 'AdventuresSuiteSchemaVersions')
+            WHERE schemas.name IN ('planning', 'auth', 'dbo')
+              AND (schemas.name IN ('planning', 'auth') OR tables.name = 'AdventuresSuiteSchemaVersions')
             UNION ALL
             SELECT CONCAT('O|', schemas.name, '|', objects.name, '|', objects.type, '|', objects.object_id)
                 COLLATE DATABASE_DEFAULT
             FROM sys.objects AS objects
             INNER JOIN sys.schemas AS schemas ON schemas.schema_id = objects.schema_id
-            WHERE schemas.name = 'planning'
+            WHERE schemas.name IN ('planning', 'auth')
               AND objects.type IN ('PK', 'F', 'C', 'UQ')
             ORDER BY 1;
             """;

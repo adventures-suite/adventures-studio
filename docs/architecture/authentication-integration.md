@@ -168,6 +168,7 @@ ExternalIdentities
 UserSessions
   UserSessionId
   UserId
+  ExternalIdentityId
   SecurityVersion
   CreatedAtUtc
   LastSeenAtUtc
@@ -185,6 +186,8 @@ Requirements:
 - a first authentication can create a platform user but grants no Creator
   membership;
 - disabled users or external mappings cannot create a new session;
+- each session is authoritatively bound to the external identity that
+  established it, and disabling that mapping invalidates the bound session;
 - no automatic linking by email;
 - linking and unlinking are deferred until their recent-authentication,
   notification, recovery, concurrency, and audit workflow is approved;

@@ -122,6 +122,16 @@ public sealed class AuthenticationRepositoryIntegrationTests
             await using (var transaction = await factory.BeginAsync())
             {
                 Assert.True(await transaction.ExternalIdentities.DisableAsync(owner.Id, CreatedAt.AddMinutes(30)));
+                Assert.Null(await transaction.Sessions.GetValidAsync(
+                    activityId,
+                    CreatedAt.AddMinutes(31),
+                    TimeSpan.FromMinutes(30)));
+                Assert.Equal(
+                    SessionActivityTouchResult.SessionUnavailable,
+                    await transaction.Sessions.TouchActivityAsync(
+                        activityId,
+                        CreatedAt.AddMinutes(31),
+                        TimeSpan.FromMinutes(5)));
                 var current = (await transaction.Users.GetAsync(owner.UserId))!;
                 await Assert.ThrowsAsync<InvalidOperationException>(() => transaction.Sessions.AddAsync(
                     NewSession(owner.UserId, current.SecurityVersion, "session_disabled_identity"), owner.Id));

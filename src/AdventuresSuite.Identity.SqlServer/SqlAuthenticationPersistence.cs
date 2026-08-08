@@ -285,12 +285,19 @@ internal sealed class DapperUserSessionRepository(SqlConnection connection, SqlT
     {
         if (utcNow.Offset != TimeSpan.Zero || idleTimeout <= TimeSpan.Zero)
             throw new ArgumentException("A UTC time and positive idle timeout are required.");
-        var session = await GetAsync(sessionId, cancellationToken);
-        if (session is null) return null;
-        var user = await Connection.QuerySingleOrDefaultAsync<UserStateRow>(Command(
-            "SELECT Status,SecurityVersion FROM auth.Users WHERE UserId=@UserId;", new { UserId = session.UserId.Value }, cancellationToken));
-        if (user is null) return null;
-        return session.EvaluateAt(utcNow, idleTimeout, Enum.Parse<PlatformUserStatus>(user.Status), new(user.SecurityVersion))
+        var state = await Connection.QuerySingleOrDefaultAsync<ValidSessionRow>(Command("""
+            SELECT s.UserSessionId,s.UserId,s.SecurityVersion,s.CreatedAtUtc,s.LastSeenAtUtc,
+                   s.AbsoluteExpiresAtUtc,s.RevokedAtUtc,s.RevocationReason,
+                   u.Status AS UserStatus,u.SecurityVersion AS UserSecurityVersion
+            FROM auth.UserSessions s
+            JOIN auth.Users u ON u.UserId=s.UserId
+            JOIN auth.ExternalIdentities i
+              ON i.ExternalIdentityId=s.ExternalIdentityId AND i.UserId=s.UserId
+            WHERE s.UserSessionId=@Id AND i.DisabledAtUtc IS NULL;
+            """, new { Id = sessionId.Value }, cancellationToken));
+        if (state is null) return null;
+        var session = state.Map();
+        return session.EvaluateAt(utcNow, idleTimeout, Enum.Parse<PlatformUserStatus>(state.UserStatus), new(state.UserSecurityVersion))
             == ApplicationSessionState.Active ? session : null;
     }
 
@@ -300,8 +307,8 @@ internal sealed class DapperUserSessionRepository(SqlConnection connection, SqlT
         ArgumentNullException.ThrowIfNull(session);
         if (authenticatedIdentityId == default) throw new ArgumentException("An authenticated identity is required.");
         var count = await Connection.ExecuteAsync(Command("""
-            INSERT auth.UserSessions (UserSessionId,UserId,SecurityVersion,CreatedAtUtc,LastSeenAtUtc,AbsoluteExpiresAtUtc,RevokedAtUtc,RevocationReason)
-            SELECT @Id,@UserId,@Version,@Created,@LastSeen,@Expires,@Revoked,@Reason
+            INSERT auth.UserSessions (UserSessionId,UserId,ExternalIdentityId,SecurityVersion,CreatedAtUtc,LastSeenAtUtc,AbsoluteExpiresAtUtc,RevokedAtUtc,RevocationReason)
+            SELECT @Id,@UserId,@IdentityId,@Version,@Created,@LastSeen,@Expires,@Revoked,@Reason
             FROM auth.Users u JOIN auth.ExternalIdentities i ON i.UserId=u.UserId
             WHERE u.UserId=@UserId AND u.Status='Active' AND u.SecurityVersion=@Version
               AND i.ExternalIdentityId=@IdentityId AND i.DisabledAtUtc IS NULL;
@@ -347,6 +354,13 @@ internal sealed class DapperUserSessionRepository(SqlConnection connection, SqlT
                   WHERE auth.Users.UserId=auth.UserSessions.UserId
                     AND auth.Users.Status='Active'
                     AND auth.Users.SecurityVersion=auth.UserSessions.SecurityVersion
+              )
+              AND EXISTS
+              (
+                  SELECT 1 FROM auth.ExternalIdentities
+                  WHERE auth.ExternalIdentities.ExternalIdentityId=auth.UserSessions.ExternalIdentityId
+                    AND auth.ExternalIdentities.UserId=auth.UserSessions.UserId
+                    AND auth.ExternalIdentities.DisabledAtUtc IS NULL
               );
             """, new { Id = sessionId.Value, Observed = observedAtUtc, Seconds = seconds }, cancellationToken));
         if (updated == 1) return SessionActivityTouchResult.Updated;
@@ -359,14 +373,28 @@ internal sealed class DapperUserSessionRepository(SqlConnection connection, SqlT
                   WHERE auth.Users.UserId=auth.UserSessions.UserId
                     AND auth.Users.Status='Active'
                     AND auth.Users.SecurityVersion=auth.UserSessions.SecurityVersion
+              )
+              AND EXISTS
+              (
+                  SELECT 1 FROM auth.ExternalIdentities
+                  WHERE auth.ExternalIdentities.ExternalIdentityId=auth.UserSessions.ExternalIdentityId
+                    AND auth.ExternalIdentities.UserId=auth.UserSessions.UserId
+                    AND auth.ExternalIdentities.DisabledAtUtc IS NULL
               );
             """, new { Id = sessionId.Value, Observed = observedAtUtc }, cancellationToken));
         return available == 1 ? SessionActivityTouchResult.Coalesced : SessionActivityTouchResult.SessionUnavailable;
     }
 
-    private sealed record UserStateRow(string Status, long SecurityVersion);
     private sealed record SessionRow(string UserSessionId, string UserId, long SecurityVersion, DateTimeOffset CreatedAtUtc,
         DateTimeOffset LastSeenAtUtc, DateTimeOffset AbsoluteExpiresAtUtc, DateTimeOffset? RevokedAtUtc, string? RevocationReason)
+    {
+        public ApplicationSession Map() => new(new(UserSessionId), new(UserId), new(SecurityVersion),
+            CreatedAtUtc.ToUniversalTime(), LastSeenAtUtc.ToUniversalTime(), AbsoluteExpiresAtUtc.ToUniversalTime(),
+            RevokedAtUtc?.ToUniversalTime(), RevocationReason is null ? null : Enum.Parse<SessionRevocationReason>(RevocationReason));
+    }
+    private sealed record ValidSessionRow(string UserSessionId, string UserId, long SecurityVersion,
+        DateTimeOffset CreatedAtUtc, DateTimeOffset LastSeenAtUtc, DateTimeOffset AbsoluteExpiresAtUtc,
+        DateTimeOffset? RevokedAtUtc, string? RevocationReason, string UserStatus, long UserSecurityVersion)
     {
         public ApplicationSession Map() => new(new(UserSessionId), new(UserId), new(SecurityVersion),
             CreatedAtUtc.ToUniversalTime(), LastSeenAtUtc.ToUniversalTime(), AbsoluteExpiresAtUtc.ToUniversalTime(),
