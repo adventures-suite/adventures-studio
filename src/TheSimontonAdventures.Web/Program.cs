@@ -1,5 +1,6 @@
 using System.Reflection;
 using TheSimontonAdventures.Web.Components;
+using TheSimontonAdventures.Web.Authorization;
 using TheSimontonAdventures.Web.Creators;
 using TheSimontonAdventures.Web.Resources;
 using TheSimontonAdventures.Web.Services;
@@ -25,6 +26,13 @@ builder.Services.AddSingleton<ICreatorResolver, CreatorResolver>();
 builder.Services.AddScoped<CreatorContextAccessor>();
 builder.Services.AddScoped<ICreatorContextAccessor>(services =>
     services.GetRequiredService<CreatorContextAccessor>());
+builder.Services.AddScoped<TrustedRequestHostContextAccessor>();
+builder.Services.AddScoped<ITrustedRequestHostContextAccessor>(services =>
+    services.GetRequiredService<TrustedRequestHostContextAccessor>());
+
+// Private authentication remains explicitly disabled until environment-backed
+// External ID and workspace settings are provisioned in Slice 5F.
+builder.Services.AddSingleton(AuthenticationConfiguration.Disabled());
 
 // Register the existing JSON-backed travel-content implementation.
 //

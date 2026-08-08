@@ -1,5 +1,7 @@
 namespace TheSimontonAdventures.Web.Creators;
 
+using TheSimontonAdventures.Web.Authorization;
+
 /// <summary>
 /// Resolves the incoming request host once and establishes immutable Creator
 /// Context before downstream platform capabilities execute.
@@ -27,11 +29,29 @@ public sealed class CreatorResolutionMiddleware
     public async Task InvokeAsync(
         HttpContext httpContext,
         ICreatorResolver creatorResolver,
-        CreatorContextAccessor contextAccessor)
+        CreatorContextAccessor contextAccessor,
+        TrustedRequestHostContextAccessor trustedHostAccessor,
+        AuthenticationConfiguration authenticationConfiguration)
     {
         ArgumentNullException.ThrowIfNull(httpContext);
         ArgumentNullException.ThrowIfNull(creatorResolver);
         ArgumentNullException.ThrowIfNull(contextAccessor);
+        ArgumentNullException.ThrowIfNull(trustedHostAccessor);
+        ArgumentNullException.ThrowIfNull(authenticationConfiguration);
+
+        if (trustedHostAccessor.IsEstablished)
+        {
+            await _next(httpContext);
+            return;
+        }
+
+        if (IsCanonicalWorkspaceRequest(httpContext.Request, authenticationConfiguration))
+        {
+            trustedHostAccessor.Establish(new TrustedRequestHostContext(
+                TrustedRequestHostType.PlatformWorkspace));
+            await _next(httpContext);
+            return;
+        }
 
         if (!contextAccessor.IsEstablished)
         {
@@ -50,8 +70,26 @@ public sealed class CreatorResolutionMiddleware
             }
 
             contextAccessor.Establish(creatorContext);
+            trustedHostAccessor.Establish(new TrustedRequestHostContext(
+                TrustedRequestHostType.PublicCreator,
+                creatorContext));
         }
 
         await _next(httpContext);
+    }
+
+    private static bool IsCanonicalWorkspaceRequest(
+        HttpRequest request,
+        AuthenticationConfiguration configuration)
+    {
+        if (configuration.Mode == AuthenticationMode.Disabled
+            || !Uri.TryCreate(configuration.WorkspaceOrigin, UriKind.Absolute, out var workspace))
+        {
+            return false;
+        }
+
+        return string.Equals(request.Scheme, workspace.Scheme, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(request.Host.Host, workspace.IdnHost, StringComparison.OrdinalIgnoreCase)
+            && (request.Host.Port ?? (request.IsHttps ? 443 : 80)) == workspace.Port;
     }
 }

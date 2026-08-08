@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using TheSimontonAdventures.Web.Authorization;
 using TheSimontonAdventures.Web.Creators;
 
 namespace TheSimontonAdventures.Web.Tests;
@@ -34,7 +35,7 @@ public sealed class CreatorResolutionMiddlewareTests
         });
         var httpContext = CreateHttpContext("one.example.com");
 
-        await middleware.InvokeAsync(httpContext, resolver, accessor);
+        await InvokeAsync(middleware, httpContext, resolver, accessor);
 
         Assert.True(nextCalled);
         Assert.Same(expectedContext, accessor.Current);
@@ -59,7 +60,7 @@ public sealed class CreatorResolutionMiddlewareTests
         });
         var httpContext = CreateHttpContext("unknown.example.com");
 
-        await middleware.InvokeAsync(httpContext, resolver, accessor);
+        await InvokeAsync(middleware, httpContext, resolver, accessor);
 
         Assert.False(nextCalled);
         Assert.Equal(
@@ -100,8 +101,9 @@ public sealed class CreatorResolutionMiddlewareTests
         });
         var httpContext = CreateHttpContext("one.example.com");
 
-        await middleware.InvokeAsync(httpContext, resolver, accessor);
-        await middleware.InvokeAsync(httpContext, resolver, accessor);
+        var trustedHostAccessor = new TrustedRequestHostContextAccessor();
+        await InvokeAsync(middleware, httpContext, resolver, accessor, trustedHostAccessor);
+        await InvokeAsync(middleware, httpContext, resolver, accessor, trustedHostAccessor);
 
         Assert.Equal(1, resolver.ResolveCallCount);
         Assert.Equal(2, nextCallCount);
@@ -133,11 +135,13 @@ public sealed class CreatorResolutionMiddlewareTests
             await Task.Yield());
 
         await Task.WhenAll(
-            middleware.InvokeAsync(
+            InvokeAsync(
+                middleware,
                 CreateHttpContext("one.example.com"),
                 resolver,
                 firstAccessor),
-            middleware.InvokeAsync(
+            InvokeAsync(
+                middleware,
                 CreateHttpContext("two.example.com"),
                 resolver,
                 secondAccessor));
@@ -173,6 +177,91 @@ public sealed class CreatorResolutionMiddlewareTests
         Assert.NotSame(firstConcrete, secondConcrete);
     }
 
+    /// <summary>
+    /// Ensures the exact workspace origin is classified without inventing a
+    /// public Creator context.
+    /// </summary>
+    [Fact]
+    public async Task InvokeAsync_WorkspaceOrigin_EstablishesWorkspaceWithoutCreator()
+    {
+        var resolver = new StubCreatorResolver(new Dictionary<string, CreatorContext>
+        {
+            ["workspace.example.com"] = CreateContext(
+                "creator_collision_01",
+                "workspace.example.com")
+        });
+        var creatorAccessor = new CreatorContextAccessor();
+        var trustedHostAccessor = new TrustedRequestHostContextAccessor();
+        var nextCalled = false;
+        var middleware = new CreatorResolutionMiddleware(_ =>
+        {
+            nextCalled = true;
+            Assert.Equal(
+                TrustedRequestHostType.PlatformWorkspace,
+                trustedHostAccessor.Current.Type);
+            Assert.Null(trustedHostAccessor.Current.Creator);
+            Assert.Throws<InvalidOperationException>(() => creatorAccessor.Current);
+            return Task.CompletedTask;
+        });
+        var context = CreateHttpContext("workspace.example.com");
+        context.Request.Scheme = "https";
+
+        await middleware.InvokeAsync(
+            context,
+            resolver,
+            creatorAccessor,
+            trustedHostAccessor,
+            ExternalConfiguration());
+
+        Assert.True(nextCalled);
+        Assert.Equal(0, resolver.ResolveCallCount);
+    }
+
+    /// <summary>Ensures public and forged forwarded hosts cannot enter the workspace branch.</summary>
+    [Theory]
+    [InlineData("creator.example.com", "workspace.example.com")]
+    [InlineData("unknown.example.com", "workspace.example.com")]
+    public async Task InvokeAsync_ForwardedWorkspaceHost_DoesNotExpandTrust(
+        string requestHost,
+        string forwardedHost)
+    {
+        var publicContext = CreateContext("creator_one_01", "creator.example.com");
+        var resolver = new StubCreatorResolver(new Dictionary<string, CreatorContext>
+        {
+            ["creator.example.com"] = publicContext
+        });
+        var creatorAccessor = new CreatorContextAccessor();
+        var trustedHostAccessor = new TrustedRequestHostContextAccessor();
+        var nextCalled = false;
+        var middleware = new CreatorResolutionMiddleware(_ =>
+        {
+            nextCalled = true;
+            return Task.CompletedTask;
+        });
+        var context = CreateHttpContext(requestHost);
+        context.Request.Scheme = "https";
+        context.Request.Headers["X-Forwarded-Host"] = forwardedHost;
+        context.Request.Headers["X-Forwarded-Proto"] = "https";
+
+        await middleware.InvokeAsync(
+            context,
+            resolver,
+            creatorAccessor,
+            trustedHostAccessor,
+            ExternalConfiguration());
+
+        if (requestHost == "creator.example.com")
+        {
+            Assert.True(nextCalled);
+            Assert.Equal(TrustedRequestHostType.PublicCreator, trustedHostAccessor.Current.Type);
+        }
+        else
+        {
+            Assert.False(nextCalled);
+            Assert.Equal(StatusCodes.Status421MisdirectedRequest, context.Response.StatusCode);
+        }
+    }
+
     private static DefaultHttpContext CreateHttpContext(string host)
     {
         var httpContext = new DefaultHttpContext();
@@ -180,6 +269,33 @@ public sealed class CreatorResolutionMiddlewareTests
         httpContext.Response.Body = new MemoryStream();
         return httpContext;
     }
+
+    private static Task InvokeAsync(
+        CreatorResolutionMiddleware middleware,
+        HttpContext httpContext,
+        ICreatorResolver resolver,
+        CreatorContextAccessor creatorAccessor,
+        TrustedRequestHostContextAccessor? trustedHostAccessor = null) =>
+        middleware.InvokeAsync(
+            httpContext,
+            resolver,
+            creatorAccessor,
+            trustedHostAccessor ?? new TrustedRequestHostContextAccessor(),
+            AuthenticationConfiguration.Disabled());
+
+    private static AuthenticationConfiguration ExternalConfiguration() => new(
+        AuthenticationMode.ExternalProvider,
+        "https://workspace.example.com",
+        new ExternalIdentityProviderId("entra_external_id"),
+        "https://tenant.ciamlogin.com/tenant/v2.0",
+        "client-id",
+        "certificate-reference",
+        "/signin-oidc",
+        "/signout-callback-oidc",
+        TimeSpan.FromHours(8),
+        TimeSpan.FromMinutes(30),
+        TimeSpan.FromMinutes(5),
+        TimeSpan.FromMinutes(5));
 
     private static CreatorContext CreateContext(
         string creatorId,
