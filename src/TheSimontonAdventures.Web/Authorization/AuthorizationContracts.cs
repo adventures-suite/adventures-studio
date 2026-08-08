@@ -13,8 +13,12 @@ public enum AuthorizationDenialReason
     ResourceScopeMismatch,
     /// <summary>The membership or delegated relationship is stale or inactive.</summary>
     AccessRevoked,
+    /// <summary>The caller's authorization state is older than authoritative membership state.</summary>
+    StaleAuthorizationContext,
     /// <summary>The operation requires a human actor.</summary>
     HumanActorRequired,
+    /// <summary>This policy slice has no approved authorization basis for the actor type.</summary>
+    ActorTypeUnsupported,
     /// <summary>The request is invalid without revealing protected resource state.</summary>
     InvalidRequest
 }
@@ -27,7 +31,8 @@ public sealed record AuthorizationRequest
         ActorIdentity? actor,
         Permission permission,
         AuthorizationResourceScope resource,
-        ActorIdentity? initiatingActor = null)
+        ActorIdentity? initiatingActor = null,
+        long? membershipVersion = null)
     {
         Actor = actor;
         if (permission == default)
@@ -60,6 +65,14 @@ public sealed record AuthorizationRequest
         }
 
         InitiatingActor = initiatingActor;
+        if (membershipVersion is < 1)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(membershipVersion),
+                "Membership versions must be positive when supplied.");
+        }
+
+        MembershipVersion = membershipVersion;
     }
 
     /// <summary>Gets the principal performing the operation.</summary>
@@ -70,24 +83,52 @@ public sealed record AuthorizationRequest
     public AuthorizationResourceScope Resource { get; }
     /// <summary>Gets the human who initiated non-human work, when applicable.</summary>
     public ActorIdentity? InitiatingActor { get; }
+    /// <summary>Gets the membership version observed by the caller, when applicable.</summary>
+    public long? MembershipVersion { get; }
+}
+
+/// <summary>Describes durable audit behavior required after authorization.</summary>
+public enum AuthorizationAuditRequirement
+{
+    /// <summary>No durable audit intent is required by this policy.</summary>
+    None,
+    /// <summary>The protected mutation and audit intent must commit atomically.</summary>
+    RequiredMutation,
+    /// <summary>The sensitive read must fail closed if audit intent cannot be recorded.</summary>
+    RequiredSensitiveRead
 }
 
 /// <summary>Returns an authorization outcome without protected resource details.</summary>
 public sealed record AuthorizationDecision
 {
-    private AuthorizationDecision(bool isAllowed, AuthorizationDenialReason? denialReason)
+    private AuthorizationDecision(
+        bool isAllowed,
+        AuthorizationDenialReason? denialReason,
+        AuthorizationAuditRequirement auditRequirement)
     {
         IsAllowed = isAllowed;
         DenialReason = denialReason;
+        AuditRequirement = auditRequirement;
     }
 
     /// <summary>Gets whether the requested operation is authorized.</summary>
     public bool IsAllowed { get; }
     /// <summary>Gets a safe reason category when authorization is denied.</summary>
     public AuthorizationDenialReason? DenialReason { get; }
+    /// <summary>Gets the durable audit behavior required for an allowed operation.</summary>
+    public AuthorizationAuditRequirement AuditRequirement { get; }
 
     /// <summary>Creates an allowed decision.</summary>
-    public static AuthorizationDecision Allow() => new(true, null);
+    public static AuthorizationDecision Allow(
+        AuthorizationAuditRequirement auditRequirement = AuthorizationAuditRequirement.None)
+    {
+        if (!Enum.IsDefined(auditRequirement))
+        {
+            throw new ArgumentOutOfRangeException(nameof(auditRequirement));
+        }
+
+        return new(true, null, auditRequirement);
+    }
 
     /// <summary>Creates a denied decision with a non-disclosing reason.</summary>
     public static AuthorizationDecision Deny(AuthorizationDenialReason reason)
@@ -97,7 +138,7 @@ public sealed record AuthorizationDecision
             throw new ArgumentOutOfRangeException(nameof(reason));
         }
 
-        return new(false, reason);
+        return new(false, reason, AuthorizationAuditRequirement.None);
     }
 }
 

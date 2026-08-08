@@ -60,7 +60,9 @@ Scope:
 
 Acceptance criteria:
 
-- every request carries explicit actor, Creator, operation, and resource scope;
+- every request carries explicit actor context, Creator, operation, and resource
+  scope; the actor may be absent only to represent an anonymous request that
+  must be denied safely;
 - human-only policies reject system and background actors;
 - create, active-list, and archived-list operations authorize collection scope;
 - default or mismatched identities fail predictably;
@@ -72,6 +74,12 @@ Acceptance criteria:
 
 Scope: initial role bundles, explicit policies, ownership requirements, archive
 and restore rules, membership version and status semantics, and audit intent.
+
+This slice authorizes authenticated human actors through current Creator
+membership only. System and background actors are denied with an explicit
+unsupported-actor or human-required reason, as applicable, until a separate
+provider-neutral workload authorization basis is approved. Queued work must not
+infer authority from a human role bundle.
 
 Acceptance criteria: policies are composable, default-deny, resource-aware, and
 independent of UI; agency membership cannot satisfy customer-plan policy.
