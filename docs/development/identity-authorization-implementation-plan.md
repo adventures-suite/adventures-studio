@@ -107,6 +107,18 @@ Map validated provider identity to stable platform `UserId`. Establish secure
 session behavior, CSRF protection, security headers, logout, revocation, and
 safe authentication errors. Workload identity remains separate.
 
+Preserve exact case-sensitive issuer/subject identity in contracts and SQL;
+activate private authentication only on the canonical workspace host; validate
+the exact workspace origin for every SignalR transport; and coalesce only
+non-security-critical session activity writes while keeping revocation and
+security-version checks immediate.
+
+Detailed design and six incremental implementation gates are defined in
+`docs/architecture/authentication-integration.md`. Complete 5A through 5F in
+order. Do not add a live provider package, login UI, or Azure identity resource
+before its preceding contracts, persistence, deterministic-adapter, and
+security gates pass.
+
 ## Slice 6: Creator Membership Persistence
 
 Add forward-only migrations and Dapper adapters for memberships, roles or

@@ -122,6 +122,19 @@ Secure, and HttpOnly cookie settings; origin validation where appropriate;
 unsafe operations never use GET; re-authentication for selected high-risk
 actions.
 
+### Cross-Origin Interactive Server Connections
+
+A malicious public Creator or unknown origin attempts to establish a
+cookie-authenticated SignalR circuit through negotiate, WebSockets,
+Server-Sent Events, or long polling. A crafted client may also manually attach
+a workspace cookie to a public host.
+
+Controls: private authentication activates only on the exact canonical
+workspace host; public and unknown hosts ignore or reject workspace cookies;
+exact workspace-origin validation covers every SignalR transport and
+reconnection; no wildcard or suffix matching; CORS and antiforgery are not
+treated as WebSocket origin controls; negative host-and-origin pipeline tests.
+
 ### Session Theft and Fixation
 
 An attacker steals, predicts, reuses, or fixes a valid authenticated session.
@@ -186,6 +199,8 @@ Every protected operation must cover at least:
 | Support actor without explicit impersonation grant | Deny |
 | Background/system actor invoking a human-only approval policy | Deny |
 | Cookie-authenticated mutation without valid anti-forgery proof | Deny |
+| Public or unknown host supplied with a workspace cookie | Remain anonymous or reject before private routing |
+| SignalR transport from a public Creator, unknown, missing, or mismatched origin | Reject before circuit establishment |
 | Authentication callback with invalid state, nonce, or return target | Deny |
 
 Tests must exercise application and persistence boundaries, not only rendered

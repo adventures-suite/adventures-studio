@@ -61,7 +61,9 @@
 ## Identity and Authorization
 
 - Read `docs/architecture/identity-authorization.md`,
-  `docs/architecture/identity-provider.md`, `docs/architecture/security.md`, and
+  `docs/architecture/identity-provider.md`,
+  `docs/architecture/authentication-integration.md`,
+  `docs/architecture/security.md`, and
   `docs/development/identity-authorization-implementation-plan.md` before
   changing authentication, membership, authorization, sessions, or audit.
 - Authentication establishes human identity; authorization determines whether
@@ -70,6 +72,14 @@
   distinct.
 - Enforce authorization below the UI through explicit resource-aware policies.
 - Treat public host resolution as independent from private authorization.
+- Activate private authentication schemes and endpoints only on the canonical
+  workspace host. Public Creator hosts must ignore or reject manually supplied
+  workspace cookies.
+- Preserve OIDC issuer and subject values exactly. Compare and persist them with
+  ordinal, case-sensitive semantics; never lowercase either identity value.
+- Require exact workspace-origin validation for every cookie-authenticated
+  SignalR transport, including negotiate, WebSockets, Server-Sent Events, and
+  long polling.
 - Default deny when Creator ownership, membership, or permission cannot be
   proven.
 - Agency membership never grants customer-plan access without a future active,

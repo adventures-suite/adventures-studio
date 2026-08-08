@@ -26,9 +26,10 @@ introduced by this decision slice. Those belong to Phase 3 Slice 5.
 - Entra External ID establishes external human identity only.
 - A validated provider identity does not establish Creator, membership, role,
   ownership, Planning Engagement, or resource permission.
-- The canonical provider mapping key is issuer plus subject. Email address,
-  display name, social provider, or tenant branding is never the stable
-  platform identity.
+- The canonical provider mapping key is issuer plus subject. Both values retain
+  their validated representation and use exact ordinal, case-sensitive
+  comparison; neither value is lowercased. Email address, display name, social
+  provider, or tenant branding is never the stable platform identity.
 - Provider claims are translated in an infrastructure adapter and do not enter
   core authorization contracts.
 - Azure Managed Identity remains workload identity. It never becomes a human
