@@ -18,19 +18,20 @@ internal sealed class DapperAdventurePlanRepository(
     {
         RequireScope(creatorId);
         const string sql = """
-            SELECT * FROM planning.AdventurePlans WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId;
-            SELECT * FROM planning.Travelers WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY TravelerId;
-            SELECT * FROM planning.TravelerPreferences WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY TravelerId, Preference;
-            SELECT * FROM planning.DestinationVisits WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY Sequence;
-            SELECT * FROM planning.ItineraryDays WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY LocalDate;
-            SELECT * FROM planning.PlannedActivities WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY PlannedActivityId;
-            SELECT * FROM planning.TransportationSegments WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY DepartureDate, TransportationSegmentId;
-            SELECT * FROM planning.Accommodations WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY StartDate, AccommodationId;
-            SELECT * FROM planning.Reservations WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY ReservationId;
-            SELECT * FROM planning.PlanningNotes WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY PlanningNoteId;
-            SELECT * FROM planning.PlanningTasks WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY DueDate, PlanningTaskId;
-            SELECT * FROM planning.BudgetItems WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY BudgetItemId;
-            SELECT * FROM planning.PackingItems WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY PackingItemId;
+            SELECT CreatorId,AdventurePlanId,Title,WorkingDescription,LifecycleStage,PlanningStatus,StartDate,EndDate,Version,CreatedAtUtc,UpdatedAtUtc
+              FROM planning.AdventurePlans WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId;
+            SELECT TravelerId,DisplayName FROM planning.Travelers WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY TravelerId;
+            SELECT TravelerId,Preference FROM planning.TravelerPreferences WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY TravelerId, Preference;
+            SELECT DestinationVisitId,Name,StartDate,EndDate,TimeZone,Sequence,Notes FROM planning.DestinationVisits WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY Sequence;
+            SELECT ItineraryDayId,DestinationVisitId,LocalDate,TimeZone,Title FROM planning.ItineraryDays WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY LocalDate;
+            SELECT PlannedActivityId,ItineraryDayId,Title,StartsAtLocal,EndsAtLocal,Status FROM planning.PlannedActivities WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY PlannedActivityId;
+            SELECT TransportationSegmentId,Mode,Origin,Destination,DepartureDate,DepartureTimeLocal,DepartureTimeZone,ArrivalDate,ArrivalTimeLocal,ArrivalTimeZone,Status FROM planning.TransportationSegments WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY DepartureDate, TransportationSegmentId;
+            SELECT AccommodationId,Name,StartDate,EndDate,TimeZone,Status FROM planning.Accommodations WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY StartDate, AccommodationId;
+            SELECT ReservationId,Subject,ConfirmationReference,Status FROM planning.Reservations WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY ReservationId;
+            SELECT PlanningNoteId,NoteText FROM planning.PlanningNotes WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY PlanningNoteId;
+            SELECT PlanningTaskId,Description,DueDate,IsCompleted FROM planning.PlanningTasks WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY DueDate, PlanningTaskId;
+            SELECT BudgetItemId,Description,Amount,CurrencyCode FROM planning.BudgetItems WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY BudgetItemId;
+            SELECT PackingItemId,Description,IsPacked FROM planning.PackingItems WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY PackingItemId;
             """;
         var command = Command(sql, new { CreatorId = creatorId.Value, PlanId = planId.Value }, cancellationToken);
         using var results = await connection.QueryMultipleAsync(command);
