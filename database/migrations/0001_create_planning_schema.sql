@@ -1,0 +1,4 @@
+IF SCHEMA_ID(N'planning') IS NULL
+BEGIN
+    EXEC(N'CREATE SCHEMA planning AUTHORIZATION dbo;');
+END;

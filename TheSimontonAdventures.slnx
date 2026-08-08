@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/AdventuresSuite.DatabaseMigrator/AdventuresSuite.DatabaseMigrator.csproj" />
     <Project Path="src/TheSimontonAdventures.Web/TheSimontonAdventures.Web.csproj" />
   </Folder>
   <Folder Name="/tests/">
