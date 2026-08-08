@@ -66,13 +66,24 @@ internal sealed class SqlPlanningTransaction(
 
     public async ValueTask DisposeAsync()
     {
-        if (!completed)
+        try
         {
-            await transaction.RollbackAsync();
+            if (!completed)
+            {
+                await transaction.RollbackAsync();
+            }
         }
-
-        await transaction.DisposeAsync();
-        await connection.DisposeAsync();
-        completed = true;
+        finally
+        {
+            try
+            {
+                await transaction.DisposeAsync();
+            }
+            finally
+            {
+                await connection.DisposeAsync();
+                completed = true;
+            }
+        }
     }
 }

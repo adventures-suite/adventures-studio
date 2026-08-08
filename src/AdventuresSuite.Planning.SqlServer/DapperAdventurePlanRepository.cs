@@ -54,12 +54,28 @@ internal sealed class DapperAdventurePlanRepository(
 
     public async Task<IReadOnlyList<AdventurePlan>> ListAsync(
         CreatorId creatorId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        await ListByArchiveStateAsync(creatorId, isArchived: false, cancellationToken);
+
+    public async Task<IReadOnlyList<AdventurePlan>> ListArchivedAsync(
+        CreatorId creatorId,
+        CancellationToken cancellationToken = default) =>
+        await ListByArchiveStateAsync(creatorId, isArchived: true, cancellationToken);
+
+    private async Task<IReadOnlyList<AdventurePlan>> ListByArchiveStateAsync(
+        CreatorId creatorId,
+        bool isArchived,
+        CancellationToken cancellationToken)
     {
         RequireScope(creatorId);
-        var ids = await connection.QueryAsync<string>(Command(
-            "SELECT AdventurePlanId FROM planning.AdventurePlans WHERE CreatorId=@CreatorId ORDER BY StartDate, AdventurePlanId;",
-            new { CreatorId = creatorId.Value }, cancellationToken));
+        var ids = await connection.QueryAsync<string>(Command("""
+            SELECT AdventurePlanId
+            FROM planning.AdventurePlans
+            WHERE CreatorId=@CreatorId
+              AND ((@IsArchived=1 AND PlanningStatus='Archived')
+                   OR (@IsArchived=0 AND PlanningStatus<>'Archived'))
+            ORDER BY StartDate, AdventurePlanId;
+            """, new { CreatorId = creatorId.Value, IsArchived = isArchived }, cancellationToken));
         var plans = new List<AdventurePlan>();
         foreach (var id in ids)
         {

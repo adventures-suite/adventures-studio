@@ -24,8 +24,13 @@ The migrator reads `ADVENTURESSUITE_SQL_CONNECTION_STRING`. Supply it through a
 local environment variable or protected deployment configuration. Do not commit
 credentials or pass secrets as command-line arguments.
 
-The migration identity requires bounded DDL permission. The web application's
-Managed Identity uses a separate runtime principal with only required DML access.
+The migration identity requires bounded DDL permission for the Planning schema
+and migration journal. The web application's Managed Identity uses a separate
+runtime principal with `SELECT`, `INSERT`, and `UPDATE` on Planning tables and
+`DELETE` only on aggregate child tables needed for transactional replacement.
+It receives no schema-management permission, no DbUp-journal write permission,
+and no `DELETE` permission on `planning.AdventurePlans`. Exact Azure SQL grants
+must be reviewed before deployment integration is enabled.
 
 ## Deployment Networking
 

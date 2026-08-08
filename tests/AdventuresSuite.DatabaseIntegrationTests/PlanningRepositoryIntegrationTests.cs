@@ -78,6 +78,42 @@ public sealed class PlanningRepositoryIntegrationTests
                 await transaction.CommitAsync();
             }
 
+            var archived = CreatePlan(alpha, 3, "Archived Spain and Atlantic",
+                lifecycleStage: AdventureLifecycleStage.Remember,
+                status: PlanningStatus.Archived);
+            await using (var transaction = await factory.BeginAsync(alpha))
+            {
+                await transaction.AdventurePlans.UpdateAsync(alpha, archived, 2);
+                await transaction.CommitAsync();
+            }
+
+            await using (var transaction = await factory.BeginAsync(alpha))
+            {
+                Assert.Empty(await transaction.AdventurePlans.ListAsync(alpha));
+                Assert.Equal(archived.Id, Assert.Single(
+                    await transaction.AdventurePlans.ListArchivedAsync(alpha)).Id);
+                Assert.Equal(PlanningStatus.Archived,
+                    (await transaction.AdventurePlans.GetAsync(alpha, archived.Id))!.Status);
+                await transaction.CommitAsync();
+            }
+
+            var restored = CreatePlan(alpha, 4, "Restored Spain and Atlantic",
+                lifecycleStage: AdventureLifecycleStage.Remember,
+                status: PlanningStatus.Completed);
+            await using (var transaction = await factory.BeginAsync(alpha))
+            {
+                await transaction.AdventurePlans.UpdateAsync(alpha, restored, 3);
+                await transaction.CommitAsync();
+            }
+
+            await using (var transaction = await factory.BeginAsync(alpha))
+            {
+                Assert.Equal(restored.Id, Assert.Single(
+                    await transaction.AdventurePlans.ListAsync(alpha)).Id);
+                Assert.Empty(await transaction.AdventurePlans.ListArchivedAsync(alpha));
+                await transaction.CommitAsync();
+            }
+
             var rollbackId = new AdventurePlanId("plan_rollback");
             await using (var transaction = await factory.BeginAsync(alpha))
             {
@@ -107,14 +143,16 @@ public sealed class PlanningRepositoryIntegrationTests
         CreatorId creatorId,
         long version,
         string title,
-        AdventurePlanId? id = null)
+        AdventurePlanId? id = null,
+        AdventureLifecycleStage lifecycleStage = AdventureLifecycleStage.Plan,
+        PlanningStatus status = PlanningStatus.Planned)
     {
         var created = new DateTimeOffset(2026, 8, 7, 20, 0, 0, TimeSpan.Zero);
         var visitId = new DestinationVisitId("visit_madrid");
         var dayId = new ItineraryDayId("day_madrid");
         return new AdventurePlan(
             id ?? new AdventurePlanId("plan_shared"), creatorId, title, "Private working plan",
-            AdventureLifecycleStage.Plan, PlanningStatus.Planned,
+            lifecycleStage, status,
             new(new DateOnly(2027, 10, 25), new DateOnly(2027, 11, 15)),
             new(version, created, created.AddMinutes(version - 1)),
             [new Traveler { Id = new("traveler_steve"), DisplayName = "Steve", Preferences = ["Window seat"] }],

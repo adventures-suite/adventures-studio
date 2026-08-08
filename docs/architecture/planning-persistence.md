@@ -56,6 +56,13 @@ Updates require the expected plan version. A stale version fails with the
 provider-neutral Planning concurrency exception and never silently overwrites a
 newer plan. Transactions commit only complete, valid aggregates.
 
+Adventure Plans use recoverable state-based archival rather than destructive
+deletion. Archival is a concurrency-checked aggregate update to the approved
+`Remember + Archived` state. Normal list operations exclude archived plans;
+archived-plan listing is explicit, and identity-based retrieval remains
+available for authorized recovery and audit workflows. Restoration is another
+versioned aggregate update. The initial repository exposes no hard-delete API.
+
 ## Initial Schema Direction
 
 The relational model will store the Adventure Plan aggregate and its child
@@ -93,8 +100,13 @@ approve one of these bounded approaches:
    current runner and removed in an unconditional cleanup step.
 
 No option is selected silently in application code. The migration identity gets
-the required DDL permission; the App Service runtime Managed Identity receives
-only required DML permission. Administrator credentials never enter web
+bounded schema-management rights for the Planning schema and DbUp journal. The
+App Service runtime Managed Identity receives only connect plus required DML
+rights on the Planning tables; it receives no schema-alteration or DbUp-journal
+write permission. The runtime needs `SELECT`, `INSERT`, and `UPDATE`, plus
+`DELETE` only on Planning child tables because a versioned aggregate replacement
+rebuilds its children transactionally. It receives no `DELETE` permission on
+`planning.AdventurePlans`. Administrator credentials never enter web
 application configuration.
 
 ## Phase 2 Exit Evidence
