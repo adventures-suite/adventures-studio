@@ -4,6 +4,10 @@ using TheSimontonAdventures.Web.Authorization.Persistence;
 
 namespace AdventuresSuite.Identity.ExternalId;
 
+internal sealed record EstablishedExternalIdSession(
+    AuthenticationSessionTicket Ticket,
+    DateTimeOffset AuthenticatedAtUtc);
+
 /// <summary>Resolves a validated external principal and creates an application-controlled session.</summary>
 internal sealed class ExternalIdSessionIssuer(
     AuthenticationConfiguration configuration,
@@ -12,7 +16,7 @@ internal sealed class ExternalIdSessionIssuer(
     IAuthenticationClock clock)
 {
     /// <summary>Establishes a session without deriving authorization from provider claims.</summary>
-    public async Task<AuthenticationSessionTicket> EstablishSessionAsync(
+    public async Task<EstablishedExternalIdSession> EstablishSessionAsync(
         ClaimsPrincipal principal,
         CancellationToken cancellationToken = default)
     {
@@ -59,7 +63,9 @@ internal sealed class ExternalIdSessionIssuer(
                 utcNow + configuration.AbsoluteSessionLifetime);
             await transaction.Sessions.AddAsync(session, mapping.Id, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
-            return new AuthenticationSessionTicket(session.Id, session.UserId, session.SecurityVersion);
+            return new EstablishedExternalIdSession(
+                new AuthenticationSessionTicket(session.Id, session.UserId, session.SecurityVersion),
+                utcNow);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {

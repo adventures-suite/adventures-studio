@@ -1,8 +1,10 @@
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Microsoft.Identity.Abstractions;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
@@ -19,6 +21,9 @@ public static class ExternalIdAuthenticationExtensions
 
     /// <summary>The internal sign-in state scheme; browser cookie behavior is completed in Slice 5E.</summary>
     public const string SessionScheme = "AdventuresSuite.ExternalId.Session";
+
+    internal const string InternalCookieScheme = "AdventuresSuite.ExternalId.InternalCookie";
+    internal const string RejectedWorkspaceScheme = "AdventuresSuite.ExternalId.RejectedHost";
 
     /// <summary>Adds hardened confidential-client OIDC protocol services.</summary>
     public static AuthenticationBuilder AddAdventuresSuiteExternalId(
@@ -48,6 +53,10 @@ public static class ExternalIdAuthenticationExtensions
         ExternalIdClientCertificateValidator.Validate(certificate, utcNow);
         builder.Services.AddSingleton(configuration);
         builder.Services.AddScoped<ExternalIdSessionIssuer>();
+        builder.Services.AddScoped<IServerSessionAuthenticator, ServerSessionAuthenticator>();
+        builder.Services.AddSingleton<
+            IValidateOptions<CookieAuthenticationOptions>,
+            ApplicationCookieOptionsValidator>();
 
         _ = builder.AddMicrosoftIdentityWebApp(
             options =>
@@ -87,11 +96,20 @@ public static class ExternalIdAuthenticationExtensions
                 ];
                 options.Events = CreateEvents(configuration);
             },
-            _ => { },
+            options => ApplicationCookieConfiguration.Configure(options, configuration),
             Scheme,
-            SessionScheme,
+            InternalCookieScheme,
             subscribeToOpenIdConnectMiddlewareDiagnosticsEvents: false,
             displayName: null);
+        builder.AddScheme<AuthenticationSchemeOptions, RejectedWorkspaceAuthenticationHandler>(
+            RejectedWorkspaceScheme,
+            _ => { });
+        builder.AddPolicyScheme(SessionScheme, displayName: null, options =>
+        {
+            options.ForwardDefaultSelector = context => IsWorkspaceRequest(context.Request, configuration)
+                ? InternalCookieScheme
+                : RejectedWorkspaceScheme;
+        });
         builder.Services.PostConfigure<OpenIdConnectOptions>(Scheme, options =>
         {
             options.ResponseType = OpenIdConnectResponseType.Code;
@@ -144,10 +162,19 @@ public static class ExternalIdAuthenticationExtensions
             {
                 var issuer = context.HttpContext.RequestServices
                     .GetRequiredService<ExternalIdSessionIssuer>();
-                var ticket = await issuer.EstablishSessionAsync(
+                var establishedSession = await issuer.EstablishSessionAsync(
                     context.Principal!,
                     context.HttpContext.RequestAborted);
-                context.HttpContext.Features.Set(new ExternalIdSessionFeature(ticket));
+                context.Principal = ApplicationCookiePrincipal.Create(
+                    establishedSession.Ticket,
+                    establishedSession.AuthenticatedAtUtc);
+                var properties = context.Properties ?? new AuthenticationProperties();
+                ApplicationCookiePrincipal.ApplyLifetime(
+                    properties,
+                    establishedSession.AuthenticatedAtUtc,
+                    configuration.AbsoluteSessionLifetime);
+                context.Properties = properties;
+                context.HttpContext.Features.Set(new ExternalIdSessionFeature(establishedSession.Ticket));
             }
             catch (OperationCanceledException) when (context.HttpContext.RequestAborted.IsCancellationRequested)
             {

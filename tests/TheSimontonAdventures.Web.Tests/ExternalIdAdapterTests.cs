@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using AdventuresSuite.Identity.ExternalId;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -96,6 +97,240 @@ public sealed class ExternalIdAdapterTests
         Assert.True(options.TokenValidationParameters.ValidateLifetime);
         Assert.True(options.TokenValidationParameters.RequireSignedTokens);
         Assert.True(options.TokenValidationParameters.RequireExpirationTime);
+    }
+
+    /// <summary>The application cookie is host-only, protected, bounded, and non-sliding.</summary>
+    [Fact]
+    public void AddExternalId_ConfiguresMinimalHostOnlyApplicationCookie()
+    {
+        using var certificate = Certificate(Now.AddDays(-1), Now.AddDays(30), true);
+        using var provider = ExternalIdServices(certificate);
+        var options = provider.GetRequiredService<IOptionsMonitor<CookieAuthenticationOptions>>()
+            .Get(ExternalIdAuthenticationExtensions.InternalCookieScheme);
+
+        Assert.Equal("__Host-AdventuresSuite.Session", options.Cookie.Name);
+        Assert.True(options.Cookie.HttpOnly);
+        Assert.Equal(CookieSecurePolicy.Always, options.Cookie.SecurePolicy);
+        Assert.Equal(SameSiteMode.Lax, options.Cookie.SameSite);
+        Assert.Equal("/", options.Cookie.Path);
+        Assert.Null(options.Cookie.Domain);
+        Assert.Equal(TimeSpan.FromHours(8), options.ExpireTimeSpan);
+        Assert.False(options.SlidingExpiration);
+    }
+
+    /// <summary>Later configuration cannot enable sliding or weaken __Host- invariants.</summary>
+    [Fact]
+    public void ApplicationCookieOptionsValidator_WeakenedOptions_Fails()
+    {
+        var options = new CookieAuthenticationOptions
+        {
+            SlidingExpiration = true
+        };
+        options.Cookie.Name = "unsafe";
+
+        var result = new ApplicationCookieOptionsValidator().Validate(
+            ExternalIdAuthenticationExtensions.InternalCookieScheme,
+            options);
+
+        Assert.True(result.Failed);
+    }
+
+    /// <summary>The protected principal contains only allowlisted session-validation metadata.</summary>
+    [Fact]
+    public void ApplicationCookiePrincipal_ContainsOnlyMinimalClaimsAndRoundTrips()
+    {
+        var ticket = new AuthenticationSessionTicket(
+            new UserSessionId("session_external_01"),
+            new UserId("user_external_01"),
+            new SecurityVersion(4));
+
+        var principal = ApplicationCookiePrincipal.Create(ticket, Now);
+        var parsed = ApplicationCookiePrincipal.Parse(principal, Now);
+
+        Assert.Equal(ticket, parsed?.Ticket);
+        Assert.Equal(Now, parsed?.AuthenticatedAtUtc);
+        Assert.Equal(ApplicationCookiePrincipal.OidcAuthenticationMethod, parsed?.AuthenticationMethod);
+        Assert.Equal(5, principal.Claims.Count());
+        Assert.DoesNotContain(principal.Claims, claim =>
+            claim.Type.Contains("creator", StringComparison.OrdinalIgnoreCase)
+            || claim.Type.Contains("email", StringComparison.OrdinalIgnoreCase)
+            || claim.Type.Contains("role", StringComparison.OrdinalIgnoreCase)
+            || claim.Type.Contains("permission", StringComparison.OrdinalIgnoreCase)
+            || claim.Type.Contains("token", StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>Cookie expiration is anchored to the same absolute server-session boundary.</summary>
+    [Fact]
+    public void ApplicationCookieLifetime_MatchesServerAbsoluteExpiration()
+    {
+        var properties = new AuthenticationProperties
+        {
+            AllowRefresh = true,
+            ExpiresUtc = Now.AddDays(1)
+        };
+
+        ApplicationCookiePrincipal.ApplyLifetime(
+            properties,
+            Now,
+            Configuration().AbsoluteSessionLifetime);
+
+        Assert.Equal(Now, properties.IssuedUtc);
+        Assert.Equal(Now.AddHours(8), properties.ExpiresUtc);
+        Assert.False(properties.AllowRefresh);
+    }
+
+    /// <summary>Duplicate or malformed cookie metadata cannot create a server-session ticket.</summary>
+    [Fact]
+    public void ApplicationCookiePrincipal_MalformedClaims_FailsClosed()
+    {
+        var valid = ApplicationCookiePrincipal.Create(
+            new AuthenticationSessionTicket(
+                new UserSessionId("session_external_01"),
+                new UserId("user_external_01"),
+                new SecurityVersion(1)),
+            Now);
+        ((ClaimsIdentity)valid.Identity!).AddClaim(new Claim(
+            ApplicationCookiePrincipal.SessionIdClaim,
+            "session_substitution_01"));
+
+        Assert.Null(ApplicationCookiePrincipal.Parse(valid, Now));
+
+        var unknown = ApplicationCookiePrincipal.Create(
+            new AuthenticationSessionTicket(
+                new UserSessionId("session_external_01"),
+                new UserId("user_external_01"),
+                new SecurityVersion(1)),
+            Now);
+        ((ClaimsIdentity)unknown.Identity!).AddClaim(new Claim("email", "canary@example.com"));
+        Assert.Null(ApplicationCookiePrincipal.Parse(unknown, Now));
+
+        var future = ApplicationCookiePrincipal.Create(
+            new AuthenticationSessionTicket(
+                new UserSessionId("session_external_01"),
+                new UserId("user_external_01"),
+                new SecurityVersion(1)),
+            Now.AddSeconds(1));
+        Assert.Null(ApplicationCookiePrincipal.Parse(future, Now));
+
+        var oversized = ApplicationCookiePrincipal.Create(
+            new AuthenticationSessionTicket(
+                new UserSessionId("session_external_01"),
+                new UserId("user_external_01"),
+                new SecurityVersion(1)),
+            Now);
+        var oversizedIdentity = (ClaimsIdentity)oversized.Identity!;
+        oversizedIdentity.RemoveClaim(oversizedIdentity.FindFirst(ApplicationCookiePrincipal.UserIdClaim)!);
+        oversizedIdentity.AddClaim(new Claim(ApplicationCookiePrincipal.UserIdClaim, new string('a', 65)));
+        Assert.Null(ApplicationCookiePrincipal.Parse(oversized, Now));
+
+        var arbitraryMethod = ApplicationCookiePrincipal.Create(
+            new AuthenticationSessionTicket(
+                new UserSessionId("session_external_01"),
+                new UserId("user_external_01"),
+                new SecurityVersion(1)),
+            Now);
+        var methodIdentity = (ClaimsIdentity)arbitraryMethod.Identity!;
+        methodIdentity.RemoveClaim(methodIdentity.FindFirst(
+            ApplicationCookiePrincipal.AuthenticationMethodClaim)!);
+        methodIdentity.AddClaim(new Claim(
+            ApplicationCookiePrincipal.AuthenticationMethodClaim,
+            "provider-controlled-value"));
+        Assert.Null(ApplicationCookiePrincipal.Parse(arbitraryMethod, Now));
+    }
+
+    /// <summary>Explicit workspace-scheme selection cannot decrypt a cookie on another host.</summary>
+    [Theory]
+    [InlineData("creator.example.com")]
+    [InlineData("unknown.example.com")]
+    public void ApplicationCookiePolicy_NonWorkspaceHost_ForwardsToRejectingHandler(string host)
+    {
+        using var certificate = Certificate(Now.AddDays(-1), Now.AddDays(30), true);
+        using var provider = ExternalIdServices(certificate);
+        var options = provider.GetRequiredService<IOptionsMonitor<PolicySchemeOptions>>()
+            .Get(ExternalIdAuthenticationExtensions.SessionScheme);
+        var context = new DefaultHttpContext();
+        context.Request.Scheme = "https";
+        context.Request.Host = new HostString(host);
+        context.Request.Headers["X-Forwarded-Host"] = "workspace.example.com";
+
+        Assert.Equal(
+            ExternalIdAuthenticationExtensions.RejectedWorkspaceScheme,
+            options.ForwardDefaultSelector!(context));
+    }
+
+    /// <summary>Cookie validation rejects a wrong host before resolving persistence services.</summary>
+    [Fact]
+    public async Task ApplicationCookieValidation_PublicHost_RejectsBeforeSessionLookup()
+    {
+        using var certificate = Certificate(Now.AddDays(-1), Now.AddDays(30), true);
+        using var provider = ExternalIdServices(certificate);
+        var options = provider.GetRequiredService<IOptionsMonitor<CookieAuthenticationOptions>>()
+            .Get(ExternalIdAuthenticationExtensions.InternalCookieScheme);
+        var httpContext = new DefaultHttpContext
+        {
+            RequestServices = new ServiceCollection().BuildServiceProvider()
+        };
+        httpContext.Request.Scheme = "https";
+        httpContext.Request.Host = new HostString("creator.example.com");
+        var principal = ApplicationCookiePrincipal.Create(
+            new AuthenticationSessionTicket(
+                new UserSessionId("session_external_01"),
+                new UserId("user_external_01"),
+                new SecurityVersion(1)),
+            Now);
+        var validation = new CookieValidatePrincipalContext(
+            httpContext,
+            new AuthenticationScheme(
+                ExternalIdAuthenticationExtensions.InternalCookieScheme,
+                null,
+                typeof(CookieAuthenticationHandler)),
+            options,
+            new AuthenticationTicket(principal, ExternalIdAuthenticationExtensions.InternalCookieScheme));
+
+        await options.Events.ValidatePrincipal(validation);
+
+        Assert.Null(validation.Principal);
+    }
+
+    /// <summary>Every workspace cookie is revalidated against authoritative server state.</summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ApplicationCookieValidation_UsesAuthoritativeSessionState(bool valid)
+    {
+        using var certificate = Certificate(Now.AddDays(-1), Now.AddDays(30), true);
+        using var provider = ExternalIdServices(certificate);
+        var options = provider.GetRequiredService<IOptionsMonitor<CookieAuthenticationOptions>>()
+            .Get(ExternalIdAuthenticationExtensions.InternalCookieScheme);
+        var authenticator = new RecordingSessionAuthenticator(valid);
+        var requestServices = new ServiceCollection()
+            .AddSingleton<IServerSessionAuthenticator>(authenticator)
+            .AddSingleton<IAuthenticationClock>(new FixedClock())
+            .BuildServiceProvider();
+        var httpContext = new DefaultHttpContext { RequestServices = requestServices };
+        httpContext.Request.Scheme = "https";
+        httpContext.Request.Host = new HostString("workspace.example.com");
+        var ticket = new AuthenticationSessionTicket(
+            new UserSessionId("session_external_01"),
+            new UserId("user_external_01"),
+            new SecurityVersion(1));
+        var principal = ApplicationCookiePrincipal.Create(ticket, Now);
+        var validation = new CookieValidatePrincipalContext(
+            httpContext,
+            new AuthenticationScheme(
+                ExternalIdAuthenticationExtensions.InternalCookieScheme,
+                null,
+                typeof(CookieAuthenticationHandler)),
+            options,
+            new AuthenticationTicket(principal, ExternalIdAuthenticationExtensions.InternalCookieScheme));
+
+        await options.Events.ValidatePrincipal(validation);
+
+        Assert.Equal(1, authenticator.CallCount);
+        Assert.Equal(ticket, authenticator.Ticket);
+        Assert.Equal("https://workspace.example.com", authenticator.Origin);
+        Assert.Equal(valid, validation.Principal is not null);
+        Assert.False(validation.ShouldRenew);
     }
 
     /// <summary>Missing, expired, future, keyless, and incorrectly purposed certificates fail closed.</summary>
@@ -217,6 +452,18 @@ public sealed class ExternalIdAdapterTests
         TimeSpan.FromMinutes(5),
         TimeSpan.FromMinutes(5));
 
+    private static ServiceProvider ExternalIdServices(X509Certificate2 certificate)
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build());
+        services.AddAuthentication().AddAdventuresSuiteExternalId(
+            Configuration(),
+            new FixedCertificateSource(certificate),
+            Now);
+        return services.BuildServiceProvider();
+    }
+
     private static X509Certificate2 Certificate(
         DateTimeOffset notBefore,
         DateTimeOffset notAfter,
@@ -248,6 +495,29 @@ public sealed class ExternalIdAdapterTests
     private sealed class FixedClock : IAuthenticationClock
     {
         public DateTimeOffset GetUtcNow() => Now;
+    }
+
+    private sealed class RecordingSessionAuthenticator(bool valid) : IServerSessionAuthenticator
+    {
+        public int CallCount { get; private set; }
+        public string? Origin { get; private set; }
+        public AuthenticationSessionTicket? Ticket { get; private set; }
+
+        public Task<SessionAuthenticationResult> AuthenticateAsync(
+            string requestOrigin,
+            AuthenticationSessionTicket? ticket,
+            CancellationToken cancellationToken = default)
+        {
+            CallCount++;
+            Origin = requestOrigin;
+            Ticket = ticket;
+            return Task.FromResult(valid
+                ? SessionAuthenticationResult.Authenticated(new ActorIdentity(
+                    ActorType.Human,
+                    ticket!.UserId.Value,
+                    ticket.UserId))
+                : SessionAuthenticationResult.Failed());
+        }
     }
 
     private sealed class DeterministicIdentityGenerator : IAuthenticationIdentityGenerator
