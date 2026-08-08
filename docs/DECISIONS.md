@@ -362,3 +362,36 @@ sensitive-data storage, alert noise, and uncontrolled telemetry cost.
 Status:
 
 Approved
+
+---
+
+## 2026-08-07
+
+### Human Authentication Uses Microsoft Entra External ID
+
+Decision:
+
+AdventuresSuite will use Microsoft Entra External ID in an external tenant as
+the initial customer and travel-professional human identity provider. The web
+application will use browser-delegated OpenID Connect authorization code flow
+with PKCE. A validated issuer and subject map through an infrastructure adapter
+to stable platform `UserId`; provider email, display name, claims, and object
+identifiers do not become Creator ownership or authorization keys.
+
+The application owns its secure session, revocation, Creator membership, and
+resource authorization. External ID establishes human identity only. Azure
+Managed Identity remains workload identity and cannot satisfy human decisions.
+Production and non-production identity configuration are separated, automated
+tests use deterministic fake identities, and no package or login UI is added
+until the Slice 5 integration design is approved.
+
+Reason:
+
+External ID provides Azure-aligned CIAM for consumers and business customers,
+standards-based OIDC, provider-managed credentials and recovery, social and
+enterprise federation options, and MFA capabilities without making the
+platform's durable identity and authorization model provider-specific.
+
+Status:
+
+Approved

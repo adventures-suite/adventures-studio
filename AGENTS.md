@@ -61,7 +61,7 @@
 ## Identity and Authorization
 
 - Read `docs/architecture/identity-authorization.md`,
-  `docs/architecture/security.md`, and
+  `docs/architecture/identity-provider.md`, `docs/architecture/security.md`, and
   `docs/development/identity-authorization-implementation-plan.md` before
   changing authentication, membership, authorization, sessions, or audit.
 - Authentication establishes human identity; authorization determines whether
@@ -113,4 +113,6 @@
 
 - Use GitHub Environments.
 - Never hardcode Azure values.
-- Prefer Managed Identity.
+- Prefer Managed Identity for supported Azure workload-to-service access. Do
+  not use it as human identity or assume it can authenticate an External ID
+  confidential web client.

@@ -90,6 +90,17 @@ Evaluate supported sign-in protocols, account recovery, MFA, session and token
 revocation, local development, CI automation, cost, privacy, operational burden,
 and migration portability. Record an approved decision before adding a package.
 
+Decision: Microsoft Entra External ID in an external tenant is the initial
+human CIAM provider. Use browser-delegated OIDC authorization code flow with
+PKCE and preserve issuer-plus-subject mapping behind an infrastructure adapter.
+Application sessions, Creator membership, authorization, and revocation remain
+AdventuresSuite responsibilities. Full constraints are defined in
+`docs/architecture/identity-provider.md`.
+
+Exit gate: provider and protocol decision approved; recovery, MFA, session,
+revocation, environment, local-development, CI, cost, privacy, and migration
+boundaries documented; no authentication package or login UI added.
+
 ## Slice 5: Authentication Integration
 
 Map validated provider identity to stable platform `UserId`. Establish secure

@@ -1023,6 +1023,7 @@ The platform vision is broader than the initial implementation.
 The current implementation remains intentionally simple:
 
 - One Blazor Web App
+- .NET 10
 - One initial Creator
 - The Simonton Adventures as the flagship implementation
 - JSON-backed content
@@ -1033,7 +1034,9 @@ The current implementation remains intentionally simple:
 - Azure App Service hosting
 - GitHub Actions deployment
 - GitHub Environments
-- OIDC authentication through Azure Managed Identity
+- Azure workload access through Managed Identity
+- Microsoft Entra External ID as the approved human authentication target;
+  integration remains deferred to Identity and Authorization Phase 3 Slice 5
 
 The current implementation should evolve incrementally toward the platform architecture.
 

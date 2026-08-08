@@ -32,8 +32,9 @@ The governing principle is:
 ## Identity and Authorization
 
 1. `architecture/identity-authorization.md`
-2. `architecture/security.md`
-3. `development/identity-authorization-implementation-plan.md`
+2. `architecture/identity-provider.md`
+3. `architecture/security.md`
+4. `development/identity-authorization-implementation-plan.md`
 
 > Authentication establishes who the user is. Authorization determines which
 > Creator-owned resource they may access for this operation.
