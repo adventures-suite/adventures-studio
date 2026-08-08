@@ -56,6 +56,26 @@ One successful SHA observation is evidence for that release, not proof that the
 activation sequence is repeatable. Retained packages are release artifacts and
 must remain identifiable by commit and workflow run for diagnosis and rollback.
 
+### Development Rollback Procedure
+
+The dev workflow retains an artifact named
+`adventures-suite-<full-sha>-<run-attempt>` containing the uniquely named ZIP
+`adventures-suite-<full-sha>-<run-attempt>.zip`. To roll back:
+
+1. select the previously healthy workflow run and record its full commit SHA
+   and run attempt;
+2. download that exact retained artifact without rebuilding it;
+3. verify the artifact and ZIP names match the selected SHA and attempt;
+4. upload the retained ZIP with restart disabled;
+5. require a new successful Azure deployment record before explicitly
+   restarting App Service; and
+6. verify `/health` reports the selected rollback SHA plus successful Creator
+   and Resource validation.
+
+Rollback never rebuilds an old source revision, selects “latest,” or reuses a
+mutable package name. The operator records the source run, rollback run,
+deployment record, package pointer, and final health evidence.
+
 Application health, release identity, startup validation, and required smoke
 tests are hard promotion gates. Failure to confirm telemetry ingestion because
 the destination is unavailable produces a warning and degraded deployment
