@@ -4,7 +4,7 @@
 
 **Status:** Approved Direction
 
-**Last Updated:** August 8, 2026
+**Last Updated:** August 9, 2026
 
 ## Purpose
 
@@ -35,6 +35,8 @@ App host.
 - approved transportation, accommodation, reservation, task, reminder, map,
   and essential-reference summaries;
 - offline access to a minimized selection of plan information;
+- minimized offline Adventure Travel Playbook access;
+- explicit Add to Device Calendar for selected authorized itinerary items;
 - journaling and photography prompts;
 - camera and photo-library capture with later Resource Engine upload;
 - push notifications for approved meaningful plan changes; and
@@ -219,6 +221,44 @@ and never treated as identity or authorization. Push payloads contain no private
 itinerary, reservation, location, or authentication data; the app fetches
 authorized detail after activation.
 
+## Travel Playbook and Device Calendar
+
+Companion presents an authorized, minimized Travel Playbook projection rather
+than downloading the Creator Master by default. Offline sections and protected
+documents are explicitly selected, encrypted, versioned, expiration-aware, and
+cleared under revocation policy. The device shows when its package is older than
+the authoritative plan.
+
+Add to Device Calendar is an explicit traveler action behind a platform adapter.
+The app requests OS calendar permission just in time, lets the traveler choose
+items, target calendar, and reminders, and remains useful when permission is
+denied. Planning state remains authoritative; device-calendar edits do not
+silently mutate the plan.
+
+Calendar entries use destination-local time and stable event identities. They
+exclude ticket QR/barcode values, booking or room PINs, private notes, precise
+breadcrumbs, another traveler's data, and permanent protected-Resource URLs.
+See `docs/architecture/adventure-travel-playbook.md` and
+`docs/architecture/adventure-calendar-integration.md`.
+
+## Countdown, Readiness, and Active Travel
+
+Companion displays a countdown for every Adventure whose authoritative
+Planning state is Planned, Upcoming, or another explicitly approved committed
+state. It derives the value from the synchronized start date and optional local
+time/IANA zone; it never stores decrementing ticks or invents a midnight instant
+for date-only plans. The presentation becomes `Starts today` or `In progress`
+at the applicable boundary and remains accessible, localized, and reduced-
+motion safe.
+
+Companion also provides traveler-specific readiness, Today and Next, material-
+change acknowledgment, required actions, approved contingencies, smart
+reminders, and selected offline maps/places. These are minimized, encrypted,
+revocation-aware projections. Unknown, unverified, and stale information is
+visibly distinct from ready or confirmed information.
+
+See `docs/architecture/adventure-readiness-and-change-management.md`.
+
 ## Security and Abuse Prevention
 
 The mobile threat model must cover lost or shared devices, rooted/jailbroken
@@ -254,6 +294,7 @@ Planning sequence. Prerequisites include:
 - a useful web Planning Workspace;
 - a versioned, OAuth-protected mobile API;
 - Resource Engine private upload and delivery;
+- private generated-artifact delivery and Travel Playbook profile policy;
 - approved offline storage and synchronization design;
 - mobile privacy and threat-model review; and
 - Apple and Google developer, signing, privacy, and distribution readiness.

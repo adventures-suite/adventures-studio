@@ -2,7 +2,7 @@
 
 **Status:** Approved Direction
 
-**Last Updated:** August 8, 2026
+**Last Updated:** August 9, 2026
 
 ## Product Promise
 
@@ -18,14 +18,20 @@ the full Creator Workspace on a smaller screen.
 The initial product centers on:
 
 - what is happening today and next;
+- an accessible countdown for every Planned, Upcoming, or otherwise approved
+  committed Adventure;
 - correct local time and time-zone context;
 - essential itinerary, transportation, accommodation, reservation, map, task,
   and reminder information;
 - selected information available offline;
+- an authorized, minimized Adventure Travel Playbook available offline;
+- explicit Add to Device Calendar for selected itinerary items;
 - journaling, photography, and memory prompts;
 - safe photo capture and later upload;
 - meaningful, privacy-safe plan-change notifications; and
-- optional GPS breadcrumbs controlled by the traveler.
+- optional GPS breadcrumbs controlled by the traveler; and
+- traveler-specific readiness, material-change acknowledgment, required
+  actions, contingencies, and smart reminders.
 
 ## Traveler-Controlled Breadcrumbs
 
@@ -60,12 +66,25 @@ whether any route becomes part of an Adventure publication.
 - Battery-conscious and transparent about background activity.
 - Helpful when permission, connectivity, or device capability is limited.
 - Consistent with Creator ownership and traveler autonomy.
+- Calendar access is optional, traveler-controlled, and useful without
+  provider-specific account connection.
 
 ## Relationship to the Platform
 
 Companion reads approved Planning Engine state. It does not infer a booking,
 change authoritative plans without an authorized operation, expose private
 records through public content, or use a mobile token as Creator permission.
+
+The Planning Engine remains authoritative when Companion presents a Travel
+Playbook or creates a device-calendar entry. Companion identifies stale output,
+never treats device-calendar edits as plan changes, and keeps ticket codes,
+booking PINs, private notes, and protected-document URLs out of calendar
+content.
+
+Countdowns are derived locally from the last authorized Adventure start
+projection and trusted device time. Date-only plans remain day-level; Companion
+does not invent a departure time. Offline countdown and Today and Next views
+show stale state when the underlying projection is overdue for synchronization.
 
 Memories and media captured during travel remain private Resources until the
 Creator deliberately preserves, authors, and publishes selected material. A

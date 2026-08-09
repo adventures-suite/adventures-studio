@@ -4,7 +4,7 @@
 
 **Status:** Product Direction
 
-**Last Updated:** August 7, 2026
+**Last Updated:** August 9, 2026
 
 ## Product Outcome
 
@@ -40,7 +40,10 @@ domain and authorization model preserve a path to multiple members.
 9. Accept or reject individual suggestions.
 10. Continue editing the authoritative plan manually.
 11. Preview a private summary of the Adventure.
-12. Explicitly choose information for a future publication workflow.
+12. Generate a versioned private Adventure Travel Playbook.
+13. Optionally export selected itinerary items to the user's calendar.
+14. Review the Adventure countdown, readiness, changes, and required actions.
+15. Explicitly choose information for a future publication workflow.
 
 ## Initial Workspace Areas
 
@@ -48,6 +51,9 @@ domain and authorization model preserve a path to multiple members.
 
 - list accessible private plans
 - show planning status, date range, and unresolved work
+- show an accessible countdown for every Planned, Upcoming, or otherwise
+  approved committed Adventure
+- show explainable readiness categories and material changes requiring action
 - create, open, archive, and resume a plan according to permissions
 
 ### Adventure Overview
@@ -97,6 +103,51 @@ domain and authorization model preserve a path to multiple members.
 - planned route and daily outline
 - clear private/draft labeling
 - no permanent public address or subscriber event
+
+### Travel Playbook
+
+- deterministic private preview generated from one plan version
+- trip overview, route, daily itinerary, transportation, accommodations,
+  reservations, readiness guidance, and selected protected documents
+- explicit Creator Master, Traveler, Print, Companion Offline, Shareable, and
+  Memory profiles
+- PDF first, with DOCX and mobile packaging added incrementally
+- visible generated-at, plan-version, stale, privacy, and intended-audience state
+- no invented confirmation, schedule, price, or meeting information
+
+The acceptance reference is a cohesive travel package comparable in usefulness
+to `ITALY_MASTER.docx`, produced from structured Planning and Resource data
+without manual assembly. See
+`docs/architecture/adventure-travel-playbook.md`.
+
+### Calendar
+
+- privacy-safe ICS export for one item, day, or selected Adventure itinerary
+- tentative state for planned but unconfirmed items
+- stable updates and cancellations when confirmed details change
+- exact local time and destination time zone
+- explicit traveler consent before device or provider calendar writes
+- secure deep links instead of ticket codes, PINs, private notes, or permanent
+  protected-document URLs
+
+Initial ICS export requires no provider account. Connected Microsoft or Google
+calendar synchronization is a later provider-adapter capability. See
+`docs/architecture/adventure-calendar-integration.md`.
+
+### Readiness and Change Management
+
+- readiness dashboard with source-backed warnings and clear next actions
+- change-impact preview across itinerary, calendar, Playbook, Companion,
+  reminders, tasks, budgets, and documents
+- protected Travel Document Inbox with reviewed extraction and provenance
+- traveler-specific views and information policies
+- distinct delivered, viewed, acknowledged, accepted, and completed states
+- Today and Next, contingencies, offline places, and smart reminders
+- planning decisions, comments, proposals, and professional handoff
+- multi-currency budgets, deadlines, and cancellation-window tracking
+- safe plan templates and cloning
+
+See `docs/architecture/adventure-readiness-and-change-management.md`.
 
 ## Experience Principles
 
@@ -167,6 +218,14 @@ tasks, and proposal decisions must remain usable on a phone.
 - Private information never appears in a public route.
 - The plan can later support Companion and publication experiences without
   re-entry.
+- A Creator can generate a coherent private Travel Playbook from one known plan
+  version without copying itinerary details into a separate document.
+- A consenting traveler can add selected itinerary items to a calendar without
+  exposing protected travel credentials or creating duplicate events.
+- Planned and committed Adventures show a correct, accessible countdown in the
+  Workspace and Companion without inventing unknown times.
+- Users can tell what is ready, what changed, who is affected, and what action
+  is required without relying on a black-box score.
 
 ## Explicitly Deferred
 

@@ -4,7 +4,7 @@
 
 **Status:** Approved Phase 3 Baseline
 
-**Last Updated:** August 7, 2026
+**Last Updated:** August 9, 2026
 
 ## Scope
 
@@ -104,6 +104,18 @@ Controls: structured redaction; safe error contracts; Creator-scoped cache and
 export keys; minimum AI context; protected Resource delivery; audit metadata
 without protected payloads; automated leakage tests.
 
+### Travel Output and Calendar Leakage
+
+A private Playbook, calendar event, lock-screen reminder, shared calendar,
+download, or offline package exposes tickets, booking credentials, private
+notes, traveler data, or stale operational instructions.
+
+Controls: explicit least-data output profiles; per-traveler calendar consent;
+stable source versions and stale indicators; protected Resource authorization;
+short-lived delivery; secure deep links instead of embedded secrets; encrypted
+and revocation-aware offline storage; shared-calendar threat testing; and no
+implicit publication from generation, export, import, or synchronization.
+
 ### Administrative Impersonation
 
 Support personnel access customer data without visible authorization.
@@ -191,6 +203,24 @@ privacy-safe notifications and telemetry; EXIF review; separate sharing and
 publication approval; sensitive-zone and time removal; abuse-case and physical
 device testing. Companion is not represented as an emergency or guaranteed
 tracking service.
+
+### Travel Output, Document, and Change Leakage
+
+An attacker or overprivileged collaborator obtains another traveler's
+countdown context, readiness state, required actions, documents, confirmation
+details, change history, contingency instructions, offline package, or
+acknowledgment status. Malicious documents or untrusted extraction may inject
+content or overwrite authoritative itinerary data; stale projections may cause
+a traveler to follow obsolete instructions.
+
+Controls: server-side Creator/resource authorization; traveler-specific
+information policies; private Resource storage and malware scanning; bounded
+file types and processing; provenance and human review for extracted values;
+minimal secure-deep-link notifications; versioned projections; visible stale,
+unknown, and unverified states; idempotent reconciliation; revocation-aware
+offline data; no secrets in countdowns, lock-screen content, analytics, or
+telemetry; and complete IDOR, malicious-file, stale-output, and cross-traveler
+policy tests.
 
 ### Billing, Entitlement, and Webhook Abuse
 

@@ -1,10 +1,10 @@
 # AdventuresSuite Roadmap
 
-**Version:** 1.2
+**Version:** 1.4
 
 **Status:** Living Document
 
-**Last Updated:** August 7, 2026
+**Last Updated:** August 9, 2026
 
 ---
 
@@ -56,11 +56,14 @@ The implementation proceeds through gated increments:
 3. Database-backed, Creator-scoped persistence
 4. Identity and authorization
 5. Minimal Creator Planning Workspace
-6. AI proposal and approval foundation
-7. Proposed itinerary, conflict review, and planning-task assistance
-8. Grounded travel research
-9. Adventures Companion
-10. Explicit preserve-and-publish transformation
+6. Adventure Travel Playbook and universal ICS calendar output
+7. AI proposal and approval foundation
+8. Proposed itinerary, conflict review, and planning-task assistance
+9. Grounded travel research
+10. Adventures Companion, offline Playbook, and device-calendar integration
+11. Travel readiness, countdowns, change impact, and document intake
+12. Traveler-specific active-travel guidance and acknowledgments
+13. Explicit preserve-and-publish transformation
 
 The governing principle is:
 
@@ -72,6 +75,34 @@ offline itinerary access, local-time context, essential references, memory and
 media capture, notifications, and optional traveler-controlled GPS breadcrumbs.
 Location capture is off by default and private until a separate Creator-reviewed
 publication step. See `docs/architecture/adventures-companion.md`.
+
+The Adventure Travel Playbook is a first-class private Planning output. It
+generates a traveler-ready, versioned guide comparable in usefulness to the
+`ITALY_MASTER.docx` reference, while keeping Planning authoritative and
+protected tickets and vouchers in the Resource Engine. Adventure Calendar
+Integration begins with privacy-safe ICS output and later adds explicit
+traveler-controlled device and provider synchronization. See:
+
+- `docs/architecture/adventure-travel-playbook.md`
+- `docs/architecture/adventure-calendar-integration.md`
+
+## Travel Readiness and Change Management Requirement
+
+AdventuresSuite will make upcoming travel operationally understandable through
+countdowns, an explainable readiness dashboard, change-impact analysis, a
+protected Travel Document Inbox, traveler-specific information policies,
+acknowledgments, required actions, Today and Next, contingencies, offline places,
+smart reminders, decision history, professional handoff, multi-currency
+budgets, deadline tracking, and safe templates.
+
+Every Planned, Upcoming, or otherwise approved committed Adventure will show a
+countdown in the Planning Workspace and AdventuresCompanion. It is derived from
+authoritative date/time-zone data, remains day-level when no time is known, and
+never becomes a second lifecycle clock or a stream of persisted ticks.
+
+These capabilities are approved requirements but will be delivered through
+bounded increments after the current authentication gate. See
+`docs/architecture/adventure-readiness-and-change-management.md`.
 
 ## Travel Professional Partnership Direction
 

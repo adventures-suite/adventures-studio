@@ -21,13 +21,19 @@ human-approved AI assistance.
 Read these documents together and in this order:
 
 1. `architecture/planning-engine.md`
-2. `architecture/ai-planning-copilot.md`
-3. `product/creator-planning-workspace.md`
-4. `development/planning-engine-implementation-plan.md`
+2. `architecture/adventure-travel-playbook.md`
+3. `architecture/adventure-calendar-integration.md`
+4. `architecture/adventure-readiness-and-change-management.md`
+5. `architecture/ai-planning-copilot.md`
+6. `product/creator-planning-workspace.md`
+7. `development/planning-engine-implementation-plan.md`
 
 The governing principle is:
 
 > AI proposes; the Creator decides; the Planning Engine commits.
+
+> Playbooks and calendar events are authorized projections of the plan. They
+> are neither the source of truth nor implicit public content.
 
 ## Identity and Authorization
 

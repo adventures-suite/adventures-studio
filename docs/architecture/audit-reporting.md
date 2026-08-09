@@ -4,7 +4,7 @@
 
 **Status:** Platform Must-Have
 
-**Last Updated:** August 7, 2026
+**Last Updated:** August 9, 2026
 
 ## Purpose
 
@@ -167,6 +167,20 @@ and deletion using opaque identities and safe outcomes without coordinates.
 Creator reporting uses authorized privacy-preserving projections; raw precise
 trails are not a general reporting dataset.
 
+Adventure Travel Playbook generation and calendar connection, consent, export,
+synchronization, cancellation, disconnect, delivery, and deletion are protected
+actions. Durable audit records retain minimal actor, Creator, plan/output,
+policy/version, outcome, and safe reason references without copying document
+content, calendar descriptions, attendee addresses, provider tokens, ticket
+values, private notes, or protected delivery URLs.
+
+Travel Document Inbox access and classification, extracted-value approval,
+information-policy changes, material-change acknowledgment, contingency
+activation, professional handoff, and protected readiness export are also
+protected actions. Countdown display ticks, reminder evaluations, and routine
+readiness recalculation are not individual audit records; record only the
+material protected action or policy outcome with minimal opaque references.
+
 ## Prohibited Data
 
 Audit, events, projections, analytics, and exports must not contain secrets,
@@ -223,6 +237,8 @@ Automated and real-infrastructure tests, as applicable, cover:
 - projection rebuilds and idempotent consumers;
 - retention, deletion, legal hold, and environment isolation;
 - prohibited-data canaries and export authorization;
+- Playbook profile, stale-version, delivery, calendar-consent, duplicate-sync,
+  cancellation, disconnect, and shared-calendar leakage behavior;
 - financial reconciliation and consent evidence where applicable; and
 - AI lineage and approval evidence without raw private inputs or outputs.
 

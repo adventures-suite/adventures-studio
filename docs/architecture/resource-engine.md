@@ -19,3 +19,22 @@ Creator and travel-content manifests store resource identities rather than publi
 `wwwroot` remains shared and inherently public. It cannot enforce Creator authorization and must never contain private, protected, embargoed, or draft media. Resource ownership in this phase is a validated logical boundary; it does not turn static files into access-controlled objects.
 
 Future providers may use Azure Blob Storage and CDN delivery without changing `ResourceId` or content ownership. Private delivery, image processing, dimensions, content-reference migration, and storage migration should be added incrementally behind the provider and service abstractions.
+
+## Protected Travel Documents and Generated Artifacts
+
+Tickets, vouchers, QR/barcode documents, shipping labels, and generated
+Adventure Travel Playbooks are protected Resources when they contain private
+Planning or traveler information. SQL stores Creator ownership, classification,
+retention, checksum, source-plan/version, and provider location; private Blob
+Storage holds the bytes.
+
+These Resources never use `wwwroot` or permanent public URLs. Delivery is
+authorized, short-lived, auditable, and profile-aware. Calendar entries and
+shareable Playbooks use secure deep links or omit protected documents rather
+than embedding operational secrets.
+
+The future Travel Document Inbox registers each original and eligible derived
+artifact through this boundary. It retains checksum, provenance, classification,
+malware-scan state, extraction status, retention, supersession, and authorized
+Planning references. OCR, barcode, and AI-extracted values remain untrusted
+proposals; Resource storage never silently mutates an Adventure Plan.

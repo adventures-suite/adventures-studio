@@ -2,7 +2,7 @@
 
 **Status:** Approved Future Incremental Delivery
 
-**Last Updated:** August 8, 2026
+**Last Updated:** August 9, 2026
 
 ## Objective
 
@@ -74,11 +74,26 @@ pass on both platforms.
 
 Implement encrypted, Creator-partitioned local storage and versioned sync for
 today/upcoming itinerary, time-zone context, reservations, tasks, maps, and
-essential references. Add explicit conflict and stale-data presentation.
+essential references. Include an authorized, minimized Travel Playbook package
+with explicit section/Resource selection, version, retention, expiration, and
+stale-data presentation.
 
 Exit gate: airplane-mode, partial sync, interrupted retry, cross-Creator,
 revocation, local clearing, time-zone transition, schema upgrade, and storage
 corruption tests pass.
+
+## M4A: Device Calendar Integration
+
+Add explicit traveler-controlled calendar export through iOS and Android
+platform adapters. Request OS calendar permission just in time; allow item,
+target-calendar, and reminder selection; preserve stable event identity,
+destination-local time zones, updates, and cancellation; and retain a useful
+reduced-capability experience when permission is denied.
+
+Exit gate: consent, denial, revocation, duplicate retry, stale update,
+cancellation, time-zone transition, shared-calendar leakage, prohibited-data,
+and cross-traveler tests pass on both platforms. Device-calendar edits cannot
+silently mutate authoritative Planning state.
 
 ## M5: Traveler-Controlled GPS Breadcrumbs
 
@@ -112,6 +127,16 @@ quota, and deletion tests pass.
 Add provider-neutral push registration and privacy-safe plan-change
 notifications. Complete offline readiness, accessibility, performance, battery,
 support, incident, store-distribution, signing, and staged-release procedures.
+
+Include derived countdowns for Planned, Upcoming, and approved committed
+Adventures; date-only and authoritative time-zone semantics; traveler-specific
+readiness and Today and Next projections; material-change acknowledgment;
+action-required workflows; approved contingencies; bounded smart reminders;
+and visible offline freshness and reconciliation state.
+
+Do not persist countdown ticks or treat notification delivery as
+acknowledgment. Follow
+`docs/architecture/adventure-readiness-and-change-management.md`.
 
 Exit gate: notification payloads contain no private detail; registrations are
 revocable and environment-isolated; production runbooks and phased rollout are

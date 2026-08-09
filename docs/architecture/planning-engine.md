@@ -4,7 +4,7 @@
 
 **Status:** Approved Direction
 
-**Last Updated:** August 7, 2026
+**Last Updated:** August 9, 2026
 
 ## Purpose
 
@@ -207,6 +207,35 @@ engagement fields belong in the current Planning persistence phase.
 - Rendering Engine presents workspace, companion, and public views.
 - Notification Engine consumes explicit approved public events, not draft saves.
 - Commerce and booking providers remain outside the initial Planning scope.
+
+## Traveler-Ready Outputs
+
+Planning state must support useful private outputs without turning those
+outputs into alternate sources of truth.
+
+- The Adventure Travel Playbook produces a versioned, traveler-ready snapshot
+  containing approved itinerary sections and selected protected Resources.
+- Adventure Calendar Integration projects selected itinerary items into
+  standards-compliant or provider-backed calendar events with explicit traveler
+  consent.
+- AdventuresCompanion consumes a minimized, encrypted offline projection and
+  may initiate explicit device-calendar operations.
+
+Generated Playbooks and calendar events retain source plan/item version,
+Creator and traveler scope, local-time and time-zone semantics, stale state,
+authorization, and audit evidence. They never create publication, membership,
+or ownership and cannot write authoritative Planning state back from an
+untrusted document or provider payload.
+
+See `docs/architecture/adventure-travel-playbook.md` and
+`docs/architecture/adventure-calendar-integration.md`.
+
+Planning also supplies authoritative inputs for Adventure countdowns,
+explainable readiness, change-impact evaluation, document linkage,
+traveler-specific projections, acknowledgments, Today and Next, contingencies,
+decisions, financial deadlines, and reusable templates. These capabilities do
+not duplicate or reverse-update the aggregate through presentation state. See
+`docs/architecture/adventure-readiness-and-change-management.md`.
 
 ## Initial Non-Goals
 

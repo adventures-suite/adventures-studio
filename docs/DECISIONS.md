@@ -543,3 +543,76 @@ identity and Planning data.
 Status:
 
 Approved
+
+---
+
+## 2026-08-09
+
+### Playbooks and Calendar Events Are Authorized Planning Projections
+
+Decision:
+
+AdventuresSuite will produce an Adventure Travel Playbook from a specific,
+authorized `AdventurePlan` version and selected protected Resources. The
+Playbook is an immutable generated artifact with explicit audience/profile,
+template, source versions, checksum, retention, stale state, and audit evidence;
+it is not an alternate Planning source of truth or implicit publication.
+
+Adventure Calendar Integration begins with privacy-safe ICS output and may
+later add traveler-controlled device and connected-provider synchronization.
+Planning remains authoritative. Each traveler explicitly consents to writes to
+that traveler's calendar, events retain stable update identities and exact
+destination-local time-zone semantics, and calendars exclude tickets, PINs,
+private notes, precise breadcrumbs, and permanent protected-Resource URLs.
+
+Reason:
+
+Travelers need cohesive operational guides and useful calendar entries during
+planning and travel, but documents, shared calendars, lock screens, provider
+copies, and offline packages create secondary disclosure and stale-data risks.
+Treating each output as a least-data, versioned projection preserves Planning
+authority, Creator isolation, traveler autonomy, and deliberate publication.
+
+Status:
+
+Approved
+
+---
+
+## 2026-08-09
+
+### Travel Readiness and Change Management Are Platform Requirements
+
+Decision:
+
+AdventuresSuite will provide Adventure countdowns, an explainable Travel
+Readiness Dashboard, change-impact analysis, a protected Travel Document Inbox,
+traveler-specific views and information policies, acknowledgment and action-
+required workflows, Today and Next, contingencies, offline map/place
+collections, smart reminders, planning decisions, comments and proposals,
+travel-professional handoff, multi-currency budgets, deadline and cancellation-
+window tracking, and safe plan templates and cloning.
+
+Every Planned, Upcoming, or otherwise approved committed Adventure displays a
+countdown in the Planning Workspace and AdventuresCompanion. The countdown is
+derived from authoritative Planning schedule data. Date-only plans remain day-
+level, local times require an IANA zone, offline state exposes freshness, and no
+decrementing counter is persisted or allowed to drive lifecycle state.
+
+Planning remains authoritative; Resource owns protected documents; Companion
+presents minimized projections; notifications do not prove acknowledgment; and
+AI extraction or impact proposals require validation and review. All operations
+preserve provenance, stable identities, dependencies, traveler scope, consent,
+revocation, retention, secure deep links, idempotency, reconciliation,
+accessibility, localization, and audit boundaries.
+
+Reason:
+
+Travelers need more than a presented itinerary. They need to know when the
+Adventure begins, whether it is ready, what changed, what affects them, and what
+they must do next without duplicating Planning state, leaking protected travel
+information, or creating unreliable automation.
+
+Status:
+
+Approved

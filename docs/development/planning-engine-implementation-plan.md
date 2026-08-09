@@ -2,7 +2,7 @@
 
 **Status:** Approved for Incremental Implementation
 
-**Last Updated:** August 7, 2026
+**Last Updated:** August 9, 2026
 
 ## Objective
 
@@ -21,6 +21,7 @@ Read before implementation:
 - `docs/architecture/content-engine.md`
 - `docs/architecture/resource-engine.md`
 - `docs/architecture/adventure-lifecycle.md`
+- `docs/architecture/adventure-readiness-and-change-management.md`
 - `docs/architecture/partner-collaboration-engine.md`
 
 ## Working Rules
@@ -39,6 +40,10 @@ Read before implementation:
 - Do not combine a phase with unrelated presentation or content work.
 - Do not add speculative partner fields or tables during the current Planning
   persistence work.
+- Preserve stable identities, provenance, dependencies, traveler visibility,
+  verification, freshness, acknowledgment, consent, and action-required hooks
+  where the owning phase needs them; do not implement the entire readiness
+  capability speculatively.
 
 ## Phase 0: Architecture and Documentation
 
@@ -202,6 +207,8 @@ Scope:
 - activities, transportation, accommodations, and reservations
 - notes, tasks, packing, and budget items
 - private read-only preview
+- deterministic private Adventure Travel Playbook preview and first PDF export
+- privacy-safe ICS calendar export for selected itinerary items
 
 Exclusions:
 
@@ -218,10 +225,16 @@ Acceptance criteria:
 - concurrency conflicts do not silently overwrite work
 - private values do not appear in public endpoints or HTML
 - critical flows work on desktop and mobile layouts
+- generated output records source plan/template/profile versions and becomes
+  visibly stale when an authoritative input changes
+- repeated ICS generation preserves stable UIDs and correct destination-local
+  time zones without exposing protected values
 
 Exit gate:
 
 - product, accessibility, security, and regression review approved
+- Playbook rendering, profile allowlist, calendar duplicate/update/cancellation,
+  and prohibited-data tests pass
 
 ## Phase 5: AI Proposal Foundation
 
@@ -321,6 +334,8 @@ Scope:
 - maps and essential references
 - journaling and photography prompts
 - offline-readiness design
+- minimized offline Travel Playbook access
+- explicit Add to Device Calendar through a platform adapter
 - optional traveler-controlled GPS breadcrumbs
 
 Acceptance criteria:
@@ -329,6 +344,8 @@ Acceptance criteria:
 - sensitive details remain protected
 - time-zone transitions are tested
 - public and private presentation boundaries remain distinct
+- calendar permission denial preserves a useful Companion experience, and no
+  traveler can write to another traveler's calendar
 - location capture is off by default, explicit, visible, pausable, stoppable,
   retention-bound, and private until separately approved for publication
 
@@ -376,6 +393,8 @@ These are decided in their owning phases:
 - AI provider and model selection
 - research providers and acceptable-source policy
 - offline Companion architecture
+- exact Playbook template/versioning and generated-artifact retention policy
+- connected calendar-provider selection, token custody, and reconciliation
 - exact private-to-public publication contract
 - travel-professional engagement invitation, permission, expiration, and
   revocation mechanics

@@ -36,6 +36,24 @@
   names, prompts, EF Core, and Razor components.
 - Use date-only values for travel calendar dates, IANA identifiers for local
   time zones, and UTC timestamps for system audit events.
+- Read `docs/architecture/adventure-travel-playbook.md`,
+  `docs/architecture/adventure-calendar-integration.md`, and
+  `docs/architecture/adventure-readiness-and-change-management.md` before
+  changing plan exports, calendar behavior, readiness, countdowns, change
+  impact, protected travel documents, or offline travel packages.
+- Treat Playbooks and calendar events as versioned, authorized projections of
+  Planning state, never as authoritative plan records or implicit publication.
+- Never place ticket codes, booking PINs, private notes, precise breadcrumbs,
+  or permanent protected-Resource URLs in a calendar event or shareable output.
+- Require each traveler to opt into writes or synchronization with that
+  traveler's calendar; membership or plan participation is not consent.
+- Derive countdowns from authoritative schedule data. Never persist countdown
+  ticks, invent a departure time for a date-only plan, or let a countdown change
+  lifecycle state.
+- Treat readiness, change impact, traveler views, acknowledgments, and active-
+  travel guidance as authorized projections; they never replace Planning state.
+- Treat document extraction and AI classification as untrusted proposals with
+  provenance and human review before Planning mutation.
 - Implement Planning Engine phases in order and do not combine them into a
   broad rewrite.
 
