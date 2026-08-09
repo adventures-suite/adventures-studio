@@ -27,6 +27,15 @@ internal static class AzureDevelopmentBootstrapper
 
     /// <summary>Builds the migration-only grants for an approved contained principal alias.</summary>
     internal static string BuildMigrationGrants(string principalAlias) => $"""
+        IF DATABASE_PRINCIPAL_ID(N'{RuntimeRoleName}') IS NOT NULL
+            AND NOT EXISTS (
+                SELECT 1
+                FROM sys.database_principals
+                WHERE name = N'{RuntimeRoleName}' AND type = 'R')
+            THROW 51000, 'The authentication runtime principal name is not an approved database role.', 1;
+        IF DATABASE_PRINCIPAL_ID(N'{RuntimeRoleName}') IS NULL
+            CREATE ROLE [{RuntimeRoleName}] AUTHORIZATION [dbo];
+
         ALTER USER {principalAlias} WITH DEFAULT_SCHEMA = [dbo];
         IF ISNULL(IS_ROLEMEMBER(N'db_ddladmin', @AliasParameter), 0) <> 1
             ALTER ROLE [db_ddladmin] ADD MEMBER {principalAlias};

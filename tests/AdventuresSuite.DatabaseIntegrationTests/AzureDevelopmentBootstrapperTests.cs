@@ -10,6 +10,10 @@ public sealed class AzureDevelopmentBootstrapperTests
         var grants = AzureDevelopmentBootstrapper.BuildMigrationGrants("[migration-principal]");
 
         Assert.Contains(
+            "CREATE ROLE [AdventuresSuiteAuthenticationRuntime] AUTHORIZATION [dbo];",
+            grants,
+            StringComparison.Ordinal);
+        Assert.Contains(
             "ALTER USER [migration-principal] WITH DEFAULT_SCHEMA = [dbo];",
             grants,
             StringComparison.Ordinal);
