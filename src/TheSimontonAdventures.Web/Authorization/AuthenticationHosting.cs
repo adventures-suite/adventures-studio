@@ -101,6 +101,7 @@ public static class AuthenticationHosting
             credential);
 
         builder.Services.AddSingleton(configuration);
+        builder.Services.AddSingleton(signedAssertionProvider);
         builder.Services.AddSingleton<IAuthenticationClock, SystemAuthenticationClock>();
         builder.Services.AddSingleton<IAuthenticationIdentityGenerator, CryptographicAuthenticationIdentityGenerator>();
         builder.Services.AddSingleton<IAuthenticationPersistenceTransactionFactory>(
