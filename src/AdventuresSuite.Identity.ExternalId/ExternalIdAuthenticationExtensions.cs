@@ -163,10 +163,17 @@ public static class ExternalIdAuthenticationExtensions
         },
         OnAuthorizationCodeReceived = async context =>
         {
+            var providerConfiguration = context.Options.Configuration;
+            if (providerConfiguration is null && context.Options.ConfigurationManager is not null)
+            {
+                providerConfiguration = await context.Options.ConfigurationManager
+                    .GetConfigurationAsync(context.HttpContext.RequestAborted);
+            }
+
             if (!IsWorkspaceRequest(context.Request, configuration)
                 || context.TokenEndpointRequest is null
                 || !Uri.TryCreate(
-                    context.TokenEndpointRequest.IssuerAddress,
+                    providerConfiguration?.TokenEndpoint,
                     UriKind.Absolute,
                     out var tokenEndpoint)
                 || !IsExpectedAuthorityHost(tokenEndpoint, configuration))
@@ -175,6 +182,7 @@ public static class ExternalIdAuthenticationExtensions
                 return;
             }
 
+            context.TokenEndpointRequest.TokenEndpoint = tokenEndpoint.AbsoluteUri;
             context.TokenEndpointRequest.ClientAssertion =
                 await signedAssertionProvider.CreateClientAssertionAsync(
                     clientId,

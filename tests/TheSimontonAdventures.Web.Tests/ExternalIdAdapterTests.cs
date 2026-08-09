@@ -121,6 +121,10 @@ public sealed class ExternalIdAdapterTests
         using var provider = services.BuildServiceProvider();
         var options = provider.GetRequiredService<IOptionsMonitor<OpenIdConnectOptions>>()
             .Get(ExternalIdAuthenticationExtensions.Scheme);
+        options.Configuration = new OpenIdConnectConfiguration
+        {
+            TokenEndpoint = "https://tenant.ciamlogin.com/tenant/oauth2/v2.0/token"
+        };
         var httpContext = new DefaultHttpContext();
         httpContext.RequestServices = provider;
         httpContext.Request.Scheme = "https";
@@ -134,10 +138,9 @@ public sealed class ExternalIdAdapterTests
             options,
             new AuthenticationProperties())
         {
-            TokenEndpointRequest = new OpenIdConnectMessage
-            {
-                IssuerAddress = "https://tenant.ciamlogin.com/tenant/oauth2/v2.0/token"
-            }
+            // Mirrors ASP.NET Core's real event request: the framework does not
+            // place its discovered token endpoint on this message before the event.
+            TokenEndpointRequest = new OpenIdConnectMessage()
         };
 
         await options.Events.AuthorizationCodeReceived(context);
@@ -150,6 +153,9 @@ public sealed class ExternalIdAdapterTests
         Assert.Equal(
             "https://tenant.ciamlogin.com/tenant/oauth2/v2.0/token",
             signer.TokenEndpoint?.AbsoluteUri);
+        Assert.Equal(
+            "https://tenant.ciamlogin.com/tenant/oauth2/v2.0/token",
+            context.TokenEndpointRequest.TokenEndpoint);
     }
 
     /// <summary>An unexpected token endpoint never receives an assertion or remote-signing operation.</summary>
@@ -164,6 +170,10 @@ public sealed class ExternalIdAdapterTests
         using var provider = services.BuildServiceProvider();
         var options = provider.GetRequiredService<IOptionsMonitor<OpenIdConnectOptions>>()
             .Get(ExternalIdAuthenticationExtensions.Scheme);
+        options.Configuration = new OpenIdConnectConfiguration
+        {
+            TokenEndpoint = "https://tenant.ciamlogin.com.attacker.example/token"
+        };
         var httpContext = new DefaultHttpContext();
         httpContext.RequestServices = provider;
         httpContext.Request.Scheme = "https";
@@ -177,10 +187,7 @@ public sealed class ExternalIdAdapterTests
             options,
             new AuthenticationProperties())
         {
-            TokenEndpointRequest = new OpenIdConnectMessage
-            {
-                IssuerAddress = "https://tenant.ciamlogin.com.attacker.example/token"
-            }
+            TokenEndpointRequest = new OpenIdConnectMessage()
         };
 
         await options.Events.AuthorizationCodeReceived(context);
