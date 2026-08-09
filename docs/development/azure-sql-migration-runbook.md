@@ -72,7 +72,10 @@ combine them or run DbUp using administrator authority.
    principal object ID, client ID, and exact display name, and runs
    `--bootstrap-sql`. This creates only the
    migration contained user and grants `CONNECT`, `db_ddladmin`,
-   `db_datareader`, and `db_datawriter` for development migrations.
+   `db_datareader`, and `db_datawriter` for development migrations. The
+   bootstrap also assigns the migration user an explicit `dbo` default schema
+   so Microsoft Entra workload authentication can create the source-controlled
+   schemas without implicit-user or group-default-schema behavior.
 2. The migration workload identity supplies
    `ADVENTURESSUITE_SQL_CONNECTION_STRING` and runs `--migrate`. No
    administrator connection string is present for this operation.

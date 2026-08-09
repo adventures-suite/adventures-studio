@@ -5,6 +5,17 @@ namespace AdventuresSuite.DatabaseIntegrationTests;
 public sealed class AzureDevelopmentBootstrapperTests
 {
     [Fact]
+    public void MigrationGrantsAssignOwnershipCapableDefaultSchema()
+    {
+        var grants = AzureDevelopmentBootstrapper.BuildMigrationGrants("[migration-principal]");
+
+        Assert.Contains(
+            "ALTER USER [migration-principal] WITH DEFAULT_SCHEMA = [dbo];",
+            grants,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void CreatePrincipalAliasUsesExactDisplayNameAndObjectIdSuffix()
     {
         var alias = AzureDevelopmentBootstrapper.CreatePrincipalAlias(

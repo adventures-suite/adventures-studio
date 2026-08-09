@@ -23,15 +23,19 @@ internal static class AzureDevelopmentBootstrapper
             migrationPrincipalId,
             migrationPrincipalClientId,
             migrationPrincipalName,
-            principalAlias => $"""
-                IF ISNULL(IS_ROLEMEMBER(N'db_ddladmin', @AliasParameter), 0) <> 1
-                    ALTER ROLE [db_ddladmin] ADD MEMBER {principalAlias};
-                IF ISNULL(IS_ROLEMEMBER(N'db_datareader', @AliasParameter), 0) <> 1
-                    ALTER ROLE [db_datareader] ADD MEMBER {principalAlias};
-                IF ISNULL(IS_ROLEMEMBER(N'db_datawriter', @AliasParameter), 0) <> 1
-                    ALTER ROLE [db_datawriter] ADD MEMBER {principalAlias};
-                GRANT CONNECT TO {principalAlias};
-                """);
+            BuildMigrationGrants);
+
+    /// <summary>Builds the migration-only grants for an approved contained principal alias.</summary>
+    internal static string BuildMigrationGrants(string principalAlias) => $"""
+        ALTER USER {principalAlias} WITH DEFAULT_SCHEMA = [dbo];
+        IF ISNULL(IS_ROLEMEMBER(N'db_ddladmin', @AliasParameter), 0) <> 1
+            ALTER ROLE [db_ddladmin] ADD MEMBER {principalAlias};
+        IF ISNULL(IS_ROLEMEMBER(N'db_datareader', @AliasParameter), 0) <> 1
+            ALTER ROLE [db_datareader] ADD MEMBER {principalAlias};
+        IF ISNULL(IS_ROLEMEMBER(N'db_datawriter', @AliasParameter), 0) <> 1
+            ALTER ROLE [db_datawriter] ADD MEMBER {principalAlias};
+        GRANT CONNECT TO {principalAlias};
+        """;
 
     /// <summary>Binds the runtime principal after migrations have created the application role.</summary>
     public static Task BindRuntimeIdentityAsync(
