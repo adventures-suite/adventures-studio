@@ -119,6 +119,15 @@ public sealed class SqlMigrationIntegrationTests
 
     private static async Task VerifySchemaAsync(string connectionString)
     {
+        Assert.Equal(2, await ScalarAsync<int>(connectionString, """
+            SELECT COUNT(*)
+            FROM sys.schemas AS schemas
+            INNER JOIN sys.database_principals AS principals
+                ON principals.principal_id = schemas.principal_id
+            WHERE schemas.name IN ('planning', 'auth')
+              AND principals.name = 'db_ddladmin';
+            """));
+
         const string childTableSql = """
             SELECT COUNT(*)
             FROM sys.tables AS tables

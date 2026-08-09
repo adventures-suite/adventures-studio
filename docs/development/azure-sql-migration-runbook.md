@@ -128,6 +128,10 @@ Before execution verify:
 7. Acquire an application lock so only one migrator executes for the database.
 8. Run `--migrate` once using per-script transaction and
    `dbo.AdventuresSuiteSchemaVersions` journal behavior.
+   Source-controlled application schemas are owned by the stable
+   `db_ddladmin` database role. The migration principal is already a member of
+   that role, so schema creation does not require the unsafe
+   `IMPERSONATE dbo` permission or bind ownership to a rotating workload user.
 9. Record script identifiers, safe outcome, duration, target version, release
    SHA, and support identity without SQL text containing data or credentials.
 10. Complete administrator `--bind-runtime`, then run workload
