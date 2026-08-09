@@ -211,7 +211,8 @@ The private SQL execution path must run the database steps in this exact order:
 
 1. An Entra database administrator runs `--bootstrap-sql` once with
    `ADVENTURESSUITE_ADMIN_SQL_CONNECTION_STRING` and the approved migration
-   principal object ID. This creates only the migration contained user and its
+   principal object ID, client ID, and exact display name. This creates only
+   the migration contained user and its
    development migration grants.
 2. The migration workload identity runs `--migrate` with
    `ADVENTURESSUITE_SQL_CONNECTION_STRING`.

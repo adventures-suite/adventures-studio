@@ -17,13 +17,17 @@ try
         case ["--bootstrap-sql"]:
             await AzureDevelopmentBootstrapper.BootstrapMigrationIdentityAsync(
                 RequireEnvironment(administratorConnectionVariable),
-                Environment.GetEnvironmentVariable("ADVENTURESSUITE_MIGRATION_PRINCIPAL_ID"));
+                Environment.GetEnvironmentVariable("ADVENTURESSUITE_MIGRATION_PRINCIPAL_ID"),
+                Environment.GetEnvironmentVariable("ADVENTURESSUITE_MIGRATION_PRINCIPAL_CLIENT_ID"),
+                Environment.GetEnvironmentVariable("ADVENTURESSUITE_MIGRATION_PRINCIPAL_NAME"));
             Console.WriteLine("Migration identity bootstrap completed successfully.");
             break;
         case ["--bind-runtime"]:
             await AzureDevelopmentBootstrapper.BindRuntimeIdentityAsync(
                 RequireEnvironment(administratorConnectionVariable),
-                Environment.GetEnvironmentVariable("ADVENTURESSUITE_APP_PRINCIPAL_ID"));
+                Environment.GetEnvironmentVariable("ADVENTURESSUITE_APP_PRINCIPAL_ID"),
+                Environment.GetEnvironmentVariable("ADVENTURESSUITE_APP_PRINCIPAL_CLIENT_ID"),
+                Environment.GetEnvironmentVariable("ADVENTURESSUITE_APP_PRINCIPAL_NAME"));
             Console.WriteLine("Runtime identity binding completed successfully.");
             break;
         case ["--verify-permissions"]:

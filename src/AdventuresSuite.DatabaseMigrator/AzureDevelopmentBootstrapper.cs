@@ -8,8 +8,6 @@ namespace AdventuresSuite.DatabaseMigrator;
 /// <summary>Performs explicit, one-time development infrastructure bootstrap operations.</summary>
 internal static class AzureDevelopmentBootstrapper
 {
-    private const string ApplicationUserName = "adventures-suite-dev-runtime";
-    private const string MigrationUserName = "adventures-suite-dev-migrations";
     private const string RuntimeRoleName = "AdventuresSuiteAuthenticationRuntime";
     private const string WrappingKeyName = "adventures-suite-data-protection";
     private const string CertificateName = "adventures-suite-external-id";
@@ -17,32 +15,42 @@ internal static class AzureDevelopmentBootstrapper
     /// <summary>Creates only the contained migration principal using Entra-administrator authority.</summary>
     public static Task BootstrapMigrationIdentityAsync(
         string administratorConnectionString,
-        string? migrationPrincipalId) =>
+        string? migrationPrincipalId,
+        string? migrationPrincipalClientId,
+        string? migrationPrincipalName) =>
         ExecutePrincipalCommandAsync(
             administratorConnectionString,
             migrationPrincipalId,
-            MigrationUserName,
-            $"""
-            ALTER ROLE [db_ddladmin] ADD MEMBER [{MigrationUserName}];
-            ALTER ROLE [db_datareader] ADD MEMBER [{MigrationUserName}];
-            ALTER ROLE [db_datawriter] ADD MEMBER [{MigrationUserName}];
-            GRANT CONNECT TO [{MigrationUserName}];
-            """);
+            migrationPrincipalClientId,
+            migrationPrincipalName,
+            principalAlias => $"""
+                IF ISNULL(IS_ROLEMEMBER(N'db_ddladmin', @AliasParameter), 0) <> 1
+                    ALTER ROLE [db_ddladmin] ADD MEMBER {principalAlias};
+                IF ISNULL(IS_ROLEMEMBER(N'db_datareader', @AliasParameter), 0) <> 1
+                    ALTER ROLE [db_datareader] ADD MEMBER {principalAlias};
+                IF ISNULL(IS_ROLEMEMBER(N'db_datawriter', @AliasParameter), 0) <> 1
+                    ALTER ROLE [db_datawriter] ADD MEMBER {principalAlias};
+                GRANT CONNECT TO {principalAlias};
+                """);
 
     /// <summary>Binds the runtime principal after migrations have created the application role.</summary>
     public static Task BindRuntimeIdentityAsync(
         string administratorConnectionString,
-        string? applicationPrincipalId) =>
+        string? applicationPrincipalId,
+        string? applicationPrincipalClientId,
+        string? applicationPrincipalName) =>
         ExecutePrincipalCommandAsync(
             administratorConnectionString,
             applicationPrincipalId,
-            ApplicationUserName,
-            $"""
-            IF DATABASE_PRINCIPAL_ID(N'{RuntimeRoleName}') IS NULL
-                THROW 51000, 'The authentication runtime role has not been migrated.', 1;
-            ALTER ROLE [{RuntimeRoleName}] ADD MEMBER [{ApplicationUserName}];
-            GRANT CONNECT TO [{ApplicationUserName}];
-            """);
+            applicationPrincipalClientId,
+            applicationPrincipalName,
+            principalAlias => $"""
+                IF DATABASE_PRINCIPAL_ID(N'{RuntimeRoleName}') IS NULL
+                    THROW 51000, 'The authentication runtime role has not been migrated.', 1;
+                IF ISNULL(IS_ROLEMEMBER(N'{RuntimeRoleName}', @AliasParameter), 0) <> 1
+                    ALTER ROLE [{RuntimeRoleName}] ADD MEMBER {principalAlias};
+                GRANT CONNECT TO {principalAlias};
+                """);
 
     /// <summary>Verifies migration DDL, data, journal, and authentication-schema permissions.</summary>
     public static async Task VerifyMigrationPermissionsAsync(string migrationConnectionString)
@@ -121,26 +129,82 @@ internal static class AzureDevelopmentBootstrapper
     private static async Task ExecutePrincipalCommandAsync(
         string connectionString,
         string? principalId,
-        string principalName,
-        string grants)
+        string? principalClientId,
+        string? principalName,
+        Func<string, string> buildGrants)
     {
-        if (!Guid.TryParse(principalId, out var objectId))
+        if (!Guid.TryParse(principalId, out var objectId)
+            || !Guid.TryParse(principalClientId, out var clientId))
         {
-            throw new InvalidOperationException("The approved workload principal identity is required.");
+            throw new InvalidOperationException(
+                "The approved workload principal object and client identities are required.");
         }
 
+        var alias = CreatePrincipalAlias(principalName, objectId);
+        var quotedAlias = QuoteIdentifier(alias);
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
+        await using var transaction = (SqlTransaction)await connection.BeginTransactionAsync();
         await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
         command.CommandText = $"""
-            DECLARE @ObjectId varchar(36) = @ObjectIdParameter;
-            IF DATABASE_PRINCIPAL_ID(N'{principalName}') IS NULL
-                EXEC(N'CREATE USER [{principalName}] FROM EXTERNAL PROVIDER WITH OBJECT_ID=''' + @ObjectId + N''';');
-            {grants}
+            SET XACT_ABORT ON;
+            DECLARE @PrincipalId int = DATABASE_PRINCIPAL_ID(@AliasParameter);
+            IF @PrincipalId IS NULL
+            BEGIN
+                EXEC(N'CREATE USER {quotedAlias} FROM EXTERNAL PROVIDER WITH OBJECT_ID='''
+                    + @ObjectIdParameter + N''';');
+                SET @PrincipalId = DATABASE_PRINCIPAL_ID(@AliasParameter);
+            END;
+
+            IF NOT EXISTS (
+                SELECT 1
+                FROM sys.database_principals
+                WHERE principal_id = @PrincipalId
+                    AND type = 'E'
+                    AND CAST(sid AS uniqueidentifier) = @ClientIdParameter)
+                THROW 51000, 'The existing database principal does not match the approved workload identity.', 1;
+
+            {buildGrants(quotedAlias)}
             """;
         command.Parameters.AddWithValue("@ObjectIdParameter", objectId.ToString());
-        await command.ExecuteNonQueryAsync();
+        command.Parameters.AddWithValue("@ClientIdParameter", clientId);
+        command.Parameters.AddWithValue("@AliasParameter", alias);
+        try
+        {
+            await command.ExecuteNonQueryAsync();
+            await transaction.CommitAsync();
+        }
+        catch
+        {
+            if (transaction.Connection is not null)
+            {
+                await transaction.RollbackAsync();
+            }
+
+            throw;
+        }
     }
+
+    /// <summary>Creates the Azure SQL alias required for an exact Entra workload object ID.</summary>
+    internal static string CreatePrincipalAlias(string? principalName, Guid objectId)
+    {
+        if (string.IsNullOrWhiteSpace(principalName)
+            || principalName != principalName.Trim()
+            || principalName.Any(character =>
+                !char.IsAsciiLetterOrDigit(character)
+                && character is not '-' and not '_' and not '.'))
+        {
+            throw new InvalidOperationException("The approved workload principal display name is required.");
+        }
+
+        var alias = $"{principalName}-{objectId:N}"[..(principalName.Length + 6)];
+        return alias.Length <= 128
+            ? alias
+            : throw new InvalidOperationException("The workload principal SQL alias exceeds sysname limits.");
+    }
+
+    private static string QuoteIdentifier(string value) => $"[{value.Replace("]", "]]", StringComparison.Ordinal)}]";
 
     private static Uri ParseVaultUri(string? value) =>
         Uri.TryCreate(value, UriKind.Absolute, out var uri)

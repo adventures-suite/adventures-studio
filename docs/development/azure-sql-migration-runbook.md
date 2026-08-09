@@ -24,13 +24,28 @@ Use the standard logical server hostname. Never configure `10.40.1.4` directly.
 
 - Application principal/object ID:
   `43f88b68-e853-4ece-9379-bd2079af8ec0`
+- Application principal/client ID:
+  `21c95c0f-4855-433b-b835-9b14446276db`
+- Application principal/display name: `adventures-suite-dev`
 - Migration principal/object ID:
   `ce76a652-2741-4324-8a1c-18f25409dee0`
+- Migration principal/client ID:
+  `74fdf34f-9299-47fc-a114-099bf3d80cec`
+- Migration principal/display name: `adventures-suite-migrate-dev`
 - One-time operator: approved SQL Microsoft Entra administrator
 
 Generated IDs are verified against live Azure resource identities immediately
 before bootstrap. Names and object IDs must agree; scripts do not trust copied
 IDs alone.
+
+Supply the verified values only to the matching one-time operation:
+
+- migration: `ADVENTURESSUITE_MIGRATION_PRINCIPAL_ID`,
+  `ADVENTURESSUITE_MIGRATION_PRINCIPAL_CLIENT_ID`, and
+  `ADVENTURESSUITE_MIGRATION_PRINCIPAL_NAME`;
+- runtime: `ADVENTURESSUITE_APP_PRINCIPAL_ID`,
+  `ADVENTURESSUITE_APP_PRINCIPAL_CLIENT_ID`, and
+  `ADVENTURESSUITE_APP_PRINCIPAL_NAME`.
 
 ## Private Execution Path Gate
 
@@ -54,16 +69,18 @@ combine them or run DbUp using administrator authority.
 
 1. The approved Entra administrator confirms the exact target, supplies
    `ADVENTURESSUITE_ADMIN_SQL_CONNECTION_STRING` and the verified migration
-   principal object ID, and runs `--bootstrap-sql`. This creates only the
+   principal object ID, client ID, and exact display name, and runs
+   `--bootstrap-sql`. This creates only the
    migration contained user and grants `CONNECT`, `db_ddladmin`,
    `db_datareader`, and `db_datawriter` for development migrations.
 2. The migration workload identity supplies
    `ADVENTURESSUITE_SQL_CONNECTION_STRING` and runs `--migrate`. No
    administrator connection string is present for this operation.
 3. After migrations create `AdventuresSuiteAuthenticationRuntime`, the Entra
-   administrator supplies the verified application principal object ID and
-   runs `--bind-runtime`. This creates the runtime contained user, adds it only
-   to that migrated role, and grants `CONNECT`.
+   administrator supplies the verified application principal object ID, client
+   ID, and exact display name and runs `--bind-runtime`. This creates the
+   runtime contained user, adds it only to that migrated role, and grants
+   `CONNECT`.
 4. The migration workload identity runs `--verify-permissions`. The bounded
    verification proves its development migration roles, journal access, and
    required authentication schema without changing application data.
@@ -75,6 +92,10 @@ execution-path elevation.
 
 Bootstrap SQL is source-controlled, parameterized by resolved identity, reviewed,
 idempotent where safe, and never contains a password or access token.
+The generated contained-user alias begins with the exact Entra display name and
+appends the first five object-ID characters, as Azure SQL requires. An existing
+alias must have the approved client ID in its database SID or the operation
+fails closed. Principal creation and grants commit in one transaction.
 
 ## Migration Artifact
 
