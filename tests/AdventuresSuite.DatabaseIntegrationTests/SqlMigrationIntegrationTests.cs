@@ -90,6 +90,33 @@ public sealed class SqlMigrationIntegrationTests
         }
     }
 
+    /// <summary>Proves a concurrent migrator fails before it can inspect or mutate the journal.</summary>
+    [Fact]
+    public async Task MigrationLock_RejectsConcurrentMigratorAndReleasesForNextRun()
+    {
+        var masterConnectionString = Environment.GetEnvironmentVariable(ConnectionVariable);
+        Assert.False(string.IsNullOrWhiteSpace(masterConnectionString),
+            $"Set {ConnectionVariable} for the SQL integration gate.");
+        var databaseName = $"AdventuresSuiteLockTest_{Guid.NewGuid():N}";
+        var connectionString = BuildDatabaseConnectionString(masterConnectionString, databaseName);
+        await CreateDatabaseAsync(masterConnectionString, databaseName);
+        try
+        {
+            using (DatabaseMigratorRunner.AcquireMigrationLock(connectionString))
+            {
+                var exception = Assert.Throws<InvalidOperationException>(() =>
+                    DatabaseMigratorRunner.Migrate(connectionString));
+                Assert.Equal("Another database migration is already running.", exception.Message);
+            }
+
+            Assert.Equal(5, DatabaseMigratorRunner.Migrate(connectionString).Count);
+        }
+        finally
+        {
+            await DropDatabaseAsync(masterConnectionString, databaseName);
+        }
+    }
+
     private static async Task VerifySchemaAsync(string connectionString)
     {
         const string childTableSql = """

@@ -1,5 +1,6 @@
 using System.Reflection;
 using DbUp;
+using Microsoft.Data.SqlClient;
 
 namespace AdventuresSuite.DatabaseMigrator;
 
@@ -17,6 +18,7 @@ public static class DatabaseMigratorRunner
             throw new ArgumentException("A database connection string is required.", nameof(connectionString));
         }
 
+        using var migrationLock = AcquireMigrationLock(connectionString);
         var assembly = typeof(MigrationCatalog).Assembly;
         _ = MigrationCatalog.GetOrderedResourceNames(assembly);
         var upgrader = BuildUpgradeEngine(connectionString, assembly);
@@ -33,6 +35,39 @@ public static class DatabaseMigratorRunner
         return Array.AsReadOnly(pendingScripts);
     }
 
+    /// <summary>Acquires the database-scoped, session-owned exclusive migrator lock.</summary>
+    internal static IDisposable AcquireMigrationLock(string connectionString)
+    {
+        var connection = new SqlConnection(connectionString);
+        try
+        {
+            connection.Open();
+            using var command = connection.CreateCommand();
+            command.CommandText = """
+                DECLARE @Result int;
+                EXEC @Result = sys.sp_getapplock
+                    @Resource = N'AdventuresSuite.DatabaseMigrator',
+                    @LockMode = N'Exclusive',
+                    @LockOwner = N'Session',
+                    @LockTimeout = 0,
+                    @DbPrincipal = N'public';
+                SELECT @Result;
+                """;
+            var result = Convert.ToInt32(command.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture);
+            if (result < 0)
+            {
+                throw new InvalidOperationException("Another database migration is already running.");
+            }
+
+            return new MigrationLock(connection);
+        }
+        catch
+        {
+            connection.Dispose();
+            throw;
+        }
+    }
+
     private static DbUp.Engine.UpgradeEngine BuildUpgradeEngine(
         string connectionString,
         Assembly assembly) =>
@@ -45,4 +80,15 @@ public static class DatabaseMigratorRunner
             .WithTransactionPerScript()
             .LogToConsole()
             .Build();
+
+    private sealed class MigrationLock(SqlConnection connection) : IDisposable
+    {
+        private SqlConnection? connection = connection;
+
+        public void Dispose()
+        {
+            // Closing the owning session releases the lock even after failures.
+            Interlocked.Exchange(ref connection, null)?.Dispose();
+        }
+    }
 }
