@@ -84,6 +84,7 @@ public sealed class ExternalIdAdapterTests
             .Get(ExternalIdAuthenticationExtensions.Scheme);
 
         Assert.Equal(OpenIdConnectResponseType.Code, options.ResponseType);
+        Assert.Equal(OpenIdConnectResponseMode.Query, options.ResponseMode);
         Assert.True(options.UsePkce);
         Assert.False(options.SaveTokens);
         Assert.False(options.GetClaimsFromUserInfoEndpoint);

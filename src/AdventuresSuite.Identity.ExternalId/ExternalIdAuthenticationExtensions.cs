@@ -61,6 +61,7 @@ public static class ExternalIdAuthenticationExtensions
                 options.CallbackPath = configuration.CallbackPath;
                 options.SignedOutCallbackPath = configuration.SignedOutCallbackPath;
                 options.ResponseType = OpenIdConnectResponseType.Code;
+                options.ResponseMode = OpenIdConnectResponseMode.Query;
                 options.UsePkce = true;
                 options.SaveTokens = false;
                 options.GetClaimsFromUserInfoEndpoint = false;
@@ -110,6 +111,7 @@ public static class ExternalIdAuthenticationExtensions
         builder.Services.PostConfigure<OpenIdConnectOptions>(Scheme, options =>
         {
             options.ResponseType = OpenIdConnectResponseType.Code;
+            options.ResponseMode = OpenIdConnectResponseMode.Query;
             options.UsePkce = true;
             options.SaveTokens = false;
             options.GetClaimsFromUserInfoEndpoint = false;
