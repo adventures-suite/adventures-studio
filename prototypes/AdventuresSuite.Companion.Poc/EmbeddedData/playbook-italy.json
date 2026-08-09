@@ -1,0 +1,80 @@
+{
+  "title": "Italy, Greece & Croatia",
+  "subtitle": "A Journey Through the Mediterranean",
+  "travelDates": "June 20 – July 5, 2026",
+  "rhythm": "Mornings for sightseeing, mid-day for rest, evenings for romance, wine, and slow dinners.",
+  "sections": [
+    {
+      "id": "overview",
+      "title": "Trip overview",
+      "icon": "⌁",
+      "items": [
+        { "heading": "Venice", "meta": "June 21–23", "summary": "Arrive by private water taxi and settle into Dorsoduro.", "details": ["Excess Venice Boutique Hotel", "Keep arrival day deliberately light"] },
+        { "heading": "Florence", "meta": "June 23–26", "summary": "Renaissance highlights, relaxed evenings, and a Chianti wine day.", "details": ["Hotel Davanzati", "Early sightseeing and mid-day rest"] },
+        { "heading": "Ravenna and cruise", "meta": "June 26–July 4", "summary": "Travel by train to Ravenna, then sail the Adriatic and Aegean.", "details": ["Dubrovnik", "Athens", "Santorini", "Split"] },
+        { "heading": "Return home", "meta": "July 4–5", "summary": "Overnight near Venice airport before returning to Phoenix.", "details": [] }
+      ]
+    },
+    {
+      "id": "daily",
+      "title": "Daily highlights",
+      "icon": "☀",
+      "items": [
+        { "heading": "Arrival in Venice", "meta": "Sunday · June 21", "summary": "Water-taxi arrival, an easy Dorsoduro walk, dinner, and a late canal stroll.", "details": ["Keep the afternoon light", "Dinner at Osteria Enoteca Ai Artisti", "10:00 PM canal walk"] },
+        { "heading": "Iconic and hidden Venice", "meta": "Monday · June 22", "summary": "An early start at St. Mark's, Doge's Palace, hotel rest, and a sunset gondola ride.", "details": ["St. Mark's Basilica before crowds", "6:45 PM gondola ride", "Dinner at Ristorante Riviera"] },
+        { "heading": "Golden-hour Florence", "meta": "Tuesday · June 23", "summary": "Train to Florence, a gentle historic-center walk, and Piazzale Michelangelo at golden hour.", "details": ["Frecciarossa departure at 10:26 AM", "Ponte Vecchio", "Dinner in Florence"] },
+        { "heading": "Florence highlights", "meta": "Wednesday · June 24", "summary": "Duomo area early, focused Uffizi highlights, and a restorative afternoon.", "details": ["Optional dome climb", "Lunch near Santo Spirito", "Do not over-schedule"] },
+        { "heading": "Chianti wine day", "meta": "Thursday · June 25", "summary": "A small-group day with two wineries, lunch, vineyard views, and a Tuscan village.", "details": ["Prefer a group of 6–8", "Two wineries and lunch", "Relaxed dinner afterward"] },
+        { "heading": "Ravenna transfer", "meta": "Friday · June 26", "summary": "Train through Bologna to Ravenna for the pre-cruise night.", "details": ["32-minute Bologna connection", "Regional train uses open seating"] }
+      ]
+    },
+    {
+      "id": "transport",
+      "title": "Transportation",
+      "icon": "↗",
+      "items": [
+        { "heading": "Phoenix to Venice", "meta": "June 20–21", "summary": "American Airlines via Dallas/Fort Worth, arriving in Venice late morning.", "details": ["Private water taxi pickup follows baggage and customs", "Operator monitors flight delays"] },
+        { "heading": "Venice to Florence", "meta": "June 23", "summary": "Frecciarossa 9413 from Venezia Santa Lucia at 10:26 AM, arriving 12:39 PM.", "details": ["Business Class", "Ticket retained as a protected Resource"] },
+        { "heading": "Florence to Ravenna", "meta": "June 26", "summary": "Frecciarossa to Bologna, then Regionale TTPER to Ravenna.", "details": ["Depart Florence at 9:55 AM", "Arrive Ravenna at 12:17 PM", "Allow time to change platforms"] }
+      ]
+    },
+    {
+      "id": "stay",
+      "title": "Stays and dining",
+      "icon": "⌂",
+      "items": [
+        { "heading": "Excess Venice Boutique Hotel", "meta": "Venice · June 21–23", "summary": "Executive suite with spa and canal view in Dorsoduro.", "details": ["Request a quiet upper-floor room", "Ask about evening spa access"] },
+        { "heading": "Hotel Davanzati", "meta": "Florence · June 23–26", "summary": "Historic-center stay with a quiet-room preference.", "details": ["Convenient for walking", "Use mid-day for rest"] },
+        { "heading": "Dining shortlist", "meta": "Venice, Florence, Ravenna", "summary": "A mix of arrival-night ease, romantic waterfront dining, Tuscan favorites, and a pre-cruise dinner.", "details": ["Osteria Enoteca Ai Artisti", "Ristorante Riviera", "Osteria del Cinghiale Bianco", "Ca' de Ven"] }
+      ]
+    },
+    {
+      "id": "cruise",
+      "title": "Cruise and excursions",
+      "icon": "≈",
+      "items": [
+        { "heading": "Explorer of the Seas", "meta": "June 27–July 4", "summary": "Seven nights from Ravenna through Croatia and Greece.", "details": ["Dubrovnik · June 28", "Athens · June 30", "Santorini · July 1", "Split · July 3"] },
+        { "heading": "Athens highlights", "meta": "Private tour · June 30", "summary": "A focused private tour planned around the Acropolis and central Athens highlights.", "details": ["Comfortable shoes", "Water and sun protection", "Confirm the port meeting point"] },
+        { "heading": "Santorini and wine", "meta": "Private tour · July 1", "summary": "An early private island experience with Oia, Red Beach, a winery, and panoramic stops.", "details": ["Tender-port timing matters", "Confirm meeting instructions", "Expect uneven surfaces"] }
+      ]
+    },
+    {
+      "id": "ready",
+      "title": "Weather and readiness",
+      "icon": "✓",
+      "items": [
+        { "heading": "Expected weather", "meta": "Summer Mediterranean", "summary": "Warm to hot days with comfortable evenings for walks and outdoor dinners.", "details": ["Venice around 80–85°F", "Florence around 85–92°F", "Evenings generally 70–75°F"] },
+        { "heading": "Packing essentials", "meta": "Traveler checklist", "summary": "Pack lightly for heat, walking, dinners, and long travel days.", "details": ["Linen or cotton clothing", "Comfortable walking shoes", "One nicer dinner outfit", "Sunscreen, hat, charger, and small day bag"] },
+        { "heading": "Keep close on travel days", "meta": "Reminder", "summary": "Carry essential documents, medication, chargers, and valuables in a small personal bag.", "details": ["Do not rely only on GPS in Venice", "Avoid overpacking each day", "Confirm key reservations in advance"] }
+      ]
+    }
+  ],
+  "protectedDocuments": [
+    { "title": "Venice water taxi voucher", "category": "Transportation", "status": "Protected" },
+    { "title": "Venice–Florence train tickets", "category": "Rail", "status": "Protected" },
+    { "title": "Florence–Ravenna train tickets", "category": "Rail", "status": "Protected" },
+    { "title": "Athens excursion confirmation", "category": "Excursion", "status": "Protected" },
+    { "title": "Santorini excursion confirmations", "category": "Excursion", "status": "Protected" },
+    { "title": "Luggage shipment record", "category": "Logistics", "status": "Protected" }
+  ]
+}

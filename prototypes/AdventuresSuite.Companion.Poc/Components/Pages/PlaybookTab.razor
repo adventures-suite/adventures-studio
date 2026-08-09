@@ -1,0 +1,70 @@
+@using Microsoft.AspNetCore.Components
+
+<div class="playbook-heading">
+    <button class="back-button" @onclick="OnBack" aria-label="Back to Adventure Home">‹</button>
+    <div><span class="eyebrow">Available offline · POC projection</span><h1>Travel Playbook</h1></div>
+</div>
+
+<article class="playbook-cover">
+    <span class="status-pill">Private</span>
+    <h2>@Playbook.Title</h2>
+    <p>@Playbook.Subtitle</p>
+    <small>@Playbook.TravelDates</small>
+</article>
+
+<div class="rhythm-card">
+    <span>✦</span><div><strong>Your travel rhythm</strong><p>@Playbook.Rhythm</p></div>
+</div>
+
+<nav class="playbook-index" aria-label="Playbook contents">
+    @foreach (var section in Playbook.Sections)
+    {
+        <a href="#playbook-@section.Id"><span>@section.Icon</span>@section.Title</a>
+    }
+</nav>
+
+@foreach (var section in Playbook.Sections)
+{
+    <section class="playbook-section" id="playbook-@section.Id">
+        <div class="section-heading"><div><span class="eyebrow">@section.Icon Playbook</span><h2>@section.Title</h2></div><small>@section.Items.Count items</small></div>
+        @foreach (var item in section.Items)
+        {
+            <article class="playbook-item">
+                @if (!string.IsNullOrWhiteSpace(item.Meta))
+                {
+                    <span class="playbook-meta">@item.Meta</span>
+                }
+                <h3>@item.Heading</h3>
+                <p>@item.Summary</p>
+                @if (item.Details.Count > 0)
+                {
+                    <ul>
+                        @foreach (var detail in item.Details)
+                        {
+                            <li>@detail</li>
+                        }
+                    </ul>
+                }
+            </article>
+        }
+    </section>
+}
+
+<section class="playbook-section">
+    <div class="section-heading"><div><span class="eyebrow">▣ Protected resources</span><h2>Travel documents</h2></div></div>
+    <p class="privacy-copy">Sensitive codes are not stored in this offline POC projection. A production Companion would retrieve each document through authorized, short-lived access.</p>
+    <div class="document-list">
+        @foreach (var document in Playbook.ProtectedDocuments)
+        {
+            <article><span>▤</span><div><strong>@document.Title</strong><small>@document.Category · @document.Status</small></div><b>🔒</b></article>
+        }
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public CompanionPlaybook Playbook { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback OnBack { get; set; }
+}

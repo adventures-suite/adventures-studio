@@ -1,0 +1,181 @@
+﻿@page "/"
+@implements IDisposable
+@inject CompanionContentService ContentService
+@inject PlaybookContentService PlaybookService
+
+@if (_adventures.Count == 0 || _adventure is null)
+{
+    <div class="loading-state" role="status">
+        <div class="brand-mark">S</div>
+        <p>Preparing your Adventure…</p>
+    </div>
+}
+else
+{
+    <div class="companion-shell">
+        <header class="topbar">
+            <div class="brand-lockup" aria-label="AdventuresSuite Companion">
+                <span class="suite-mark" aria-hidden="true">
+                    <svg viewBox="0 0 48 48"><path class="pin" d="M24 3C14.1 3 6 11.1 6 21c0 13.6 18 25 18 25s18-11.4 18-25C42 11.1 33.9 3 24 3Z"/><circle cx="24" cy="21" r="11"/><path class="needle" d="m29 15-3 8-8 4 3-8 8-4Z"/></svg>
+                </span>
+                <span><strong>AdventuresSuite</strong><small>Companion</small></span>
+            </div>
+            <button class="avatar" aria-label="Open traveler profile">SS</button>
+        </header>
+
+        <section class="adventure-switcher" aria-label="Choose an Adventure">
+            <button class="adventure-switcher-trigger" @onclick="ToggleAdventureMenu" aria-expanded="@_adventureMenuOpen">
+                <span><small>@(_adventure.IsCurrent ? "Current Adventure" : "Planned Adventure")</small><strong>@_adventure.Title</strong></span>
+                <b aria-hidden="true">@(_adventureMenuOpen ? "⌃" : "⌄")</b>
+            </button>
+            @if (_adventureMenuOpen)
+            {
+                <div class="adventure-menu">
+                    @foreach (var adventure in _adventures)
+                    {
+                        <button class="@(adventure.Id == _adventure.Id ? "selected" : null)" @onclick="() => SelectAdventure(adventure)">
+                            <span class="adventure-state @(adventure.IsCurrent ? "current" : "planned")">@(adventure.IsCurrent ? "Current" : "Planned")</span>
+                            <span><strong>@adventure.Title</strong><small>@adventure.TravelDates</small></span>
+                            <b>@(adventure.Id == _adventure.Id ? "✓" : "")</b>
+                        </button>
+                    }
+                </div>
+            }
+        </section>
+
+        <div class="creator-context" aria-label="Creator: Simonton Adventures">
+            <span class="creator-mark">S</span>
+            <span><small>Presented by</small><strong>Simonton Adventures</strong></span>
+        </div>
+
+        <ErrorBoundary>
+            <ChildContent>
+                <section class="screen" aria-live="polite">
+                    @switch (_selectedTab)
+                    {
+                        case CompanionTab.Home:
+                            <HomeTab Adventure="_adventure"
+                                     OnOpenJourney="() => SelectTab(CompanionTab.Itinerary)"
+                                     OnOpenReadiness="() => SelectTab(CompanionTab.Readiness)"
+                                     OnOpenPlaybook="OpenPlaybook"
+                                     OnFeedback="ShowToast" />
+                            break;
+                        case CompanionTab.Itinerary:
+                            <JourneyTab Adventure="_adventure" />
+                            break;
+                        case CompanionTab.Readiness:
+                            <ReadinessTab Adventure="_adventure" OnFeedback="ShowToast" />
+                            break;
+                        case CompanionTab.Memories:
+                            <MemoriesTab OnFeedback="ShowToast" />
+                            break;
+                        case CompanionTab.Playbook:
+                            @if (_playbook is not null)
+                            {
+                                <PlaybookTab Playbook="_playbook" OnBack="() => SelectTab(CompanionTab.Home)" />
+                            }
+                            break;
+                    }
+                </section>
+            </ChildContent>
+            <ErrorContent Context="error">
+                <section class="poc-error" role="alert">
+                    <strong>The prototype could not render this view.</strong>
+                    <p>@error.Message</p>
+                </section>
+            </ErrorContent>
+        </ErrorBoundary>
+
+        <nav class="tabbar" aria-label="Companion navigation">
+            @TabButton(CompanionTab.Home, "⌂", "Home")
+            @TabButton(CompanionTab.Itinerary, "≡", "Journey")
+            @TabButton(CompanionTab.Readiness, "✓", "Ready")
+            @TabButton(CompanionTab.Memories, "◇", "Memories")
+        </nav>
+
+        @if (_toast is not null)
+        {
+            <div class="toast" role="status">@_toast</div>
+        }
+    </div>
+}
+
+@code {
+    private IReadOnlyList<CompanionAdventure> _adventures = [];
+    private CompanionAdventure? _adventure;
+    private CompanionTab _selectedTab;
+    private bool _adventureMenuOpen;
+    private CompanionPlaybook? _playbook;
+    private string? _toast;
+    private PeriodicTimer? _timer;
+    private CancellationTokenSource? _timerCancellation;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _adventures = await ContentService.LoadAsync();
+        _adventure = _adventures.FirstOrDefault();
+        _timer = new PeriodicTimer(TimeSpan.FromMinutes(1));
+        _timerCancellation = new CancellationTokenSource();
+        _ = RefreshCountdownAsync(_timerCancellation.Token);
+    }
+
+    private RenderFragment TabButton(CompanionTab tab, string icon, string label) => @<button class="@(_selectedTab == tab ? "active" : null)" @onclick="() => _selectedTab = tab"><span>@icon</span><small>@label</small></button>;
+
+    private void SelectTab(CompanionTab tab) => _selectedTab = tab;
+
+    private void ToggleAdventureMenu() => _adventureMenuOpen = !_adventureMenuOpen;
+
+    private void SelectAdventure(CompanionAdventure adventure)
+    {
+        _adventure = adventure;
+        _adventureMenuOpen = false;
+        _selectedTab = CompanionTab.Home;
+    }
+
+    private async Task OpenPlaybook()
+    {
+        if (_adventure?.Id != "1")
+        {
+            await ShowToast("A Playbook has not been generated for this Planned Adventure yet.");
+            return;
+        }
+
+        _playbook ??= await PlaybookService.LoadItalyAsync();
+        _selectedTab = CompanionTab.Playbook;
+    }
+
+    private async Task RefreshCountdownAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            while (_timer is not null && await _timer.WaitForNextTickAsync(cancellationToken))
+            {
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
+    private async Task ShowToast(string message)
+    {
+        _toast = message;
+        StateHasChanged();
+        await Task.Delay(2600);
+        if (_toast == message)
+        {
+            _toast = null;
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        _timerCancellation?.Cancel();
+        _timerCancellation?.Dispose();
+        _timer?.Dispose();
+    }
+
+    private enum CompanionTab { Home, Itinerary, Readiness, Memories, Playbook }
+}
