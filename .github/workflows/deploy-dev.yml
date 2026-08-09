@@ -107,6 +107,7 @@ jobs:
               Deployment__RunId="${{ github.run_id }}" \
               Deployment__RunAttempt="${{ github.run_attempt }}" \
               WEBSITE_HEALTHCHECK_MAXPINGFAILURES=3 \
+              WEBSITES_CONTAINER_START_TIME_LIMIT=600 \
               WEBSITE_RUN_FROM_PACKAGE=1 \
             --output none
 
