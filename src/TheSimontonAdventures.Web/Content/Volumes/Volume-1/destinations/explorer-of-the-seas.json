@@ -1,0 +1,185 @@
+{
+  "volumeSlug": "italy-greece-croatia",
+  "country": "At Sea",
+  "countrySlug": "at-sea",
+  "city": "Explorer of the Seas",
+  "slug": "explorer-of-the-seas",
+  "qrSlug": "explorer-of-the-seas",
+  "title": "Explorer of the Seas",
+  "subtitle": "Our Home Across the Mediterranean",
+  "summary": "Explorer of the Seas carried us from Ravenna across the Adriatic and Aegean, connecting four remarkable ports with the pleasures of life at sea. Between destinations, the ship became its own chapter of our adventure—sunny afternoons on deck, dinners with friends, glowing sunsets, and an ever-changing view beyond the rail.",
+  "heroResourceId": "resource_explorer_hero",
+  "published": true,
+  "featured": true,
+  "homepageOrder": 5,
+  "homepageResourceId": "resource_explorer_hero",
+  "homepageSummary": "Come aboard for seven nights of sea views, shared meals, sunny decks, and unforgettable Mediterranean sunsets.",
+  "sections": [
+    {
+      "heading": "Coming Aboard in Ravenna",
+      "paragraphs": [
+        "After our days traveling through Italy, the sight of Explorer of the Seas waiting at the Ravenna cruise terminal marked a complete change of pace. The ship would be our home for the next seven nights and our connection to Croatia and Greece.",
+        "Stepping aboard replaced train schedules and hotel changes with a single familiar room, a view of the sea, and the anticipation of waking in a new place. The cruise was not simply transportation between destinations; it became a destination of its own."
+      ],
+      "imageResourceId": "resource_explorer_of_the_seas_section_01",
+      "imageCaption": "Our Mediterranean home waiting in Ravenna"
+    },
+    {
+      "heading": "A City Within the Ship",
+      "paragraphs": [
+        "Inside, the Royal Promenade felt like a brightly lit street running through the center of the ship. Shops, cafés, balconies, stairways, and gathering places created an energy that was entirely different from the quiet horizon outside.",
+        "It quickly became one of our familiar landmarks. We passed through it on the way to dinner, paused there for a photograph together, and watched the ship settle into its own rhythm after each day ashore."
+      ],
+      "imageResourceId": "resource_explorer_of_the_seas_section_02",
+      "imageCaption": "Together on the Royal Promenade"
+    },
+    {
+      "heading": "Days on Deck",
+      "paragraphs": [
+        "Sea days gave us permission to slow down. The pool deck filled with music, conversation, and sunlight while the deep-blue Mediterranean stretched beyond every railing.",
+        "Those hours between ports mattered. Resting together on deck, watching the wake trail toward the horizon, and sharing an unhurried meal with friends balanced the busy walking days in Dubrovnik, Athens, Santorini, and Split."
+      ],
+      "imageResourceId": "resource_explorer_of_the_seas_section_03",
+      "imageCaption": "Slowing down between Mediterranean ports"
+    },
+    {
+      "heading": "Evenings on the Mediterranean",
+      "paragraphs": [
+        "At the end of the day, the ship offered a front-row seat to the changing sky. Islands became silhouettes, the water reflected warm bands of color, and the sun disappeared behind the horizon as Explorer continued toward the next port.",
+        "These were some of the quietest moments of the trip. Standing beside the ship and watching the Mediterranean fade into evening made the distance between destinations feel less like empty space and more like part of the story."
+      ],
+      "imageResourceId": "resource_explorer_of_the_seas_section_04",
+      "imageCaption": "The Mediterranean settling into evening"
+    }
+  ],
+  "reflections": [
+    {
+      "afterSection": 2,
+      "author": "Dianne",
+      "title": "From Dianne's Journal",
+      "text": "The ship gave us a familiar place to return to after every port. I loved that each day could be full of discovery and still end with dinner, music, and the sea just outside.",
+      "signature": "❤️ Dianne"
+    },
+    {
+      "afterSection": 4,
+      "author": "Steve",
+      "title": "Steve's Notes",
+      "text": "Some of my favorite cruise memories were the simplest ones: the wake behind us, a sunset from the rail, and time with Dianne and our friends when nobody needed to hurry anywhere.",
+      "signature": "— Steve"
+    }
+  ],
+  "quote": {
+    "text": "Explorer of the Seas turned the distance between ports into part of the adventure.",
+    "attribution": "The Simonton Adventures"
+  },
+  "facts": [
+    {
+      "label": "Cruise line",
+      "value": "Royal Caribbean International"
+    },
+    {
+      "label": "Voyage",
+      "value": "Seven-night Adriatic and Aegean cruise"
+    },
+    {
+      "label": "Embarkation",
+      "value": "Ravenna, Italy"
+    },
+    {
+      "label": "Ports",
+      "value": "Dubrovnik, Athens, Santorini, and Split"
+    }
+  ],
+  "highlights": [
+    {
+      "title": "Royal Promenade",
+      "description": "The lively interior promenade brings together cafés, shops, entertainment, and gathering spaces."
+    },
+    {
+      "title": "Pool Deck",
+      "description": "Sunny open decks provide room to relax and enjoy the sea between port days."
+    },
+    {
+      "title": "Dining Together",
+      "description": "Shared dinners offered time to reconnect, exchange stories, and enjoy the evening at an unhurried pace."
+    },
+    {
+      "title": "Views at Sea",
+      "description": "The ship's wake, island silhouettes, and Mediterranean sunsets made every sailing memorable."
+    }
+  ],
+  "tips": [
+    {
+      "title": "Explore early",
+      "description": "Walk the ship soon after boarding to learn the main routes before the first busy evening."
+    },
+    {
+      "title": "Plan time to do nothing",
+      "description": "Leave room between activities to sit on deck and enjoy the reason for traveling by sea."
+    },
+    {
+      "title": "Watch for sunset",
+      "description": "Check the sailing direction and sunset time to find a good view before the rail becomes crowded."
+    },
+    {
+      "title": "Keep port days balanced",
+      "description": "A relaxed evening aboard can make the next full day of walking and sightseeing much more enjoyable."
+    }
+  ],
+  "gallery": [
+    {
+      "resourceId": "resource_explorer_of_the_seas_gallery_01",
+      "caption": "Explorer of the Seas waiting to begin our cruise",
+      "displayOrder": 1
+    },
+    {
+      "resourceId": "resource_explorer_of_the_seas_gallery_02",
+      "caption": "The Royal Promenade at the heart of the ship",
+      "displayOrder": 2
+    },
+    {
+      "resourceId": "resource_explorer_of_the_seas_gallery_03",
+      "caption": "Our first promenade selfie",
+      "displayOrder": 3
+    },
+    {
+      "resourceId": "resource_explorer_of_the_seas_gallery_04",
+      "caption": "A quiet moment together on the pool deck",
+      "displayOrder": 4
+    },
+    {
+      "resourceId": "resource_explorer_of_the_seas_gallery_05",
+      "caption": "A sunny afternoon at sea",
+      "displayOrder": 5
+    },
+    {
+      "resourceId": "resource_explorer_of_the_seas_gallery_06",
+      "caption": "Our path across the Mediterranean",
+      "displayOrder": 6
+    },
+    {
+      "resourceId": "resource_explorer_of_the_seas_gallery_07",
+      "caption": "Evening light along the ship",
+      "displayOrder": 7
+    },
+    {
+      "resourceId": "resource_explorer_of_the_seas_gallery_08",
+      "caption": "Dinner with friends and the sea beyond",
+      "displayOrder": 8
+    },
+    {
+      "resourceId": "resource_explorer_of_the_seas_gallery_09",
+      "caption": "A cheerful surprise waiting in our cabin",
+      "displayOrder": 9
+    }
+  ],
+  "map": {
+    "latitude": 40.5,
+    "longitude": 18.0,
+    "label": "Adriatic and Aegean Seas",
+    "zoom": 4
+  },
+  "resources": [
+
+  ]
+}

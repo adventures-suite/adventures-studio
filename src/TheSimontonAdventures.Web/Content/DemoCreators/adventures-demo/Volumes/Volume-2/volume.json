@@ -1,0 +1,21 @@
+{
+  "number": 2,
+  "slug": "demo-draft-notebook",
+  "title": "Demo Draft Notebook",
+  "subtitle": "A non-public route integration fixture",
+  "description": "This draft volume verifies that public routes enforce publication state.",
+  "coverResourceId": "resource_demo_volume_cover",
+  "heroResourceId": "resource_demo_volume_hero",
+  "travelDates": "Unpublished",
+  "statusMessage": "Draft",
+  "status": "Draft",
+  "journeyStops": [
+
+  ],
+  "journeys": [
+
+  ],
+  "destinations": [
+
+  ]
+}

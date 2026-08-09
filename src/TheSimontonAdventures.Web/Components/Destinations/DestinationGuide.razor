@@ -1,0 +1,143 @@
+@using TheSimontonAdventures.Web.Models
+
+@if (HasContent)
+{
+    <section class="destination-guide">
+        <header class="destination-guide__header">
+            <p class="destination-eyebrow">Plan your visit</p>
+            <h2>Know Before You Go</h2>
+
+            <p>
+                A few useful details to help you understand the place,
+                appreciate its highlights, and plan your own visit.
+            </p>
+        </header>
+
+        <div class="destination-guide__layout">
+            @if (Facts.Count > 0)
+            {
+                <section class="destination-guide__group destination-guide__group--facts">
+                    <div class="destination-guide__group-header">
+                        <span class="destination-guide__number">01</span>
+
+                        <div>
+                            <p class="destination-guide__label">
+                                At a glance
+                            </p>
+
+                            <h3>Essential Details</h3>
+                        </div>
+                    </div>
+
+                    <dl class="destination-guide__facts">
+                        @foreach (var fact in Facts)
+                        {
+                            <div class="destination-guide__fact">
+                                <dt>@fact.Label</dt>
+                                <dd>@fact.Value</dd>
+                            </div>
+                        }
+                    </dl>
+                </section>
+            }
+
+            @if (Highlights.Count > 0)
+            {
+                <section class="destination-guide__group">
+                    <div class="destination-guide__group-header">
+                        <span class="destination-guide__number">02</span>
+
+                        <div>
+                            <p class="destination-guide__label">
+                                What to notice
+                            </p>
+
+                            <h3>Highlights</h3>
+                        </div>
+                    </div>
+
+                    <div class="destination-guide__items">
+                        @foreach (var highlight in Highlights)
+                        {
+                            <article class="destination-guide__item">
+                                <span class="destination-guide__marker"
+                                      aria-hidden="true">
+                                    +
+                                </span>
+
+                                <div>
+                                    <h4>@highlight.Title</h4>
+
+                                    @if (!string.IsNullOrWhiteSpace(highlight.Description))
+                                    {
+                                        <p>@highlight.Description</p>
+                                    }
+                                </div>
+                            </article>
+                        }
+                    </div>
+                </section>
+            }
+
+            @if (Tips.Count > 0)
+            {
+                <section class="destination-guide__group">
+                    <div class="destination-guide__group-header">
+                        <span class="destination-guide__number">03</span>
+
+                        <div>
+                            <p class="destination-guide__label">
+                                From experience
+                            </p>
+
+                            <h3>Travel Tips</h3>
+                        </div>
+                    </div>
+
+                    <div class="destination-guide__items">
+                        @foreach (var tip in Tips)
+                        {
+                            <article class="destination-guide__item">
+                                <span class="destination-guide__marker"
+                                      aria-hidden="true">
+                                    →
+                                </span>
+
+                                <div>
+                                    <h4>@tip.Title</h4>
+
+                                    @if (!string.IsNullOrWhiteSpace(tip.Description))
+                                    {
+                                        <p>@tip.Description</p>
+                                    }
+                                </div>
+                            </article>
+                        }
+                    </div>
+                </section>
+            }
+        </div>
+    </section>
+}
+
+@code {
+    /// <summary>Gets or sets the concise facts shown in the guide.</summary>
+    [Parameter]
+    public IReadOnlyList<DestinationFact> Facts { get; set; }
+        = Array.Empty<DestinationFact>();
+
+    /// <summary>Gets or sets the notable experiences shown in the guide.</summary>
+    [Parameter]
+    public IReadOnlyList<DestinationHighlight> Highlights { get; set; }
+        = Array.Empty<DestinationHighlight>();
+
+    /// <summary>Gets or sets the practical advice shown in the guide.</summary>
+    [Parameter]
+    public IReadOnlyList<DestinationTip> Tips { get; set; }
+        = Array.Empty<DestinationTip>();
+
+    private bool HasContent =>
+        Facts.Count > 0
+        || Highlights.Count > 0
+        || Tips.Count > 0;
+}

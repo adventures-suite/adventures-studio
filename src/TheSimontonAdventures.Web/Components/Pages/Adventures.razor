@@ -1,0 +1,166 @@
+@page "/adventures"
+
+@using TheSimontonAdventures.Web.Models
+@inject ICreatorContextAccessor CreatorContextAccessor
+@inject ITravelContentService TravelContentService
+@inject IResourceService ResourceService
+
+<PageTitle>Adventures | @CreatorContextAccessor.Current.GetSiteName()</PageTitle>
+
+<main class="adventures-catalog">
+    <header class="adventures-catalog__header">
+        <p class="adventures-catalog__eyebrow">
+            @CreatorContextAccessor.Current.GetSiteName()
+        </p>
+        <h1>Adventures</h1>
+        <p>
+            Follow journeys in progress, preview what is being planned, and
+            revisit published adventures.
+        </p>
+    </header>
+
+    @if (_isLoading)
+    {
+        <LoadingState Message="Loading adventures…" />
+    }
+    else if (_volumes.Count == 0)
+    {
+        <section class="adventures-catalog__empty">
+            <h2>New adventures are taking shape</h2>
+            <p>Check back as this Creator publishes the next journey.</p>
+        </section>
+    }
+    else
+    {
+        @foreach (var group in StatusGroups)
+        {
+            var volumes = _volumes
+                .Where(volume => volume.Status == group.Status)
+                .OrderBy(volume => volume.Number)
+                .ToArray();
+
+            if (volumes.Length > 0)
+            {
+                <section class="adventures-catalog__section"
+                         aria-labelledby="@group.HeadingId">
+                    <div class="adventures-catalog__section-heading">
+                        <p>@group.Eyebrow</p>
+                        <h2 id="@group.HeadingId">@group.Title</h2>
+                    </div>
+
+                    <div class="adventures-catalog__grid">
+                        @foreach (var volume in volumes)
+                        {
+                            <article class="adventure-card">
+                                <a class="adventure-card__media"
+                                   href="@TravelRoutes.Volume(volume.Slug)">
+                                    @if (_covers.TryGetValue(volume.Slug, out var cover))
+                                    {
+                                        <img src="@cover.PublicUrl"
+                                             alt="@cover.Resource.AlternativeText"
+                                             loading="lazy" />
+                                    }
+                                    else
+                                    {
+                                        <span class="adventure-card__placeholder">
+                                            @volume.Title
+                                        </span>
+                                    }
+
+                                    <span class="adventure-card__status">
+                                        @volume.Status.GetDisplayLabel()
+                                    </span>
+                                </a>
+
+                                <div class="adventure-card__body">
+                                    <p class="adventure-card__number">
+                                        Volume @volume.GetNumberLabel()
+                                    </p>
+                                    <h3>
+                                        <a href="@TravelRoutes.Volume(volume.Slug)">
+                                            @volume.Title
+                                        </a>
+                                    </h3>
+
+                                    @if (!string.IsNullOrWhiteSpace(volume.Subtitle))
+                                    {
+                                        <p class="adventure-card__subtitle">
+                                            @volume.Subtitle
+                                        </p>
+                                    }
+
+                                    @if (!string.IsNullOrWhiteSpace(volume.TravelDates))
+                                    {
+                                        <p class="adventure-card__dates">
+                                            @volume.TravelDates
+                                        </p>
+                                    }
+
+                                    <p class="adventure-card__description">
+                                        @volume.Description
+                                    </p>
+
+                                    <a class="adventure-card__action"
+                                       href="@TravelRoutes.Volume(volume.Slug)">
+                                        @GetCallToAction(volume.Status)
+                                        <span aria-hidden="true">→</span>
+                                    </a>
+                                </div>
+                            </article>
+                        }
+                    </div>
+                </section>
+            }
+        }
+    }
+</main>
+
+@code {
+    private static readonly AdventureStatusGroup[] StatusGroups =
+    [
+        new(VolumeStatus.Current, "Now", "Current Adventure", "current-adventure"),
+        new(VolumeStatus.Upcoming, "Next", "Upcoming Adventures", "upcoming-adventures"),
+        new(VolumeStatus.Planned, "On the Horizon", "Planned Adventures", "planned-adventures"),
+        new(VolumeStatus.Published, "From the Archive", "Published Adventures", "published-adventures")
+    ];
+
+    private IReadOnlyList<Volume> _volumes = [];
+    private IReadOnlyDictionary<string, ResolvedResource> _covers =
+        new Dictionary<string, ResolvedResource>(StringComparer.OrdinalIgnoreCase);
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _volumes = await TravelContentService.GetPublicVolumesAsync(
+            CreatorContextAccessor.Current.Id);
+        var covers = await Task.WhenAll(_volumes.Select(async volume => new
+        {
+            volume.Slug,
+            Resource = await ResourceService.ResolvePublicAsync(
+                CreatorContextAccessor.Current.Id,
+                volume.CoverResourceId)
+        }));
+        _covers = covers
+            .Where(item => item.Resource is not null)
+            .ToDictionary(
+                item => item.Slug,
+                item => item.Resource!,
+                StringComparer.OrdinalIgnoreCase);
+        _isLoading = false;
+    }
+
+    private static string GetCallToAction(VolumeStatus status) => status switch
+    {
+        VolumeStatus.Planned => "View the plan",
+        VolumeStatus.Upcoming => "Preview the adventure",
+        VolumeStatus.Current => "Follow the adventure",
+        VolumeStatus.Published => "Revisit the adventure",
+        _ => "View the adventure"
+    };
+
+    private sealed record AdventureStatusGroup(
+        VolumeStatus Status,
+        string Eyebrow,
+        string Title,
+        string HeadingId);
+}

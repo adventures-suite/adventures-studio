@@ -1,0 +1,16 @@
+{
+  "volumeSlug": "spain-trans-atlantic-cruise",
+  "country": "Spain",
+  "countrySlug": "spain",
+  "city": "Barcelona",
+  "slug": "barcelona",
+  "qrSlug": "barcelona",
+  "title": "Barcelona",
+  "subtitle": "Planning our arrival in Spain",
+  "summary": "Barcelona is included in the proposed itinerary as the arrival and embarkation city. Flights, lodging, and activities remain to be confirmed.",
+  "timeZone": "Europe/Madrid",
+  "plannedArrivalDate": "2027-10-26",
+  "plannedDepartureDate": "2027-10-29",
+  "published": false,
+  "featured": false
+}

@@ -1,0 +1,193 @@
+{
+  "volumeSlug": "italy-greece-croatia",
+  "country": "Greece",
+  "countrySlug": "greece",
+  "city": "Athens",
+  "slug": "athens",
+  "qrSlug": "athens",
+  "title": "Athens",
+  "subtitle": "Where Democracy Was Born",
+  "summary": "Athens brought ancient history and modern life together in a way that felt immediate and alive. From Hadrian's Arch and the marble Panathenaic Stadium to the weathered columns of the Parthenon, each stop revealed another era still present in the modern capital.",
+  "timeZone": "Europe/Athens",
+  "visitedFrom": "2026-06-30",
+  "visitedTo": "2026-06-30",
+  "heroResourceId": "resource_athens_hero",
+  "published": true,
+  "featured": true,
+  "homepageOrder": 7,
+  "homepageResourceId": "resource_athens_card",
+  "homepageSummary": "Walk from Hadrian's Arch to the Olympic stadium and stand among the enduring columns of the Acropolis.",
+  "sections": [
+    {
+      "heading": "Arriving in Athens",
+      "paragraphs": [
+        "Athens felt different from the island destinations and historic cities that came before it. The streets were busy, energetic, and unmistakably modern, yet ancient landmarks remained visible throughout the city.",
+        "As we moved toward the historic center, the Acropolis rose above everything around it. Its presence made the city feel connected to thousands of years of history before we had even reached the site."
+      ],
+      "imageResourceId": "resource_athens_section_01",
+      "imageCaption": "The Acropolis rising above modern Athens"
+    },
+    {
+      "heading": "Hadrian's Arch in the Morning Sun",
+      "paragraphs": [
+        "Hadrian's Arch stood beside the modern city with traffic, trees, and everyday Athens moving around it. The monument once marked a transition between the old city of Theseus and the Roman city associated with Emperor Hadrian.",
+        "The bright sun turned its Pentelic marble nearly white against the deep blue sky. It was our first close reminder that Athens does not separate its ancient landmarks from daily life; the two continue to share the same streets."
+      ],
+      "imageResourceId": "resource_athens_section_02",
+      "imageCaption": "Hadrian's Arch bridging two eras of Athens"
+    },
+    {
+      "heading": "A Stadium Built of Marble",
+      "paragraphs": [
+        "The Panathenaic Stadium offered another connection between ancient Athens and the modern world. Built entirely of marble on the site of an ancient stadium, it hosted the opening and closing ceremonies of the first modern Olympic Games in 1896.",
+        "We stopped for a photograph with the long rows of seats, Greek flags, and Olympic rings behind us. It was a personal moment inside a place that represents competition, ceremony, and the revival of an ancient ideal."
+      ],
+      "imageResourceId": "resource_athens_section_03",
+      "imageCaption": "Together at the home of the first modern Olympic Games"
+    },
+    {
+      "heading": "Walking Through the Acropolis",
+      "paragraphs": [
+        "Walking through the Acropolis was one of the most anticipated experiences of our journey. The climb led us past ancient stone, monumental gateways, and views that stretched across the entire city.",
+        "Standing among structures that had survived for centuries made the history feel more immediate than any photograph or textbook ever could. It was not simply a collection of ruins. It was a place that helped shape art, architecture, government, and culture throughout the Western world."
+      ],
+      "imageResourceId": "resource_athens_section_04",
+      "imageCaption": "Walking through the Acropolis"
+    },
+    {
+      "heading": "Standing Before the Parthenon",
+      "paragraphs": [
+        "The Parthenon was familiar long before we saw it in person, but its scale and setting were more powerful than we expected. Even after centuries of change, the structure still dominated the summit.",
+        "Close views revealed repaired columns, carved fragments, scaffolding, and the patient restoration continuing around the monument. The work made its survival feel active rather than accidental—a responsibility carried forward one carefully placed piece at a time.",
+        "From the Acropolis, Athens extended in every direction below us. The contrast between the ancient monument and the modern city surrounding it made the moment especially memorable."
+      ],
+      "imageResourceId": "resource_athens_section_05",
+      "imageCaption": "Ancient stone and ongoing restoration at the Parthenon"
+    }
+  ],
+  "facts": [
+    {
+      "label": "Location",
+      "value": "Athens, Attica, Greece"
+    },
+    {
+      "label": "Historic significance",
+      "value": "Birthplace of democracy and a center of ancient Greek civilization"
+    },
+    {
+      "label": "Signature landmark",
+      "value": "The Acropolis"
+    },
+    {
+      "label": "Essential experience",
+      "value": "Standing before the Parthenon"
+    }
+  ],
+  "highlights": [
+    {
+      "title": "The Acropolis",
+      "description": "The ancient citadel rises above Athens and contains some of the most influential monuments of classical Greece."
+    },
+    {
+      "title": "The Parthenon",
+      "description": "The temple dedicated to Athena remains one of the world's most recognizable examples of classical architecture."
+    },
+    {
+      "title": "The Ancient Agora",
+      "description": "The former political, commercial, and social center of ancient Athens offers another perspective on daily life in the classical city."
+    },
+    {
+      "title": "Plaka",
+      "description": "Historic streets, cafés, shops, and traditional architecture create one of Athens' most inviting neighborhoods."
+    }
+  ],
+  "tips": [
+    {
+      "title": "Visit the Acropolis early",
+      "description": "Morning temperatures and smaller crowds can make the climb and exploration much more comfortable."
+    },
+    {
+      "title": "Wear shoes with good traction",
+      "description": "Ancient marble surfaces can be uneven and surprisingly slippery."
+    },
+    {
+      "title": "Carry water",
+      "description": "Summer temperatures can become intense, especially on exposed archaeological sites."
+    },
+    {
+      "title": "Explore beyond the ruins",
+      "description": "Athens is also a vibrant modern capital with lively neighborhoods, restaurants, markets, and street life."
+    }
+  ],
+  "reflections": [
+    {
+      "afterSection": 2,
+      "author": "Dianne",
+      "title": "From Dianne's Journal",
+      "text": "Seeing the Acropolis above the city made Athens feel different from anywhere else we had visited. The history was not hidden away. It seemed to watch over the entire city.",
+      "signature": "❤️ Dianne"
+    },
+    {
+      "afterSection": 5,
+      "author": "Steve",
+      "title": "Steve's Notes",
+      "text": "I expected the Acropolis to be impressive, but standing there made the scale of its influence much easier to understand. So much of the world we know was shaped by ideas that began here.",
+      "signature": "— Steve"
+    }
+  ],
+  "quote": {
+    "text": "Standing beneath the Acropolis reminded us how small we are compared to the civilizations that came before us.",
+    "attribution": "The Simonton Adventures"
+  },
+  "gallery": [
+    {
+      "resourceId": "resource_athens_gallery_01",
+      "caption": "Ancient history above modern Athens",
+      "displayOrder": 1
+    },
+    {
+      "resourceId": "resource_athens_gallery_02",
+      "caption": "Walking through the Acropolis",
+      "displayOrder": 2
+    },
+    {
+      "resourceId": "resource_athens_gallery_03",
+      "caption": "The Parthenon",
+      "displayOrder": 3
+    },
+    {
+      "resourceId": "resource_athens_gallery_04",
+      "caption": "Hadrian's Arch in the Athens sunshine",
+      "displayOrder": 4
+    },
+    {
+      "resourceId": "resource_athens_gallery_05",
+      "caption": "Our Olympic moment at the Panathenaic Stadium",
+      "displayOrder": 5
+    },
+    {
+      "resourceId": "resource_athens_gallery_06",
+      "caption": "A close look at the Parthenon's surviving stonework",
+      "displayOrder": 6
+    },
+    {
+      "resourceId": "resource_athens_gallery_07",
+      "caption": "Centuries of history visible in every column",
+      "displayOrder": 7
+    },
+    {
+      "resourceId": "resource_athens_gallery_08",
+      "caption": "Preserving the Parthenon for another generation",
+      "displayOrder": 8
+    }
+  ],
+  "map": {
+    "latitude": 37.9715,
+    "longitude": 23.7257,
+    "label": "Athens, Greece",
+    "zoom": 13
+  },
+  "resources": [
+
+  ]
+}

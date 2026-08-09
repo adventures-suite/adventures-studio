@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 1500 480"
+     role="img"
+     aria-labelledby="title description">
+  <title id="title">The Simonton Adventures monochrome logo</title>
+  <desc id="description">
+    A one-color wordmark and SA road and sunrise symbol.
+  </desc>
+
+  <g fill="#000">
+    <path d="M247 400 338 62h28l92 338h-48l-58-238-59 238z" />
+    <path d="M289 72c-36-23-94-28-132-2-31 21-42 60-27 91 16 34 58 48 92 61 30 12 58 24 72 49l-35 19c-10-18-33-27-58-37-45-18-96-38-114-83-21-50-2-111 45-141 51-33 126-26 174 6z" />
+    <path d="M263 245c43 17 76 43 76 83 0 50-49 81-102 106H67c41-44 83-68 126-82 45-15 82-23 88-45 4-15-8-29-35-41z" />
+    <path d="M81 250h367v8H81z" />
+    <path d="M316 250a36 36 0 0 1 72 0z" />
+  </g>
+  <path d="M96 428c57-42 113-51 157-72 39-19 57-37 39-70-7-13-20-23-38-32"
+        fill="none" stroke="#fff" stroke-width="13" stroke-linecap="round" />
+  <g fill="#000" font-family="Baskerville, 'Baskerville Old Face', Georgia, 'Times New Roman', serif">
+    <text x="532" y="216" font-size="103" letter-spacing="12">THE SIMONTON</text>
+    <text x="532" y="345" font-size="103" letter-spacing="12">ADVENTURES</text>
+  </g>
+</svg>

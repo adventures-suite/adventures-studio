@@ -1,0 +1,103 @@
+.travel-mode-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    flex: 0 0 auto;
+    color: #16202a;
+    transform-origin: center;
+    transition:
+        color 180ms ease,
+        transform 180ms ease,
+        filter 180ms ease;
+}
+
+.travel-mode-icon svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    fill: currentColor;
+    stroke: currentColor;
+    stroke-width: 0;
+}
+
+.travel-mode-icon--flight {
+    color: #4f7d9b;
+}
+
+.travel-mode-icon--train {
+    color: #8b4f57;
+}
+
+.travel-mode-icon--cruise,
+.travel-mode-icon--ferry {
+    color: #315f78;
+}
+
+.travel-mode-icon--watertaxi,
+.travel-mode-icon--water-taxi {
+    color: #3f7f83;
+}
+
+.travel-mode-icon--car,
+.travel-mode-icon--taxi,
+.travel-mode-icon--bus {
+    color: #5b6670;
+}
+
+.travel-mode-icon--walking {
+    color: #5d7552;
+}
+
+.travel-mode-icon:hover {
+    filter: saturate(1.08);
+    transform: translateY(-1px) scale(1.04);
+}
+
+.travel-mode-icon--flight:hover {
+    transform: translate(0.12rem, -0.1rem) rotate(-5deg) scale(1.04);
+}
+
+.travel-mode-icon--train:hover {
+    transform: translateX(0.12rem) scale(1.04);
+}
+
+.travel-mode-icon--cruise:hover,
+.travel-mode-icon--ferry:hover,
+.travel-mode-icon--watertaxi:hover,
+.travel-mode-icon--water-taxi:hover {
+    transform: translateY(-0.08rem) rotate(-1deg) scale(1.04);
+}
+
+.travel-mode-icon--car:hover,
+.travel-mode-icon--taxi:hover,
+.travel-mode-icon--bus:hover {
+    transform: translateX(0.1rem) scale(1.04);
+}
+
+.travel-mode-icon--walking:hover {
+    transform: translate(0.06rem, -0.06rem) scale(1.04);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .travel-mode-icon {
+        transition: none;
+    }
+
+    .travel-mode-icon:hover,
+    .travel-mode-icon--flight:hover,
+    .travel-mode-icon--train:hover,
+    .travel-mode-icon--cruise:hover,
+    .travel-mode-icon--ferry:hover,
+    .travel-mode-icon--watertaxi:hover,
+    .travel-mode-icon--water-taxi:hover,
+    .travel-mode-icon--car:hover,
+    .travel-mode-icon--taxi:hover,
+    .travel-mode-icon--bus:hover,
+    .travel-mode-icon--walking:hover {
+        filter: none;
+        transform: none;
+    }
+}

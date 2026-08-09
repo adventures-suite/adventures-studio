@@ -1,0 +1,33 @@
+@using Microsoft.AspNetCore.Components
+
+<div class="page-heading">
+    <span class="eyebrow">Private by default</span>
+    <h1>Capture the story</h1>
+    <p>Keep moments organized while you travel. Nothing is published automatically.</p>
+</div>
+
+<button class="memory-card" @onclick='() => FeedbackAsync("Journal entry started locally in the prototype.")'>
+    <span>✎</span><div><strong>Write a journal note</strong><small>Save a thought for later</small></div><b>›</b>
+</button>
+<button class="memory-card" @onclick='() => FeedbackAsync("Camera access is not enabled in this prototype.")'>
+    <span>▧</span><div><strong>Capture a photograph</strong><small>Protected until you choose to publish</small></div><b>›</b>
+</button>
+
+<article class="breadcrumb-card">
+    <div class="map-pattern"></div>
+    <div class="breadcrumb-content">
+        <span class="privacy-chip">GPS off</span>
+        <h2>Remember the path</h2>
+        <p>Breadcrumbs require your permission and an explicit start every time.</p>
+        <button @onclick='() => FeedbackAsync("GPS remains off. This POC does not request location permission.")'>Learn how it works</button>
+    </div>
+</article>
+
+<p class="poc-notice"><strong>Experience prototype</strong><br />Authentication, secure storage, GPS, calendar writes, and synchronization are intentionally simulated.</p>
+
+@code {
+    [Parameter]
+    public EventCallback<string> OnFeedback { get; set; }
+
+    private Task FeedbackAsync(string message) => OnFeedback.InvokeAsync(message);
+}

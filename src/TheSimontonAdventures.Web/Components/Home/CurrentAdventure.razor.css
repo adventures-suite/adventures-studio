@@ -1,0 +1,105 @@
+.current-adventure {
+    padding-block: clamp(5rem, 10vw, 9rem);
+    color: var(--color-text-inverse);
+    background: var(--color-primary);
+}
+
+.current-adventure__content {
+    width: min(
+        var(--content-width),
+        calc(100% - (var(--page-gutter) * 2))
+    );
+    margin-inline: auto;
+    display: grid;
+    grid-template-columns:
+        minmax(20rem, 0.85fr)
+        minmax(0, 1.15fr);
+    align-items: center;
+    gap: clamp(3rem, 8vw, 8rem);
+}
+
+.current-adventure__media {
+    margin: 0;
+}
+
+.current-adventure__media img {
+    display: block;
+    width: 100%;
+    max-width: 34rem;
+    margin-inline: auto;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    box-shadow: var(--shadow-medium);
+}
+
+.current-adventure__copy {
+    max-width: 44rem;
+}
+
+.current-adventure__eyebrow {
+    margin: 0 0 var(--space-4);
+    color: var(--color-accent-light);
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    letter-spacing: var(--letter-spacing-label);
+    text-transform: uppercase;
+}
+
+.current-adventure h2 {
+    margin: 0;
+    font-size: clamp(3rem, 6vw, 6rem);
+    line-height: 0.98;
+    text-wrap: balance;
+}
+
+.current-adventure__subtitle {
+    margin: var(--space-5) 0 0;
+    color: var(--color-accent-light);
+    font-family: var(--font-family-heading);
+    font-size: clamp(1.35rem, 2.5vw, 2rem);
+    font-style: italic;
+}
+
+.current-adventure__description {
+    margin: var(--space-8) 0 0;
+    color: rgba(255, 255, 255, 0.76);
+    font-size: var(--font-size-lg);
+    line-height: var(--line-height-reading);
+}
+
+.current-adventure__link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-top: var(--space-8);
+    padding-bottom: var(--space-2);
+    color: var(--color-text-inverse);
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+    letter-spacing: 0.1rem;
+    text-decoration: none;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--color-accent-light);
+    transition:
+        gap var(--transition-standard),
+        color var(--transition-standard);
+}
+
+.current-adventure__link:hover {
+    gap: var(--space-5);
+    color: var(--color-accent-light);
+}
+
+@media (max-width: 50rem) {
+    .current-adventure__content {
+        grid-template-columns: 1fr;
+    }
+
+    .current-adventure__copy {
+        max-width: none;
+    }
+
+    .current-adventure__media img {
+        max-width: 28rem;
+    }
+}

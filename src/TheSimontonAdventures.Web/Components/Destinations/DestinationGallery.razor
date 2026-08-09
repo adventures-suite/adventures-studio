@@ -1,0 +1,98 @@
+@using TheSimontonAdventures.Web.Models
+@rendermode InteractiveServer
+
+@if (Images.Count > 0)
+{
+    var orderedImages = Images
+        .OrderBy(image => image.DisplayOrder)
+        .ToList();
+
+    <section class="destination-gallery">
+        <header class="destination-section-heading">
+            <p class="destination-eyebrow">Through our lens</p>
+            <h2>Photo Gallery</h2>
+        </header>
+
+        <div class="destination-gallery__grid">
+            @for (var index = 0; index < orderedImages.Count; index++)
+            {
+                var image = orderedImages[index];
+                var imageIndex = index;
+
+                <figure class="destination-gallery__item">
+                    <button class="destination-gallery__button"
+                            type="button"
+                            @onclick="() => OpenLightbox(imageIndex)"
+                            aria-label="Open @image.AlternativeText in full-screen viewer">
+
+                        <img src="@image.PublicUrl"
+                             alt="@image.AlternativeText"
+                             loading="lazy" />
+                    </button>
+
+                    @if (!string.IsNullOrWhiteSpace(image.Caption)
+                        || !string.IsNullOrWhiteSpace(image.Attribution)
+                        || !string.IsNullOrWhiteSpace(image.Copyright))
+                    {
+                        <figcaption>
+                            @if (!string.IsNullOrWhiteSpace(image.Caption))
+                            {
+                                <span class="destination-gallery__caption">
+                                    @image.Caption
+                                </span>
+                            }
+
+                            @if (!string.IsNullOrWhiteSpace(image.Attribution)
+                                || !string.IsNullOrWhiteSpace(image.Copyright))
+                            {
+                                <small class="destination-gallery__credit">
+                                    @if (!string.IsNullOrWhiteSpace(image.Attribution))
+                                    {
+                                        <span>Photo: @image.Attribution</span>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(image.Copyright))
+                                    {
+                                        <span>@image.Copyright</span>
+                                    }
+                                </small>
+                            }
+                        </figcaption>
+                    }
+                </figure>
+            }
+        </div>
+    </section>
+
+    <PhotographyLightbox
+        IsOpen="_isLightboxOpen"
+        Images="orderedImages"
+        CurrentIndex="_currentIndex"
+        CurrentIndexChanged="HandleCurrentIndexChanged"
+        OnClose="CloseLightbox" />
+}
+
+@code {
+    /// <summary>Gets or sets the ordered images available to the gallery.</summary>
+    [Parameter, EditorRequired]
+    public IReadOnlyList<GalleryImage> Images { get; set; }
+        = Array.Empty<GalleryImage>();
+
+    private bool _isLightboxOpen;
+    private int _currentIndex;
+
+    private void OpenLightbox(int index)
+    {
+        _currentIndex = index;
+        _isLightboxOpen = true;
+    }
+
+    private void CloseLightbox()
+    {
+        _isLightboxOpen = false;
+    }
+
+    private void HandleCurrentIndexChanged(int index)
+    {
+        _currentIndex = index;
+    }
+}

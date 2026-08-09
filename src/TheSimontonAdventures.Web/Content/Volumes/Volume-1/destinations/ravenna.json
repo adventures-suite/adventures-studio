@@ -1,0 +1,96 @@
+{
+  "volumeSlug": "italy-greece-croatia",
+  "country": "Italy",
+  "countrySlug": "italy",
+  "city": "Ravenna",
+  "slug": "ravenna",
+  "qrSlug": "ravenna",
+  "title": "Ravenna",
+  "subtitle": "Gateway to the Adriatic",
+  "summary": "Ravenna marked the transition between our time on land and the beginning of our Mediterranean cruise. Known for its remarkable mosaics and deep history, the city gave us one final glimpse of Italy before we boarded Explorer of the Seas.",
+  "timeZone": "Europe/Rome",
+  "visitedFrom": "2026-06-26",
+  "visitedTo": "2026-06-27",
+  "heroResourceId": "resource_ravenna_hero",
+  "published": true,
+  "featured": true,
+  "homepageOrder": 4,
+  "homepageResourceId": "resource_ravenna_card",
+  "homepageSummary": "Discover Ravenna's remarkable mosaics, quiet historic center, and its role as the gateway to our Mediterranean cruise.",
+  "sections": [
+
+  ],
+  "reflections": [
+
+  ],
+  "quote": {
+    "text": "Ravenna felt like the pause between two adventures—the end of our Italian journey on land and the beginning of our time at sea.",
+    "attribution": "The Simonton Adventures"
+  },
+  "facts": [
+    {
+      "label": "Location",
+      "value": "Emilia-Romagna, Italy"
+    },
+    {
+      "label": "Known for",
+      "value": "Byzantine mosaics and early Christian monuments"
+    },
+    {
+      "label": "Historic connection",
+      "value": "Final resting place of Dante Alighieri"
+    },
+    {
+      "label": "Role in our journey",
+      "value": "Cruise embarkation city"
+    }
+  ],
+  "highlights": [
+    {
+      "title": "Byzantine Mosaics",
+      "description": "Ravenna is renowned for richly detailed mosaics preserved inside churches and historic monuments."
+    },
+    {
+      "title": "Basilica of San Vitale",
+      "description": "One of Ravenna's most important landmarks, known for its architecture and extraordinary sixth-century mosaics."
+    },
+    {
+      "title": "Dante's Tomb",
+      "description": "The modest tomb of the author of the Divine Comedy connects Ravenna to one of Italy's most important literary figures."
+    },
+    {
+      "title": "Cruise Embarkation",
+      "description": "Ravenna served as the gateway to the Adriatic and the beginning of our seven-night cruise."
+    }
+  ],
+  "tips": [
+    {
+      "title": "Confirm cruise transportation early",
+      "description": "The cruise terminal is outside Ravenna's historic center, so transportation should be planned before embarkation day."
+    },
+    {
+      "title": "Allow time for the mosaics",
+      "description": "Several major mosaic sites are located throughout the city, and seeing more than one provides a fuller understanding of Ravenna's history."
+    },
+    {
+      "title": "Stay near the historic center",
+      "description": "A central hotel makes it easier to explore Ravenna on foot before traveling to the cruise terminal."
+    },
+    {
+      "title": "Treat Ravenna as more than a port",
+      "description": "Even a short visit can reveal important art, architecture, and history beyond its role as an embarkation city."
+    }
+  ],
+  "gallery": [
+
+  ],
+  "map": {
+    "latitude": 44.4184,
+    "longitude": 12.2035,
+    "label": "Ravenna, Italy",
+    "zoom": 13
+  },
+  "resources": [
+
+  ]
+}

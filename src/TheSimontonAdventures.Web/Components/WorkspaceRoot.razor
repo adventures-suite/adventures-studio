@@ -1,0 +1,25 @@
+@using AdventuresSuite.Identity.ExternalId
+@inject IHttpContextAccessor HttpContextAccessor
+
+<main class="workspace-root">
+    <h1>AdventuresSuite</h1>
+    @if (IsAuthenticated)
+    {
+        <p>You are signed in to the private workspace.</p>
+        <p>Creator access will remain unavailable until membership is implemented.</p>
+        <form method="post" action="@ExternalIdBrowserEndpoints.SignOutPath">
+            <AntiforgeryToken />
+            <button type="submit">Sign out</button>
+        </form>
+    }
+    else
+    {
+        <p>Sign in to access the private workspace.</p>
+        <a href="@ExternalIdBrowserEndpoints.SignInPath">Sign in</a>
+    }
+</main>
+
+@code {
+    private bool IsAuthenticated =>
+        HttpContextAccessor.HttpContext?.User.Identity?.IsAuthenticated is true;
+}

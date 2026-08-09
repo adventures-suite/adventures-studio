@@ -1,0 +1,52 @@
+{
+  "number": 3,
+  "slug": "spain-trans-atlantic-cruise",
+  "title": "Spain & Trans-Atlantic Cruise",
+  "subtitle": "Spain & Trans-Atlantic cruise",
+  "description": "A magical time in Spain, followed by a trans-Atlantic cruise to Fort Lauderdale, Florida, with stops in the Canary Islands and Bermuda.",
+  "coverResourceId": "resource_volume_three_cover",
+  "status": "Planned",
+  "travelDates": "October 25 – November 15, 2027",
+  "statusMessage": "Our planned Spain & Trans-Atlantic cruise",
+  "journeys": [
+    {
+      "slug": "proposed-trans-atlantic-itinerary",
+      "title": "Proposed Trans-Atlantic Itinerary",
+      "journeyType": "Editorial",
+      "featured": true,
+      "displayOrder": 1
+    }
+  ],
+  "destinations": [
+    {
+      "countrySlug": "spain",
+      "destinationSlug": "barcelona",
+      "displayOrder": 1,
+      "featured": false
+    },
+    {
+      "countrySlug": "spain",
+      "destinationSlug": "palma-de-mallorca",
+      "displayOrder": 2,
+      "featured": false
+    },
+    {
+      "countrySlug": "spain",
+      "destinationSlug": "alicante",
+      "displayOrder": 3,
+      "featured": false
+    },
+    {
+      "countrySlug": "spain",
+      "destinationSlug": "malaga",
+      "displayOrder": 4,
+      "featured": false
+    },
+    {
+      "countrySlug": "usa",
+      "destinationSlug": "fort-lauderdale",
+      "displayOrder": 5,
+      "featured": false
+    }
+  ]
+}

@@ -1,0 +1,149 @@
+name: Validate SQL Migrations
+
+on:
+  workflow_dispatch:
+
+  pull_request:
+    paths:
+      - database/**
+      - src/AdventuresSuite.DatabaseMigrator/**
+      - src/AdventuresSuite.Identity.SqlServer/**
+      - src/AdventuresSuite.Planning.SqlServer/**
+      - tests/AdventuresSuite.DatabaseIntegrationTests/**
+      - .github/workflows/validate-sql-migrations.yml
+
+permissions:
+  contents: read
+
+jobs:
+  validate-sql-migrations:
+    name: SQL Server migration gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: Y
+          MSSQL_PID: Developer
+          MSSQL_SA_PASSWORD: ${{ secrets.SQL_TEST_SA_PASSWORD }}
+        ports:
+          - 1433:1433
+
+    env:
+      DOTNET_VERSION: "10.0.x"
+      RESULTS_DIR: artifacts/sql-migration-results
+      MIGRATOR_PUBLISH_DIR: artifacts/database-migrator
+
+    steps:
+      - name: Require SQL test secret
+        env:
+          SQL_TEST_SA_PASSWORD: ${{ secrets.SQL_TEST_SA_PASSWORD }}
+        run: |
+          if [ -z "$SQL_TEST_SA_PASSWORD" ]; then
+            echo "::error::Set the SQL_TEST_SA_PASSWORD repository secret."
+            exit 1
+          fi
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Wait for SQL Server
+        run: |
+          container_id="$(docker ps --filter ancestor=mcr.microsoft.com/mssql/server:2022-latest --format '{{.ID}}' | head -n 1)"
+          if [ -z "$container_id" ]; then
+            echo "::error::SQL Server service container was not found."
+            exit 1
+          fi
+
+          for attempt in {1..30}; do
+            if docker exec "$container_id" /bin/bash -c \
+              '/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -C -Q "SELECT 1" -b -o /dev/null'; then
+              echo "SQL Server is ready."
+              exit 0
+            fi
+
+            echo "SQL Server readiness attempt $attempt of 30 failed; retrying in 2 seconds."
+            sleep 2
+          done
+
+          echo "::error::SQL Server did not become ready within 60 seconds."
+          exit 1
+
+      - name: Restore
+        run: |
+          dotnet restore TheSimontonAdventures.slnx
+          dotnet restore tests/AdventuresSuite.DatabaseIntegrationTests/AdventuresSuite.DatabaseIntegrationTests.csproj
+
+      - name: Build
+        run: |
+          dotnet build TheSimontonAdventures.slnx --configuration Release --no-restore
+          dotnet build tests/AdventuresSuite.DatabaseIntegrationTests/AdventuresSuite.DatabaseIntegrationTests.csproj \
+            --configuration Release \
+            --no-restore
+
+      - name: Run SQL migration integration gate
+        env:
+          SQL_TEST_SA_PASSWORD: ${{ secrets.SQL_TEST_SA_PASSWORD }}
+        run: |
+          sql_test_connection="Server=localhost,1433;Database=master;User ID=sa;Password=${SQL_TEST_SA_PASSWORD};Encrypt=True;TrustServerCertificate=True;Connect Timeout=5"
+          echo "::add-mask::$sql_test_connection"
+          export ADVENTURESSUITE_SQL_TEST_CONNECTION_STRING="$sql_test_connection"
+          mkdir -p "$RESULTS_DIR"
+          dotnet test tests/AdventuresSuite.DatabaseIntegrationTests/AdventuresSuite.DatabaseIntegrationTests.csproj \
+            --configuration Release \
+            --no-build \
+            --no-restore \
+            --logger "trx;LogFileName=sql-migration-gate.trx" \
+            --results-directory "$RESULTS_DIR"
+
+      - name: Publish migrator artifact
+        run: |
+          dotnet publish src/AdventuresSuite.DatabaseMigrator/AdventuresSuite.DatabaseMigrator.csproj \
+            --configuration Release \
+            --no-restore \
+            --output "$MIGRATOR_PUBLISH_DIR"
+
+          test -f "$MIGRATOR_PUBLISH_DIR/AdventuresSuite.DatabaseMigrator.dll"
+
+          dotnet "$MIGRATOR_PUBLISH_DIR/AdventuresSuite.DatabaseMigrator.dll" --list \
+            | sed 's/.*Database.Migrations.//' \
+            > "$RESULTS_DIR/published-migrations.txt"
+
+          cat > "$RESULTS_DIR/expected-migrations.txt" <<'EOF'
+          0001_create_planning_schema.sql
+          0002_create_adventure_plans.sql
+          0003_create_planning_children.sql
+          0004_create_authentication_persistence.sql
+          0005_bind_sessions_to_external_identities.sql
+          EOF
+
+          diff -u \
+            "$RESULTS_DIR/expected-migrations.txt" \
+            "$RESULTS_DIR/published-migrations.txt"
+
+      - name: Capture SQL Server diagnostics
+        if: always()
+        run: |
+          mkdir -p "$RESULTS_DIR"
+          container_id="$(docker ps -a --filter ancestor=mcr.microsoft.com/mssql/server:2022-latest --format '{{.ID}}' | head -n 1)"
+          if [ -n "$container_id" ]; then
+            docker logs "$container_id" > "$RESULTS_DIR/sql-server.log" 2>&1 || true
+          fi
+
+      - name: Upload migration evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sql-migration-evidence-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ env.RESULTS_DIR }}
+            ${{ env.MIGRATOR_PUBLISH_DIR }}
+          if-no-files-found: error
+          retention-days: 14

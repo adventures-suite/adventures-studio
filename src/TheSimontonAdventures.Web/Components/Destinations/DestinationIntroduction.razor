@@ -1,0 +1,23 @@
+@using TheSimontonAdventures.Web.Models
+
+<section id="destination-story"
+         class="destination-introduction">
+
+    <div class="destination-introduction__heading">
+        <p class="destination-eyebrow">
+            From Our Journey
+        </p>
+
+        <h2>A Moment That Stayed With Us</h2>
+    </div>
+
+    <div class="destination-introduction__story">
+        <p>@Destination.Summary</p>
+    </div>
+</section>
+
+@code {
+    /// <summary>Gets or sets the destination introduced by the component.</summary>
+    [Parameter, EditorRequired]
+    public Destination Destination { get; set; } = null!;
+}

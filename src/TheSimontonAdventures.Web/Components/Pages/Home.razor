@@ -1,7 +1,45 @@
 ﻿@page "/"
 
-<PageTitle>Home</PageTitle>
+@using TheSimontonAdventures.Web.Components.Home
+@inject ICreatorContextAccessor CreatorContextAccessor
+@inject IResourceService ResourceService
 
-<h1>Hello, world!</h1>
+<PageTitle>@CreatorContextAccessor.Current.GetDefaultSeoTitle()</PageTitle>
 
-Welcome to your new app.
+<HomeHero
+    Eyebrow="@CreatorContextAccessor.Current.GetSiteName()"
+    Headline="@CreatorContextAccessor.Current.Brand.HomeHeroHeadline"
+    Description="@CreatorContextAccessor.Current.Brand.HomeHeroDescription"
+    HeroImage="@(_hero?.PublicUrl ?? string.Empty)"
+    HeroImageAlt="@(_hero?.Resource.AlternativeText ?? string.Empty)"
+    PrimaryActionLabel="@CreatorContextAccessor.Current.Brand.HomeHeroActionLabel"
+    PrimaryActionUrl="@TravelRoutes.Adventures" />
+
+@foreach (var section in CreatorContextAccessor.Current.Homepage.Sections)
+{
+    switch (section)
+    {
+        case CreatorHomepageSectionType.CurrentAdventure:
+            <CurrentAdventure />
+            break;
+        case CreatorHomepageSectionType.PlannedAdventures:
+            <HomePlannedAdventures />
+            break;
+        case CreatorHomepageSectionType.FeaturedDestinations:
+            <HomeFeaturedDestinations />
+            break;
+    }
+}
+
+@code {
+    private ResolvedResource? _hero;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _hero = await ResourceService.ResolvePublicAsync(
+            CreatorContextAccessor.Current.Id,
+            CreatorContextAccessor.Current.Brand.HomeHeroResourceId)
+            ?? throw new InvalidDataException(
+                "The Creator homepage hero resource is not publicly available.");
+    }
+}

@@ -1,0 +1,52 @@
+@using Microsoft.AspNetCore.Components
+
+<div class="page-heading">
+    <span class="eyebrow">Adventure readiness</span>
+    <h1>Know what comes next</h1>
+    <p>Each signal is explainable—unknown never means ready.</p>
+</div>
+
+<div class="readiness-summary">
+    <strong>@ReadinessPercent%</strong><span>@(Adventure.IsCurrent ? "Travel readiness" : "Planning confidence")</span>
+    <div class="progress"><i style="width:@ReadinessPercent%"></i></div>
+</div>
+
+<div class="check-list">
+    @foreach (var item in VisibleItems)
+    {
+        <article class="check-item">
+            <span class="check-icon @item.State">@(item.State == "ready" ? "✓" : "!")</span>
+            <div><strong>@item.Title</strong><small>@item.Detail</small></div><b>›</b>
+        </article>
+    }
+</div>
+
+<button class="primary-action" @onclick="ReviewActionsAsync">Review @(Adventure.IsCurrent ? "1 travel update" : "3 required actions")</button>
+
+@code {
+    private static readonly ReadinessItem[] Items =
+    [
+        new("Itinerary", "5 destinations sequenced", "ready"),
+        new("Travel documents", "3 protected documents available", "ready"),
+        new("Flights", "Phoenix departure needs confirmation", "attention"),
+        new("Accommodation", "Barcelona stay is not confirmed", "attention"),
+        new("Shore plans", "Palma, Alicante, and Málaga undecided", "attention"),
+        new("Offline package", "Updated just now", "ready")
+    ];
+
+    [Parameter]
+    public EventCallback<string> OnFeedback { get; set; }
+
+    [Parameter, EditorRequired]
+    public CompanionAdventure Adventure { get; set; } = null!;
+
+    private int ReadinessPercent => Adventure.IsCurrent ? 94 : 72;
+    private IEnumerable<ReadinessItem> VisibleItems => Adventure.IsCurrent
+        ? Items.Where(item => item.Title is "Itinerary" or "Travel documents" or "Offline package")
+        : Items;
+
+    private Task ReviewActionsAsync() =>
+        OnFeedback.InvokeAsync("Acknowledgment flow is simulated; no plan state changed.");
+
+    private sealed record ReadinessItem(string Title, string Detail, string State);
+}

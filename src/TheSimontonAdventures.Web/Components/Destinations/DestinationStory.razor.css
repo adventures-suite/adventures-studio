@@ -1,0 +1,209 @@
+.destination-story {
+    width: min(
+        var(--content-width),
+        calc(100% - (var(--page-gutter) * 2))
+    );
+    margin-inline: auto;
+}
+
+.destination-story__section {
+    position: relative;
+    display: grid;
+    grid-template-columns:
+        minmax(15rem, 0.62fr)
+        minmax(0, 1.38fr);
+    gap: clamp(3rem, 7vw, 7rem);
+    padding-block: clamp(5.5rem, 9vw, var(--space-section));
+    border-top: 1px solid rgba(22, 32, 42, 0.1);
+}
+
+.destination-story__heading {
+    position: sticky;
+    top: 7rem;
+    align-self: start;
+}
+
+.destination-story__number {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin-bottom: var(--space-5);
+    color: var(--color-accent);
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    letter-spacing: var(--letter-spacing-label);
+    text-transform: uppercase;
+}
+
+.destination-story__number::after {
+    width: 2.5rem;
+    height: 1px;
+    content: "";
+    background: currentColor;
+    opacity: 0.45;
+}
+
+.destination-story h2 {
+    max-width: 10ch;
+    margin: 0;
+    font-size: clamp(2.6rem, 5vw, 4.5rem);
+    line-height: 0.98;
+    letter-spacing: -0.05em;
+    text-wrap: balance;
+}
+
+.destination-story__body {
+    max-width: var(--reading-width);
+}
+
+.destination-story__body p {
+    margin: 0 0 var(--space-6);
+    color: var(--color-text-muted);
+    font-size: var(--font-size-lg);
+    line-height: var(--line-height-reading);
+    text-wrap: pretty;
+}
+
+.destination-story__body p:first-child {
+    color: var(--color-text);
+    font-size: clamp(1.2rem, 2vw, 1.35rem);
+    line-height: 1.75;
+}
+
+.destination-story__body p:last-child {
+    margin-bottom: 0;
+}
+
+/* Editorial photograph */
+
+.destination-story__media {
+    grid-column: 1 / -1;
+    margin: clamp(2.5rem, 6vw, 5rem) 0 0;
+}
+
+.destination-story__media img {
+    display: block;
+    width: 100%;
+    height: clamp(24rem, 52vw, 44rem);
+    border-radius: 1.35rem;
+    object-fit: cover;
+    object-position: center;
+    box-shadow:
+        0 1.5rem 3.5rem rgba(22, 32, 42, 0.12),
+        0 0 0 1px rgba(22, 32, 42, 0.05);
+}
+
+.destination-story__media figcaption {
+    max-width: var(--reading-width);
+    margin-top: var(--space-3);
+    padding-left: 0.1rem;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    font-style: italic;
+    line-height: 1.55;
+}
+
+/* Alternate visual rhythm */
+
+.destination-story__section--reversed
+.destination-story__heading {
+    grid-column: 2;
+}
+
+.destination-story__section--reversed
+.destination-story__body {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.destination-story__section--reversed
+.destination-story__media {
+    grid-column: 1 / -1;
+    width: min(54rem, 84%);
+    margin-left: auto;
+}
+
+.destination-story__section:not(.destination-story__section--reversed)
+.destination-story__media {
+    width: min(64rem, 100%);
+}
+
+/* Subtle editorial accent */
+
+.destination-story__section::after {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4rem;
+    height: 2px;
+    border-radius: 999px;
+    content: "";
+    background: var(--color-accent);
+    opacity: 0.45;
+}
+
+@media (max-width: 56rem) {
+    .destination-story__section {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+    }
+
+    .destination-story__heading,
+    .destination-story__section--reversed
+    .destination-story__heading,
+    .destination-story__section--reversed
+    .destination-story__body {
+        position: static;
+        grid-column: 1;
+        grid-row: auto;
+    }
+
+    .destination-story h2 {
+        max-width: 14ch;
+    }
+
+    .destination-story__media,
+    .destination-story__section--reversed
+    .destination-story__media,
+    .destination-story__section:not(.destination-story__section--reversed)
+    .destination-story__media {
+        grid-column: 1;
+        width: 100%;
+        margin: var(--space-8) 0 0;
+    }
+}
+
+@media (max-width: 46.875rem) {
+    .destination-story__section {
+        gap: var(--space-8);
+        padding-block: 4.5rem;
+    }
+
+    .destination-story h2 {
+        max-width: none;
+    }
+
+    .destination-story__body p {
+        font-size: 1rem;
+        line-height: 1.72;
+    }
+
+    .destination-story__body p:first-child {
+        font-size: 1.15rem;
+    }
+
+    .destination-story__media img {
+        height: clamp(18rem, 75vw, 30rem);
+        border-radius: 1rem;
+    }
+}
+
+@media (max-width: 30rem) {
+    .destination-story {
+        width: calc(100% - 2rem);
+    }
+
+    .destination-story__section {
+        padding-block: 4rem;
+    }
+}

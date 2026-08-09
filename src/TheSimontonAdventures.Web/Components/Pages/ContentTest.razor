@@ -1,0 +1,24 @@
+@using TheSimontonAdventures.Web.Models
+@using TheSimontonAdventures.Web.Services
+@inject ITravelContentService TravelContentService
+@inject ICreatorContextAccessor CreatorContextAccessor
+
+@foreach (var volume in _volumes)
+{
+    <p>
+        Volume @volume.Number:
+        @volume.Title —
+        @volume.Status
+    </p>
+}
+
+@code {
+    private IReadOnlyList<Volume> _volumes = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _volumes =
+            await TravelContentService.GetPublicVolumesAsync(
+                CreatorContextAccessor.Current.Id);
+    }
+}

@@ -1,0 +1,301 @@
+{
+    "slug": "our-mediterranean-adventure",
+    "volumeSlug": "italy-greece-croatia",
+    "title": "Italy, Greece & Croatia",
+    "summary": "A romantic journey through Italy, Greece, and Croatia.",
+    "journeyType": "Editorial",
+    "startLocation": "Phoenix",
+    "endLocation": "Phoenix",
+    "startDate": "June 20, 2026",
+    "endDate": "July 5, 2026",
+    "published": true,
+    "displayOrder": 1,
+    "segments": [
+      {
+        "from": "Phoenix Sky Harbor International Airport",
+        "to": "Venice Marco Polo Airport",
+        "startCoordinate": {
+          "latitude": 33.4342,
+          "longitude": -112.0116,
+          "label": "Phoenix Sky Harbor International Airport"
+        },
+        "endCoordinate": {
+          "latitude": 45.5053,
+          "longitude": 12.3519,
+          "label": "Venice Marco Polo Airport"
+        },
+        "waypoints": [
+          {
+            "title": "Dallas/Fort Worth International Airport",
+            "coordinate": {
+              "latitude": 32.8998,
+              "longitude": -97.0403,
+              "label": "Dallas/Fort Worth International Airport"
+            },
+            "notes": "Connection between the domestic and international flights.",
+            "displayOrder": 1
+          }
+        ],
+        "travelMode": "Flight",
+        "travelDescription": "American Airlines via Dallas/Fort Worth",
+        "departureDate": "June 20, 2026",
+        "arrivalDate": "June 21, 2026",
+        "countrySlug": "italy",
+        "destinationSlug": "venice",
+        "notes": "Overnight international journey to Venice.",
+        "displayOrder": 1
+      },
+      {
+        "from": "Venice Marco Polo Airport",
+        "to": "Excess Venice Boutique Hotel",
+        "startCoordinate": {
+          "latitude": 45.5053,
+          "longitude": 12.3519,
+          "label": "Venice Marco Polo Airport"
+        },
+        "endCoordinate": {
+          "latitude": 45.4308,
+          "longitude": 12.3215,
+          "label": "Dorsoduro, Venice"
+        },
+        "waypoints": [],
+        "travelMode": "WaterTaxi",
+        "travelDescription": "Private water taxi",
+        "departureDate": "June 21, 2026",
+        "arrivalDate": "June 21, 2026",
+        "countrySlug": "italy",
+        "destinationSlug": "venice",
+        "notes": "Canal-side arrival in Venice.",
+        "displayOrder": 2
+      },
+      {
+        "from": "Venezia Santa Lucia",
+        "to": "Firenze Santa Maria Novella",
+        "startCoordinate": {
+          "latitude": 45.4411,
+          "longitude": 12.3210,
+          "label": "Venezia Santa Lucia"
+        },
+        "endCoordinate": {
+          "latitude": 43.7762,
+          "longitude": 11.2486,
+          "label": "Firenze Santa Maria Novella"
+        },
+        "waypoints": [],
+        "travelMode": "Train",
+        "travelDescription": "High-speed rail",
+        "departureDate": "June 23, 2026",
+        "arrivalDate": "June 23, 2026",
+        "countrySlug": "italy",
+        "destinationSlug": "florence",
+        "notes": "Travel from Venice to Florence.",
+        "displayOrder": 3
+      },
+      {
+        "from": "Firenze Santa Maria Novella",
+        "to": "Ravenna",
+        "startCoordinate": {
+          "latitude": 43.7762,
+          "longitude": 11.2486,
+          "label": "Firenze Santa Maria Novella"
+        },
+        "endCoordinate": {
+          "latitude": 44.4184,
+          "longitude": 12.2035,
+          "label": "Ravenna"
+        },
+        "waypoints": [
+          {
+            "title": "Bologna Centrale",
+            "coordinate": {
+              "latitude": 44.5055,
+              "longitude": 11.3419,
+              "label": "Bologna Centrale"
+            },
+            "notes": "Rail connection.",
+            "displayOrder": 1
+          }
+        ],
+        "travelMode": "Train",
+        "travelDescription": "Rail via Bologna",
+        "departureDate": "June 26, 2026",
+        "arrivalDate": "June 26, 2026",
+        "countrySlug": "italy",
+        "destinationSlug": "",
+        "notes": "Travel to Ravenna before cruise embarkation.",
+        "displayOrder": 4
+      },
+      {
+        "from": "Ravenna Cruise Port",
+        "to": "Dubrovnik Cruise Port",
+        "startCoordinate": {
+          "latitude": 44.4921,
+          "longitude": 12.2837,
+          "label": "Porto Corsini Cruise Terminal"
+        },
+        "endCoordinate": {
+          "latitude": 42.6587,
+          "longitude": 18.0860,
+          "label": "Port of Dubrovnik"
+        },
+        "waypoints": [],
+        "travelMode": "Cruise",
+        "travelDescription": "Royal Caribbean Explorer of the Seas",
+        "departureDate": "June 27, 2026",
+        "arrivalDate": "June 28, 2026",
+        "countrySlug": "croatia",
+        "destinationSlug": "dubrovnik",
+        "notes": "First cruise segment across the Adriatic.",
+        "displayOrder": 5
+      },
+      {
+        "from": "Dubrovnik Cruise Port",
+        "to": "Piraeus Cruise Port",
+        "startCoordinate": {
+          "latitude": 42.6587,
+          "longitude": 18.0860,
+          "label": "Port of Dubrovnik"
+        },
+        "endCoordinate": {
+          "latitude": 37.9420,
+          "longitude": 23.6465,
+          "label": "Port of Piraeus"
+        },
+        "waypoints": [],
+        "travelMode": "Cruise",
+        "travelDescription": "Explorer of the Seas",
+        "departureDate": "June 28, 2026",
+        "arrivalDate": "June 30, 2026",
+        "countrySlug": "greece",
+        "destinationSlug": "acropolis",
+        "notes": "Includes a sea day before arrival in Athens.",
+        "displayOrder": 6
+      },
+      {
+        "from": "Piraeus Cruise Port",
+        "to": "Santorini",
+        "startCoordinate": {
+          "latitude": 37.9420,
+          "longitude": 23.6465,
+          "label": "Port of Piraeus"
+        },
+        "endCoordinate": {
+          "latitude": 36.3932,
+          "longitude": 25.4615,
+          "label": "Santorini"
+        },
+        "waypoints": [],
+        "travelMode": "Cruise",
+        "travelDescription": "Explorer of the Seas",
+        "departureDate": "June 30, 2026",
+        "arrivalDate": "July 1, 2026",
+        "countrySlug": "greece",
+        "destinationSlug": "santorini",
+        "notes": "Overnight sailing through the Aegean.",
+        "displayOrder": 7
+      },
+      {
+        "from": "Santorini",
+        "to": "Split Cruise Port",
+        "startCoordinate": {
+          "latitude": 36.3932,
+          "longitude": 25.4615,
+          "label": "Santorini"
+        },
+        "endCoordinate": {
+          "latitude": 43.5033,
+          "longitude": 16.4411,
+          "label": "Port of Split"
+        },
+        "waypoints": [],
+        "travelMode": "Cruise",
+        "travelDescription": "Explorer of the Seas",
+        "departureDate": "July 1, 2026",
+        "arrivalDate": "July 3, 2026",
+        "countrySlug": "croatia",
+        "destinationSlug": "split",
+        "notes": "Includes a sea day before arrival in Split.",
+        "displayOrder": 8
+      },
+      {
+        "from": "Split Cruise Port",
+        "to": "Ravenna Cruise Port",
+        "startCoordinate": {
+          "latitude": 43.5033,
+          "longitude": 16.4411,
+          "label": "Port of Split"
+        },
+        "endCoordinate": {
+          "latitude": 44.4921,
+          "longitude": 12.2837,
+          "label": "Porto Corsini Cruise Terminal"
+        },
+        "waypoints": [],
+        "travelMode": "Cruise",
+        "travelDescription": "Explorer of the Seas",
+        "departureDate": "July 3, 2026",
+        "arrivalDate": "July 4, 2026",
+        "countrySlug": "italy",
+        "destinationSlug": "",
+        "notes": "Final cruise segment and disembarkation.",
+        "displayOrder": 9
+      },
+      {
+        "from": "Ravenna Cruise Port",
+        "to": "Courtyard Venice Airport",
+        "startCoordinate": {
+          "latitude": 44.4921,
+          "longitude": 12.2837,
+          "label": "Porto Corsini Cruise Terminal"
+        },
+        "endCoordinate": {
+          "latitude": 45.5058,
+          "longitude": 12.3397,
+          "label": "Venice Airport area"
+        },
+        "waypoints": [],
+        "travelMode": "Bus",
+        "travelDescription": "Ground transportation",
+        "departureDate": "July 4, 2026",
+        "arrivalDate": "July 4, 2026",
+        "countrySlug": "italy",
+        "destinationSlug": "venice",
+        "notes": "Transfer from Ravenna to the Venice airport hotel.",
+        "displayOrder": 10
+      },
+      {
+        "from": "Venice Marco Polo Airport",
+        "to": "Phoenix Sky Harbor International Airport",
+        "startCoordinate": {
+          "latitude": 45.5053,
+          "longitude": 12.3519,
+          "label": "Venice Marco Polo Airport"
+        },
+        "endCoordinate": {
+          "latitude": 33.4342,
+          "longitude": -112.0116,
+          "label": "Phoenix Sky Harbor International Airport"
+        },
+        "waypoints": [
+          {
+            "title": "Dallas/Fort Worth International Airport",
+            "coordinate": {
+              "latitude": 32.8998,
+              "longitude": -97.0403,
+              "label": "Dallas/Fort Worth International Airport"
+            },
+            "notes": "Connection before the final flight home.",
+            "displayOrder": 1
+          }
+        ],
+        "travelMode": "Flight",
+        "travelDescription": "American Airlines via Dallas/Fort Worth",
+        "departureDate": "July 5, 2026",
+        "arrivalDate": "July 5, 2026",
+        "countrySlug": "",
+        "destinationSlug": "",
+        "notes": "Return home with the memories of Volume I.",
+        "displayOrder": 11
+      }
+    ]
+  }

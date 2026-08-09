@@ -1,0 +1,63 @@
+@using TheSimontonAdventures.Web.Models
+@using TheSimontonAdventures.Web.Services
+@inject ITravelContentService TravelContentService
+@inject ICreatorContextAccessor CreatorContextAccessor
+
+@if (_volume is not null && _volume.JourneyStops.Count > 0)
+{
+    <section class="journey-timeline">
+        <div class="journey-timeline__header">
+            <p class="destination-eyebrow">The journey</p>
+            <h2>Where We Are</h2>
+        </div>
+
+        <div class="journey-timeline__track">
+            @foreach (var stop in _volume.JourneyStops.InDisplayOrder())
+            {
+                var isCurrent = IsCurrentStop(stop);
+                var cssClass = isCurrent
+                    ? "journey-timeline__stop journey-timeline__stop--current"
+                    : "journey-timeline__stop";
+
+                <JourneyStopItem
+                    Stop="@stop"
+                    Href="@stop.GetDestinationRoute(Destination.VolumeSlug)"
+                    CssClass="@cssClass"
+                    IconCssClass="journey-timeline__icon"
+                    TextCssClass="journey-timeline__text"
+                    IsCurrent="@isCurrent"
+                    CurrentLabel="You are here" />
+            }
+        </div>
+    </section>
+}
+
+@code {
+    /// <summary>
+    /// Gets or sets the destination highlighted within its volume timeline.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public Destination Destination { get; set; } = null!;
+
+    private Volume? _volume;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _volume = await TravelContentService.GetVolumeAsync(
+            CreatorContextAccessor.Current.Id,
+            Destination.VolumeSlug);
+    }
+
+    private bool IsCurrentStop(JourneyStop stop)
+    {
+        return string.Equals(
+                   stop.CountrySlug,
+                   Destination.CountrySlug,
+                   StringComparison.OrdinalIgnoreCase)
+               &&
+               string.Equals(
+                   stop.DestinationSlug,
+                   Destination.Slug,
+                   StringComparison.OrdinalIgnoreCase);
+    }
+}

@@ -1,0 +1,109 @@
+.destination-facts {
+    width: min(
+        var(--content-width),
+        calc(100% - (var(--page-gutter) * 2))
+    );
+    margin-inline: auto;
+    padding-block: clamp(5rem, 9vw, var(--space-section));
+    display: grid;
+    grid-template-columns:
+        minmax(15rem, 0.65fr)
+        minmax(0, 1.35fr);
+    gap: clamp(3rem, 7vw, 7rem);
+    border-top: 1px solid rgba(22, 32, 42, 0.1);
+}
+
+.destination-facts__heading {
+    align-self: start;
+}
+
+.destination-facts__heading p {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin: 0 0 var(--space-4);
+    color: var(--color-accent);
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    letter-spacing: var(--letter-spacing-label);
+    text-transform: uppercase;
+}
+
+.destination-facts__heading p::after {
+    width: 2rem;
+    height: 1px;
+    content: "";
+    background: currentColor;
+    opacity: 0.45;
+}
+
+.destination-facts__heading h2 {
+    max-width: 10ch;
+    margin: 0;
+    font-size: clamp(2.6rem, 5vw, 4.25rem);
+    line-height: 0.98;
+    letter-spacing: -0.05em;
+    text-wrap: balance;
+}
+
+.destination-facts__list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    border: 1px solid rgba(22, 32, 42, 0.08);
+    border-radius: 1.5rem;
+    background: rgba(22, 32, 42, 0.08);
+    box-shadow:
+        0 1.25rem 3rem rgba(22, 32, 42, 0.08),
+        0 0 0 1px rgba(255,255,255,.45) inset;
+}
+
+.destination-facts__item {
+    padding: 1.75rem;
+    background: #ffffff;
+}
+
+.destination-facts dt {
+    margin: 0;
+    color: rgba(22, 32, 42, 0.56);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.destination-facts dd {
+    margin: 0.7rem 0 0;
+    color: #16202a;
+    font-family: var(--font-family-heading);
+    font-size: 1.2rem;
+    line-height: 1.45;
+}
+
+@media (max-width: 60rem) {
+    .destination-facts {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+    }
+
+    .destination-facts__heading h2 {
+        max-width: 14ch;
+    }
+}
+
+@media (max-width: 42rem) {
+    .destination-facts {
+        padding-block: 4.5rem;
+    }
+
+    .destination-facts__list {
+        grid-template-columns: 1fr;
+    }
+
+    .destination-facts__item {
+        padding: 1.5rem;
+    }
+}

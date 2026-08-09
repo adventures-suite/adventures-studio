@@ -1,0 +1,43 @@
+{
+  "id": "creator_tsa_01",
+  "slug": "the-simonton-adventures",
+  "displayName": "The Simonton Adventures",
+  "status": "Active",
+  "primaryDomain": "thesimontonadventures.com",
+  "domains": [
+    "thesimontonadventures.com",
+    "www.thesimontonadventures.com"
+  ],
+  "locale": "en-US",
+  "timeZone": "America/Phoenix",
+  "contentRoot": "Content/Volumes",
+  "brand": {
+    "siteName": "The Simonton Adventures",
+    "tagline": "Inspiration to unforgettable experiences",
+    "logoResourceId": "resource_logo_primary",
+    "faviconResourceId": "resource_favicon",
+    "homeHeroResourceId": "resource_home_hero",
+    "homeHeroHeadline": "Transforming inspiration into unforgettable experiences.",
+    "homeHeroDescription": "Discover meaningful journeys, trusted guidance, and stories designed to help you experience the world with confidence.",
+    "homeHeroActionLabel": "Begin the Adventure",
+    "copyrightNotice": "The Simonton Adventures",
+    "defaultSeoTitle": "The Simonton Adventures",
+    "defaultSeoDescription": "Meaningful journeys, trusted travel guidance, and stories designed to inspire unforgettable experiences.",
+    "primaryColor": "#1a2327",
+    "accentColor": "#9a6e3a",
+    "typography": "Classic"
+  },
+  "homepage": {
+    "sections": [
+      "CurrentAdventure",
+      "PlannedAdventures",
+      "FeaturedDestinations"
+    ]
+  },
+  "features": {
+    "enableAbout": true,
+    "enableCompanion": true,
+    "enableReservations": false,
+    "enableTelemetry": false
+  }
+}

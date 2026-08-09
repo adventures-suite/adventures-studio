@@ -1,0 +1,28 @@
+@using TheSimontonAdventures.Web.Models
+
+@if (Facts.Count > 0)
+{
+    <section class="destination-facts">
+        <div class="destination-facts__heading">
+            <p>At a glance</p>
+            <h2>About This Place</h2>
+        </div>
+
+        <dl class="destination-facts__list">
+            @foreach (var fact in Facts)
+            {
+                <div class="destination-facts__item">
+                    <dt>@fact.Label</dt>
+                    <dd>@fact.Value</dd>
+                </div>
+            }
+        </dl>
+    </section>
+}
+
+@code {
+    /// <summary>Gets or sets the factual details rendered by the component.</summary>
+    [Parameter, EditorRequired]
+    public IReadOnlyList<DestinationFact> Facts { get; set; }
+        = Array.Empty<DestinationFact>();
+}

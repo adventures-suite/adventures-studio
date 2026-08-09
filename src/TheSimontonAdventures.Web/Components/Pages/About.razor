@@ -1,0 +1,168 @@
+@page "/about"
+@inject ICreatorContextAccessor CreatorContextAccessor
+@inject ITravelContentService TravelContentService
+@inject IResourceService ResourceService
+@using TheSimontonAdventures.Web.Models
+
+<PageTitle>About | @CreatorContextAccessor.Current.GetSiteName()</PageTitle>
+
+@if (!CreatorContextAccessor.Current.Features.EnableAbout || _profile is null)
+{
+    <main class="about-page" style="@AboutHeroStyle">
+        <section class="about-hero">
+            <div class="about-content">
+                <p class="about-eyebrow">@CreatorContextAccessor.Current.GetSiteName()</p>
+                <h1>About this Creator</h1>
+                <p class="about-lead">
+                    @CreatorContextAccessor.Current.Brand.Tagline
+                </p>
+            </div>
+        </section>
+    </main>
+}
+else
+{
+    <main class="about-page" style="@AboutHeroStyle">
+        <section class="about-hero">
+            <div class="about-content">
+                <p class="about-eyebrow">@CreatorContextAccessor.Current.GetSiteName()</p>
+                <h1>@_profile.Headline</h1>
+                <p class="about-lead">@_profile.Lead</p>
+            </div>
+        </section>
+
+        <section class="about-story">
+            <div class="about-content about-reading-width">
+                <h2>@_profile.StoryTitle</h2>
+
+                @foreach (var paragraph in _profile.IntroductionParagraphs)
+                {
+                    <p>@paragraph</p>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(_profile.Highlight))
+                {
+                    <p class="about-highlight">@_profile.Highlight</p>
+                }
+
+                @foreach (var paragraph in _profile.StoryParagraphs)
+                {
+                    <p>@paragraph</p>
+                }
+            </div>
+        </section>
+    </main>
+}
+
+<style>
+    .about-page {
+        min-height: 100vh;
+        background:
+            linear-gradient(
+                180deg,
+                rgba(26, 35, 39, 0.88),
+                rgba(26, 35, 39, 0.55)
+            ),
+            var(--about-hero-image)
+                center / cover no-repeat fixed;
+        color: #f7f4ee;
+    }
+
+    .about-hero {
+        display: flex;
+        align-items: end;
+        min-height: 52vh;
+        padding: clamp(5rem, 10vw, 9rem) 1.5rem 4rem;
+    }
+
+    .about-story {
+        padding: clamp(4rem, 8vw, 7rem) 1.5rem;
+        background: rgba(247, 244, 238, 0.96);
+        color: #252525;
+    }
+
+    .about-content {
+        width: min(100%, 72rem);
+        margin: 0 auto;
+    }
+
+    .about-reading-width {
+        width: min(100%, 52rem);
+    }
+
+    .about-eyebrow {
+        margin-bottom: 1rem;
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+    }
+
+    h1 {
+        max-width: 16ch;
+        margin: 0;
+        font-size: clamp(3rem, 7vw, 6.5rem);
+        line-height: 0.98;
+    }
+
+    h2 {
+        margin-top: 0;
+        font-size: clamp(2rem, 4vw, 3.25rem);
+    }
+
+    .about-lead {
+        max-width: 42rem;
+        margin-top: 1.5rem;
+        font-size: clamp(1.15rem, 2vw, 1.5rem);
+        line-height: 1.6;
+    }
+
+    .about-story p {
+        font-size: 1.15rem;
+        line-height: 1.8;
+    }
+
+    .about-highlight {
+        margin: 2.5rem 0;
+        padding: 1.5rem 1.75rem;
+        border-left: 0.3rem solid #9a6e3a;
+        background: #ffffff;
+        font-size: 1.25rem !important;
+        font-style: italic;
+    }
+</style>
+
+@code {
+    private CreatorProfile? _profile;
+    private string _homepageHeroImageUrl = string.Empty;
+    private string _aboutHeroImageUrl = string.Empty;
+
+    private string AboutHeroImageUrl =>
+        string.IsNullOrWhiteSpace(_aboutHeroImageUrl)
+            ? _homepageHeroImageUrl
+            : _aboutHeroImageUrl;
+
+    private string AboutHeroStyle =>
+        $"--about-hero-image: url('{AboutHeroImageUrl}')";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _homepageHeroImageUrl = await ResourceService.GetPublicUrlAsync(
+            CreatorContextAccessor.Current.Id,
+            CreatorContextAccessor.Current.Brand.HomeHeroResourceId)
+            ?? throw new InvalidDataException(
+                "The Creator homepage hero resource is not publicly available.");
+
+        if (CreatorContextAccessor.Current.Features.EnableAbout)
+        {
+            _profile = await TravelContentService.GetCreatorProfileAsync(
+                CreatorContextAccessor.Current.Id);
+            if (_profile?.HeroResourceId is not null)
+            {
+                _aboutHeroImageUrl = await ResourceService.GetPublicUrlAsync(
+                    CreatorContextAccessor.Current.Id,
+                    _profile.HeroResourceId.Value) ?? string.Empty;
+            }
+        }
+    }
+}

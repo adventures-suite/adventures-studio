@@ -1,0 +1,116 @@
+.destination-introduction {
+    position: relative;
+    display: grid;
+    grid-template-columns:
+        minmax(14rem, 0.62fr)
+        minmax(0, 1.38fr);
+    gap: clamp(3rem, 7vw, 7rem);
+    width: min(
+        var(--content-width),
+        calc(100% - (var(--page-gutter) * 2))
+    );
+    margin-inline: auto;
+    padding-block: clamp(5rem, 9vw, var(--space-section));
+}
+
+.destination-introduction::before {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 1px;
+    content: "";
+    background: linear-gradient(
+        90deg,
+        rgba(22, 32, 42, 0),
+        rgba(22, 32, 42, 0.12),
+        rgba(22, 32, 42, 0)
+    );
+}
+
+.destination-introduction__heading {
+    align-self: start;
+}
+
+.destination-introduction__heading h2 {
+    max-width: 10ch;
+    margin: 0;
+    font-size: clamp(2.5rem, 5vw, 4.25rem);
+    line-height: 0.98;
+    letter-spacing: -0.05em;
+    text-wrap: balance;
+}
+
+.destination-introduction__heading h2::after {
+    display: block;
+    width: 3rem;
+    height: 2px;
+    margin-top: 1.25rem;
+    border-radius: 999px;
+    content: "";
+    background: var(--color-accent);
+    opacity: 0.7;
+}
+
+.destination-introduction__story {
+    max-width: var(--reading-width);
+}
+
+.destination-introduction__story p {
+    margin: 0;
+    color: var(--color-text);
+    font-family: var(--font-family-heading);
+    font-size: clamp(1.55rem, 3vw, 2.35rem);
+    line-height: 1.5;
+    letter-spacing: -0.02em;
+    text-wrap: pretty;
+}
+
+.destination-introduction__story p::first-letter {
+    float: left;
+    margin: 0.08em 0.14em 0 0;
+    color: var(--color-accent);
+    font-size: 4.35em;
+    line-height: 0.76;
+}
+
+@media (max-width: 56rem) {
+    .destination-introduction {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+    }
+
+    .destination-introduction__heading h2 {
+        max-width: 14ch;
+    }
+}
+
+@media (max-width: 46.875rem) {
+    .destination-introduction {
+        gap: var(--space-8);
+        padding-block: 4.5rem;
+    }
+
+    .destination-introduction__heading h2 {
+        max-width: none;
+    }
+
+    .destination-introduction__story p {
+        font-size: clamp(1.4rem, 6vw, 1.95rem);
+        line-height: 1.55;
+    }
+
+    .destination-introduction__story p::first-letter {
+        font-size: 3.8em;
+    }
+}
+
+@media (max-width: 30rem) {
+    .destination-introduction {
+        width: calc(100% - 2rem);
+    }
+
+    .destination-introduction__story p {
+        font-size: 1.35rem;
+    }
+}

@@ -1,0 +1,199 @@
+{
+  "volumeSlug": "italy-greece-croatia",
+  "country": "Greece",
+  "countrySlug": "greece",
+  "city": "Santorini",
+  "slug": "santorini",
+  "qrSlug": "santorini",
+  "title": "Santorini",
+  "subtitle": "Island of Sunsets",
+  "summary": "Santorini looked almost unreal from the moment it appeared on the horizon. Whitewashed villages clung to volcanic cliffs above the deep blue Aegean, while the island's black earth, red shoreline, and immense flooded caldera told the dramatic story beneath its postcard beauty.",
+  "timeZone": "Europe/Athens",
+  "visitedFrom": "2026-07-01",
+  "visitedTo": "2026-07-01",
+  "heroResourceId": "resource_santorini_hero",
+  "published": true,
+  "featured": true,
+  "homepageOrder": 8,
+  "homepageResourceId": "resource_santorini_card",
+  "homepageSummary": "Follow whitewashed villages along the caldera rim to volcanic beaches and unforgettable Aegean overlooks.",
+  "sections": [
+    {
+      "heading": "Approaching the Caldera",
+      "paragraphs": [
+        "The first view of Santorini came from the water. The cliffs rose sharply above the caldera, crowned by white villages that seemed almost impossibly high above us.",
+        "It was one of the most dramatic arrivals of the trip. Before we had even stepped onto the island, Santorini had already created a sense of anticipation."
+      ],
+      "imageResourceId": "resource_santorini_section_01",
+      "imageCaption": "The immense blue caldera at the center of Santorini"
+    },
+    {
+      "heading": "Beyond the Whitewashed Villages",
+      "paragraphs": [
+        "The white buildings and blue domes were every bit as beautiful as we had imagined, but Santorini offered much more than its most familiar postcard views.",
+        "Traveling across the island revealed traditional villages, volcanic terrain, vineyards, and beaches shaped by the island's geological history. Walking the caldera rim brought those contrasts together: dazzling white paths and buildings above dark cliffs and impossibly blue water.",
+        "Oia rewarded every turn with another composition of curved rooftops, narrow passages, and distant villages balanced along the cliffs. The famous scenery felt even more remarkable when we could place ourselves inside it."
+      ],
+      "imageResourceId": "resource_santorini_section_02",
+      "imageCaption": "Following the cliffside path through Oia"
+    },
+    {
+      "heading": "Colors of the Island",
+      "paragraphs": [
+        "The colors of Santorini seemed especially vivid: white walls, blue water, dark volcanic stone, red cliffs, and the warm tones of the late afternoon sun.",
+        "Those contrasts gave the island its unmistakable character. It was beautiful in photographs, but being surrounded by those colors and landscapes made the experience feel much richer."
+      ],
+      "imageResourceId": "resource_santorini_section_03",
+      "imageCaption": "The volcanic colors and rugged shoreline of Red Beach"
+    },
+    {
+      "heading": "Together Above the Caldera",
+      "paragraphs": [
+        "Some views called for a photograph, while others made us stop and simply look. Standing together above the caldera, with the volcanic islands spread across the water, gave us both kinds of moment at once.",
+        "Santorini's scale is difficult to understand from the village streets alone. From the overlooks, the shape of the ancient eruption became visible in the cliffs and islands surrounding us, turning a beautiful view into a reminder of the forces that created it."
+      ],
+      "imageResourceId": "resource_santorini_section_04",
+      "imageCaption": "Sharing a quiet view across the caldera"
+    }
+  ],
+  "reflections": [
+    {
+      "afterSection": 1,
+      "author": "Dianne",
+      "title": "From Dianne's Journal",
+      "text": "Seeing Santorini from the water was one of those moments when the place looked exactly like a dream. The white villages above us seemed almost too beautiful to be real.",
+      "signature": "❤️ Dianne"
+    },
+    {
+      "afterSection": 4,
+      "author": "Steve",
+      "title": "Steve's Notes",
+      "text": "I expected the famous blue-and-white views, but the volcanic landscape surprised me. The cliffs, beaches, and vineyards made the island much more varied than I had imagined.",
+      "signature": "— Steve"
+    }
+  ],
+  "quote": {
+    "text": "Santorini looked exactly like the postcards—until we experienced it ourselves. Then it became something far more memorable.",
+    "attribution": "The Simonton Adventures"
+  },
+  "facts": [
+    {
+      "label": "Location",
+      "value": "Cyclades, Greece"
+    },
+    {
+      "label": "Landscape",
+      "value": "Volcanic caldera and steep cliffs"
+    },
+    {
+      "label": "Signature experience",
+      "value": "Views across the Aegean Sea"
+    },
+    {
+      "label": "Local tradition",
+      "value": "Wine produced from volcanic soil"
+    }
+  ],
+  "highlights": [
+    {
+      "title": "The Caldera",
+      "description": "The flooded volcanic caldera creates Santorini's dramatic cliffs and sweeping views across the Aegean."
+    },
+    {
+      "title": "Pyrgos",
+      "description": "A traditional hilltop village with winding streets, historic architecture, and panoramic island views."
+    },
+    {
+      "title": "Prophet Elias",
+      "description": "One of the island's highest viewpoints, offering a broad perspective across Santorini and the surrounding sea."
+    },
+    {
+      "title": "The Volcanic Beaches",
+      "description": "Red and dark-sand beaches reveal the geological forces that shaped the island."
+    }
+  ],
+  "tips": [
+    {
+      "title": "Plan around cruise crowds",
+      "description": "Popular viewpoints and villages can become crowded, so earlier visits or a private itinerary can create a more relaxed experience."
+    },
+    {
+      "title": "Wear sturdy shoes",
+      "description": "Many village streets are steep, uneven, and paved with stone that can become slippery."
+    },
+    {
+      "title": "Explore beyond Oia",
+      "description": "Santorini's traditional villages, beaches, wineries, and elevated viewpoints reveal much more of the island."
+    },
+    {
+      "title": "Allow extra transportation time",
+      "description": "Narrow roads, summer traffic, and cruise-day demand can make travel across the island slower than expected."
+    }
+  ],
+  "gallery": [
+    {
+      "resourceId": "resource_santorini_gallery_01",
+      "caption": "Santorini rising above the caldera",
+      "displayOrder": 1
+    },
+    {
+      "resourceId": "resource_santorini_gallery_02",
+      "caption": "White villages balanced along the volcanic cliffs",
+      "displayOrder": 2
+    },
+    {
+      "resourceId": "resource_santorini_gallery_03",
+      "caption": "Together above Oia and the Aegean",
+      "displayOrder": 3
+    },
+    {
+      "resourceId": "resource_santorini_gallery_04",
+      "caption": "Walking the bright paths above the caldera",
+      "displayOrder": 4
+    },
+    {
+      "resourceId": "resource_santorini_gallery_05",
+      "caption": "Dianne in the heart of Oia",
+      "displayOrder": 5
+    },
+    {
+      "resourceId": "resource_santorini_gallery_06",
+      "caption": "The caldera stretching toward the horizon",
+      "displayOrder": 6
+    },
+    {
+      "resourceId": "resource_santorini_gallery_07",
+      "caption": "A quiet moment above the caldera",
+      "displayOrder": 7
+    },
+    {
+      "resourceId": "resource_santorini_gallery_08",
+      "caption": "The scale of Santorini's volcanic landscape",
+      "displayOrder": 8
+    },
+    {
+      "resourceId": "resource_santorini_gallery_09",
+      "caption": "Red Beach in vivid volcanic color",
+      "displayOrder": 9
+    },
+    {
+      "resourceId": "resource_santorini_gallery_10",
+      "caption": "The quieter streets of Pyrgos",
+      "displayOrder": 10
+    },
+    {
+      "resourceId": "resource_santorini_gallery_11",
+      "caption": "The island's volcanic shoreline",
+      "displayOrder": 11
+    }
+  ],
+  "map": {
+    "latitude": 36.3932,
+    "longitude": 25.4615,
+    "label": "Santorini, Greece",
+    "zoom": 11
+  },
+  "resources": [
+
+  ]
+}

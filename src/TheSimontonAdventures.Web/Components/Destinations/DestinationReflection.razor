@@ -1,0 +1,44 @@
+@using TheSimontonAdventures.Web.Models
+
+<aside class="destination-reflection">
+    <div class="destination-reflection__inner">
+        <p class="destination-reflection__eyebrow">
+            @GetTitle()
+        </p>
+
+        <blockquote>
+            <p>@Reflection.Text</p>
+        </blockquote>
+
+        @if (!string.IsNullOrWhiteSpace(Reflection.Signature))
+        {
+            <p class="destination-reflection__signature">
+                @Reflection.Signature
+            </p>
+        }
+        else if (!string.IsNullOrWhiteSpace(Reflection.Author))
+        {
+            <p class="destination-reflection__signature">
+                — @Reflection.Author
+            </p>
+        }
+    </div>
+</aside>
+
+@code {
+    /// <summary>Gets or sets the authored reflection to display.</summary>
+    [Parameter, EditorRequired]
+    public JourneyReflection Reflection { get; set; } = null!;
+
+    private string GetTitle()
+    {
+        if (!string.IsNullOrWhiteSpace(Reflection.Title))
+        {
+            return Reflection.Title;
+        }
+
+        return string.IsNullOrWhiteSpace(Reflection.Author)
+            ? "From Our Journey"
+            : $"From {Reflection.Author}'s Journal";
+    }
+}

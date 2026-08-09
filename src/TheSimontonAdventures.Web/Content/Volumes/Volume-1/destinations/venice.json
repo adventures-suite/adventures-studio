@@ -1,0 +1,198 @@
+{
+  "volumeSlug": "italy-greece-croatia",
+  "country": "Italy",
+  "countrySlug": "italy",
+  "city": "Venice",
+  "slug": "venice",
+  "qrSlug": "venice",
+  "title": "Venice",
+  "subtitle": "The Floating City",
+  "summary": "Our Mediterranean adventure began in Venice, where canals replaced roads and centuries of history appeared around every corner. Arriving by private water taxi gave us an unforgettable introduction to a city best experienced slowly—from its grand waterways and ornate architecture to its quiet lanes and evenings beside the water.",
+  "timeZone": "Europe/Rome",
+  "visitedFrom": "2026-06-21",
+  "visitedTo": "2026-06-23",
+  "heroResourceId": "resource_venice_hero",
+  "published": true,
+  "featured": true,
+  "homepageOrder": 1,
+  "homepageResourceId": "resource_venice_card",
+  "homepageSummary": "Begin our adventure in Venice with a water-taxi arrival, winding canals, quiet alleyways, unforgettable meals, and timeless beauty.",
+  "sections": [
+    {
+      "heading": "Arriving by Water",
+      "paragraphs": [
+        "After landing in Venice, everything about travel suddenly changed. Roads disappeared, boats replaced cars, and our private water taxi became the first chapter of an adventure we had dreamed about for months.",
+        "As we cruised through the canals toward our hotel, historic buildings rose directly from the water and gondolas quietly passed beneath centuries-old bridges. Within minutes, we realized Venice wasn't simply another city—it was an experience unlike anywhere else in the world."
+      ],
+      "imageResourceId": "resource_venice_section_01",
+      "imageCaption": "Our Venice adventure began on the water"
+    },
+    {
+      "heading": "Getting Lost on Purpose",
+      "paragraphs": [
+        "Some of our favorite memories came without an itinerary. We wandered through quiet alleyways, crossed countless bridges, and discovered charming canals where very few tourists seemed to venture.",
+        "Every turn revealed another postcard view. Small cafés, colorful buildings, flower-filled balconies, and peaceful canals reminded us that Venice rewards those willing to slow down and simply explore."
+      ],
+      "imageResourceId": "resource_venice_section_02",
+      "imageCaption": "Golden light along one of Venice's quieter canals"
+    },
+    {
+      "heading": "The Art of Lingering",
+      "paragraphs": [
+        "Our evenings quickly became our favorite part of Venice. Sitting outside along the canals, enjoying incredible Italian food while gondolas quietly drifted past, created memories that photographs could never fully capture.",
+        "It wasn't just the scenery that made Venice special. It was sharing those moments together—the conversations, the laughter, and the realization that this incredible journey was only beginning."
+      ],
+      "imageResourceId": "resource_venice_section_03",
+      "imageCaption": "A tucked-away courtyard ready for the evening"
+    },
+    {
+      "heading": "Beauty in Every Detail",
+      "paragraphs": [
+        "Venice rewarded us whenever we remembered to look up. Beyond the canals were graceful courtyards, richly decorated interiors, weathered facades, and architectural details shaped by generations of artists and craftspeople.",
+        "That contrast became part of the city's magic: a quiet brick alley could open into an elegant square, while an unassuming doorway could reveal a room glowing with color and gold. Venice felt less like a collection of landmarks and more like one continuous work of art."
+      ],
+      "imageResourceId": "resource_venice_section_04",
+      "imageCaption": "Venice's artistry rewards a closer look"
+    }
+  ],
+  "facts": [
+    {
+      "label": "Location",
+      "value": "Venice, Veneto, Italy"
+    },
+    {
+      "label": "Historic significance",
+      "value": "One of the world's most unique maritime cities and a UNESCO World Heritage Site"
+    },
+    {
+      "label": "Signature landmark",
+      "value": "Grand Canal"
+    },
+    {
+      "label": "Essential experience",
+      "value": "Exploring Venice on foot and by water taxi"
+    }
+  ],
+  "highlights": [
+    {
+      "title": "Grand Canal",
+      "description": "Venice's main waterway serves as both a transportation route and one of the city's most beautiful sightseeing experiences."
+    },
+    {
+      "title": "St. Mark's Square",
+      "description": "The historic heart of Venice, surrounded by remarkable architecture, cafés, and centuries of history."
+    },
+    {
+      "title": "Hidden Canals",
+      "description": "Some of Venice's greatest beauty is found away from the crowds in its quiet residential neighborhoods."
+    },
+    {
+      "title": "Canal-side Dining",
+      "description": "Sharing authentic Italian meals beside the canals became one of our favorite parts of every evening."
+    }
+  ],
+  "tips": [
+    {
+      "title": "Walk beyond the tourist areas",
+      "description": "Some of Venice's most memorable streets and canals are found just a few blocks away from the busiest attractions."
+    },
+    {
+      "title": "Travel by water taxi at least once",
+      "description": "Arriving by boat provides an unforgettable first impression of Venice."
+    },
+    {
+      "title": "Slow down",
+      "description": "Venice is best experienced without rushing. Leave time simply to wander and discover."
+    },
+    {
+      "title": "Enjoy dinner along the canals",
+      "description": "Evening meals beside the water offer some of the most memorable moments of the entire city."
+    }
+  ],
+  "reflections": [
+    {
+      "afterSection": 1,
+      "author": "Dianne",
+      "title": "From Dianne's Journal",
+      "text": "The moment our water taxi entered the canals, I knew this trip was going to be something special. Venice felt magical from the very beginning.",
+      "signature": "❤️ Dianne"
+    },
+    {
+      "afterSection": 2,
+      "author": "Steve",
+      "title": "Steve's Notes",
+      "text": "I've seen thousands of photographs of Venice, but none of them prepared me for what it felt like to stand there in person. The city somehow feels both timeless and alive.",
+      "signature": "— Steve"
+    }
+  ],
+  "quote": {
+    "text": "The moment we stepped onto the water taxi, we realized this wasn't just another vacation—it was the beginning of an adventure.",
+    "attribution": "The Simonton Adventures"
+  },
+  "gallery": [
+    {
+      "resourceId": "resource_venice_gallery_01",
+      "caption": "Beginning our Venice adventure by water taxi",
+      "displayOrder": 1
+    },
+    {
+      "resourceId": "resource_venice_gallery_02",
+      "caption": "Our first view of Venice from the lagoon",
+      "displayOrder": 2
+    },
+    {
+      "resourceId": "resource_venice_gallery_03",
+      "caption": "Passing beneath the bridges of Venice",
+      "displayOrder": 3
+    },
+    {
+      "resourceId": "resource_venice_gallery_04",
+      "caption": "Golden light on a quiet canal",
+      "displayOrder": 4
+    },
+    {
+      "resourceId": "resource_venice_gallery_05",
+      "caption": "Getting lost on purpose",
+      "displayOrder": 5
+    },
+    {
+      "resourceId": "resource_venice_gallery_06",
+      "caption": "Architecture around every corner",
+      "displayOrder": 6
+    },
+    {
+      "resourceId": "resource_venice_gallery_07",
+      "caption": "A remarkable ceiling filled with color and gold",
+      "displayOrder": 7
+    },
+    {
+      "resourceId": "resource_venice_gallery_08",
+      "caption": "A quiet courtyard prepared for dinner",
+      "displayOrder": 8
+    },
+    {
+      "resourceId": "resource_venice_gallery_09",
+      "caption": "Taking time to enjoy the view",
+      "displayOrder": 9
+    },
+    {
+      "resourceId": "resource_venice_gallery_10",
+      "caption": "The canals after sunset",
+      "displayOrder": 10
+    },
+    {
+      "resourceId": "resource_venice_gallery_11",
+      "caption": "Venice in motion",
+      "displayOrder": 11
+    }
+  ],
+  "map": {
+    "latitude": 45.4408,
+    "longitude": 12.3155,
+    "label": "Venice, Italy",
+    "zoom": 13
+  },
+  "resources": [
+
+  ]
+}

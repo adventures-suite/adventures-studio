@@ -1,0 +1,109 @@
+@rendermode InteractiveServer
+@inject IResourceService ResourceService
+
+<header class="site-header">
+    <div class="site-header__inner">
+        <a class="site-header__brand"
+           href="/"
+           aria-label="@($"{CreatorContext.GetSiteName()} home")">
+            @if (!string.IsNullOrWhiteSpace(_logoUrl))
+            {
+                <img class="site-header__brand-logo"
+                     src="@_logoUrl"
+                     alt="" />
+            }
+            else
+            {
+                <span class="site-header__brand-name">
+                    @CreatorContext.GetSiteName()
+                </span>
+
+                @if (!string.IsNullOrWhiteSpace(CreatorContext.Brand.Tagline))
+                {
+                    <span class="site-header__brand-tagline">
+                        @CreatorContext.Brand.Tagline
+                    </span>
+                }
+            }
+        </a>
+
+        <button class="site-header__menu-button"
+                type="button"
+                aria-label="Toggle primary navigation"
+                aria-expanded="@_isMenuOpen"
+                aria-controls="primary-navigation"
+                @onclick="ToggleMenu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <nav id="primary-navigation"
+             class="@NavigationClass"
+             aria-label="Primary navigation">
+            <NavLink href="/"
+                     Match="NavLinkMatch.All"
+                     @onclick="CloseMenu">
+                Home
+            </NavLink>
+
+            <NavLink href="@TravelRoutes.Adventures"
+                     @onclick="CloseMenu">
+                Adventures
+            </NavLink>
+
+            @if (CreatorContext.Features.EnableCompanion)
+            {
+                <NavLink href="/platform/adventures-companion"
+                         @onclick="CloseMenu">
+                    Adventures Companion
+                </NavLink>
+            }
+
+            @if (CreatorContext.Features.EnableAbout)
+            {
+                <NavLink href="/about"
+                         @onclick="CloseMenu">
+                    About
+                </NavLink>
+            }
+        </nav>
+    </div>
+</header>
+
+@code {
+    /// <summary>
+    /// Gets or sets the immutable Creator Context transferred into this
+    /// interactive component boundary.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public CreatorContext CreatorContext { get; set; } = null!;
+
+    private bool _isMenuOpen;
+    private string _logoUrl = string.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _logoUrl = CreatorContext.Brand.LogoResourceId is null
+            ? string.Empty
+            : await ResourceService.GetPublicUrlAsync(
+                CreatorContext.Id,
+                CreatorContext.Brand.LogoResourceId.Value) ?? string.Empty;
+    }
+
+    private string NavigationClass =>
+        _isMenuOpen
+            ? "site-header__navigation site-header__navigation--open"
+            : "site-header__navigation";
+
+    private void ToggleMenu()
+    {
+        _isMenuOpen = !_isMenuOpen;
+    }
+
+    private void CloseMenu()
+    {
+        _isMenuOpen = false;
+    }
+
+}

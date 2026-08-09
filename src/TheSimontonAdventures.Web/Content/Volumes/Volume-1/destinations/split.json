@@ -1,0 +1,198 @@
+{
+  "volumeSlug": "italy-greece-croatia",
+  "country": "Croatia",
+  "countrySlug": "croatia",
+  "city": "Split",
+  "slug": "split",
+  "qrSlug": "split",
+  "title": "Split",
+  "subtitle": "Ancient City by the Sea",
+  "summary": "Split welcomed us from across its brilliant blue harbor, then drew us into a city where Roman columns, medieval stonework, family homes, cafés, and narrow passages all shared the same ancient walls. Diocletian's Palace was not a monument separated from daily life—it was the living heart of it.",
+  "timeZone": "Europe/Zagreb",
+  "visitedFrom": "2026-07-03",
+  "visitedTo": "2026-07-03",
+  "heroResourceId": "resource_split_hero",
+  "published": true,
+  "featured": true,
+  "homepageOrder": 9,
+  "homepageResourceId": "resource_split_hero",
+  "homepageSummary": "Cross the harbor and step inside a Roman palace that has evolved into the lively, lived-in heart of modern Split.",
+  "sections": [
+    {
+      "heading": "A City Between Mountains and Sea",
+      "paragraphs": [
+        "Split first appeared across a sweep of intensely blue water, its waterfront gathered beneath a long ridge of pale mountains. From the harbor, the city's layers were already visible: working docks in the foreground, the palm-lined Riva along the shore, and the bell tower rising above terracotta roofs.",
+        "Once ashore, we paused beside the promenade before entering the old city. The relaxed cafés and bright Adriatic light made the Riva feel like Split's front porch—a place where travelers arrived and local life unfolded at an unhurried pace."
+      ],
+      "imageResourceId": "resource_split_section_01",
+      "imageCaption": "Beginning our day beside the Riva"
+    },
+    {
+      "heading": "Inside a Living Roman Palace",
+      "paragraphs": [
+        "Diocletian's Palace did not feel like a ruin with a city built around it. The palace had become the city. Roman columns framed a crowded Peristyle, ancient walls supported later buildings, and every passage seemed to connect one century with another.",
+        "The most remarkable details were often the ordinary ones: shuttered windows set into massive stone blocks, balconies above Roman masonry, and homes still occupying spaces shaped nearly two thousand years ago. History here was not preserved behind glass; it continued to be used."
+      ],
+      "imageResourceId": "resource_split_section_02",
+      "imageCaption": "Roman architecture at the center of modern Split"
+    },
+    {
+      "heading": "The Cathedral Above the Palace",
+      "paragraphs": [
+        "The Cathedral of Saint Domnius carried another of Split's extraordinary transformations. What began as Emperor Diocletian's mausoleum eventually became a Christian cathedral, while its tall bell tower grew into the defining landmark of the old city.",
+        "Seen above the layered palace walls, the tower made the city's long history feel almost tangible. Roman foundations, medieval additions, and present-day life occupied the same view, each era adapting what the previous one had left behind."
+      ],
+      "imageResourceId": "resource_split_section_03",
+      "imageCaption": "Layers of Split beneath the cathedral bell tower"
+    },
+    {
+      "heading": "Following the Narrow Streets",
+      "paragraphs": [
+        "Beyond the grand palace spaces, Split became intimate. We followed polished lanes into quiet courtyards, passed green shutters and sun-warmed stone, and looked up through narrow passages where plants and laundry softened the ancient walls.",
+        "Those smaller streets revealed the character we remembered most clearly. The palace was monumental, but it was also colorful, imperfect, and deeply human—a place where wandering without a route felt like the best way to understand it."
+      ],
+      "imageResourceId": "resource_split_section_04",
+      "imageCaption": "Everyday life tucked inside the old city's walls"
+    }
+  ],
+  "reflections": [
+    {
+      "afterSection": 2,
+      "author": "Dianne",
+      "title": "From Dianne's Journal",
+      "text": "Walking through the palace changed the way I imagined an ancient site. It was full of movement and ordinary life, with homes and cafés woven directly into walls that had already stood for centuries.",
+      "signature": "❤️ Dianne"
+    },
+    {
+      "afterSection": 4,
+      "author": "Steve",
+      "title": "Steve's Notes",
+      "text": "Split rewarded every turn. The grand Roman spaces were unforgettable, but the quiet courtyards and lived-in passages made the city feel real rather than frozen in history.",
+      "signature": "— Steve"
+    }
+  ],
+  "quote": {
+    "text": "Split reminded us that history doesn't have to be behind museum glass. Here, people still live inside it every day.",
+    "attribution": "The Simonton Adventures"
+  },
+  "facts": [
+    {
+      "label": "Location",
+      "value": "Dalmatian Coast, Croatia"
+    },
+    {
+      "label": "Known for",
+      "value": "Diocletian's Palace"
+    },
+    {
+      "label": "UNESCO site",
+      "value": "Historic Center of Split"
+    },
+    {
+      "label": "Essential experience",
+      "value": "Walking through Diocletian's Palace"
+    }
+  ],
+  "highlights": [
+    {
+      "title": "Diocletian's Palace",
+      "description": "One of the world's most remarkable Roman structures still serving as the heart of a modern city."
+    },
+    {
+      "title": "Riva Promenade",
+      "description": "Split's waterfront is lined with cafés, palm trees, and beautiful Adriatic views."
+    },
+    {
+      "title": "Cathedral of Saint Domnius",
+      "description": "Originally built as Emperor Diocletian's mausoleum, it later became one of the world's oldest cathedrals."
+    },
+    {
+      "title": "Old Town",
+      "description": "Stone alleys, hidden courtyards, and centuries of history make every walk feel like an exploration."
+    }
+  ],
+  "tips": [
+    {
+      "title": "Explore on foot",
+      "description": "The historic center is compact and rewards slow exploration."
+    },
+    {
+      "title": "Spend time on the waterfront",
+      "description": "The Riva offers a relaxing place to enjoy the city's atmosphere."
+    },
+    {
+      "title": "Look upward",
+      "description": "Many of Split's architectural details are easy to miss unless you slow down and look around."
+    },
+    {
+      "title": "Allow time to wander",
+      "description": "Some of the city's most memorable discoveries happen away from the busiest streets."
+    }
+  ],
+  "gallery": [
+    {
+      "resourceId": "resource_split_gallery_01",
+      "caption": "Split gathered between the Adriatic and the mountains",
+      "displayOrder": 1
+    },
+    {
+      "resourceId": "resource_split_gallery_02",
+      "caption": "Together beside the Riva",
+      "displayOrder": 2
+    },
+    {
+      "resourceId": "resource_split_gallery_03",
+      "caption": "Following the busy lanes into the old city",
+      "displayOrder": 3
+    },
+    {
+      "resourceId": "resource_split_gallery_04",
+      "caption": "Centuries of daily life written into the palace walls",
+      "displayOrder": 4
+    },
+    {
+      "resourceId": "resource_split_gallery_05",
+      "caption": "The Peristyle at the heart of Diocletian's Palace",
+      "displayOrder": 5
+    },
+    {
+      "resourceId": "resource_split_gallery_06",
+      "caption": "Together inside the living palace",
+      "displayOrder": 6
+    },
+    {
+      "resourceId": "resource_split_gallery_07",
+      "caption": "Taking in the scale of the palace ruins",
+      "displayOrder": 7
+    },
+    {
+      "resourceId": "resource_split_gallery_08",
+      "caption": "A quiet courtyard beyond the busiest streets",
+      "displayOrder": 8
+    },
+    {
+      "resourceId": "resource_split_gallery_09",
+      "caption": "The bell tower rising above layers of history",
+      "displayOrder": 9
+    },
+    {
+      "resourceId": "resource_split_gallery_10",
+      "caption": "A lived-in passage within the palace walls",
+      "displayOrder": 10
+    },
+    {
+      "resourceId": "resource_split_gallery_11",
+      "caption": "Color and character in the old city's smallest spaces",
+      "displayOrder": 11
+    }
+  ],
+  "map": {
+    "latitude": 43.5081,
+    "longitude": 16.4402,
+    "label": "Split, Croatia",
+    "zoom": 14
+  },
+  "resources": [
+
+  ]
+}

@@ -1,0 +1,117 @@
+{
+  "slug": "proposed-eastern-caribbean-itinerary",
+  "volumeSlug": "key-west-eastern-caribbean-cruise",
+  "title": "Proposed Eastern Caribbean Itinerary",
+  "summary": "A working route from Phoenix through South Florida and across the Eastern Caribbean.",
+  "journeyType": "Editorial",
+  "startLocation": "Phoenix",
+  "endLocation": "Perfect Day CocoCay",
+  "startDate": "May 15, 2027",
+  "endDate": "May 22, 2027",
+  "published": true,
+  "displayOrder": 1,
+  "segments": [
+    {
+      "from": "Phoenix",
+      "to": "Miami",
+      "travelMode": "Flight",
+      "travelDescription": "Air travel to South Florida",
+      "departureDate": "May 15, 2027",
+      "arrivalDate": "May 15, 2027",
+      "visitSchedule": {
+        "timeZone": "America/New_York",
+        "plannedArrivalDate": "2027-05-15",
+        "plannedDepartureDate": "2027-05-16"
+      },
+      "countrySlug": "usa",
+      "destinationSlug": "miami",
+      "notes": "Flight and arrival details remain to be confirmed.",
+      "displayOrder": 1
+    },
+    {
+      "from": "Miami",
+      "to": "Key West",
+      "travelMode": "Car",
+      "travelDescription": "Ground transportation through the Florida Keys",
+      "departureDate": "May 16, 2027",
+      "arrivalDate": "May 16, 2027",
+      "visitSchedule": {
+        "timeZone": "America/New_York",
+        "plannedArrivalDate": "2027-05-16",
+        "plannedDepartureDate": "2027-05-16"
+      },
+      "countrySlug": "usa",
+      "destinationSlug": "key-west",
+      "notes": "The timing and route for the Key West visit remain flexible.",
+      "displayOrder": 2
+    },
+    {
+      "from": "Key West",
+      "to": "Miami",
+      "travelMode": "Car",
+      "travelDescription": "Return ground transportation for embarkation",
+      "departureDate": "May 17, 2027",
+      "arrivalDate": "May 17, 2027",
+      "visitSchedule": {
+        "timeZone": "America/New_York",
+        "plannedArrivalDate": "2027-05-17",
+        "plannedDepartureDate": "2027-05-17"
+      },
+      "countrySlug": "usa",
+      "destinationSlug": "miami",
+      "notes": "Embarkation transportation will be finalized with the cruise schedule.",
+      "displayOrder": 3
+    },
+    {
+      "from": "Miami",
+      "to": "Philipsburg",
+      "travelMode": "Cruise",
+      "travelDescription": "Royal Caribbean Icon of the Seas",
+      "departureDate": "May 17, 2027",
+      "arrivalDate": "May 19, 2027",
+      "visitSchedule": {
+        "timeZone": "America/Lower_Princes",
+        "plannedArrivalDate": "2027-05-19",
+        "plannedDepartureDate": "2027-05-19"
+      },
+      "countrySlug": "st-maarten",
+      "destinationSlug": "philipsburg",
+      "notes": "Port order and arrival times are subject to the cruise itinerary.",
+      "displayOrder": 4
+    },
+    {
+      "from": "Philipsburg",
+      "to": "Charlotte Amalie",
+      "travelMode": "Cruise",
+      "travelDescription": "Royal Caribbean Icon of the Seas",
+      "departureDate": "May 19, 2027",
+      "arrivalDate": "May 20, 2027",
+      "visitSchedule": {
+        "timeZone": "America/St_Thomas",
+        "plannedArrivalDate": "2027-05-20",
+        "plannedDepartureDate": "2027-05-20"
+      },
+      "countrySlug": "st-thomas",
+      "destinationSlug": "charlotte-amalie",
+      "notes": "Shore plans will be added as reservations are confirmed.",
+      "displayOrder": 5
+    },
+    {
+      "from": "Charlotte Amalie",
+      "to": "Perfect Day CocoCay",
+      "travelMode": "Cruise",
+      "travelDescription": "Royal Caribbean Icon of the Seas",
+      "departureDate": "May 20, 2027",
+      "arrivalDate": "May 22, 2027",
+      "visitSchedule": {
+        "timeZone": "America/Nassau",
+        "plannedArrivalDate": "2027-05-22",
+        "plannedDepartureDate": "2027-05-22"
+      },
+      "countrySlug": "bahamas",
+      "destinationSlug": "perfect-day-cococay",
+      "notes": "Activities remain under consideration.",
+      "displayOrder": 6
+    }
+  ]
+}

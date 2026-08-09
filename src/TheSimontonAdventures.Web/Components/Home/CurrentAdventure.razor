@@ -1,0 +1,88 @@
+@using TheSimontonAdventures.Web.Models
+@using TheSimontonAdventures.Web.Services
+@inject ITravelContentService TravelContentService
+@inject ICreatorContextAccessor CreatorContextAccessor
+@inject IResourceService ResourceService
+
+@if (_isLoading)
+{
+    <section class="current-adventure">
+        <LoadingState Message="Loading the current adventure…" />
+    </section>
+}
+else if (_volume is not null)
+{
+    <section class="current-adventure">
+        <div class="current-adventure__content">
+            <figure class="current-adventure__media">
+                @if (_cover is not null)
+                {
+                    <img src="@_cover.PublicUrl"
+                         alt="@_cover.Resource.AlternativeText"
+                         loading="lazy" />
+                }
+                else
+                {
+                    <div class="current-adventure__placeholder">
+                        <span>@_volume.Title</span>
+                    </div>
+                }
+            </figure>
+
+            <div class="current-adventure__copy">
+                <p class="current-adventure__eyebrow">
+                    @_volume.Status.GetDisplayLabel()
+                </p>
+
+                <p class="current-adventure__volume-number">
+                    Volume @_volume.GetNumberLabel()
+                </p>
+
+                <h2>@_volume.Title</h2>
+
+                @if (!string.IsNullOrWhiteSpace(_volume.Subtitle))
+                {
+                    <p class="current-adventure__subtitle">
+                        @_volume.Subtitle
+                    </p>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(_volume.TravelDates))
+                {
+                    <p class="current-adventure__dates">
+                        @_volume.TravelDates
+                    </p>
+                }
+
+                <p class="current-adventure__description">
+                    @_volume.Description
+                </p>
+
+                <a class="current-adventure__link"
+                   href="@TravelRoutes.Volume(_volume.Slug)">
+                    Join the journey
+                    <span aria-hidden="true">→</span>
+                </a>
+            </div>
+        </div>
+    </section>
+}
+
+@code {
+    private Volume? _volume;
+    private ResolvedResource? _cover;
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _volume = await TravelContentService.GetCurrentVolumeAsync(
+            CreatorContextAccessor.Current.Id);
+        if (_volume is not null)
+        {
+            _cover = await ResourceService.ResolvePublicAsync(
+                CreatorContextAccessor.Current.Id,
+                _volume.CoverResourceId);
+        }
+        _isLoading = false;
+    }
+}

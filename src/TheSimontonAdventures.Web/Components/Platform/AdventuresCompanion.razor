@@ -1,0 +1,47 @@
+<section class="adventures-companion" aria-labelledby="adventures-companion-title">
+    <div class="adventures-companion__header">
+        <span class="adventures-companion__eyebrow">
+            Adventures Companion
+        </span>
+
+        <h2 id="adventures-companion-title">
+            Turn inspiration into your next adventure.
+        </h2>
+
+        <p class="adventures-companion__intro">
+            You're exploring <strong>@DestinationName</strong>.
+            Adventures Companion will eventually help you save destinations,
+            build personalized itineraries, organize reservations, and preserve
+            the memories you create along the way.
+        </p>
+    </div>
+
+    <ul class="adventures-companion__features">
+        <li>Save this destination</li>
+        <li>Add it to My Adventure</li>
+        <li>Build a personalized itinerary</li>
+        <li>Organize reservations and travel details</li>
+        <li>Capture memories while traveling</li>
+        <li>Continue planning across destinations</li>
+    </ul>
+
+    <div class="adventures-companion__footer">
+        <span class="adventures-companion__status">
+            Coming in a future Adventures Companion release.
+        </span>
+
+        <a class="adventures-companion__link"
+           href="/platform/adventures-companion">
+            Learn more
+            <span aria-hidden="true">→</span>
+        </a>
+    </div>
+</section>
+
+@code {
+    /// <summary>
+    /// Gets or sets the destination name used to contextualize the preview.
+    /// </summary>
+    [Parameter]
+    public string DestinationName { get; set; } = "this destination";
+}

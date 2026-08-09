@@ -1,0 +1,233 @@
+@page "/volumes/{VolumeSlug}"
+
+@using TheSimontonAdventures.Web.Models
+@using TheSimontonAdventures.Web.Components.Volume
+@using TheSimontonAdventures.Web.Components.Journeys
+
+@inject ITravelContentService TravelContentService
+@inject ICreatorContextAccessor CreatorContextAccessor
+@inject IResourceService ResourceService
+
+<PageTitle>@PageTitle</PageTitle>
+
+@if (_isLoading)
+{
+    <main class="volume-page">
+        <LoadingState Message="Loading adventure…" />
+    </main>
+}
+else if (_volume is null)
+{
+    <main class="volume-page">
+        <h1>Adventure not found</h1>
+    </main>
+}
+else
+{
+    <main class="volume-page">
+
+        <section class="volume-hero">
+
+            @if (_cover is not null)
+            {
+                <div class="volume-hero__image">
+                    <img src="@_cover.PublicUrl"
+                         alt="@_cover.Resource.AlternativeText"
+                         loading="eager" />
+                </div>
+            }
+
+            <div class="volume-hero__content">
+
+                <span class="volume-eyebrow">
+                    @CreatorContextAccessor.Current.GetSiteName()
+                </span>
+
+                <h1>
+                    @_volume.Title
+                </h1>
+
+                @if (!string.IsNullOrWhiteSpace(_volume.Subtitle))
+                {
+                    <h2>
+                        @_volume.Subtitle
+                    </h2>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(_volume.TravelDates))
+                {
+                    <p class="volume-travel-dates">
+                        @_volume.TravelDates
+                    </p>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(_volume.Description))
+                {
+                    <p class="volume-description">
+                        @_volume.Description
+                    </p>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(_volume.StatusMessage))
+                {
+                    <p class="volume-status-message">
+                        @_volume.StatusMessage
+                    </p>
+                }
+
+            </div>
+
+        </section>
+
+        @if (_journey is not null && IsPlanning)
+        {
+            <PlannedAdventureDetails Volume="@_volume" Journey="@_journey" />
+        }
+        else if (_journey is not null)
+        {
+            <JourneySegmentTimeline Journey="@_journey" />
+        }
+
+        <VolumeDestinations
+            Destinations="@_destinationCards"
+            VolumeSlug="@_volume.Slug" />
+
+    </main>
+}
+
+@code {
+    /// <summary>Gets or sets the volume segment captured from the route.</summary>
+    [Parameter]
+    public string VolumeSlug { get; set; } = string.Empty;
+
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    private TheSimontonAdventures.Web.Models.Volume? _volume;
+
+    private ResolvedResource? _cover;
+
+    private Journey? _journey;
+
+    private IReadOnlyList<VolumeDestinationCard> _destinationCards =
+        Array.Empty<VolumeDestinationCard>();
+
+    private bool _isLoading;
+
+    private bool IsPlanning => _volume?.Status is
+        VolumeStatus.Planned or VolumeStatus.Upcoming;
+
+    private string PageTitle =>
+        _volume is null
+            ? $"Adventure | {CreatorContextAccessor.Current.GetSiteName()}"
+            : $"{_volume.Title} | {CreatorContextAccessor.Current.GetSiteName()}";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _isLoading = true;
+        _volume = null;
+        _cover = null;
+        _journey = null;
+        _destinationCards = Array.Empty<VolumeDestinationCard>();
+
+        try
+        {
+            _volume = await TravelContentService.GetVolumeAsync(
+                CreatorContextAccessor.Current.Id,
+                VolumeSlug);
+
+            if (_volume is null || !PublicContentPolicy.IsPublic(_volume))
+            {
+                _volume = null;
+                MarkNotFound();
+                return;
+            }
+
+            _cover = await ResourceService.ResolvePublicAsync(
+                CreatorContextAccessor.Current.Id,
+                _volume.CoverResourceId);
+
+            var featuredJourneyReference = _volume.Journeys
+                .Where(reference => reference.Featured)
+                .OrderBy(reference => reference.DisplayOrder)
+                .FirstOrDefault();
+
+            if (featuredJourneyReference is not null)
+            {
+                _journey = await TravelContentService.GetJourneyAsync(
+                    CreatorContextAccessor.Current.Id,
+                    _volume.Slug,
+                    featuredJourneyReference.Slug);
+
+                if (!PublicContentPolicy.IsPublic(_volume, _journey))
+                {
+                    _journey = null;
+                }
+            }
+
+            var destinations =
+                await TravelContentService.GetPublishedDestinationsForVolumeAsync(
+                    CreatorContextAccessor.Current.Id,
+                    _volume.Slug);
+
+            _destinationCards = (await Task.WhenAll(destinations
+                .Select(CreateDestinationCardAsync)))
+                .OrderBy(card => card.DisplayOrder)
+                .ToArray();
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void MarkNotFound()
+    {
+        if (HttpContext is not null && !HttpContext.Response.HasStarted)
+        {
+            HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
+        }
+    }
+
+    private async Task<VolumeDestinationCard> CreateDestinationCardAsync(
+        Destination destination)
+    {
+        var reference = _volume!.Destinations.Single(item =>
+            string.Equals(
+                item.CountrySlug,
+                destination.CountrySlug,
+                StringComparison.OrdinalIgnoreCase)
+            && string.Equals(
+                item.DestinationSlug,
+                destination.Slug,
+                StringComparison.OrdinalIgnoreCase));
+
+        var cardImage = await ResourceService.ResolvePublicAsync(
+            CreatorContextAccessor.Current.Id,
+            destination.HomepageResourceId);
+
+        return new VolumeDestinationCard
+        {
+            CountrySlug = reference.CountrySlug,
+            DestinationSlug = reference.DestinationSlug,
+            Title = destination.Title,
+            CountryName = destination.Country,
+            HeroImage = cardImage?.PublicUrl ?? string.Empty,
+            HeroImageAlt = cardImage?.Resource.AlternativeText ?? string.Empty,
+            Summary = destination.GetCardSummary(),
+            DisplayOrder = reference.DisplayOrder
+        };
+    }
+
+    private string BuildVolumeHeroAltText()
+    {
+        if (_volume is null)
+        {
+            return string.Empty;
+        }
+
+        return string.IsNullOrWhiteSpace(_volume.Subtitle)
+            ? _volume.Title
+            : $"{_volume.Title}: {_volume.Subtitle}";
+    }
+}

@@ -1,0 +1,15 @@
+<p class="loading-state"
+   role="status"
+   aria-live="polite"
+   aria-atomic="true">
+    <span class="loading-state__indicator" aria-hidden="true"></span>
+    <span>@Message</span>
+</p>
+
+@code {
+    /// <summary>
+    /// Gets or sets the contextual loading message announced to users.
+    /// </summary>
+    [Parameter]
+    public string Message { get; set; } = "Loading…";
+}

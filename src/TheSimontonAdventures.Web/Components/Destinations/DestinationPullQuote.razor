@@ -1,0 +1,30 @@
+@using TheSimontonAdventures.Web.Models
+
+@if (Quote is not null && !string.IsNullOrWhiteSpace(Quote.Text))
+{
+    <section class="destination-quote">
+        <div class="destination-quote__content">
+            <span class="destination-quote__mark"
+                  aria-hidden="true">
+                “
+            </span>
+
+            <blockquote>
+                @Quote.Text
+            </blockquote>
+
+            @if (!string.IsNullOrWhiteSpace(Quote.Attribution))
+            {
+                <p class="destination-quote__attribution">
+                    — @Quote.Attribution
+                </p>
+            }
+        </div>
+    </section>
+}
+
+@code {
+    /// <summary>Gets or sets the optional quotation to display.</summary>
+    [Parameter]
+    public TheSimontonAdventures.Web.Models.DestinationQuote? Quote { get; set; }
+}

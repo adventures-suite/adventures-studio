@@ -1,0 +1,116 @@
+.home-planned-adventures {
+    padding: clamp(5rem, 10vw, 9rem) var(--page-gutter);
+    background: var(--color-background-alt);
+}
+
+.home-planned-adventures > * {
+    width: min(var(--content-width), 100%);
+    margin-inline: auto;
+}
+
+.home-planned-adventures__header {
+    max-width: var(--reading-width);
+    text-align: center;
+}
+
+.home-planned-adventures__header > p:first-child,
+.home-planned-adventures__status {
+    color: var(--creator-accent);
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    letter-spacing: var(--letter-spacing-label);
+    text-transform: uppercase;
+}
+
+.home-planned-adventures__header h2 {
+    margin: var(--space-3) 0 0;
+    font-size: clamp(2.8rem, 6vw, 5.75rem);
+    line-height: 1;
+}
+
+.home-planned-adventures__header > p:last-child {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-lg);
+    line-height: var(--line-height-reading);
+}
+
+.home-planned-adventures__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-8);
+    margin-top: var(--space-12);
+}
+
+.home-planned-adventures__grid article {
+    overflow: hidden;
+    border: var(--border-light);
+    background: var(--color-surface);
+}
+
+.home-planned-adventures__media {
+    display: block;
+    overflow: hidden;
+    padding: 0;
+    border: 0;
+    aspect-ratio: 16 / 9;
+}
+
+.home-planned-adventures__media img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 500ms ease;
+}
+
+.home-planned-adventures__media:hover img {
+    transform: scale(1.025);
+}
+
+.home-planned-adventures__body {
+    padding: clamp(2rem, 4vw, 3.5rem);
+}
+
+.home-planned-adventures__status {
+    margin: 0 0 var(--space-3);
+}
+
+.home-planned-adventures h3 {
+    margin: 0;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    line-height: 1;
+}
+
+.home-planned-adventures__dates {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.home-planned-adventures__grid article > p:last-of-type {
+    color: var(--color-text-muted);
+    line-height: var(--line-height-reading);
+}
+
+.home-planned-adventures a:not(.home-planned-adventures__media) {
+    display: inline-flex;
+    gap: var(--space-3);
+    padding-bottom: var(--space-2);
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+    letter-spacing: 0.08rem;
+    text-decoration: none;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--creator-accent);
+}
+
+.home-planned-adventures__all {
+    margin-top: var(--space-10);
+}
+
+@media (max-width: 50rem) {
+    .home-planned-adventures__grid {
+        grid-template-columns: 1fr;
+    }
+}

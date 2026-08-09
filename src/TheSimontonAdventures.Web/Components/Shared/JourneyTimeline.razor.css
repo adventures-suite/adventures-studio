@@ -1,0 +1,253 @@
+.journey-timeline {
+    margin: 6rem auto;
+}
+
+.journey-timeline__header {
+    max-width: 52rem;
+    margin-bottom: 2.75rem;
+}
+
+.journey-timeline__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin-bottom: 0.85rem;
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(22, 32, 42, 0.56);
+}
+
+.journey-timeline__eyebrow::before {
+    width: 2.25rem;
+    height: 1px;
+    content: "";
+    background: rgba(22, 32, 42, 0.24);
+}
+
+.journey-timeline h2 {
+    margin: 0;
+    font-size: clamp(2.5rem, 5vw, 4.25rem);
+    line-height: 1;
+    letter-spacing: -0.05em;
+    color: #16202a;
+    text-wrap: balance;
+}
+
+.journey-timeline__items {
+    position: relative;
+    display: flex;
+    gap: 2.4rem;
+    margin-top: 3rem;
+    padding: 1.25rem 2rem 2rem;
+    overflow-x: auto;
+    overflow-y: visible;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: 2rem;
+    scrollbar-width: thin;
+    scrollbar-color:
+        rgba(22, 32, 42, 0.26)
+        rgba(22, 32, 42, 0.05);
+    -webkit-overflow-scrolling: touch;
+}
+
+.journey-timeline__items::before {
+    position: absolute;
+    top: 2.7rem;
+    left: 2rem;
+    width: calc(100% - 4rem);
+    min-width: 100rem;
+    height: 2px;
+    border-radius: 999px;
+    content: "";
+    background: linear-gradient(
+        90deg,
+        rgba(22, 32, 42, 0.06),
+        rgba(22, 32, 42, 0.2),
+        rgba(22, 32, 42, 0.06)
+    );
+}
+
+.journey-timeline__items::-webkit-scrollbar {
+    height: 0.55rem;
+}
+
+.journey-timeline__items::-webkit-scrollbar-track {
+    border-radius: 999px;
+    background: rgba(22, 32, 42, 0.05);
+}
+
+.journey-timeline__items::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(22, 32, 42, 0.26);
+}
+
+.journey-timeline__items::-webkit-scrollbar-thumb:hover {
+    background: rgba(22, 32, 42, 0.38);
+}
+
+.journey-timeline__items ::deep .journey-stop {
+    position: relative;
+    z-index: 1;
+    flex: 0 0 12.5rem;
+    scroll-snap-align: start;
+    transition:
+        transform 220ms ease,
+        opacity 220ms ease;
+}
+
+.journey-timeline__items ::deep .journey-stop:hover {
+    transform: translateY(-4px);
+}
+
+.journey-timeline__items ::deep .journey-stop__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.2rem;
+    height: 3.2rem;
+    border: 1px solid rgba(22, 32, 42, 0.1);
+    border-radius: 999px;
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255, 255, 255, 1),
+            rgba(246, 248, 250, 0.96)
+        );
+    box-shadow:
+        0 0.75rem 1.7rem rgba(22, 32, 42, 0.09),
+        0 0 0 0.35rem rgba(255, 255, 255, 0.85);
+    font-size: 1.35rem;
+    transition:
+        transform 220ms ease,
+        border-color 220ms ease,
+        box-shadow 220ms ease;
+}
+
+.journey-timeline__items ::deep .journey-stop:hover .journey-stop__icon {
+    transform: scale(1.04);
+    border-color: rgba(22, 32, 42, 0.18);
+    box-shadow:
+        0 1rem 2rem rgba(22, 32, 42, 0.13),
+        0 0 0 0.4rem rgba(255, 255, 255, 0.9);
+}
+
+.journey-timeline__items ::deep .journey-stop__content {
+    margin-top: 1.15rem;
+}
+
+.journey-timeline__items ::deep .journey-stop__content h3 {
+    margin: 0;
+    font-size: 1.08rem;
+    line-height: 1.28;
+    letter-spacing: -0.015em;
+    color: #16202a;
+}
+
+.journey-timeline__items ::deep .journey-stop__subtitle {
+    margin: 0.5rem 0 0;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    color: rgba(22, 32, 42, 0.64);
+}
+
+.journey-timeline__items ::deep .journey-stop__travel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-top: 1rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid rgba(22, 32, 42, 0.08);
+}
+
+.journey-timeline__items ::deep .journey-stop__travel-mode {
+    align-self: flex-start;
+    padding: 0.28rem 0.55rem;
+    border: 1px solid rgba(22, 32, 42, 0.07);
+    border-radius: 999px;
+    background: rgba(22, 32, 42, 0.04);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(22, 32, 42, 0.58);
+}
+
+.journey-timeline__items ::deep .journey-stop__travel-description {
+    margin-top: 0.2rem;
+    font-size: 0.87rem;
+    line-height: 1.48;
+    color: rgba(22, 32, 42, 0.7);
+}
+
+.journey-timeline__items ::deep .journey-stop:hover .travel-mode-icon--flight {
+    transform: translate(0.18rem, -0.12rem) rotate(-5deg);
+}
+
+.journey-timeline__items ::deep .journey-stop:hover .travel-mode-icon--train {
+    transform: translateX(0.18rem);
+}
+
+.journey-timeline__items ::deep .journey-stop:hover .travel-mode-icon--cruise,
+.journey-timeline__items ::deep .journey-stop:hover .travel-mode-icon--ferry,
+.journey-timeline__items ::deep .journey-stop:hover .travel-mode-icon--watertaxi,
+.journey-timeline__items ::deep .journey-stop:hover .travel-mode-icon--water-taxi {
+    transform: translateY(-0.08rem) rotate(-1deg);
+}
+
+.journey-timeline__items ::deep .journey-stop:hover .travel-mode-icon--car,
+.journey-timeline__items ::deep .journey-stop:hover .travel-mode-icon--taxi,
+.journey-timeline__items ::deep .journey-stop:hover .travel-mode-icon--bus {
+    transform: translateX(0.16rem);
+}
+
+.journey-timeline__items ::deep .journey-stop:hover .travel-mode-icon--walking {
+    transform: translate(0.08rem, -0.08rem);
+}
+
+@media (max-width: 760px) {
+    .journey-timeline {
+        margin-top: 4.5rem;
+    }
+
+    .journey-timeline__header {
+        margin-bottom: 2.25rem;
+    }
+
+    .journey-timeline__items {
+        gap: 1.75rem;
+        margin-top: 2.25rem;
+        padding: 1rem 1rem 1.75rem;
+        scroll-padding-inline: 1rem;
+    }
+
+    .journey-timeline__items::before {
+        top: 2.45rem;
+        left: 1rem;
+        width: calc(100% - 2rem);
+    }
+
+    .journey-timeline__items ::deep .journey-stop {
+        flex-basis: 10.5rem;
+    }
+
+    .journey-timeline__items ::deep .journey-stop__icon {
+        width: 3rem;
+        height: 3rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .journey-timeline__items ::deep .journey-stop,
+    .journey-timeline__items ::deep .journey-stop__icon,
+    .journey-timeline__items ::deep .journey-stop .travel-mode-icon {
+        transition: none;
+    }
+
+    .journey-timeline__items ::deep .journey-stop:hover,
+    .journey-timeline__items ::deep .journey-stop:hover .journey-stop__icon,
+    .journey-timeline__items ::deep .journey-stop:hover .travel-mode-icon {
+        transform: none;
+    }
+}

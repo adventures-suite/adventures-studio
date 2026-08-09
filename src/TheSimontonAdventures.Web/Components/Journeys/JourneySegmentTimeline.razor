@@ -1,0 +1,170 @@
+@using TheSimontonAdventures.Web.Models
+@using TheSimontonAdventures.Web.Components.Shared
+@using TheSimontonAdventures.Web.Creators
+@using TheSimontonAdventures.Web.Presentation
+@inject ICreatorContextAccessor CreatorContextAccessor
+
+@if (Journey is not null && Journey.Segments.Count > 0)
+{
+    <section class="journey-segment-timeline"
+             aria-labelledby="journey-segment-timeline-title">
+
+        <div class="journey-segment-timeline__header">
+            <span class="journey-segment-timeline__eyebrow">
+                @Eyebrow
+            </span>
+
+            <h2 id="journey-segment-timeline-title">
+                @Journey.Title
+            </h2>
+
+            @if (!string.IsNullOrWhiteSpace(Journey.Summary))
+            {
+                <p>
+                    @Journey.Summary
+                </p>
+            }
+
+            @if (ShowTentativeNotice)
+            {
+                <p class="journey-segment-timeline__notice">
+                    Details may change as this proposed itinerary develops,
+                    including routes, timing, transportation, and destinations.
+                </p>
+            }
+        </div>
+
+        <div class="journey-segment-timeline__segments">
+            @foreach (var segment in Journey.Segments.OrderBy(
+                segment => segment.DisplayOrder))
+            {
+                <article class="journey-segment">
+                    <div class="journey-segment__route">
+                        <span class="journey-segment__location">
+                            @segment.From
+                        </span>
+
+                        <div class="journey-segment__transport">
+                            <TravelModeIcon
+                                TravelMode="@segment.TravelMode.ToString()" />
+
+                            <span class="journey-segment__line"
+                                  aria-hidden="true"></span>
+
+                            <span class="journey-segment__arrow"
+                                  aria-hidden="true">→</span>
+                        </div>
+
+                        <span class="journey-segment__location">
+                            @segment.To
+                        </span>
+                    </div>
+
+                    <div class="journey-segment__details">
+                        <span class="journey-segment__mode">
+                            @FormatTravelMode(segment.TravelMode)
+                        </span>
+
+                        @if (!string.IsNullOrWhiteSpace(
+                            segment.TravelDescription))
+                        {
+                            <span class="journey-segment__description">
+                                @segment.TravelDescription
+                            </span>
+                        }
+
+                        @if (segment.VisitSchedule is not null)
+                        {
+                            <span class="journey-segment__dates">
+                                @segment.VisitSchedule.FormatDateRange(
+                                    CreatorContextAccessor.Current.Locale)
+                            </span>
+
+                            var gangwayWindow =
+                                segment.VisitSchedule.FormatGangwayWindow(
+                                    CreatorContextAccessor.Current.Locale);
+                            @if (!string.IsNullOrWhiteSpace(gangwayWindow))
+                            {
+                                <span class="journey-segment__gangway">
+                                    @gangwayWindow
+                                </span>
+                            }
+                        }
+                        else if (!string.IsNullOrWhiteSpace(
+                            segment.DepartureDate))
+                        {
+                            <span class="journey-segment__dates">
+                                @FormatDates(segment)
+                            </span>
+                        }
+
+                        @if (segment.Waypoints.Count > 0)
+                        {
+                            <div class="journey-segment__waypoints">
+                                <span>Via</span>
+
+                                @foreach (var waypoint in segment.Waypoints
+                                    .OrderBy(waypoint => waypoint.DisplayOrder))
+                                {
+                                    <span class="journey-segment__waypoint">
+                                        @waypoint.Title
+                                    </span>
+                                }
+                            </div>
+                        }
+
+                        @if (ShowSegmentNotes
+                            && !string.IsNullOrWhiteSpace(segment.Notes))
+                        {
+                            <p class="journey-segment__notes">
+                                @segment.Notes
+                            </p>
+                        }
+                    </div>
+                </article>
+            }
+        </div>
+    </section>
+}
+
+@code {
+    /// <summary>Gets or sets the journey whose ordered segments are rendered.</summary>
+    [Parameter]
+    public Journey? Journey { get; set; }
+
+    /// <summary>Gets or sets the label introducing the itinerary.</summary>
+    [Parameter]
+    public string Eyebrow { get; set; } = "Journey";
+
+    /// <summary>
+    /// Gets or sets whether the itinerary displays change-sensitive planning
+    /// guidance.
+    /// </summary>
+    [Parameter]
+    public bool ShowTentativeNotice { get; set; }
+
+    /// <summary>Gets or sets whether authored segment notes are displayed.</summary>
+    [Parameter]
+    public bool ShowSegmentNotes { get; set; }
+
+    private static string FormatTravelMode(TravelMode travelMode)
+    {
+        return travelMode switch
+        {
+            TravelMode.WaterTaxi => "Water taxi",
+            TravelMode.Unknown => "Travel",
+            _ => travelMode.ToString()
+        };
+    }
+
+    private static string FormatDates(JourneySegment segment)
+    {
+        if (string.IsNullOrWhiteSpace(segment.ArrivalDate) ||
+            segment.ArrivalDate == segment.DepartureDate)
+        {
+            return segment.DepartureDate;
+        }
+
+        return $"{segment.DepartureDate} – {segment.ArrivalDate}";
+    }
+}

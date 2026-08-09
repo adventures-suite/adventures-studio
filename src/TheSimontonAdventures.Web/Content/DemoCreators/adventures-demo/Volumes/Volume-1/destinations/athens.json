@@ -1,0 +1,62 @@
+{
+  "volumeSlug": "demo-aegean-notebook",
+  "country": "Greece",
+  "countrySlug": "greece",
+  "city": "Athens",
+  "slug": "athens",
+  "qrSlug": "athens",
+  "title": "Athens Field Notes",
+  "subtitle": "The same public slug, owned by a different Creator",
+  "summary": "This concise destination proves that two Creators can independently own Athens without sharing content, branding, navigation, or public-address targets.",
+  "timeZone": "Europe/Athens",
+  "heroResourceId": "resource_demo_athens_hero",
+  "published": true,
+  "featured": true,
+  "homepageOrder": 1,
+  "homepageResourceId": "resource_demo_athens_card",
+  "homepageSummary": "A permanent browser-visible fixture for Creator isolation.",
+  "sections": [
+    {
+      "heading": "Why this Creator exists",
+      "paragraphs": [
+        "Aegean Field Notes is deliberately small and development-only. It follows the same Creator, Content, Address, QR, and Presentation Engine paths as the flagship site.",
+        "Its Athens slug intentionally overlaps the flagship Creator. The request host determines which Creator owns the address and which destination is rendered."
+      ],
+      "imageResourceId": "resource_athens_section_01",
+      "imageCaption": "Shared platform media with independently owned demo content"
+    }
+  ],
+  "reflections": [
+
+  ],
+  "facts": [
+    {
+      "label": "Creator",
+      "value": "Aegean Field Notes"
+    },
+    {
+      "label": "Environment",
+      "value": "Development only"
+    },
+    {
+      "label": "Isolation key",
+      "value": "CreatorId + public slug"
+    }
+  ],
+  "highlights": [
+
+  ],
+  "tips": [
+
+  ],
+  "gallery": [
+    {
+      "resourceId": "resource_athens_gallery_01",
+      "caption": "Demo Creator media presentation",
+      "displayOrder": 1
+    }
+  ],
+  "resources": [
+
+  ]
+}

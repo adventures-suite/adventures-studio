@@ -1,0 +1,58 @@
+@using TheSimontonAdventures.Web.Models
+
+@if (Map is not null)
+{
+    <section class="destination-map">
+        <header class="destination-section-heading">
+            <p class="destination-eyebrow">Find your way</p>
+            <h2>Explore the Location</h2>
+        </header>
+
+        <div class="destination-map__frame">
+            <iframe src="@GetEmbedUrl()"
+                    title="Map showing @Map.Label"
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
+        </div>
+
+        <a class="destination-map__link"
+           href="@GetExternalMapUrl()"
+           target="_blank"
+           rel="noopener noreferrer">
+            Open @Map.Label in Google Maps
+        </a>
+    </section>
+}
+
+@code {
+    /// <summary>Gets or sets the optional map location to embed.</summary>
+    [Parameter]
+    public DestinationMapLocation? Map { get; set; }
+
+    private string GetEmbedUrl()
+    {
+        if (Map is null)
+        {
+            return string.Empty;
+        }
+
+        var coordinates =
+            FormattableString.Invariant($"{Map.Latitude},{Map.Longitude}");
+
+        return $"https://maps.google.com/maps?q={coordinates}&z={Map.Zoom}&output=embed";
+    }
+
+    private string GetExternalMapUrl()
+    {
+        if (Map is null)
+        {
+            return "#";
+        }
+
+        var coordinates =
+            FormattableString.Invariant($"{Map.Latitude},{Map.Longitude}");
+
+        return $"https://www.google.com/maps/search/?api=1&query={coordinates}";
+    }
+}

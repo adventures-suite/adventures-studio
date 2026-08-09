@@ -1,0 +1,99 @@
+@using Microsoft.AspNetCore.Components
+
+<div class="eyebrow-row">
+    <span class="eyebrow">@(Adventure.IsCurrent ? "Your Current Adventure" : "Your next Adventure")</span>
+    <span class="sync-pill"><i></i> Available offline</span>
+</div>
+
+<article class="hero-card">
+    <img class="hero-photo" src="@Adventure.HeroImagePath" alt="@Adventure.HeroAlternativeText" />
+    <div class="hero-shade"></div>
+    <div class="hero-texture"></div>
+    <div class="hero-content">
+        <span class="status-pill">@Adventure.Status</span>
+        <p class="hero-kicker">@Adventure.Subtitle</p>
+        <h1>@Adventure.Title</h1>
+        <p class="date-line">@Adventure.TravelDates</p>
+        @if (Adventure.IsCurrent)
+        {
+            <div class="countdown current-label" aria-label="Adventure in progress">
+                <strong>In</strong><span>progress</span>
+            </div>
+            <p class="countdown-detail">Today’s details are ready offline</p>
+        }
+        else
+        {
+            <div class="countdown" aria-label="@CountdownAccessibleText">
+                <strong>@CountdownValue</strong>
+                <span>@CountdownUnit</span>
+            </div>
+            <p class="countdown-detail">Until your Adventure begins</p>
+        }
+    </div>
+</article>
+
+<section class="quick-grid" aria-label="Quick actions">
+    <button @onclick='() => FeedbackAsync("Calendar preview opened — no device write was performed.")'>
+        <span>▣</span><strong>Calendar</strong><small>Add itinerary</small>
+    </button>
+    <button @onclick="OnOpenPlaybook">
+        <span>▤</span><strong>Playbook</strong><small>Offline guide</small>
+    </button>
+    <button @onclick='() => FeedbackAsync("Document Inbox is simulated in this prototype.")'>
+        <span>⌑</span><strong>Documents</strong><small>3 protected</small>
+    </button>
+</section>
+
+<section class="section-block">
+    <div class="section-heading">
+        <div><span class="eyebrow">Today &amp; next</span><h2>@TodayHeading</h2></div>
+        <button class="text-button" @onclick="OnOpenJourney">View all</button>
+    </div>
+    <article class="next-card">
+        <div class="date-tile"><strong>@FeaturedDay</strong><span>@FeaturedMonth</span></div>
+        <div class="next-copy">
+            <span class="item-type">@FeaturedMode · @(Adventure.IsCurrent ? "Today" : "Planned")</span>
+            <h3>@FeaturedSegment.From to @FeaturedSegment.To</h3>
+            <p>@FeaturedSegment.TravelDescription</p>
+            <small>@FeaturedSegment.TimeZone</small>
+        </div>
+    </article>
+</section>
+
+<section class="section-block">
+    <div class="section-heading"><div><span class="eyebrow">Adventure pulse</span><h2>Almost ready</h2></div><strong class="score">72%</strong></div>
+    <div class="progress" aria-label="Adventure readiness 72 percent"><i style="width:72%"></i></div>
+    <div class="attention-card" role="note">
+        <span>!</span><div><strong>3 items need attention</strong><p>Flights, pre-cruise stay, and shore plans are not confirmed.</p></div>
+        <button aria-label="Review readiness" @onclick="OnOpenReadiness">›</button>
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public CompanionAdventure Adventure { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback OnOpenJourney { get; set; }
+
+    [Parameter]
+    public EventCallback OnOpenReadiness { get; set; }
+
+    [Parameter]
+    public EventCallback OnOpenPlaybook { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnFeedback { get; set; }
+
+    private CompanionSegment FeaturedSegment => Adventure.Segments[Adventure.IsCurrent ? Math.Min(6, Adventure.Segments.Count - 1) : 0];
+    private DateOnly FeaturedDate => DateOnly.ParseExact(FeaturedSegment.ArrivalDate, "MMMM d, yyyy", System.Globalization.CultureInfo.InvariantCulture);
+    private string FeaturedDay => FeaturedDate.Day.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    private string FeaturedMonth => FeaturedDate.ToString("MMM", System.Globalization.CultureInfo.InvariantCulture).ToUpperInvariant();
+    private string FeaturedMode => FeaturedSegment.TravelMode == "Flight" ? "✈ Flight" : FeaturedSegment.TravelMode;
+    private string TodayHeading => Adventure.IsCurrent ? $"Today in {FeaturedSegment.To}" : $"Your journey starts in {FeaturedSegment.From}";
+    private int CountdownValue => Math.Max(0, Adventure.StartDate.DayNumber - DateOnly.FromDateTime(DateTime.Now).DayNumber);
+    private string CountdownUnit => CountdownValue == 1 ? "day" : "days";
+    private string CountdownAccessibleText => $"{CountdownValue} {CountdownUnit} until {Adventure.Title} begins on {Adventure.StartDate:MMMM d, yyyy}";
+
+    private Task FeedbackAsync(string message) => OnFeedback.InvokeAsync(message);
+}

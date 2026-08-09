@@ -1,0 +1,91 @@
+@using TheSimontonAdventures.Web.Models
+
+<section class="volume-destinations" aria-labelledby="volume-destinations-title">
+    <div class="volume-destinations__header">
+        <span class="volume-destinations__eyebrow">
+            Explore the journey
+        </span>
+
+        <h2 id="volume-destinations-title">
+            Destinations
+        </h2>
+
+        <p>
+            Discover the places, stories, and experiences that shaped this adventure.
+        </p>
+    </div>
+
+    @if (!Destinations.Any())
+    {
+        <div class="volume-destinations__empty">
+            <h3>More destinations are coming.</h3>
+
+            <p>
+                This adventure is still being expanded. Check back as new destination
+                stories, photography, and travel guidance are added.
+            </p>
+        </div>
+    }
+    else
+    {
+        <div class="volume-destinations__grid">
+            @foreach (var destination in Destinations.OrderBy(d => d.DisplayOrder))
+            {
+                <a class="volume-destination-card"
+                   href="@BuildDestinationUrl(destination)"
+                   aria-label="Explore @destination.Title">
+
+                    @if (!string.IsNullOrWhiteSpace(destination.HeroImage))
+                    {
+                        <div class="volume-destination-card__image">
+                            <img src="@destination.HeroImage"
+                                 alt="@destination.HeroImageAlt"
+                                 loading="lazy" />
+                        </div>
+                    }
+
+                    <div class="volume-destination-card__content">
+                        <span class="volume-destination-card__country">
+                            @destination.CountryName
+                        </span>
+
+                        <h3>
+                            @destination.Title
+                        </h3>
+
+                        @if (!string.IsNullOrWhiteSpace(destination.Summary))
+                        {
+                            <p class="volume-destination-card__summary">
+                                @destination.Summary
+                            </p>
+                        }
+
+                        <span class="volume-destination-card__action">
+                            Explore destination
+                            <span aria-hidden="true">→</span>
+                        </span>
+                    </div>
+                </a>
+            }
+        </div>
+    }
+</section>
+
+@code {
+    /// <summary>Gets or sets destination cards in volume display order.</summary>
+    [Parameter]
+    public IEnumerable<VolumeDestinationCard> Destinations { get; set; } =
+        Enumerable.Empty<VolumeDestinationCard>();
+
+    /// <summary>Gets or sets the owning volume slug used to build card routes.</summary>
+    [Parameter]
+    public string VolumeSlug { get; set; } = string.Empty;
+
+    private string BuildDestinationUrl(VolumeDestinationCard destination)
+    {
+        return TravelRoutes.Destination(
+            VolumeSlug,
+            destination.CountrySlug,
+            destination.DestinationSlug);
+    }
+}

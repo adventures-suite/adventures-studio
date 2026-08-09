@@ -1,0 +1,39 @@
+{
+  "volumeSlug": "demo-aegean-notebook",
+  "country": "Greece",
+  "countrySlug": "greece",
+  "city": "Preview",
+  "slug": "unpublished-preview",
+  "qrSlug": "unpublished-preview",
+  "title": "Unpublished Preview",
+  "subtitle": "A route-publication integration fixture",
+  "summary": "This test-only demo destination must never be exposed publicly.",
+  "timeZone": "Europe/Athens",
+  "heroResourceId": "resource_demo_athens_hero",
+  "published": false,
+  "featured": false,
+  "homepageOrder": 2,
+  "homepageResourceId": "resource_demo_athens_card",
+  "homepageSummary": "An unpublished route fixture.",
+  "sections": [
+
+  ],
+  "reflections": [
+
+  ],
+  "facts": [
+
+  ],
+  "highlights": [
+
+  ],
+  "tips": [
+
+  ],
+  "gallery": [
+
+  ],
+  "resources": [
+
+  ]
+}

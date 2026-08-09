@@ -1,0 +1,120 @@
+.destination-reflection {
+    position: relative;
+    grid-column: 1 / -1;
+    width: min(60rem, 100%);
+    margin: clamp(4rem, 8vw, 7rem) auto 0;
+    padding: clamp(3rem, 6vw, 5rem);
+    border: 1px solid rgba(22, 32, 42, 0.08);
+    border-radius: 1.75rem;
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255, 255, 255, 0.98),
+            rgba(247, 248, 250, 0.94)
+        );
+    box-shadow:
+        0 1.5rem 3.5rem rgba(22, 32, 42, 0.08),
+        0 0 0 1px rgba(255, 255, 255, 0.45) inset;
+    overflow: hidden;
+}
+
+.destination-reflection::before {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 5rem;
+    height: 3px;
+    border-radius: 999px;
+    content: "";
+    background: var(--color-accent);
+    transform: translateX(-50%);
+}
+
+.destination-reflection__inner {
+    max-width: 46rem;
+    margin-inline: auto;
+    text-align: center;
+}
+
+.destination-reflection__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin: 0 0 var(--space-6);
+    color: var(--color-accent);
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    letter-spacing: var(--letter-spacing-label);
+    text-transform: uppercase;
+}
+
+.destination-reflection__eyebrow::before,
+.destination-reflection__eyebrow::after {
+    width: 2rem;
+    height: 1px;
+    content: "";
+    background: currentColor;
+    opacity: 0.45;
+}
+
+.destination-reflection blockquote {
+    position: relative;
+    margin: 0;
+}
+
+.destination-reflection blockquote::before {
+    position: absolute;
+    top: -2.5rem;
+    left: 50%;
+    color: rgba(22, 32, 42, 0.08);
+    font-family: Georgia, serif;
+    font-size: 7rem;
+    line-height: 1;
+    content: "“";
+    transform: translateX(-50%);
+}
+
+.destination-reflection blockquote p {
+    position: relative;
+    margin: 0;
+    color: var(--color-text);
+    font-family: var(--font-family-heading);
+    font-size: clamp(1.7rem, 3.4vw, 2.8rem);
+    font-style: italic;
+    font-weight: 400;
+    line-height: 1.42;
+    text-wrap: pretty;
+}
+
+.destination-reflection__signature {
+    margin: var(--space-8) 0 0;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    letter-spacing: 0.04rem;
+}
+
+.destination-reflection__signature strong {
+    display: block;
+    margin-bottom: 0.35rem;
+    color: var(--color-text);
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+@media (max-width: 46.875rem) {
+    .destination-reflection {
+        width: 100%;
+        padding: 2.25rem 1.5rem;
+        border-radius: 1.25rem;
+    }
+
+    .destination-reflection blockquote::before {
+        top: -2rem;
+        font-size: 5rem;
+    }
+
+    .destination-reflection blockquote p {
+        font-size: clamp(1.4rem, 7vw, 2rem);
+        line-height: 1.5;
+    }
+}

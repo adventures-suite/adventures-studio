@@ -1,0 +1,183 @@
+{
+  "volumeSlug": "italy-greece-croatia",
+  "country": "Croatia",
+  "countrySlug": "croatia",
+  "city": "Dubrovnik",
+  "slug": "dubrovnik",
+  "qrSlug": "dubrovnik",
+  "title": "Dubrovnik",
+  "subtitle": "The Pearl of the Adriatic",
+  "summary": "Dubrovnik announced itself from the water, where a modern bridge and rugged mountains framed our arrival. Inside the Old Town, sea-worn fortifications, sunlit limestone streets, sacred spaces, and one unforgettable staircase revealed a city built in layers above the Adriatic.",
+  "timeZone": "Europe/Zagreb",
+  "visitedFrom": "2026-06-28",
+  "visitedTo": "2026-06-28",
+  "heroResourceId": "resource_dubrovnik_hero",
+  "published": true,
+  "featured": true,
+  "homepageOrder": 6,
+  "homepageResourceId": "resource_dubrovnik_card",
+  "homepageSummary": "Arrive by sea, trace Dubrovnik's mighty fortifications, and climb into the limestone heart of the Old Town.",
+  "sections": [
+    {
+      "heading": "An Arrival Framed by Water",
+      "paragraphs": [
+        "Our first view of Dubrovnik came across the water. The Franjo Tudman Bridge stretched above the harbor while boats rested along the shore and mountains rose behind the city, giving the arrival a scale that photographs could barely contain.",
+        "From the ship, the harbor felt like a threshold between the open Adriatic and the historic city waiting beyond it. Dianne paused at the rail to take it in, a quiet moment before the pace and crowds of the Old Town took over."
+      ],
+      "imageResourceId": "resource_dubrovnik_section_01",
+      "imageCaption": "A first look at Dubrovnik from the water"
+    },
+    {
+      "heading": "Stone Walls Above the Adriatic",
+      "paragraphs": [
+        "Dubrovnik's defenses dominate the coastline. Fort Lovrijenac rises directly from the rock, and the massive walls seem to grow from the clear water below rather than merely stand beside it.",
+        "Up close, the fortifications carried the weight of the city's history. Their towers, weathered stone, and commanding position explained how the former Republic of Ragusa protected both its independence and its harbor for centuries."
+      ],
+      "imageResourceId": "resource_dubrovnik_section_02",
+      "imageCaption": "Fort Lovrijenac guarding Dubrovnik's coast"
+    },
+    {
+      "heading": "Inside the Old City",
+      "paragraphs": [
+        "Passing the fortifications brought us into a different world of pale stone buildings, shaded corners, churches, and streets polished by generations of footsteps. Even with the midday activity, the architecture kept drawing our attention upward and away from the crowd.",
+        "A church interior offered a moment of stillness and vivid color. Gold details, deep blue curtains, painted icons, and the Last Supper above the sanctuary revealed another side of a city often defined by its exterior walls."
+      ],
+      "imageResourceId": "resource_dubrovnik_section_03",
+      "imageCaption": "Color and quiet inside one of Dubrovnik's churches"
+    },
+    {
+      "heading": "The Stairs We Will Remember",
+      "paragraphs": [
+        "The Jesuit Steps rose steeply between warm stone facades toward the Church of Saint Ignatius. Their graceful Baroque design was impressive, but under the bright sun the climb quickly became a more personal test of determination.",
+        "They earned a nickname in our travel story: the Stairs of Shame. It was the kind of shared challenge that became funnier with every retelling and ensured that this corner of Dubrovnik would be remembered as clearly as its grandest views."
+      ],
+      "imageResourceId": "resource_dubrovnik_section_04",
+      "imageCaption": "The memorable climb toward Saint Ignatius"
+    }
+  ],
+  "reflections": [
+    {
+      "afterSection": 1,
+      "author": "Dianne",
+      "title": "From Dianne's Journal",
+      "text": "Seeing Dubrovnik from the water gave me time to appreciate the whole setting—the brilliant harbor, the bridge, and the mountains surrounding us—before we stepped into the city itself.",
+      "signature": "❤️ Dianne"
+    },
+    {
+      "afterSection": 4,
+      "author": "Steve",
+      "title": "Steve's Notes",
+      "text": "Dubrovnik's walls were every bit as dramatic as expected, but the stairs became the story we kept telling. Travel memories have a way of choosing their own landmarks.",
+      "signature": "— Steve"
+    }
+  ],
+  "quote": {
+    "text": "Dubrovnik felt both powerful and peaceful—an ancient city standing confidently above the sea.",
+    "attribution": "The Simonton Adventures"
+  },
+  "facts": [
+    {
+      "label": "Location",
+      "value": "Dalmatian Coast, Croatia"
+    },
+    {
+      "label": "Known for",
+      "value": "Medieval walls, Old Town, and Adriatic views"
+    },
+    {
+      "label": "Historic identity",
+      "value": "Former Republic of Ragusa"
+    },
+    {
+      "label": "Essential experience",
+      "value": "Walking the city walls"
+    }
+  ],
+  "highlights": [
+    {
+      "title": "Dubrovnik City Walls",
+      "description": "The historic walls provide sweeping views over the Old Town, rooftops, fortifications, and the Adriatic Sea."
+    },
+    {
+      "title": "Stradun",
+      "description": "The polished limestone main street forms the heart of Dubrovnik's Old Town."
+    },
+    {
+      "title": "Fort Lovrijenac",
+      "description": "The fortress rises above the sea just outside the city walls and offers dramatic coastal views."
+    },
+    {
+      "title": "Old Town",
+      "description": "Churches, palaces, stone alleys, and public squares preserve centuries of history inside the walls."
+    }
+  ],
+  "tips": [
+    {
+      "title": "Explore early",
+      "description": "The Old Town becomes much busier later in the day, especially when several cruise ships are in port."
+    },
+    {
+      "title": "Prepare for stairs",
+      "description": "Many streets and parts of the city walls include steep steps and uneven stone surfaces."
+    },
+    {
+      "title": "Allow time for the walls",
+      "description": "Walking the complete circuit takes time, especially when stopping for photographs and views."
+    },
+    {
+      "title": "Look beyond the main street",
+      "description": "Some of Dubrovnik's most memorable corners are found along the smaller side streets and quieter alleys."
+    }
+  ],
+  "gallery": [
+    {
+      "resourceId": "resource_dubrovnik_gallery_01",
+      "caption": "Sailing into Dubrovnik's mountain-framed harbor",
+      "displayOrder": 1
+    },
+    {
+      "resourceId": "resource_dubrovnik_gallery_02",
+      "caption": "Taking in our first view of Dubrovnik",
+      "displayOrder": 2
+    },
+    {
+      "resourceId": "resource_dubrovnik_gallery_03",
+      "caption": "Fort Lovrijenac above the sea",
+      "displayOrder": 3
+    },
+    {
+      "resourceId": "resource_dubrovnik_gallery_04",
+      "caption": "Dubrovnik's defenses built into the rocky shore",
+      "displayOrder": 4
+    },
+    {
+      "resourceId": "resource_dubrovnik_gallery_05",
+      "caption": "Approaching the walls of the Old City",
+      "displayOrder": 5
+    },
+    {
+      "resourceId": "resource_dubrovnik_gallery_06",
+      "caption": "Sacred art inside the Old City",
+      "displayOrder": 6
+    },
+    {
+      "resourceId": "resource_dubrovnik_gallery_07",
+      "caption": "The Jesuit Steps before the crowd arrived",
+      "displayOrder": 7
+    },
+    {
+      "resourceId": "resource_dubrovnik_gallery_08",
+      "caption": "A much busier climb through the Old City",
+      "displayOrder": 8
+    }
+  ],
+  "map": {
+    "latitude": 42.6507,
+    "longitude": 18.0944,
+    "label": "Dubrovnik, Croatia",
+    "zoom": 14
+  },
+  "resources": [
+
+  ]
+}

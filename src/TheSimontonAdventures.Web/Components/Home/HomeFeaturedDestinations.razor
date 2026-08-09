@@ -1,0 +1,118 @@
+@using TheSimontonAdventures.Web.Models
+@using TheSimontonAdventures.Web.Services
+@inject ITravelContentService TravelContentService
+@inject ICreatorContextAccessor CreatorContextAccessor
+@inject IResourceService ResourceService
+
+@if (_destinations.Count > 0)
+{
+    <section class="home-destinations">
+        <header class="home-destinations__header">
+            <p class="home-destinations__eyebrow">
+                Featured Destinations
+            </p>
+
+            <h2>Places That Became Part of Our Story</h2>
+
+            <p>
+                Explore a few of the places that defined our current adventure.
+            </p>
+        </header>
+
+        <div class="home-destinations__grid">
+            @for (var index = 0; index < _destinations.Count; index++)
+            {
+                var destination = _destinations[index];
+
+                <article class="home-destinations__card
+                                @(index == 0 ? "home-destinations__card--featured" : string.Empty)">
+
+                    <a class="home-destinations__image-link"
+                       href="@GetDestinationUrl(destination)">
+
+                        @if (_cardImages.TryGetValue(destination.Slug, out var cardImage))
+                        {
+                            <img src="@cardImage.PublicUrl"
+                                alt="@cardImage.Resource.AlternativeText"
+                                loading="lazy" />
+                        }
+                        else
+                        {
+                            <div class="home-destinations__placeholder">
+                                @destination.Title
+                            </div>
+                        }
+                    </a>
+
+                    <div class="home-destinations__copy">
+                        <p>
+                            @destination.City · @destination.Country
+                        </p>
+
+                        <h3>
+                            <a href="@GetDestinationUrl(destination)">
+                                @destination.Title
+                            </a>
+                        </h3>
+
+                        <p class="home-destinations__summary">
+                            @destination.GetCardSummary()
+                        </p>
+
+                        <a class="home-destinations__link"
+                           href="@GetDestinationUrl(destination)">
+                            Explore the destination
+                            <span aria-hidden="true">→</span>
+                        </a>
+                    </div>
+                </article>
+            }
+        </div>
+    </section>
+}
+
+@code {
+    private Volume? _volume;
+    private IReadOnlyList<Destination> _destinations = [];
+    private IReadOnlyDictionary<string, ResolvedResource> _cardImages =
+        new Dictionary<string, ResolvedResource>(StringComparer.OrdinalIgnoreCase);
+
+    protected override async Task OnInitializedAsync()
+    {
+        _volume = await TravelContentService.GetCurrentVolumeAsync(
+            CreatorContextAccessor.Current.Id);
+
+        if (_volume is null)
+        {
+            return;
+        }
+
+        var destinations =
+            await TravelContentService.GetFeaturedDestinationsAsync(
+                CreatorContextAccessor.Current.Id,
+                _volume.Slug);
+
+        _destinations = destinations
+            .Take(3)
+            .ToList();
+        var images = await Task.WhenAll(_destinations.Select(async destination => new
+        {
+            destination.Slug,
+            Resource = await ResourceService.ResolvePublicAsync(
+                CreatorContextAccessor.Current.Id,
+                destination.HomepageResourceId)
+        }));
+        _cardImages = images
+            .Where(item => item.Resource is not null)
+            .ToDictionary(item => item.Slug, item => item.Resource!, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private string GetDestinationUrl(Destination destination)
+    {
+        return TravelRoutes.Destination(
+            destination.VolumeSlug,
+            destination.CountrySlug,
+            destination.Slug);
+    }
+
+}

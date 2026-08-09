@@ -1,0 +1,198 @@
+{
+  "volumeSlug": "italy-greece-croatia",
+  "country": "Italy",
+  "countrySlug": "italy",
+  "city": "Florence",
+  "slug": "florence",
+  "qrSlug": "florence",
+  "title": "Florence",
+  "subtitle": "Heart of the Renaissance",
+  "summary": "Florence felt like a city designed to be explored slowly. Its piazzas, churches, sculptures, and painted interiors brought the Renaissance into the rhythm of everyday life, while walks beside the Arno and evenings in the historic center revealed a city that remained warm, lively, and deeply personal.",
+  "timeZone": "Europe/Rome",
+  "visitedFrom": "2026-06-23",
+  "visitedTo": "2026-06-26",
+  "heroResourceId": "resource_florence_hero",
+  "published": true,
+  "featured": true,
+  "homepageOrder": 2,
+  "homepageResourceId": "resource_florence_card",
+  "homepageSummary": "Walk through Renaissance art and architecture, pause beside the Arno, and watch Florence come alive after dark.",
+  "sections": [
+    {
+      "heading": "Arriving in the Renaissance",
+      "paragraphs": [
+        "Florence immediately felt different from Venice. The canals and quiet passageways were replaced by broad piazzas, stone buildings, busy streets, and the unmistakable dome of the cathedral rising above the city.",
+        "As we walked toward the historic center, it became clear that Florence was not simply a city with important art. Art, architecture, and history were woven into the experience of moving through the city itself."
+      ],
+      "imageResourceId": "resource_florence_section_01",
+      "imageCaption": "Discovering layers of art inside a Renaissance courtyard"
+    },
+    {
+      "heading": "Standing Before David",
+      "paragraphs": [
+        "Michelangelo's David was one of the landmarks we had anticipated most. We had seen photographs countless times, but seeing the sculpture in person made us understand why it has remained so powerful for centuries.",
+        "The scale, detail, and expression were extraordinary. More than a famous work of art, David felt like a human presence in the room—confident, alert, and frozen in the moment before action."
+      ],
+      "imageResourceId": "resource_florence_section_02",
+      "imageCaption": "Michelangelo's David inside the Accademia Gallery"
+    },
+    {
+      "heading": "An Evening Along the Arno",
+      "paragraphs": [
+        "Some of our favorite moments in Florence came when we were no longer rushing toward a landmark. Walking near the Arno River in the evening gave us time to appreciate the softer side of the city.",
+        "The light changed across the buildings, the bridges reflected on the water, and Florence seemed to settle into a quieter rhythm. It was the kind of moment that made us want to slow down and stay a little longer."
+      ],
+      "imageResourceId": "resource_florence_section_03",
+      "imageCaption": "Ponte Vecchio reflected in the Arno"
+    },
+    {
+      "heading": "Florence After Dark",
+      "paragraphs": [
+        "After sunset, Florence took on a different character. The stone walls of Palazzo Vecchio glowed under warm lights, fountains and sculptures stood out against the night sky, and the piazzas remained full of people enjoying the cooler evening air.",
+        "These unhurried nighttime walks gave us space to revisit places we had seen during the day. With fewer distractions and nowhere else to be, we could enjoy the atmosphere, share a gelato, and let the city provide the evening's itinerary."
+      ],
+      "imageResourceId": "resource_florence_section_04",
+      "imageCaption": "Piazza della Signoria glowing after dark"
+    }
+  ],
+  "facts": [
+    {
+      "label": "Location",
+      "value": "Florence, Tuscany, Italy"
+    },
+    {
+      "label": "Defining era",
+      "value": "The Renaissance"
+    },
+    {
+      "label": "Signature landmark",
+      "value": "The Cathedral of Santa Maria del Fiore"
+    },
+    {
+      "label": "Essential experience",
+      "value": "Seeing Michelangelo's David in person"
+    }
+  ],
+  "highlights": [
+    {
+      "title": "The Duomo",
+      "description": "Florence's cathedral dominates the skyline with its marble facade and Brunelleschi's remarkable dome."
+    },
+    {
+      "title": "Michelangelo's David",
+      "description": "The monumental sculpture at the Accademia Gallery remains one of the defining masterpieces of Renaissance art."
+    },
+    {
+      "title": "Ponte Vecchio",
+      "description": "The historic bridge crosses the Arno River and is lined with distinctive shops and centuries of history."
+    },
+    {
+      "title": "Piazza della Signoria",
+      "description": "An open-air gathering place surrounded by sculpture, architecture, and some of Florence's most important civic landmarks."
+    }
+  ],
+  "tips": [
+    {
+      "title": "Reserve major museums early",
+      "description": "Timed entry for the Accademia and other major attractions can prevent long waits and make the day easier to plan."
+    },
+    {
+      "title": "Explore on foot",
+      "description": "Many of Florence's most memorable streets, piazzas, churches, and viewpoints are best discovered while walking."
+    },
+    {
+      "title": "Allow time for the details",
+      "description": "The city rewards visitors who look beyond the headline landmarks and notice its doors, courtyards, sculptures, and smaller churches."
+    },
+    {
+      "title": "Plan for the heat",
+      "description": "Summer afternoons can be warm, so early sightseeing and a slower midday pace can make the experience more comfortable."
+    }
+  ],
+  "reflections": [
+    {
+      "afterSection": 1,
+      "author": "Dianne",
+      "title": "From Dianne's Journal",
+      "text": "Florence felt elegant from the moment we arrived. Everywhere we looked, there seemed to be another beautiful building, sculpture, or street waiting for us.",
+      "signature": "❤️ Dianne"
+    },
+    {
+      "afterSection": 2,
+      "author": "Steve",
+      "title": "Steve's Notes",
+      "text": "I expected David to be impressive. I did not expect the sculpture to feel so alive. Seeing it in person completely changed the way I understood it.",
+      "signature": "— Steve"
+    }
+  ],
+  "quote": {
+    "text": "Florence made us slow down, look closer, and appreciate the history woven into nearly every street.",
+    "attribution": "The Simonton Adventures"
+  },
+  "gallery": [
+    {
+      "resourceId": "resource_florence_gallery_01",
+      "caption": "Our first view of the Duomo complex",
+      "displayOrder": 1
+    },
+    {
+      "resourceId": "resource_florence_gallery_02",
+      "caption": "Taking in Piazza della Signoria",
+      "displayOrder": 2
+    },
+    {
+      "resourceId": "resource_florence_gallery_03",
+      "caption": "Art and architecture in every direction",
+      "displayOrder": 3
+    },
+    {
+      "resourceId": "resource_florence_gallery_04",
+      "caption": "Remembering to look up",
+      "displayOrder": 4
+    },
+    {
+      "resourceId": "resource_florence_gallery_05",
+      "caption": "Standing before Michelangelo's David",
+      "displayOrder": 5
+    },
+    {
+      "resourceId": "resource_florence_gallery_06",
+      "caption": "Stories preserved in painted walls",
+      "displayOrder": 6
+    },
+    {
+      "resourceId": "resource_florence_gallery_07",
+      "caption": "Quiet moments inside Florence's churches",
+      "displayOrder": 7
+    },
+    {
+      "resourceId": "resource_florence_gallery_08",
+      "caption": "Ponte Vecchio reflected in the river",
+      "displayOrder": 8
+    },
+    {
+      "resourceId": "resource_florence_gallery_09",
+      "caption": "A well-earned gelato stop",
+      "displayOrder": 9
+    },
+    {
+      "resourceId": "resource_florence_gallery_10",
+      "caption": "The piazza takes on a new character at night",
+      "displayOrder": 10
+    },
+    {
+      "resourceId": "resource_florence_gallery_11",
+      "caption": "An evening together in the heart of Florence",
+      "displayOrder": 11
+    }
+  ],
+  "map": {
+    "latitude": 43.7696,
+    "longitude": 11.2558,
+    "label": "Florence, Italy",
+    "zoom": 14
+  },
+  "resources": [
+
+  ]
+}

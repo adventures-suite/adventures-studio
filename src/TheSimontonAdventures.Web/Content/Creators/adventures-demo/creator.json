@@ -1,0 +1,40 @@
+{
+  "id": "creator_demo_01",
+  "slug": "adventures-demo",
+  "displayName": "Adventures Demo",
+  "status": "Active",
+  "developmentOnly": true,
+  "primaryDomain": "demo.adventuressuite.test",
+  "domains": [
+    "demo.adventuressuite.test"
+  ],
+  "locale": "en-GB",
+  "timeZone": "Europe/Athens",
+  "contentRoot": "Content/DemoCreators/adventures-demo/Volumes",
+  "brand": {
+    "siteName": "Aegean Field Notes",
+    "tagline": "A development-only Creator exploring one city at a time",
+    "faviconResourceId": "resource_favicon",
+    "homeHeroResourceId": "resource_home_hero",
+    "homeHeroHeadline": "Small field notes, independently owned.",
+    "homeHeroDescription": "Explore a focused Aegean notebook that proves every Creator controls its own voice, imagery, and public journeys.",
+    "homeHeroActionLabel": "Open the Notebook",
+    "copyrightNotice": "Aegean Field Notes Demo",
+    "defaultSeoTitle": "Aegean Field Notes — Creator Demo",
+    "defaultSeoDescription": "A development-only AdventuresSuite Creator used to verify tenant-scoped branding, content, addresses, and features.",
+    "primaryColor": "#123c4a",
+    "accentColor": "#e58b3a",
+    "typography": "Modern"
+  },
+  "homepage": {
+    "sections": [
+      "CurrentAdventure"
+    ]
+  },
+  "features": {
+    "enableAbout": false,
+    "enableCompanion": false,
+    "enableReservations": false,
+    "enableTelemetry": false
+  }
+}

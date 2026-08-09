@@ -1,0 +1,89 @@
+@using TheSimontonAdventures.Web.Models
+@using TheSimontonAdventures.Web.Services
+@inject ITravelContentService TravelContentService
+@inject ICreatorContextAccessor CreatorContextAccessor
+
+@if (_previous is not null || _next is not null)
+{
+    <nav class="destination-navigation"
+         aria-label="Destination navigation">
+
+        <div class="destination-navigation__content">
+            @if (_previous is not null)
+            {
+                <a class="destination-navigation__item destination-navigation__item--previous"
+                   href="@GetDestinationUrl(_previous)">
+                    <span>← Previous destination</span>
+                    <strong>@_previous.Title</strong>
+                </a>
+            }
+            else
+            {
+                <span></span>
+            }
+
+            @if (_next is not null)
+            {
+                <a class="destination-navigation__item destination-navigation__item--next"
+                   href="@GetDestinationUrl(_next)">
+                    <span>Next destination →</span>
+                    <strong>@_next.Title</strong>
+                </a>
+            }
+        </div>
+    </nav>
+}
+
+@code {
+    /// <summary>
+    /// Gets or sets the current destination used to locate adjacent content.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public Destination Destination { get; set; } = null!;
+
+    private Destination? _previous;
+    private Destination? _next;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _previous = null;
+        _next = null;
+
+        var destinations = await TravelContentService.GetPublishedDestinationsForVolumeAsync(
+            CreatorContextAccessor.Current.Id,
+            Destination.VolumeSlug);
+
+        var currentIndex = destinations.ToList().FindIndex(item =>
+            string.Equals(
+                item.CountrySlug,
+                Destination.CountrySlug,
+                StringComparison.OrdinalIgnoreCase)
+            && string.Equals(
+                item.Slug,
+                Destination.Slug,
+                StringComparison.OrdinalIgnoreCase));
+
+        if (currentIndex < 0)
+        {
+            return;
+        }
+
+        if (currentIndex > 0)
+        {
+            _previous = destinations[currentIndex - 1];
+        }
+
+        if (currentIndex < destinations.Count - 1)
+        {
+            _next = destinations[currentIndex + 1];
+        }
+    }
+
+    private static string GetDestinationUrl(Destination destination)
+    {
+        return TravelRoutes.Destination(
+            destination.VolumeSlug,
+            destination.CountrySlug,
+            destination.Slug);
+    }
+}

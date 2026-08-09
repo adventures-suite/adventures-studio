@@ -1,0 +1,177 @@
+{
+  "number": 1,
+  "slug": "italy-greece-croatia",
+  "title": "Italy, Greece & Croatia",
+  "subtitle": "A Journey Through the Mediterranean",
+  "description": "Our journey through the canals, cities, islands and ancient landmarks of Italy, Greece and Croatia.",
+  "coverResourceId": "resource_volume_one_cover",
+  "status": "Current",
+  "travelDates": "June 20 – July 5, 2026",
+  "statusMessage": "Our current featured Mediterranean adventure",
+  "journeyStops": [
+    {
+      "title": "Phoenix",
+      "subtitle": "The adventure begins",
+      "countrySlug": "",
+      "destinationSlug": "",
+      "travelMode": "Flight",
+      "travelDescription": "American Airlines to Venice",
+      "displayOrder": 1
+    },
+    {
+      "title": "Venice",
+      "subtitle": "Canals, quiet streets, and our first Italian memories",
+      "countrySlug": "italy",
+      "destinationSlug": "venice",
+      "travelMode": "WaterTaxi",
+      "travelDescription": "Private water taxi from Venice Marco Polo Airport",
+      "displayOrder": 2
+    },
+    {
+      "title": "Florence",
+      "subtitle": "Art, history, and the heart of the Renaissance",
+      "countrySlug": "italy",
+      "destinationSlug": "florence",
+      "travelMode": "Train",
+      "travelDescription": "High-speed rail from Venice",
+      "displayOrder": 3
+    },
+    {
+      "title": "Ravenna",
+      "subtitle": "The gateway to our Mediterranean cruise",
+      "countrySlug": "italy",
+      "destinationSlug": "",
+      "travelMode": "Train",
+      "travelDescription": "Train from Florence through Bologna",
+      "displayOrder": 4
+    },
+    {
+      "title": "Explorer of the Seas",
+      "subtitle": "Seven nights across the Adriatic and Aegean",
+      "countrySlug": "at-sea",
+      "destinationSlug": "explorer-of-the-seas",
+      "travelMode": "Cruise",
+      "travelDescription": "Royal Caribbean Mediterranean cruise",
+      "displayOrder": 5
+    },
+    {
+      "title": "Dubrovnik",
+      "subtitle": "Ancient walls overlooking the Adriatic",
+      "countrySlug": "croatia",
+      "destinationSlug": "dubrovnik",
+      "travelMode": "Cruise",
+      "travelDescription": "Explorer of the Seas",
+      "displayOrder": 6
+    },
+    {
+      "title": "Athens",
+      "subtitle": "Walking through the foundations of Western civilization",
+      "countrySlug": "greece",
+      "destinationSlug": "athens",
+      "travelMode": "Cruise",
+      "travelDescription": "Explorer of the Seas to Piraeus",
+      "displayOrder": 7
+    },
+    {
+      "title": "Santorini",
+      "subtitle": "Clifftop villages, volcanic landscapes, and Aegean views",
+      "countrySlug": "greece",
+      "destinationSlug": "santorini",
+      "travelMode": "Cruise",
+      "travelDescription": "Explorer of the Seas",
+      "displayOrder": 8
+    },
+    {
+      "title": "Split",
+      "subtitle": "Roman history along Croatia’s Dalmatian coast",
+      "countrySlug": "croatia",
+      "destinationSlug": "split",
+      "travelMode": "Cruise",
+      "travelDescription": "Explorer of the Seas",
+      "displayOrder": 9
+    },
+    {
+      "title": "Ravenna",
+      "subtitle": "Returning to Italy after the cruise",
+      "countrySlug": "italy",
+      "destinationSlug": "",
+      "travelMode": "Cruise",
+      "travelDescription": "Disembark Explorer of the Seas",
+      "displayOrder": 10
+    },
+    {
+      "title": "Venice",
+      "subtitle": "One final evening before returning home",
+      "countrySlug": "italy",
+      "destinationSlug": "venice",
+      "travelMode": "Bus",
+      "travelDescription": "Ground transportation from Ravenna",
+      "displayOrder": 11
+    },
+    {
+      "title": "Phoenix",
+      "subtitle": "Home with memories worth preserving",
+      "countrySlug": "",
+      "destinationSlug": "",
+      "travelMode": "Flight",
+      "travelDescription": "American Airlines from Venice",
+      "displayOrder": 12
+    }
+  ],
+  "journeys": [
+    {
+      "slug": "our-mediterranean-adventure",
+      "title": "Our Mediterranean Adventure",
+      "journeyType": "Editorial",
+      "featured": true,
+      "displayOrder": 1
+    }
+  ],
+  "destinations": [
+    {
+      "countrySlug": "italy",
+      "destinationSlug": "venice",
+      "displayOrder": 1
+    },
+    {
+      "countrySlug": "italy",
+      "destinationSlug": "florence",
+      "displayOrder": 2
+    },
+    {
+      "countrySlug": "italy",
+      "destinationSlug": "tuscany",
+      "displayOrder": 3
+    },
+    {
+      "countrySlug": "italy",
+      "destinationSlug": "ravenna",
+      "displayOrder": 4
+    },
+    {
+      "countrySlug": "at-sea",
+      "destinationSlug": "explorer-of-the-seas",
+      "displayOrder": 5
+    },
+    {
+      "countrySlug": "croatia",
+      "destinationSlug": "dubrovnik",
+      "displayOrder": 6
+    },
+    {
+      "countrySlug": "greece",
+      "destinationSlug": "athens",
+      "displayOrder": 7
+    },
+    {
+      "countrySlug": "greece",
+      "destinationSlug": "santorini",
+      "displayOrder": 8
+    },
+    {
+      "countrySlug": "croatia",
+      "destinationSlug": "split",
+      "displayOrder": 9
+    }
+  ]
+}

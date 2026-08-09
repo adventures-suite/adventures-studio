@@ -1,0 +1,49 @@
+@using TheSimontonAdventures.Web.Models
+@using TheSimontonAdventures.Web.Services
+@inject ITravelContentService TravelContentService
+@inject ICreatorContextAccessor CreatorContextAccessor
+
+@if (_volume is not null && _volume.JourneyStops.Count > 0)
+{
+    <section class="home-journey">
+        <div class="home-journey__header">
+            <p class="home-journey__eyebrow">The Journey</p>
+
+            <h2>@_volume.Title</h2>
+
+            <p>
+                Follow each stop as another chapter in this Creator's adventure.
+            </p>
+        </div>
+
+        <div class="home-journey__track">
+            @foreach (var stop in _volume.JourneyStops.InDisplayOrder())
+            {
+                <JourneyStopItem
+                    Stop="@stop"
+                    Href="@stop.GetDestinationRoute(_volume.Slug)"
+                    CssClass="home-journey__stop"
+                    IconCssClass="home-journey__icon"
+                    TextCssClass="home-journey__text" />
+            }
+        </div>
+    </section>
+}
+
+@code {
+    /// <summary>
+    /// Gets or sets the volume intended to supply the overview itinerary.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public string VolumeSlug { get; set; } = string.Empty;
+
+    private Volume? _volume;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var volume = await TravelContentService.GetVolumeAsync(
+            CreatorContextAccessor.Current.Id,
+            VolumeSlug);
+        _volume = PublicContentPolicy.IsPublic(volume) ? volume : null;
+    }
+}

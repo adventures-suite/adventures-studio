@@ -1,0 +1,196 @@
+{
+  "volumeSlug": "italy-greece-croatia",
+  "country": "Italy",
+  "countrySlug": "italy",
+  "city": "Tuscany",
+  "slug": "tuscany",
+  "qrSlug": "tuscany",
+  "title": "Tuscany",
+  "subtitle": "Rolling Hills and Timeless Vineyards",
+  "summary": "Tuscany gave us a slower rhythm after the energy of Florence. A road through the vines led us into rolling hills, olive groves, cypress-lined gardens, and a working winery where the landscape and the traditions behind each bottle became part of the same story.",
+  "timeZone": "Europe/Rome",
+  "heroResourceId": "resource_tuscany_hero",
+  "published": true,
+  "featured": true,
+  "homepageOrder": 3,
+  "homepageResourceId": "resource_tuscany_card",
+  "homepageSummary": "Follow the vineyard roads into rolling hills, a working winery, and the quiet gardens of a Tuscan estate.",
+  "sections": [
+    {
+      "heading": "Leaving the City Behind",
+      "paragraphs": [
+        "The change of pace began as Florence faded behind us. Busy streets gave way to winding country roads, and the view opened into green hills patterned with vineyards, olive groves, stone homes, and dark rows of cypress trees.",
+        "It was the Tuscany we had pictured for years, but being surrounded by it felt different from seeing it in photographs. The landscape seemed to invite us to stop measuring the day by landmarks and simply enjoy where the road led next."
+      ],
+      "imageResourceId": "resource_tuscany_section_01",
+      "imageCaption": "Taking in the hills beyond the vineyard"
+    },
+    {
+      "heading": "Walking Through the Vineyard",
+      "paragraphs": [
+        "Rows of vines stretched across the hillside beneath a brilliant blue sky. Walking among them brought the scale of the vineyard into focus, from clusters of grapes tucked beneath the leaves to the olive trees and distant ridgelines surrounding the property.",
+        "The experience made the countryside feel tangible. Tuscany was no longer just a beautiful backdrop; it was a cultivated landscape shaped by seasons, patient work, and traditions passed from one generation to the next."
+      ],
+      "imageResourceId": "resource_tuscany_section_02",
+      "imageCaption": "Vines and olive groves beneath the Tuscan sun"
+    },
+    {
+      "heading": "From Vine to Cellar",
+      "paragraphs": [
+        "Inside the winery, the scenery gave way to polished steel tanks, brick-vaulted rooms, and rows of wooden barrels. Seeing each stage of the process connected the grapes outside with the wine aging quietly below the estate.",
+        "The cellar carried its own sense of time. Everything about it encouraged patience—the cool rooms, the carefully marked barrels, and the understanding that some experiences cannot be rushed."
+      ],
+      "imageResourceId": "resource_tuscany_section_03",
+      "imageCaption": "Wine aging beneath centuries-old brick arches"
+    },
+    {
+      "heading": "A Villa Above the Hills",
+      "paragraphs": [
+        "Beyond the cellar, the estate unfolded into formal gardens, lemon trees, fountains, and a cypress avenue pointing toward the horizon. Every doorway seemed to frame another view of the countryside.",
+        "This was the part of Tuscany that stayed with us most: the balance between cultivated beauty and an easy, unhurried way of living. We left with photographs, but also with the feeling that we had briefly stepped into a much slower clock."
+      ],
+      "imageResourceId": "resource_tuscany_section_04",
+      "imageCaption": "The countryside framed by the villa doors"
+    }
+  ],
+  "reflections": [
+    {
+      "afterSection": 1,
+      "author": "Dianne",
+      "title": "From Dianne's Journal",
+      "text": "Standing above the valley, I wanted to remember every layer of the view—the vines, the olive trees, the stone house, and the hills disappearing into the distance.",
+      "signature": "❤️ Dianne"
+    },
+    {
+      "afterSection": 3,
+      "author": "Steve",
+      "title": "Steve's Notes",
+      "text": "The winery made the landscape mean more. Seeing the vines, the equipment, and the cellar together showed how much work and patience sit behind a single glass of wine.",
+      "signature": "— Steve"
+    }
+  ],
+  "quote": {
+    "text": "Tuscany reminded us that some of the best travel moments happen when there is nowhere else you need to be.",
+    "attribution": "The Simonton Adventures"
+  },
+  "facts": [
+    {
+      "label": "Region",
+      "value": "Central Italy"
+    },
+    {
+      "label": "Known for",
+      "value": "Vineyards, hill towns, art, food, and countryside"
+    },
+    {
+      "label": "Signature experience",
+      "value": "Exploring the Chianti countryside"
+    },
+    {
+      "label": "Travel style",
+      "value": "Slow, scenic, and immersive"
+    }
+  ],
+  "highlights": [
+    {
+      "title": "Chianti Countryside",
+      "description": "Vineyards, olive groves, and winding roads create one of Italy's most recognizable landscapes."
+    },
+    {
+      "title": "Historic Villages",
+      "description": "Stone towns and quiet piazzas offer a slower and more intimate view of Tuscany."
+    },
+    {
+      "title": "Food and Wine",
+      "description": "Local meals and regional wines connect the landscape to centuries of tradition."
+    },
+    {
+      "title": "Scenic Drives",
+      "description": "The journey between villages is often as memorable as the destinations themselves."
+    }
+  ],
+  "tips": [
+    {
+      "title": "Allow time between stops",
+      "description": "Tuscany is best experienced at a relaxed pace, with room for unplanned views, village walks, and long meals."
+    },
+    {
+      "title": "Use local transportation carefully",
+      "description": "Many countryside locations are difficult to reach by public transportation, so a private driver or organized tour may simplify the day."
+    },
+    {
+      "title": "Choose fewer places",
+      "description": "A smaller number of meaningful stops creates a better experience than trying to cover too much countryside in one day."
+    },
+    {
+      "title": "Look beyond the headline towns",
+      "description": "Some of Tuscany's most memorable moments may come from smaller villages, local farms, and quiet overlooks."
+    }
+  ],
+  "gallery": [
+    {
+      "resourceId": "resource_tuscany_gallery_01",
+      "caption": "The road into the vineyard",
+      "displayOrder": 1
+    },
+    {
+      "resourceId": "resource_tuscany_gallery_02",
+      "caption": "Vines stretching across the hillside",
+      "displayOrder": 2
+    },
+    {
+      "resourceId": "resource_tuscany_gallery_03",
+      "caption": "A closer look at the season's grapes",
+      "displayOrder": 3
+    },
+    {
+      "resourceId": "resource_tuscany_gallery_04",
+      "caption": "Together in the vineyard",
+      "displayOrder": 4
+    },
+    {
+      "resourceId": "resource_tuscany_gallery_05",
+      "caption": "A view worth slowing down for",
+      "displayOrder": 5
+    },
+    {
+      "resourceId": "resource_tuscany_gallery_06",
+      "caption": "Learning how the vineyard becomes wine",
+      "displayOrder": 6
+    },
+    {
+      "resourceId": "resource_tuscany_gallery_07",
+      "caption": "Inside the quiet barrel cellar",
+      "displayOrder": 7
+    },
+    {
+      "resourceId": "resource_tuscany_gallery_08",
+      "caption": "Gardens opening onto the countryside",
+      "displayOrder": 8
+    },
+    {
+      "resourceId": "resource_tuscany_gallery_09",
+      "caption": "A classic cypress-lined avenue",
+      "displayOrder": 9
+    },
+    {
+      "resourceId": "resource_tuscany_gallery_10",
+      "caption": "A garden framed by the villa",
+      "displayOrder": 10
+    },
+    {
+      "resourceId": "resource_tuscany_gallery_11",
+      "caption": "The timeless colors of a Tuscan estate",
+      "displayOrder": 11
+    }
+  ],
+  "map": {
+    "latitude": 43.7711,
+    "longitude": 11.2486,
+    "label": "Tuscany, Italy",
+    "zoom": 8
+  },
+  "resources": [
+
+  ]
+}
