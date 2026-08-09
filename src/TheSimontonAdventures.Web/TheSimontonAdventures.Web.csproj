@@ -15,7 +15,25 @@
 </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.Extensions.AspNetCore.DataProtection.Blobs" Version="1.5.3" />
+    <PackageReference Include="Azure.Extensions.AspNetCore.DataProtection.Keys" Version="1.6.3" />
+    <PackageReference Include="Azure.Identity" Version="1.21.0" />
     <PackageReference Include="QRCoder" Version="1.8.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Authorization/Identity.cs" />
+    <Compile Remove="Authorization/AuthenticationConfiguration.cs" />
+    <Compile Remove="Authorization/AuthenticationContracts.cs" />
+    <Compile Remove="Authorization/AuthenticationRuntime.cs" />
+    <Compile Remove="Authorization/BrowserAuthenticationDefaults.cs" />
+    <Compile Remove="Authorization/Persistence/AuthenticationPersistenceContracts.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../AdventuresSuite.Identity/AdventuresSuite.Identity.csproj" />
+    <ProjectReference Include="../AdventuresSuite.Identity.ExternalId/AdventuresSuite.Identity.ExternalId.csproj" />
+    <ProjectReference Include="../AdventuresSuite.Identity.SqlServer/AdventuresSuite.Identity.SqlServer.csproj" />
   </ItemGroup>
 
 </Project>

@@ -11,6 +11,6 @@
     <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.10" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="../TheSimontonAdventures.Web/TheSimontonAdventures.Web.csproj" />
+    <ProjectReference Include="../AdventuresSuite.Identity/AdventuresSuite.Identity.csproj" />
   </ItemGroup>
 </Project>

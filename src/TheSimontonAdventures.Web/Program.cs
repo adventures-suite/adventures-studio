@@ -1,4 +1,5 @@
 using System.Reflection;
+using AdventuresSuite.Identity.ExternalId;
 using TheSimontonAdventures.Web.Components;
 using TheSimontonAdventures.Web.Authorization;
 using TheSimontonAdventures.Web.Creators;
@@ -31,9 +32,10 @@ builder.Services.AddScoped<TrustedRequestHostContextAccessor>();
 builder.Services.AddScoped<ITrustedRequestHostContextAccessor>(services =>
     services.GetRequiredService<TrustedRequestHostContextAccessor>());
 
-// Private authentication remains explicitly disabled until environment-backed
-// External ID and workspace settings are provisioned in Slice 5F.
-builder.Services.AddSingleton(AuthenticationConfiguration.Disabled());
+// Activate private identity only when the complete environment-backed Slice 5F
+// configuration is present. Missing or partial external-provider state fails
+// startup instead of falling back to public-only or development identity.
+builder.AddAdventuresSuiteAuthentication();
 
 // Register the existing JSON-backed travel-content implementation.
 //
@@ -126,6 +128,13 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+// Apply only explicitly configured proxy addresses before request scheme, host,
+// authentication, redirects, or workspace-origin decisions are evaluated.
+if (authenticationConfiguration.Mode != AuthenticationMode.Disabled)
+{
+    app.UseForwardedHeaders();
+}
+
 // Apply browser defenses to dynamic pages, framework endpoints, and static
 // assets, including host denials and fallback responses. HSTS remains
 // production-only through UseHsts above.
@@ -166,23 +175,32 @@ app.MapStaticAssets();
 /// </summary>
 app.MapGet(
     "/health",
-    (ApplicationReadinessState readinessState) =>
+    (ApplicationReadinessState readinessState,
+        IServiceProvider services) =>
     {
+        var authenticationReady = authenticationConfiguration.Mode == AuthenticationMode.Disabled
+            || services.GetRequiredService<AuthenticationReadinessState>().IsReady;
         var response = new
         {
-            status = readinessState.IsReady ? "Healthy" : "Unhealthy",
+            status = readinessState.IsReady && authenticationReady ? "Healthy" : "Unhealthy",
             deploymentVersion =
                 typeof(Program).Assembly
                     .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
                     .InformationalVersion ?? "unknown",
             resourcesValidated = readinessState.ResourcesValidated,
-            creatorContentValidated = readinessState.CreatorContentValidated
+            creatorContentValidated = readinessState.CreatorContentValidated,
+            authenticationReady
         };
 
-        return readinessState.IsReady
+        return readinessState.IsReady && authenticationReady
             ? Results.Ok(response)
             : Results.Json(response, statusCode: StatusCodes.Status503ServiceUnavailable);
     });
+
+if (authenticationConfiguration.Mode == AuthenticationMode.ExternalProvider)
+{
+    app.MapAdventuresSuiteExternalIdEndpoints(authenticationConfiguration);
+}
 
 /// <summary>
 /// Resolves a stable public slug and redirects the request to its current
