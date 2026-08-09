@@ -153,6 +153,32 @@
 - Mobile uses public-client browser-delegated authorization code with PKCE; it
   does not reuse workspace cookies or embed client secrets or certificates.
 
+## Platform Billing and Entitlements
+
+- Read `docs/architecture/platform-billing-entitlements.md`,
+  `docs/product/pricing-model.md`, and
+  `docs/development/platform-billing-entitlements-implementation-plan.md` before
+  changing plans, billing accounts, subscriptions, paid capabilities,
+  allowances, seats, usage, checkout, provider webhooks, or billing reports.
+- Keep identity, Creator membership, authorization, Platform Entitlements,
+  feature flags, service availability, and Creator Commerce distinct. Passing
+  one gate never satisfies another.
+- Use stable `PlatformCapability` vocabulary and immutable plan versions. Never
+  branch application behavior on a marketing plan name.
+- Evaluate entitlement below the UI with explicit Creator scope. Never trust
+  cookies, identity claims, mobile tokens, redirects, feature flags, or provider
+  payloads as authoritative entitlement.
+- A seat never creates membership, chooses a role, or grants permission. A
+  Billing Account that pays for multiple Creators gains no data access.
+- Keep `PlatformEntitlement` separate from Creator Commerce
+  `CommerceEntitlement`; do not share orders, subscriptions, or payment state.
+- Treat provider webhooks as untrusted, signed, replay-protected, idempotent
+  input processed through a transactional inbox and reconciliation.
+- Never store payment-card data or derive billable usage from operational logs,
+  metrics, analytics, or caller-submitted quantities.
+- Preserve Creator data, recovery, and approved export through billing failure;
+  do not automatically delete or unpublish work.
+
 ## Documentation
 
 - XML document all public classes, methods, and properties.
@@ -172,3 +198,16 @@
 - Prefer Managed Identity for supported Azure workload-to-service access. Do
   not use it as human identity or assume it can authenticate an External ID
   confidential web client.
+- Read `docs/development/slice-5f-azure-environment.md` and its linked runbooks
+  before changing External ID, Azure SQL, private networking, Key Vault, Data
+  Protection storage, workload identities, or the migration app.
+- Treat Azure as live state, reviewed IaC as the reproducible definition, and
+  runbooks as the authority for cross-tenant and data-plane operations.
+- Keep application DML and migration DDL identities separate. The application
+  never runs migrations or grants itself database access.
+- Do not enable public SQL, Key Vault, Blob, or migration-app ingress to make a
+  hosted workflow pass. Approve and prove a private execution path.
+- Resolve generated principal IDs, private addresses, and object versions from
+  deployment outputs; never hardcode them in application behavior.
+- Keep the migration app stopped by default and return it to stopped state after
+  success or failure with retained artifact and journal evidence.
