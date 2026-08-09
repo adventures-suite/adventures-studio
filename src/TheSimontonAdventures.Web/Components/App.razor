@@ -1,9 +1,10 @@
 ﻿@inject ICreatorContextAccessor CreatorContextAccessor
 @inject IResourceService ResourceService
 @inject IHttpContextAccessor HttpContextAccessor
+@inject ITrustedRequestHostContextAccessor TrustedRequestHostContextAccessor
 
 <!DOCTYPE html>
-<html lang="@CreatorContextAccessor.Current.Locale">
+<html lang="@Locale">
 
 <head>
     <meta charset="utf-8" />
@@ -14,14 +15,23 @@
     <link rel="stylesheet" href="@Assets["app.css"]" />
     <link rel="stylesheet" href="@Assets["TheSimontonAdventures.Web.styles.css"]" />
     <ImportMap AdditionalAttributes="@ImportMapAttributes" />
-    <meta name="description"
-          content="@CreatorContextAccessor.Current.GetDefaultSeoDescription()" />
-    <link rel="icon" href="@FaviconUrl" />
+    <meta name="description" content="@Description" />
+    @if (!string.IsNullOrEmpty(FaviconUrl))
+    {
+        <link rel="icon" href="@FaviconUrl" />
+    }
     <HeadOutlet />
 </head>
 
 <body>
-    <Routes />
+    @if (IsWorkspace)
+    {
+        <WorkspaceRoot />
+    }
+    else
+    {
+        <Routes />
+    }
     <ReconnectModal />
     <script src="@Assets["_framework/blazor.web.js"]"></script>
 </body>
@@ -29,8 +39,14 @@
 </html>
 
 @code {
+    private const string WorkspaceDescription =
+        "Private AdventuresSuite workspace.";
+
+    private string Description { get; set; } = WorkspaceDescription;
     private string FaviconUrl { get; set; } = string.Empty;
     private IReadOnlyDictionary<string, object>? ImportMapAttributes { get; set; }
+    private bool IsWorkspace { get; set; }
+    private string Locale { get; set; } = "en-US";
 
     protected override async Task OnInitializedAsync()
     {
@@ -40,6 +56,16 @@
         {
             ["nonce"] = BrowserSecurityHeadersMiddleware.GetNonce(httpContext)
         };
+
+        IsWorkspace = TrustedRequestHostContextAccessor.Current.Type
+            == TrustedRequestHostType.PlatformWorkspace;
+        if (IsWorkspace)
+        {
+            return;
+        }
+
+        Locale = CreatorContextAccessor.Current.Locale;
+        Description = CreatorContextAccessor.Current.GetDefaultSeoDescription();
         FaviconUrl = await ResourceService.GetPublicUrlAsync(
             CreatorContextAccessor.Current.Id,
             CreatorContextAccessor.Current.Brand.FaviconResourceId)

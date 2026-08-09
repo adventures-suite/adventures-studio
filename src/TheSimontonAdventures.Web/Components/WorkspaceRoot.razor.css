@@ -1,0 +1,15 @@
+.workspace-root {
+    margin: 4rem auto;
+    max-width: 42rem;
+    padding: 0 1.5rem;
+}
+
+.workspace-root h1 {
+    margin-bottom: 1.5rem;
+}
+
+.workspace-root button,
+.workspace-root a {
+    display: inline-block;
+    margin-top: 1rem;
+}
