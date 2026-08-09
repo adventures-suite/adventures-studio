@@ -61,7 +61,6 @@ public static class ExternalIdAuthenticationExtensions
                 options.CallbackPath = configuration.CallbackPath;
                 options.SignedOutCallbackPath = configuration.SignedOutCallbackPath;
                 options.ResponseType = OpenIdConnectResponseType.Code;
-                options.ResponseMode = OpenIdConnectResponseMode.Query;
                 options.UsePkce = true;
                 options.SaveTokens = false;
                 options.GetClaimsFromUserInfoEndpoint = false;
@@ -82,7 +81,6 @@ public static class ExternalIdAuthenticationExtensions
                     NameClaimType = "sub"
                 };
                 options.ProtocolValidator.RequireNonce = true;
-                options.ProtocolValidator.RequireStateValidation = true;
                 options.ClientCredentials =
                 [
                     new CredentialDescription
@@ -111,7 +109,6 @@ public static class ExternalIdAuthenticationExtensions
         builder.Services.PostConfigure<OpenIdConnectOptions>(Scheme, options =>
         {
             options.ResponseType = OpenIdConnectResponseType.Code;
-            options.ResponseMode = OpenIdConnectResponseMode.Query;
             options.UsePkce = true;
             options.SaveTokens = false;
             options.GetClaimsFromUserInfoEndpoint = false;
@@ -120,7 +117,6 @@ public static class ExternalIdAuthenticationExtensions
             options.BackchannelTimeout = TimeSpan.FromSeconds(30);
             options.RemoteAuthenticationTimeout = TimeSpan.FromMinutes(5);
             options.ProtocolValidator.RequireNonce = true;
-            options.ProtocolValidator.RequireStateValidation = true;
             options.TokenValidationParameters.ValidateIssuer = true;
             options.TokenValidationParameters.ValidateAudience = true;
             options.TokenValidationParameters.ValidateIssuerSigningKey = true;

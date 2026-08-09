@@ -84,7 +84,6 @@ public sealed class ExternalIdAdapterTests
             .Get(ExternalIdAuthenticationExtensions.Scheme);
 
         Assert.Equal(OpenIdConnectResponseType.Code, options.ResponseType);
-        Assert.Equal(OpenIdConnectResponseMode.Query, options.ResponseMode);
         Assert.True(options.UsePkce);
         Assert.False(options.SaveTokens);
         Assert.False(options.GetClaimsFromUserInfoEndpoint);
@@ -93,7 +92,9 @@ public sealed class ExternalIdAdapterTests
         Assert.Equal(TimeSpan.FromSeconds(30), options.BackchannelTimeout);
         Assert.Equal(TimeSpan.FromMinutes(5), options.RemoteAuthenticationTimeout);
         Assert.True(options.ProtocolValidator.RequireNonce);
-        Assert.True(options.ProtocolValidator.RequireStateValidation);
+        // ASP.NET Core unprotects state and validates its correlation cookie before
+        // invoking the protocol validator, after deliberately clearing message.State.
+        Assert.False(options.ProtocolValidator.RequireStateValidation);
         Assert.True(options.CorrelationCookie.HttpOnly);
         Assert.Equal(SameSiteMode.None, options.CorrelationCookie.SameSite);
         Assert.Equal(CookieSecurePolicy.Always, options.CorrelationCookie.SecurePolicy);
