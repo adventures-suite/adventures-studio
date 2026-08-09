@@ -1,4 +1,4 @@
-namespace TheSimontonAdventures.Web.Authorization;
+namespace AdventuresSuite.Identity;
 
 internal static class AuthorizationIdentity
 {

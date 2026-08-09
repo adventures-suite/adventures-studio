@@ -6,19 +6,4 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Include="../TheSimontonAdventures.Web/Authorization/Identity.cs"
-             Link="Authorization/Identity.cs" />
-    <Compile Include="../TheSimontonAdventures.Web/Authorization/AuthenticationConfiguration.cs"
-             Link="Authorization/AuthenticationConfiguration.cs" />
-    <Compile Include="../TheSimontonAdventures.Web/Authorization/AuthenticationContracts.cs"
-             Link="Authorization/AuthenticationContracts.cs" />
-    <Compile Include="../TheSimontonAdventures.Web/Authorization/AuthenticationRuntime.cs"
-             Link="Authorization/AuthenticationRuntime.cs" />
-    <Compile Include="../TheSimontonAdventures.Web/Authorization/BrowserAuthenticationDefaults.cs"
-             Link="Authorization/BrowserAuthenticationDefaults.cs" />
-    <Compile Include="../TheSimontonAdventures.Web/Authorization/Persistence/AuthenticationPersistenceContracts.cs"
-             Link="Authorization/Persistence/AuthenticationPersistenceContracts.cs" />
-  </ItemGroup>
-
 </Project>

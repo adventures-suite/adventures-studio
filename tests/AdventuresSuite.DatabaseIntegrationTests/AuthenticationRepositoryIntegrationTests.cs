@@ -1,8 +1,7 @@
 using AdventuresSuite.DatabaseMigrator;
 using AdventuresSuite.Identity.SqlServer;
 using Microsoft.Data.SqlClient;
-using TheSimontonAdventures.Web.Authorization;
-using TheSimontonAdventures.Web.Authorization.Persistence;
+using AdventuresSuite.Identity.Persistence;
 
 namespace AdventuresSuite.DatabaseIntegrationTests;
 

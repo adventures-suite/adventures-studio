@@ -1,4 +1,4 @@
-namespace TheSimontonAdventures.Web.Authorization;
+namespace AdventuresSuite.Identity;
 
 /// <summary>Defines stable browser-credential names shared by security middleware and adapters.</summary>
 public static class BrowserAuthenticationDefaults

@@ -22,12 +22,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Authorization/Identity.cs" />
-    <Compile Remove="Authorization/AuthenticationConfiguration.cs" />
-    <Compile Remove="Authorization/AuthenticationContracts.cs" />
-    <Compile Remove="Authorization/AuthenticationRuntime.cs" />
-    <Compile Remove="Authorization/BrowserAuthenticationDefaults.cs" />
-    <Compile Remove="Authorization/Persistence/AuthenticationPersistenceContracts.cs" />
+    <Using Include="AdventuresSuite.Identity" />
+    <Using Include="AdventuresSuite.Identity.Persistence" />
   </ItemGroup>
 
   <ItemGroup>

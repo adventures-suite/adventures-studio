@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server;
 using Microsoft.Extensions.Logging;
-using TheSimontonAdventures.Web.Authorization;
+using AdventuresSuite.Identity;
 
 namespace AdventuresSuite.Identity.ExternalId;
 

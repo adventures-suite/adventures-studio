@@ -1,4 +1,3 @@
-using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -10,7 +9,7 @@ using Microsoft.Identity.Abstractions;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
-using TheSimontonAdventures.Web.Authorization;
+using AdventuresSuite.Identity;
 
 namespace AdventuresSuite.Identity.ExternalId;
 
@@ -30,29 +29,21 @@ public static class ExternalIdAuthenticationExtensions
     public static AuthenticationBuilder AddAdventuresSuiteExternalId(
         this AuthenticationBuilder builder,
         AuthenticationConfiguration configuration,
-        IExternalIdClientCertificateSource certificateSource,
-        DateTimeOffset utcNow)
+        ICustomSignedAssertionProvider signedAssertionProvider)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(configuration);
-        ArgumentNullException.ThrowIfNull(certificateSource);
+        ArgumentNullException.ThrowIfNull(signedAssertionProvider);
+        if (string.IsNullOrWhiteSpace(signedAssertionProvider.Name))
+            throw new InvalidOperationException("The external identity signed-assertion provider is invalid.");
         if (configuration.Mode != AuthenticationMode.ExternalProvider)
         {
             throw new InvalidOperationException("External ID requires external-provider mode.");
         }
 
-        X509Certificate2 certificate;
-        try
-        {
-            certificate = certificateSource.Resolve(configuration.ClientCertificateReference!);
-        }
-        catch
-        {
-            throw new InvalidOperationException("The external identity client certificate is unavailable.");
-        }
-
-        ExternalIdClientCertificateValidator.Validate(certificate, utcNow);
         builder.Services.AddSingleton(configuration);
+        builder.Services.AddSingleton(signedAssertionProvider);
+        builder.Services.AddSingleton<ICustomSignedAssertionProvider>(signedAssertionProvider);
         builder.Services.AddScoped<ExternalIdSessionIssuer>();
         builder.Services.AddScoped<IServerSessionAuthenticator, ServerSessionAuthenticator>();
         builder.Services.AddCascadingAuthenticationState();
@@ -95,8 +86,8 @@ public static class ExternalIdAuthenticationExtensions
                 [
                     new CredentialDescription
                     {
-                        SourceType = CredentialSource.Certificate,
-                        Certificate = certificate
+                        SourceType = CredentialSource.CustomSignedAssertion,
+                        CustomSignedAssertionProviderName = signedAssertionProvider.Name
                     }
                 ];
                 options.Events = CreateEvents(configuration);

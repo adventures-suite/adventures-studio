@@ -9,9 +9,12 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Microsoft.Identity.Abstractions;
+using Microsoft.Identity.Client;
+using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using TheSimontonAdventures.Web.Authorization;
-using TheSimontonAdventures.Web.Authorization.Persistence;
+using AdventuresSuite.Identity.Persistence;
 
 namespace TheSimontonAdventures.Web.Tests;
 
@@ -74,8 +77,7 @@ public sealed class ExternalIdAdapterTests
         services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build());
         services.AddAuthentication().AddAdventuresSuiteExternalId(
             Configuration(),
-            new FixedCertificateSource(certificate),
-            Now);
+            new FixedSignedAssertionProvider());
         using var provider = services.BuildServiceProvider();
 
         var options = provider.GetRequiredService<IOptionsMonitor<OpenIdConnectOptions>>()
@@ -479,8 +481,7 @@ public sealed class ExternalIdAdapterTests
         Assert.Throws<InvalidOperationException>(() => services.AddAuthentication()
             .AddAdventuresSuiteExternalId(
                 AuthenticationConfiguration.Disabled(),
-                new FixedCertificateSource(certificate),
-                Now));
+                new FixedSignedAssertionProvider()));
     }
 
     /// <summary>Only the exact configured workspace origin can activate OIDC processing.</summary>
@@ -573,8 +574,7 @@ public sealed class ExternalIdAdapterTests
         services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build());
         services.AddAuthentication().AddAdventuresSuiteExternalId(
             Configuration(),
-            new FixedCertificateSource(certificate),
-            Now);
+            new FixedSignedAssertionProvider());
         return services.BuildServiceProvider();
     }
 
@@ -604,6 +604,28 @@ public sealed class ExternalIdAdapterTests
         : IExternalIdClientCertificateSource
     {
         public X509Certificate2 Resolve(string certificateReference) => certificate;
+    }
+
+    private sealed class FixedSignedAssertionProvider : ICustomSignedAssertionProvider
+    {
+        public CredentialSource CredentialSource => CredentialSource.CustomSignedAssertion;
+        public string Name => "TestSignedAssertion";
+
+        public Task LoadIfNeededAsync(
+            CredentialDescription credentialDescription,
+            CredentialSourceLoaderParameters? parameters = null)
+        {
+            credentialDescription.CachedValue = new FixedClientAssertion();
+            credentialDescription.Skip = false;
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class FixedClientAssertion : ClientAssertionProviderBase
+    {
+        protected override Task<ClientAssertion> GetClientAssertionAsync(
+            AssertionRequestOptions? assertionRequestOptions) =>
+            Task.FromResult(new ClientAssertion("test-assertion", Now.AddMinutes(5)));
     }
 
     private sealed class FixedClock : IAuthenticationClock

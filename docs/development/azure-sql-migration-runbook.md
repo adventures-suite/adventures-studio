@@ -47,21 +47,31 @@ document a private self-hosted/ephemeral runner or another reviewed Azure-native
 execution mechanism. Do not temporarily open SQL public networking as an
 undocumented shortcut.
 
-## One-Time Contained-User Bootstrap
+## Ordered Bootstrap and Migration
 
-The approved Entra administrator connects through the private path and:
+The approved private execution path performs four separate operations. Do not
+combine them or run DbUp using administrator authority.
 
-1. confirms the target server and database;
-2. creates contained users for the current application and migration Managed
-   Identities using their external provider identities;
-3. grants application `CONNECT` and only documented schema-scoped runtime DML;
-4. grants migration `CONNECT`, approved development `db_ddladmin`, and required
-   migration-journal/data permissions;
-5. denies or omits `db_owner`, user/role administration, server-level roles,
-   and cross-database authority;
-6. verifies effective permissions by impersonation or separate workload tests;
-7. records sanitized grants and current principal IDs; and
-8. removes any temporary operator or execution-path elevation.
+1. The approved Entra administrator confirms the exact target, supplies
+   `ADVENTURESSUITE_ADMIN_SQL_CONNECTION_STRING` and the verified migration
+   principal object ID, and runs `--bootstrap-sql`. This creates only the
+   migration contained user and grants `CONNECT`, `db_ddladmin`,
+   `db_datareader`, and `db_datawriter` for development migrations.
+2. The migration workload identity supplies
+   `ADVENTURESSUITE_SQL_CONNECTION_STRING` and runs `--migrate`. No
+   administrator connection string is present for this operation.
+3. After migrations create `AdventuresSuiteAuthenticationRuntime`, the Entra
+   administrator supplies the verified application principal object ID and
+   runs `--bind-runtime`. This creates the runtime contained user, adds it only
+   to that migrated role, and grants `CONNECT`.
+4. The migration workload identity runs `--verify-permissions`. The bounded
+   verification proves its development migration roles, journal access, and
+   required authentication schema without changing application data.
+
+No operation grants `db_owner`, user/role administration to a workload,
+server-level roles, or cross-database authority. Record sanitized effective
+grants and current principal IDs, then remove temporary operator or
+execution-path elevation.
 
 Bootstrap SQL is source-controlled, parameterized by resolved identity, reviewed,
 idempotent where safe, and never contains a password or access token.
@@ -92,11 +102,12 @@ Before execution verify:
 5. Start the migration app through the Azure control plane.
 6. Acquire an Azure SQL token using the migration app's own Managed Identity.
 7. Acquire an application lock so only one migrator executes for the database.
-8. Run DbUp once using per-script transaction and
+8. Run `--migrate` once using per-script transaction and
    `dbo.AdventuresSuiteSchemaVersions` journal behavior.
 9. Record script identifiers, safe outcome, duration, target version, release
    SHA, and support identity without SQL text containing data or credentials.
-10. Run the approved post-migration validation.
+10. Complete administrator `--bind-runtime`, then run workload
+    `--verify-permissions` as separate operations.
 11. Stop the migration app even when migration or validation fails.
 12. Verify stopped state, revoke temporary package access, and retain evidence.
 

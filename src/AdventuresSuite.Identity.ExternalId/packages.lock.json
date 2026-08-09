@@ -2,6 +2,24 @@
   "version": 1,
   "dependencies": {
     "net10.0": {
+      "Azure.Security.KeyVault.Certificates": {
+        "type": "Direct",
+        "requested": "[4.8.0, )",
+        "resolved": "4.8.0",
+        "contentHash": "48EHvsZM0hQow0PP4PAkWZYcE/tmjfx7az07GrqU2Q/0p3O3Vm/F+bEu1iVREBYzSV7uHHPikyJyBnXClfKuJA==",
+        "dependencies": {
+          "Azure.Core": "1.46.2"
+        }
+      },
+      "Azure.Security.KeyVault.Keys": {
+        "type": "Direct",
+        "requested": "[4.8.0, )",
+        "resolved": "4.8.0",
+        "contentHash": "3rueqKRzNZdW+gEWox07Hpxq3n+0AZdRw3QI4GC3GBzLCw9n00LXgy4upow00bAuQJ9QGX2xwzJPg2/wALPYDA==",
+        "dependencies": {
+          "Azure.Core": "1.46.2"
+        }
+      },
       "Microsoft.Identity.Web": {
         "type": "Direct",
         "requested": "[4.13.2, )",
@@ -44,14 +62,6 @@
           "Azure.Core": "1.50.0",
           "Microsoft.Identity.Client": "4.83.1",
           "Microsoft.Identity.Client.Extensions.Msal": "4.83.1"
-        }
-      },
-      "Azure.Security.KeyVault.Certificates": {
-        "type": "Transitive",
-        "resolved": "4.6.0",
-        "contentHash": "e2ATU/n2ZDL/S8A8EdrcfKEvKc2BojCrrSpmM+JKnrSTQS32x/W0Ldu8utk+epLKwXvSJRSWtlgdo7X8hG1mCg==",
-        "dependencies": {
-          "Azure.Core": "1.37.0"
         }
       },
       "Azure.Security.KeyVault.Secrets": {

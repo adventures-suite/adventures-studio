@@ -1,4 +1,4 @@
-namespace TheSimontonAdventures.Web.Authorization.Persistence;
+namespace AdventuresSuite.Identity.Persistence;
 
 /// <summary>Describes the outcome of a coalesced session-activity write.</summary>
 public enum SessionActivityTouchResult

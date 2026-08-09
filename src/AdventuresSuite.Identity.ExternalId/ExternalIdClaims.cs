@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using TheSimontonAdventures.Web.Authorization;
+using AdventuresSuite.Identity;
 
 namespace AdventuresSuite.Identity.ExternalId;
 

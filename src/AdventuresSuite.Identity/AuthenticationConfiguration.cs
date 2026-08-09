@@ -1,4 +1,4 @@
-namespace TheSimontonAdventures.Web.Authorization;
+namespace AdventuresSuite.Identity;
 
 /// <summary>Classifies the selected provider-neutral authentication mode.</summary>
 public enum AuthenticationMode

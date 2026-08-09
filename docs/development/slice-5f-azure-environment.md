@@ -110,8 +110,19 @@ outputs and environment configuration. Record them during the reconciliation
 gate without storing key material.
 
 The application Managed Identity is scoped only to its Data Protection
-container and the approved Key Vault certificate/key operations. Storage-account
-wide data access and broad vault administration are prohibited.
+container, public certificate metadata reads, assertion signing with the
+certificate's Key Vault key, and wrapping-key operations. The External ID
+private key is non-exportable and never downloaded by the application. The
+application signs client assertions through Key Vault cryptographic operations.
+Secret reads, certificate export, storage-account-wide data access, and broad
+vault administration are prohibited.
+
+At minimum, the runtime assignment must permit certificate metadata `get`, key
+`sign`, and the Data Protection key's `wrapKey`/`unwrapKey` operations. It must
+not permit secret `get`, certificate import/create/delete, key export, or vault
+administration. The separately approved bootstrap identity may receive
+time-bounded certificate/key creation authority for `--bootstrap-key-vault`;
+remove that elevation after creation and verification.
 
 ## Workload Identities
 
@@ -195,6 +206,24 @@ plane:
 - migration artifact deployment and execution through private networking;
 - first real browser sign-in and revocation smoke tests; and
 - emergency disablement, rollback, evidence collection, and teardown.
+
+The private SQL execution path must run the database steps in this exact order:
+
+1. An Entra database administrator runs `--bootstrap-sql` once with
+   `ADVENTURESSUITE_ADMIN_SQL_CONNECTION_STRING` and the approved migration
+   principal object ID. This creates only the migration contained user and its
+   development migration grants.
+2. The migration workload identity runs `--migrate` with
+   `ADVENTURESSUITE_SQL_CONNECTION_STRING`.
+3. The Entra database administrator runs `--bind-runtime` only after the
+   migration has created the runtime database role.
+4. The migration workload identity runs `--verify-permissions` to prove its
+   connection, DDL role, migration journal, and authentication schema access.
+
+`--bootstrap-key-vault` is a separate, explicit control-plane/data-plane
+operation. It must not run implicitly with a database migration. It creates a
+non-exportable signing certificate and the Data Protection wrapping key, then
+prints public certificate material only for External ID registration.
 
 ## Known Private-Execution Gates
 

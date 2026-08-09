@@ -1,6 +1,6 @@
-using TheSimontonAdventures.Web.Authorization.Persistence;
+using AdventuresSuite.Identity.Persistence;
 
-namespace TheSimontonAdventures.Web.Authorization;
+namespace AdventuresSuite.Identity;
 
 /// <summary>Provides deterministic UTC time to authentication operations.</summary>
 public interface IAuthenticationClock

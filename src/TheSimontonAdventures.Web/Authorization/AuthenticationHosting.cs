@@ -1,12 +1,11 @@
 using AdventuresSuite.Identity.ExternalId;
+using AdventuresSuite.Identity.Persistence;
 using AdventuresSuite.Identity.SqlServer;
-using Azure.Core;
 using Azure.Identity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using System.Net;
-using TheSimontonAdventures.Web.Authorization.Persistence;
 
 namespace TheSimontonAdventures.Web.Authorization;
 
@@ -25,8 +24,12 @@ public static class AuthenticationHosting
         ArgumentNullException.ThrowIfNull(builder);
         var section = builder.Configuration.GetSection(SectionName);
         var modeValue = section["Mode"];
-        if (string.IsNullOrWhiteSpace(modeValue)
-            || string.Equals(modeValue, nameof(AuthenticationMode.Disabled), StringComparison.OrdinalIgnoreCase))
+        if (string.IsNullOrWhiteSpace(modeValue))
+        {
+            throw new InvalidOperationException("Authentication configuration 'Mode' is required.");
+        }
+
+        if (string.Equals(modeValue, nameof(AuthenticationMode.Disabled), StringComparison.OrdinalIgnoreCase))
         {
             var disabled = AuthenticationConfiguration.Disabled();
             builder.Services.AddSingleton(disabled);
@@ -58,7 +61,10 @@ public static class AuthenticationHosting
         var vaultUri = RequireHttpsRootUri(section, "KeyVaultUri");
         var dataProtectionBlobUri = RequireHttpsUri(section, "DataProtectionBlobUri");
         var dataProtectionKeyUri = RequireHttpsUri(section, "DataProtectionKeyUri");
-        var sqlConnectionString = Require(section, "SqlConnectionString");
+        var sqlConnectionString = AzureSqlAuthenticationConfiguration.Validate(
+            Require(section, "SqlConnectionString"),
+            Require(section, "SqlServerName"),
+            Require(section, "SqlDatabaseName"));
         var applicationName = Require(section, "DataProtectionApplicationName");
         if (!string.Equals(applicationName, "AdventuresSuite.Development.Authentication", StringComparison.Ordinal))
         {
@@ -88,17 +94,18 @@ public static class AuthenticationHosting
             }
         });
 
-        TokenCredential credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
-        {
-            ExcludeInteractiveBrowserCredential = true
-        });
-        var certificateSource = new KeyVaultExternalIdClientCertificateSource(vaultUri, credential);
+        var credential = new ManagedIdentityCredential(ManagedIdentityId.SystemAssigned);
+        var signedAssertionProvider = new KeyVaultExternalIdSignedAssertionProvider(
+            vaultUri,
+            configuration.ClientCertificateReference!,
+            credential);
 
         builder.Services.AddSingleton(configuration);
         builder.Services.AddSingleton<IAuthenticationClock, SystemAuthenticationClock>();
         builder.Services.AddSingleton<IAuthenticationIdentityGenerator, CryptographicAuthenticationIdentityGenerator>();
         builder.Services.AddSingleton<IAuthenticationPersistenceTransactionFactory>(
             new SqlAuthenticationTransactionFactory(sqlConnectionString));
+        builder.Services.AddSingleton(new SqlAuthenticationReadinessProbe(sqlConnectionString));
         builder.Services
             .AddAuthentication(options =>
             {
@@ -106,7 +113,7 @@ public static class AuthenticationHosting
                 options.DefaultChallengeScheme = ExternalIdAuthenticationExtensions.Scheme;
                 options.DefaultSignInScheme = ExternalIdAuthenticationExtensions.SessionScheme;
             })
-            .AddAdventuresSuiteExternalId(configuration, certificateSource, DateTimeOffset.UtcNow);
+            .AddAdventuresSuiteExternalId(configuration, signedAssertionProvider);
 
         builder.Services
             .AddDataProtection()
@@ -183,7 +190,8 @@ public sealed class AuthenticationReadinessState
 
 internal sealed class AuthenticationReadinessHostedService(
     IDataProtectionProvider dataProtectionProvider,
-    IAuthenticationPersistenceTransactionFactory transactionFactory,
+    SqlAuthenticationReadinessProbe persistenceProbe,
+    KeyVaultExternalIdSignedAssertionProvider signedAssertionProvider,
     AuthenticationReadinessState readinessState) : IHostedService
 {
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -195,7 +203,8 @@ internal sealed class AuthenticationReadinessHostedService(
             throw new InvalidOperationException("Authentication dependencies are unavailable.");
         }
 
-        await using var transaction = await transactionFactory.BeginAsync(cancellationToken);
+        await persistenceProbe.VerifyAsync(cancellationToken);
+        await signedAssertionProvider.VerifyAsync(cancellationToken);
         readinessState.MarkReady();
     }
 

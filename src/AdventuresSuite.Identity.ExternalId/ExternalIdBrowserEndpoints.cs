@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using TheSimontonAdventures.Web.Authorization;
-using TheSimontonAdventures.Web.Authorization.Persistence;
+using AdventuresSuite.Identity;
+using AdventuresSuite.Identity.Persistence;
 
 namespace AdventuresSuite.Identity.ExternalId;
 

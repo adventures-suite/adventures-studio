@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using TheSimontonAdventures.Web.Authorization;
-using TheSimontonAdventures.Web.Authorization.Persistence;
+using AdventuresSuite.Identity.Persistence;
 
 namespace TheSimontonAdventures.Web.Tests;
 

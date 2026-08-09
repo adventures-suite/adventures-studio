@@ -5,80 +5,72 @@ using Microsoft.Data.SqlClient;
 
 namespace AdventuresSuite.DatabaseMigrator;
 
-/// <summary>
-/// Performs the approved one-time development bootstrap through the private
-/// migration workload identity.
-/// </summary>
+/// <summary>Performs explicit, one-time development infrastructure bootstrap operations.</summary>
 internal static class AzureDevelopmentBootstrapper
 {
     private const string ApplicationUserName = "adventures-suite-dev-runtime";
     private const string MigrationUserName = "adventures-suite-dev-migrations";
-    private const string RuntimeRoleName = "adventures_suite_auth_runtime";
+    private const string RuntimeRoleName = "AdventuresSuiteAuthenticationRuntime";
     private const string WrappingKeyName = "adventures-suite-data-protection";
     private const string CertificateName = "adventures-suite-external-id";
 
-    public static async Task RunAsync(
-        string connectionString,
-        string? applicationPrincipalId,
-        string? migrationPrincipalId,
-        string? keyVaultUri)
-    {
-        if (!Guid.TryParse(applicationPrincipalId, out var applicationObjectId)
-            || !Guid.TryParse(migrationPrincipalId, out var migrationObjectId)
-            || !Uri.TryCreate(keyVaultUri, UriKind.Absolute, out var vaultUri)
-            || vaultUri.Scheme != Uri.UriSchemeHttps
-            || vaultUri.AbsolutePath != "/")
-        {
-            throw new InvalidOperationException("The approved bootstrap identities and Key Vault URI are required.");
-        }
+    /// <summary>Creates only the contained migration principal using Entra-administrator authority.</summary>
+    public static Task BootstrapMigrationIdentityAsync(
+        string administratorConnectionString,
+        string? migrationPrincipalId) =>
+        ExecutePrincipalCommandAsync(
+            administratorConnectionString,
+            migrationPrincipalId,
+            MigrationUserName,
+            $"""
+            ALTER ROLE [db_ddladmin] ADD MEMBER [{MigrationUserName}];
+            ALTER ROLE [db_datareader] ADD MEMBER [{MigrationUserName}];
+            ALTER ROLE [db_datawriter] ADD MEMBER [{MigrationUserName}];
+            GRANT CONNECT TO [{MigrationUserName}];
+            """);
 
-        await BootstrapSqlAsync(
-            connectionString,
-            applicationObjectId,
-            migrationObjectId);
-        await BootstrapKeyVaultAsync(vaultUri);
-        Console.WriteLine("Azure development bootstrap completed successfully.");
-    }
+    /// <summary>Binds the runtime principal after migrations have created the application role.</summary>
+    public static Task BindRuntimeIdentityAsync(
+        string administratorConnectionString,
+        string? applicationPrincipalId) =>
+        ExecutePrincipalCommandAsync(
+            administratorConnectionString,
+            applicationPrincipalId,
+            ApplicationUserName,
+            $"""
+            IF DATABASE_PRINCIPAL_ID(N'{RuntimeRoleName}') IS NULL
+                THROW 51000, 'The authentication runtime role has not been migrated.', 1;
+            ALTER ROLE [{RuntimeRoleName}] ADD MEMBER [{ApplicationUserName}];
+            GRANT CONNECT TO [{ApplicationUserName}];
+            """);
 
-    private static async Task BootstrapSqlAsync(
-        string connectionString,
-        Guid applicationObjectId,
-        Guid migrationObjectId)
+    /// <summary>Verifies migration DDL, data, journal, and authentication-schema permissions.</summary>
+    public static async Task VerifyMigrationPermissionsAsync(string migrationConnectionString)
     {
-        await using var connection = new SqlConnection(connectionString);
+        await using var connection = new SqlConnection(migrationConnectionString);
         await connection.OpenAsync();
         await using var command = connection.CreateCommand();
         command.CommandText = """
-            DECLARE @ApplicationObjectId varchar(36) = @ApplicationObjectIdParameter;
-            DECLARE @MigrationObjectId varchar(36) = @MigrationObjectIdParameter;
+            IF HAS_PERMS_BY_NAME(DB_NAME(), 'DATABASE', 'CONNECT') <> 1
+                OR IS_ROLEMEMBER('db_ddladmin') <> 1
+                OR IS_ROLEMEMBER('db_datareader') <> 1
+                OR IS_ROLEMEMBER('db_datawriter') <> 1
+                OR OBJECT_ID(N'dbo.AdventuresSuiteSchemaVersions', N'U') IS NULL
+                OR OBJECT_ID(N'auth.Users', N'U') IS NULL
+                OR OBJECT_ID(N'auth.ExternalIdentities', N'U') IS NULL
+                OR OBJECT_ID(N'auth.UserSessions', N'U') IS NULL
+                THROW 51000, 'Migration permissions or schema are unavailable.', 1;
 
-            IF DATABASE_PRINCIPAL_ID(N'adventures-suite-dev-runtime') IS NULL
-                EXEC(N'CREATE USER [adventures-suite-dev-runtime] FROM EXTERNAL PROVIDER WITH OBJECT_ID=''' + @ApplicationObjectId + N''';');
-            IF DATABASE_PRINCIPAL_ID(N'adventures-suite-dev-migrations') IS NULL
-                EXEC(N'CREATE USER [adventures-suite-dev-migrations] FROM EXTERNAL PROVIDER WITH OBJECT_ID=''' + @MigrationObjectId + N''';');
-            IF DATABASE_PRINCIPAL_ID(N'adventures_suite_auth_runtime') IS NULL
-                CREATE ROLE [adventures_suite_auth_runtime];
-
-            ALTER ROLE [adventures_suite_auth_runtime] ADD MEMBER [adventures-suite-dev-runtime];
-            GRANT CONNECT TO [adventures-suite-dev-runtime];
-            GRANT SELECT, INSERT, UPDATE, DELETE ON SCHEMA::[auth] TO [adventures_suite_auth_runtime];
-
-            ALTER ROLE [db_ddladmin] ADD MEMBER [adventures-suite-dev-migrations];
-            ALTER ROLE [db_datareader] ADD MEMBER [adventures-suite-dev-migrations];
-            ALTER ROLE [db_datawriter] ADD MEMBER [adventures-suite-dev-migrations];
-            GRANT CONNECT TO [adventures-suite-dev-migrations];
+            SELECT TOP (0) ScriptName FROM dbo.AdventuresSuiteSchemaVersions;
             """;
-        command.Parameters.AddWithValue("@ApplicationObjectIdParameter", applicationObjectId.ToString());
-        command.Parameters.AddWithValue("@MigrationObjectIdParameter", migrationObjectId.ToString());
         await command.ExecuteNonQueryAsync();
     }
 
-    private static async Task BootstrapKeyVaultAsync(Uri vaultUri)
+    /// <summary>Creates only non-exportable Key Vault cryptographic objects.</summary>
+    public static async Task BootstrapKeyVaultAsync(string? keyVaultUri)
     {
-        var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
-        {
-            ExcludeInteractiveBrowserCredential = true
-        });
+        var vaultUri = ParseVaultUri(keyVaultUri);
+        var credential = new ManagedIdentityCredential(ManagedIdentityId.SystemAssigned);
         var keyClient = new KeyClient(vaultUri, credential);
         try
         {
@@ -90,11 +82,7 @@ internal static class AzureDevelopmentBootstrapper
             {
                 KeySize = 2048,
                 Enabled = true,
-                KeyOperations =
-                {
-                    KeyOperation.WrapKey,
-                    KeyOperation.UnwrapKey
-                }
+                KeyOperations = { KeyOperation.WrapKey, KeyOperation.UnwrapKey }
             });
         }
 
@@ -108,8 +96,7 @@ internal static class AzureDevelopmentBootstrapper
         {
             var policy = new CertificatePolicy("Self", "CN=AdventuresSuite Development External ID")
             {
-                ContentType = CertificateContentType.Pkcs12,
-                Exportable = true,
+                Exportable = false,
                 KeyType = CertificateKeyType.Rsa,
                 KeySize = 2048,
                 ReuseKey = false,
@@ -117,8 +104,8 @@ internal static class AzureDevelopmentBootstrapper
                 KeyUsage = { CertificateKeyUsage.DigitalSignature },
                 EnhancedKeyUsage = { "1.3.6.1.5.5.7.3.2" }
             };
-            var operation = await certificateClient.StartCreateCertificateAsync(CertificateName, policy);
-            certificate = await operation.WaitForCompletionAsync();
+            certificate = await (await certificateClient.StartCreateCertificateAsync(CertificateName, policy))
+                .WaitForCompletionAsync();
         }
 
         Console.WriteLine(
@@ -130,4 +117,38 @@ internal static class AzureDevelopmentBootstrapper
             "External ID public certificate DER (public material): {0}",
             Convert.ToBase64String(certificate.Cer));
     }
+
+    private static async Task ExecutePrincipalCommandAsync(
+        string connectionString,
+        string? principalId,
+        string principalName,
+        string grants)
+    {
+        if (!Guid.TryParse(principalId, out var objectId))
+        {
+            throw new InvalidOperationException("The approved workload principal identity is required.");
+        }
+
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = $"""
+            DECLARE @ObjectId varchar(36) = @ObjectIdParameter;
+            IF DATABASE_PRINCIPAL_ID(N'{principalName}') IS NULL
+                EXEC(N'CREATE USER [{principalName}] FROM EXTERNAL PROVIDER WITH OBJECT_ID=''' + @ObjectId + N''';');
+            {grants}
+            """;
+        command.Parameters.AddWithValue("@ObjectIdParameter", objectId.ToString());
+        await command.ExecuteNonQueryAsync();
+    }
+
+    private static Uri ParseVaultUri(string? value) =>
+        Uri.TryCreate(value, UriKind.Absolute, out var uri)
+        && uri.Scheme == Uri.UriSchemeHttps
+        && uri.AbsolutePath == "/"
+        && string.IsNullOrEmpty(uri.Query)
+        && string.IsNullOrEmpty(uri.Fragment)
+        && string.IsNullOrEmpty(uri.UserInfo)
+            ? uri
+            : throw new InvalidOperationException("The approved Key Vault URI is required.");
 }

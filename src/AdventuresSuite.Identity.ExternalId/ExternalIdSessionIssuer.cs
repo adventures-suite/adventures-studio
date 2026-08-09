@@ -1,6 +1,6 @@
 using System.Security.Claims;
-using TheSimontonAdventures.Web.Authorization;
-using TheSimontonAdventures.Web.Authorization.Persistence;
+using AdventuresSuite.Identity;
+using AdventuresSuite.Identity.Persistence;
 
 namespace AdventuresSuite.Identity.ExternalId;
 
