@@ -22,6 +22,18 @@ if (string.IsNullOrWhiteSpace(connectionString))
 try
 {
     var appliedScripts = DatabaseMigratorRunner.Migrate(connectionString);
+    if (string.Equals(
+            Environment.GetEnvironmentVariable("ADVENTURESSUITE_BOOTSTRAP_ENABLED"),
+            "true",
+            StringComparison.OrdinalIgnoreCase))
+    {
+        await AzureDevelopmentBootstrapper.RunAsync(
+            connectionString,
+            Environment.GetEnvironmentVariable("ADVENTURESSUITE_APP_PRINCIPAL_ID"),
+            Environment.GetEnvironmentVariable("ADVENTURESSUITE_MIGRATION_PRINCIPAL_ID"),
+            Environment.GetEnvironmentVariable("ADVENTURESSUITE_KEY_VAULT_URI"));
+    }
+
     Console.WriteLine(
         $"AdventuresSuite database migrations completed successfully; applied {appliedScripts.Count} script(s).");
     return 0;
