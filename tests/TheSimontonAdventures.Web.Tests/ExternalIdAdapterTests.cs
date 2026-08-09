@@ -109,6 +109,88 @@ public sealed class ExternalIdAdapterTests
         Assert.True(options.TokenValidationParameters.RequireExpirationTime);
     }
 
+    /// <summary>The initial OIDC code redemption carries only the remote-signed client assertion.</summary>
+    [Fact]
+    public async Task AuthorizationCodeRedemption_AttachesClientAssertionForExactAuthorityHost()
+    {
+        var signer = new FixedSignedAssertionProvider();
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build());
+        services.AddAuthentication().AddAdventuresSuiteExternalId(Configuration(), signer);
+        using var provider = services.BuildServiceProvider();
+        var options = provider.GetRequiredService<IOptionsMonitor<OpenIdConnectOptions>>()
+            .Get(ExternalIdAuthenticationExtensions.Scheme);
+        var httpContext = new DefaultHttpContext();
+        httpContext.RequestServices = provider;
+        httpContext.Request.Scheme = "https";
+        httpContext.Request.Host = new HostString("workspace.example.com");
+        var context = new AuthorizationCodeReceivedContext(
+            httpContext,
+            new AuthenticationScheme(
+                ExternalIdAuthenticationExtensions.Scheme,
+                null,
+                typeof(OpenIdConnectHandler)),
+            options,
+            new AuthenticationProperties())
+        {
+            TokenEndpointRequest = new OpenIdConnectMessage
+            {
+                IssuerAddress = "https://tenant.ciamlogin.com/tenant/oauth2/v2.0/token"
+            }
+        };
+
+        await options.Events.AuthorizationCodeReceived(context);
+
+        Assert.Equal("test-assertion", context.TokenEndpointRequest.ClientAssertion);
+        Assert.Equal(
+            "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+            context.TokenEndpointRequest.ClientAssertionType);
+        Assert.Equal("client-id", signer.ClientId);
+        Assert.Equal(
+            "https://tenant.ciamlogin.com/tenant/oauth2/v2.0/token",
+            signer.TokenEndpoint?.AbsoluteUri);
+    }
+
+    /// <summary>An unexpected token endpoint never receives an assertion or remote-signing operation.</summary>
+    [Fact]
+    public async Task AuthorizationCodeRedemption_UnexpectedAuthorityHost_FailsClosed()
+    {
+        var signer = new FixedSignedAssertionProvider();
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build());
+        services.AddAuthentication().AddAdventuresSuiteExternalId(Configuration(), signer);
+        using var provider = services.BuildServiceProvider();
+        var options = provider.GetRequiredService<IOptionsMonitor<OpenIdConnectOptions>>()
+            .Get(ExternalIdAuthenticationExtensions.Scheme);
+        var httpContext = new DefaultHttpContext();
+        httpContext.RequestServices = provider;
+        httpContext.Request.Scheme = "https";
+        httpContext.Request.Host = new HostString("workspace.example.com");
+        var context = new AuthorizationCodeReceivedContext(
+            httpContext,
+            new AuthenticationScheme(
+                ExternalIdAuthenticationExtensions.Scheme,
+                null,
+                typeof(OpenIdConnectHandler)),
+            options,
+            new AuthenticationProperties())
+        {
+            TokenEndpointRequest = new OpenIdConnectMessage
+            {
+                IssuerAddress = "https://tenant.ciamlogin.com.attacker.example/token"
+            }
+        };
+
+        await options.Events.AuthorizationCodeReceived(context);
+
+        Assert.NotNull(context.Result?.Failure);
+        Assert.Null(context.TokenEndpointRequest.ClientAssertion);
+        Assert.Null(signer.ClientId);
+        Assert.Null(signer.TokenEndpoint);
+    }
+
     /// <summary>The application cookie is host-only, protected, bounded, and non-sliding.</summary>
     [Fact]
     public void AddExternalId_ConfiguresMinimalHostOnlyApplicationCookie()
@@ -608,10 +690,12 @@ public sealed class ExternalIdAdapterTests
         public X509Certificate2 Resolve(string certificateReference) => certificate;
     }
 
-    private sealed class FixedSignedAssertionProvider : ICustomSignedAssertionProvider
+    private sealed class FixedSignedAssertionProvider : IExternalIdClientAssertionProvider
     {
         public CredentialSource CredentialSource => CredentialSource.CustomSignedAssertion;
         public string Name => "TestSignedAssertion";
+        public string? ClientId { get; private set; }
+        public Uri? TokenEndpoint { get; private set; }
 
         public Task LoadIfNeededAsync(
             CredentialDescription credentialDescription,
@@ -620,6 +704,16 @@ public sealed class ExternalIdAdapterTests
             credentialDescription.CachedValue = new FixedClientAssertion();
             credentialDescription.Skip = false;
             return Task.CompletedTask;
+        }
+
+        public Task<string> CreateClientAssertionAsync(
+            string clientId,
+            Uri tokenEndpoint,
+            CancellationToken cancellationToken = default)
+        {
+            ClientId = clientId;
+            TokenEndpoint = tokenEndpoint;
+            return Task.FromResult("test-assertion");
         }
     }
 

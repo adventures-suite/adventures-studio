@@ -29,7 +29,7 @@ public static class ExternalIdAuthenticationExtensions
     public static AuthenticationBuilder AddAdventuresSuiteExternalId(
         this AuthenticationBuilder builder,
         AuthenticationConfiguration configuration,
-        ICustomSignedAssertionProvider signedAssertionProvider)
+        IExternalIdClientAssertionProvider signedAssertionProvider)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(configuration);
@@ -40,6 +40,8 @@ public static class ExternalIdAuthenticationExtensions
         {
             throw new InvalidOperationException("External ID requires external-provider mode.");
         }
+        var clientId = configuration.ClientId
+            ?? throw new InvalidOperationException("External ID requires a client identifier.");
 
         builder.Services.AddSingleton(configuration);
         builder.Services.AddSingleton(signedAssertionProvider);
@@ -89,7 +91,7 @@ public static class ExternalIdAuthenticationExtensions
                         CustomSignedAssertionProviderName = signedAssertionProvider.Name
                     }
                 ];
-                options.Events = CreateEvents(configuration);
+                options.Events = CreateEvents(configuration, signedAssertionProvider, clientId);
                 options.AccessDeniedPath = ExternalIdBrowserEndpoints.AccessDeniedPath;
             },
             options => ApplicationCookieConfiguration.Configure(options, configuration),
@@ -139,7 +141,10 @@ public static class ExternalIdAuthenticationExtensions
         options.NonceCookie.SecurePolicy = CookieSecurePolicy.Always;
     }
 
-    private static OpenIdConnectEvents CreateEvents(AuthenticationConfiguration configuration) => new()
+    private static OpenIdConnectEvents CreateEvents(
+        AuthenticationConfiguration configuration,
+        IExternalIdClientAssertionProvider signedAssertionProvider,
+        string clientId) => new()
     {
         OnRedirectToIdentityProvider = context =>
         {
@@ -155,6 +160,28 @@ public static class ExternalIdAuthenticationExtensions
         {
             EnforceWorkspace(context.Request, context.Fail, configuration);
             return Task.CompletedTask;
+        },
+        OnAuthorizationCodeReceived = async context =>
+        {
+            if (!IsWorkspaceRequest(context.Request, configuration)
+                || context.TokenEndpointRequest is null
+                || !Uri.TryCreate(
+                    context.TokenEndpointRequest.IssuerAddress,
+                    UriKind.Absolute,
+                    out var tokenEndpoint)
+                || !IsExpectedAuthorityHost(tokenEndpoint, configuration))
+            {
+                context.Fail("Authentication failed.");
+                return;
+            }
+
+            context.TokenEndpointRequest.ClientAssertion =
+                await signedAssertionProvider.CreateClientAssertionAsync(
+                    clientId,
+                    tokenEndpoint,
+                    context.HttpContext.RequestAborted);
+            context.TokenEndpointRequest.ClientAssertionType =
+                "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
         },
         OnTokenValidated = async context =>
         {
@@ -223,6 +250,17 @@ public static class ExternalIdAuthenticationExtensions
             return Task.CompletedTask;
         }
     };
+
+    private static bool IsExpectedAuthorityHost(
+        Uri tokenEndpoint,
+        AuthenticationConfiguration configuration) =>
+        Uri.TryCreate(configuration.Authority, UriKind.Absolute, out var authority)
+        && tokenEndpoint.Scheme == Uri.UriSchemeHttps
+        && string.Equals(tokenEndpoint.IdnHost, authority.IdnHost, StringComparison.OrdinalIgnoreCase)
+        && tokenEndpoint.Port == authority.Port
+        && string.IsNullOrEmpty(tokenEndpoint.UserInfo)
+        && string.IsNullOrEmpty(tokenEndpoint.Query)
+        && string.IsNullOrEmpty(tokenEndpoint.Fragment);
 
     private static void EnforceWorkspace(
         HttpRequest request,

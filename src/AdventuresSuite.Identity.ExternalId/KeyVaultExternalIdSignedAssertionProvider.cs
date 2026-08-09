@@ -12,7 +12,7 @@ using Microsoft.Identity.Web;
 namespace AdventuresSuite.Identity.ExternalId;
 
 /// <summary>Signs External ID client assertions with a non-exportable Azure Key Vault key.</summary>
-public sealed class KeyVaultExternalIdSignedAssertionProvider : ICustomSignedAssertionProvider
+public sealed class KeyVaultExternalIdSignedAssertionProvider : IExternalIdClientAssertionProvider
 {
     /// <summary>The stable Microsoft.Identity.Web custom-provider name.</summary>
     public const string ProviderName = "AdventuresSuiteKeyVaultSignedAssertion";
@@ -69,6 +69,28 @@ public sealed class KeyVaultExternalIdSignedAssertionProvider : ICustomSignedAss
         await assertionProvider.VerifySigningAsync(cancellationToken);
     }
 
+    /// <inheritdoc />
+    public async Task<string> CreateClientAssertionAsync(
+        string clientId,
+        Uri tokenEndpoint,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(clientId))
+            throw new ArgumentException("A client identifier is required.", nameof(clientId));
+        ArgumentNullException.ThrowIfNull(tokenEndpoint);
+        if (!tokenEndpoint.IsAbsoluteUri
+            || tokenEndpoint.Scheme != Uri.UriSchemeHttps
+            || !string.IsNullOrEmpty(tokenEndpoint.UserInfo)
+            || !string.IsNullOrEmpty(tokenEndpoint.Query)
+            || !string.IsNullOrEmpty(tokenEndpoint.Fragment))
+        {
+            throw new ArgumentException("An exact HTTPS token endpoint is required.", nameof(tokenEndpoint));
+        }
+
+        assertionProvider ??= await CreateProviderAsync(cancellationToken);
+        return await assertionProvider.CreateAsync(clientId, tokenEndpoint, cancellationToken);
+    }
+
     private async Task<KeyVaultClientAssertion> CreateProviderAsync(CancellationToken cancellationToken)
     {
         var certificate = (await certificateClient.GetCertificateAsync(
@@ -100,6 +122,30 @@ public sealed class KeyVaultExternalIdSignedAssertionProvider : ICustomSignedAss
             AssertionRequestOptions? assertionRequestOptions)
         {
             ArgumentNullException.ThrowIfNull(assertionRequestOptions);
+            var result = await CreateSignedAssertionAsync(
+                assertionRequestOptions.ClientID,
+                assertionRequestOptions.TokenEndpoint,
+                assertionRequestOptions.CancellationToken);
+            return new ClientAssertion(result.Value, result.ExpiresAt);
+        }
+
+        public async Task<string> CreateAsync(
+            string clientId,
+            Uri tokenEndpoint,
+            CancellationToken cancellationToken)
+        {
+            var assertion = await CreateSignedAssertionAsync(
+                clientId,
+                tokenEndpoint.AbsoluteUri,
+                cancellationToken);
+            return assertion.Value;
+        }
+
+        private async Task<SignedAssertion> CreateSignedAssertionAsync(
+            string clientId,
+            string tokenEndpoint,
+            CancellationToken cancellationToken)
+        {
             var issuedAt = DateTimeOffset.UtcNow;
             var expiresAt = issuedAt.AddMinutes(5);
             var header = EncodeJson(new Dictionary<string, object>
@@ -110,9 +156,9 @@ public sealed class KeyVaultExternalIdSignedAssertionProvider : ICustomSignedAss
             });
             var payload = EncodeJson(new Dictionary<string, object>
             {
-                ["aud"] = assertionRequestOptions.TokenEndpoint,
-                ["iss"] = assertionRequestOptions.ClientID,
-                ["sub"] = assertionRequestOptions.ClientID,
+                ["aud"] = tokenEndpoint,
+                ["iss"] = clientId,
+                ["sub"] = clientId,
                 ["jti"] = Guid.NewGuid().ToString("D"),
                 ["nbf"] = issuedAt.ToUnixTimeSeconds(),
                 ["iat"] = issuedAt.ToUnixTimeSeconds(),
@@ -123,8 +169,10 @@ public sealed class KeyVaultExternalIdSignedAssertionProvider : ICustomSignedAss
             var result = await cryptographyClient.SignAsync(
                 SignatureAlgorithm.RS256,
                 digest,
-                assertionRequestOptions.CancellationToken);
-            return new ClientAssertion($"{unsigned}.{Base64Url(result.Signature)}", expiresAt);
+                cancellationToken);
+            return new SignedAssertion(
+                $"{unsigned}.{Base64Url(result.Signature)}",
+                expiresAt);
         }
 
         public async Task VerifySigningAsync(CancellationToken cancellationToken)
@@ -142,6 +190,8 @@ public sealed class KeyVaultExternalIdSignedAssertionProvider : ICustomSignedAss
 
         private static string Base64Url(byte[] value) =>
             Convert.ToBase64String(value).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+
+        private sealed record SignedAssertion(string Value, DateTimeOffset ExpiresAt);
     }
 }
 
