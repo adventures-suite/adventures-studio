@@ -38,7 +38,7 @@ Product and Offer
     ↓
 Order
     ↓
-Entitlement or Fulfillment
+CommerceEntitlement or Fulfillment
 ```
 
 An EPUB file may be a Publication artifact and Resource without being for sale.
@@ -104,16 +104,19 @@ An Order records the customer, selected Offers, commercial amounts, payment
 state, and fulfillment state. Payment-provider records support an Order but do
 not replace the AdventuresSuite Order identity.
 
-## Entitlement
+## Commerce Entitlement
 
-An Entitlement records a customer's continuing right to access a purchased
-digital product or protected experience.
+A `CommerceEntitlement` records a customer's continuing right to access a
+purchased digital product or protected experience. It is distinct from a
+`PlatformEntitlement`, which governs a Creator's right to use an AdventuresSuite
+SaaS capability. Commerce and Platform Billing do not share entitlement,
+subscription, order, or payment state.
 
 ## Fulfillment
 
-Fulfillment delivers the purchased item. Digital fulfillment grants an
-Entitlement and protected access. Physical fulfillment creates and tracks work
-with an approved production and shipping provider.
+Fulfillment delivers the purchased item. Digital fulfillment grants a
+`CommerceEntitlement` and protected access. Physical fulfillment creates and
+tracks work with an approved production and shipping provider.
 
 ---
 
@@ -183,7 +186,7 @@ Resource Engine
     stores protected artifacts and rights metadata
 
 Commerce Engine
-    owns catalogs, Products, Offers, Orders, and Entitlements
+    owns catalogs, Products, Offers, Orders, and CommerceEntitlements
 
 Fulfillment adapters
     manufacture, deliver, and track physical products
@@ -221,8 +224,8 @@ commerce, but it is not selected by this document.
 
 When justified, the likely direction is:
 
-- Azure SQL for catalogs, Products, Offers, Orders, Entitlements, and fulfillment
-  state
+- Azure SQL for catalogs, Products, Offers, Orders, CommerceEntitlements, and
+  fulfillment state
 - Azure Blob Storage for protected digital artifacts and licensed derivatives
 - Durable messaging for payment, fulfillment, and delivery processing
 - Managed Identity between internal Azure services
@@ -237,7 +240,8 @@ commitments.
 
 ## Phase 1: Commerce Architecture
 
-- Finalize Publication, Edition, Product, Offer, Order, and Entitlement contracts
+- Finalize Publication, Edition, Product, Offer, Order, and
+  CommerceEntitlement contracts
 - Decide the merchant model
 - Define tax, refund, support, privacy, and accounting responsibilities
 - Establish Resource rights and protected-delivery foundations
@@ -253,7 +257,7 @@ commitments.
 
 - Sell one EPUB or PDF product type
 - Process payment safely
-- Grant an Entitlement
+- Grant a CommerceEntitlement
 - Deliver a protected artifact
 - Send transactional receipts
 
@@ -274,5 +278,6 @@ commitments.
 # Current Implementation Status
 
 This document establishes approved future direction. Commerce, checkout,
-payments, Entitlements, and fulfillment are not part of the current JSON-backed
-public application.
+payments, CommerceEntitlements, and fulfillment are not part of the current
+JSON-backed public application. AdventuresSuite SaaS plans and paid platform
+capabilities follow `docs/architecture/platform-billing-entitlements.md`.

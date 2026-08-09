@@ -121,6 +121,22 @@ only the minimum provider-neutral audit vocabulary and classifications it needs.
 See `docs/architecture/audit-reporting.md` and
 `docs/development/audit-reporting-implementation-plan.md`.
 
+## Platform Billing and Entitlements Requirement
+
+AdventuresSuite will support versioned membership levels, add-ons, seats, and
+usage allowances through a provider-neutral Platform Billing and Entitlements
+capability. Plans bundle stable platform capabilities; they are not user roles.
+
+Feature access will compose user authorization, Creator entitlement, rollout,
+and service availability. Platform Billing remains separate from Creator
+Commerce, audience subscriptions, and Creator memberships. Current development
+remains unmetered until the relevant product, legal, tax, accounting, support,
+security, and implementation gates are approved.
+
+See `docs/architecture/platform-billing-entitlements.md`,
+`docs/product/pricing-model.md`, and
+`docs/development/platform-billing-entitlements-implementation-plan.md`.
+
 ---
 
 # Version 1.0

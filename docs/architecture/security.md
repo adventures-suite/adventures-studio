@@ -192,6 +192,23 @@ publication approval; sensitive-zone and time removal; abuse-case and physical
 device testing. Companion is not represented as an emergency or guaranteed
 tracking service.
 
+### Billing, Entitlement, and Webhook Abuse
+
+An attacker forges checkout completion, provider webhooks, plan state, usage,
+seat allocation, or entitlement claims; replays a valid event; changes another
+Creator's subscription; exploits event reordering; or uses payer identity to
+gain Creator access.
+
+Controls: server-authoritative Platform Entitlements; no billing state from
+cookies, identity/mobile tokens, redirects, feature flags, or client input;
+signed bounded webhooks; replay protection; transactional idempotent inbox;
+ordering-aware transitions and reconciliation; explicit Creator and Billing
+Account scope; separate billing permissions and step-up authentication;
+optimistic concurrency; append-oriented audit; no payer-to-membership inference;
+generic enumeration-safe failures; least-privilege provider and SQL identities;
+no payment data or raw payloads in logs; deterministic grace, suspension,
+recovery, and export behavior.
+
 ## Authorization Test Matrix
 
 Every protected operation must cover at least:
@@ -249,8 +266,9 @@ an attacker cannot turn audit volume into a denial of service.
 Review this model when identity provider, session strategy, membership schema,
 Planning Engagement, protected Resources, AI context, exports, background jobs,
 support tooling, public APIs, native mobile clients, offline storage, device
-notifications, media capture, or precise location are introduced or materially
-changed.
+notifications, media capture, precise location, billing providers, checkout,
+paid entitlements, usage metering, or provider webhooks are introduced or
+materially changed.
 
 Operational logging, tracing, metrics, redaction, sampling, and telemetry access
 follow `docs/architecture/observability.md`. Security telemetry and durable audit

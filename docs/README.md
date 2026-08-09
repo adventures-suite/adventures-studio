@@ -40,6 +40,17 @@ The governing principle is:
 > Authentication establishes who the user is. Authorization determines which
 > Creator-owned resource they may access for this operation.
 
+### Slice 5F Azure Environment and Runbooks
+
+1. `development/slice-5f-azure-environment.md`
+2. `development/external-id-environment-runbook.md`
+3. `development/azure-sql-migration-runbook.md`
+4. `development/authentication-key-management-runbook.md`
+5. `development/deployment.md`
+
+> Azure is the running environment. Infrastructure as code is the reproducible
+> definition. Runbooks govern cross-tenant and data-plane operations.
+
 ## Logging and Observability
 
 1. `architecture/observability.md`
@@ -74,6 +85,17 @@ The governing principle is:
 3. `development/adventures-companion-implementation-plan.md`
 
 > The traveler controls capture. Private synchronization is not publication.
+
+## Platform Billing and Entitlements
+
+1. `architecture/platform-billing-entitlements.md`
+2. `product/pricing-model.md`
+3. `business/business-model.md`
+4. `development/platform-billing-entitlements-implementation-plan.md`
+5. `architecture/commerce-engine.md`
+
+> Authorization decides what a user may do. Platform entitlement decides what
+> the Creator has purchased or been granted.
 
 ## Existing Engine Foundations
 

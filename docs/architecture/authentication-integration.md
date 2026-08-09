@@ -534,6 +534,15 @@ Provision separate non-production External ID configuration, Key Vault
 certificate, durable Data Protection keys, exact redirects, and environment
 settings through reviewed infrastructure changes.
 
+The provisioned development inventory, IaC boundary, private execution gates,
+External ID operations, SQL bootstrap/migration, certificate lifecycle, and Data
+Protection procedures are governed by:
+
+- `docs/development/slice-5f-azure-environment.md`;
+- `docs/development/external-id-environment-runbook.md`;
+- `docs/development/azure-sql-migration-runbook.md`; and
+- `docs/development/authentication-key-management-runbook.md`.
+
 Exit gate: sign-in, sign-out, restart, certificate readiness, session revocation,
 public-route availability, and Creator authorization smoke tests pass without
 private telemetry leakage.

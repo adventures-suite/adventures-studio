@@ -466,3 +466,80 @@ offline features from becoming surveillance or accidental publication paths.
 Status:
 
 Approved
+
+---
+
+## 2026-08-08
+
+### Platform Billing and Entitlements Are Separate from Authorization and Commerce
+
+Decision:
+
+AdventuresSuite will use a provider-neutral Platform Billing and Entitlements
+capability for SaaS plans, add-ons, seats, allowances, and paid feature access.
+Identity, Creator membership, resource authorization, Platform Entitlement,
+feature rollout, and service availability remain independent gates. Plans are
+immutable versioned bundles of stable capabilities and never become roles or
+application conditionals based on marketing names.
+
+`PlatformEntitlement` means a Creator's right to use an AdventuresSuite
+capability. `CommerceEntitlement` means a shopper's right to access a
+Creator-sold digital product. Platform Billing and Creator Commerce do not share
+orders, subscriptions, entitlements, payment state, or reporting. A Billing
+Account may fund multiple Creators without gaining access to any of them, and a
+seat never creates membership or permission.
+
+Payment providers remain adapters. Webhooks are untrusted signed,
+replay-protected, idempotent input processed through a transactional inbox and
+reconciliation. AdventuresSuite does not store payment-card data or derive
+billable usage from operational telemetry. Billing failure does not
+automatically delete or unpublish Creator work.
+
+Reason:
+
+Separating commercial rights from security authorization allows Adventures
+Studio to evolve pricing, grandfather plans, offer add-ons, serve agencies, and
+change providers without weakening Creator isolation or scattering plan-name
+checks through the platform.
+
+Status:
+
+Approved
+
+---
+
+## 2026-08-08
+
+### Development Authentication Infrastructure Uses Private Azure Boundaries
+
+Decision:
+
+Slice 5F development uses a separate External ID external tenant, dedicated
+Azure SQL database, private VNet integration and private endpoints, private Key
+Vault and Data Protection Blob storage, and separate system-assigned Managed
+Identities for application DML and migration DDL. SQL, Key Vault, Blob, and the
+migration application do not expose public data-plane ingress.
+
+Azure live state is not sufficient documentation. Reviewed infrastructure as
+code must reproduce or reconcile supported Azure resources, and versioned
+runbooks govern External ID, certificate registration and rotation, SQL
+contained-user bootstrap, migration execution, Data Protection, smoke tests,
+recovery, and teardown.
+
+The migration app shares development compute, remains stopped by default, runs
+one exact immutable migrator artifact through an approved private execution
+path, and returns to stopped state after success or failure. The web application
+cannot execute migrations, grant itself database access, or obtain DDL
+authority. A public firewall exception is not the default workaround for a
+hosted runner that cannot reach private endpoints.
+
+Reason:
+
+This design preserves least privilege, environment isolation, reproducibility,
+and operational evidence while preventing the application, migration workflow,
+or CI runner from becoming an unreviewed administrative path into private
+identity and Planning data.
+
+Status:
+
+Approved

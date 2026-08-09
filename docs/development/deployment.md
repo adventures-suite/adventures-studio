@@ -103,3 +103,18 @@ diagnostic event without private content.
 Full conventions and implementation sequencing are defined in
 `docs/architecture/observability.md` and
 `docs/development/observability-implementation-plan.md`.
+
+## Slice 5F Private Azure Environment
+
+Authentication-enabled development deployment additionally follows:
+
+- `docs/development/slice-5f-azure-environment.md`;
+- `docs/development/external-id-environment-runbook.md`;
+- `docs/development/azure-sql-migration-runbook.md`; and
+- `docs/development/authentication-key-management-runbook.md`.
+
+Azure live state is not the reproducible source of truth. Reviewed IaC owns
+supported Azure control-plane resources, while versioned runbooks govern
+External ID, certificate, SQL bootstrap, migration, smoke, rotation, recovery,
+and teardown boundaries. Public data-plane access must not be enabled merely to
+accommodate a GitHub-hosted runner.

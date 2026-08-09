@@ -775,6 +775,29 @@ Detailed direction is defined in
 `docs/product/adventures-companion.md`, and
 `docs/development/adventures-companion-implementation-plan.md`.
 
+### 10.17 Platform Billing and Entitlements Capability
+
+Platform Billing governs how Creators, agencies, organizations, and enterprise
+customers pay Adventures Studio for AdventuresSuite. It owns Billing Accounts,
+Platform Products and Prices, versioned Plan Definitions, Platform
+Subscriptions, Platform Entitlements, seats, usage allowances, provider inbox,
+and reconciliation.
+
+It is separate from Creator Commerce. A `PlatformEntitlement` permits a Creator
+to use an AdventuresSuite capability; a `CommerceEntitlement` permits a shopper
+to access a Creator-sold digital product. The two do not share orders,
+subscriptions, entitlement state, payment state, or reporting.
+
+Effective feature access composes independent identity, authorization,
+entitlement, rollout, and availability decisions. Plans bundle stable capability
+names and never become authorization roles. A Billing Account may pay for more
+than one Creator without gaining access to any Creator data.
+
+Detailed direction is defined in
+`docs/architecture/platform-billing-entitlements.md`,
+`docs/product/pricing-model.md`, and
+`docs/development/platform-billing-entitlements-implementation-plan.md`.
+
 ---
 
 ## 11. Engine Ownership Rule
@@ -1159,6 +1182,8 @@ AdventuresSuite follows these principles:
 - Mobile clients are untrusted and intermittently connected; Companion uses
   minimized encrypted projections, server-side authorization, and explicit
   traveler consent for private location capture.
+- Identity, authorization, Platform Entitlements, feature rollout, and service
+  availability are independent gates; plan names never become roles.
 
 ---
 

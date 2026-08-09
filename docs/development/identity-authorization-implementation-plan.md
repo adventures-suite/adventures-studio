@@ -145,6 +145,12 @@ order. Do not add a live provider package, login UI, or Azure identity resource
 before its preceding contracts, persistence, deterministic-adapter, and
 security gates pass.
 
+Slice 5F environment integration additionally requires the approved inventory,
+IaC reconciliation, private execution path, External ID, SQL migration,
+certificate, and Data Protection runbooks rooted at
+`docs/development/slice-5f-azure-environment.md`. Slice 6 remains blocked until
+the exact live sign-in and infrastructure evidence in that document passes.
+
 ## Slice 6: Creator Membership Persistence
 
 Add forward-only migrations and Dapper adapters for memberships, roles or

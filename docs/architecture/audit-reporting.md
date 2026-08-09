@@ -112,6 +112,13 @@ commerce and refunds, photography licensing and fulfillment, and approved AI
 proposal lifecycle. Detailed event catalogs are added with their owning Engine,
 not invented speculatively in shared contracts.
 
+Platform Billing adds a separate event and evidence family for subscription
+lifecycle, plan migration, entitlement grants and revocations, allowance and
+seat changes, usage corrections, provider inbox processing, and reconciliation.
+Provider payloads, payment details, invoices, and contact data are not general
+event or audit metadata. Billable usage comes from an immutable governed ledger,
+never operational telemetry or product analytics.
+
 ## Reporting Projections
 
 Reports read purpose-built projections rather than issuing unrestricted joins

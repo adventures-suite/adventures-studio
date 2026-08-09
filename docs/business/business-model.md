@@ -87,6 +87,17 @@ Recurring revenue supports:
 - Customer support
 - Continuous innovation
 
+Plan names are product packaging, not roles or authorization vocabulary. Plans
+will be immutable versioned bundles of stable Platform Capabilities,
+Entitlements, seats, and allowances. Identity, Creator membership, user
+permission, paid entitlement, feature rollout, and service availability remain
+separate gates.
+
+Platform Billing is also separate from Creator Commerce: platform customers pay
+Adventures Studio for AdventuresSuite capabilities, while shoppers pay Creators
+for books, prints, licenses, and other products. See
+`docs/architecture/platform-billing-entitlements.md`.
+
 ---
 
 # Creator Economy
@@ -123,6 +134,9 @@ Potential limitations:
 The goal is to demonstrate value.
 
 Not frustrate users.
+
+Free limits, trials, grace periods, downgrade, cancellation, retention, and
+export behavior require explicit commercial policy before enforcement.
 
 ---
 
