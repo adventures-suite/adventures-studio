@@ -1,8 +1,8 @@
 # Slice 5F Azure Development Environment
 
-**Status:** Provisioned Foundation; Application Integration In Progress
+**Status:** Slice 5F Complete; External Provider Gate Passed
 
-**Last Updated:** August 8, 2026
+**Last Updated:** August 9, 2026
 
 ## Purpose
 
@@ -277,3 +277,45 @@ Any material drift blocks Slice 5F until reconciled or explicitly approved.
 - rollback, rotation, incident, and teardown runbooks are approved.
 
 Slice 6 remains blocked until this evidence is complete.
+
+### Development Gate Result
+
+The development External Provider gate passed on August 9, 2026. Evidence is
+sanitized: it records resource names, aggregate results, timestamps, commit
+identifiers, and workflow support identifiers without tokens, cookies,
+connection strings, private keys, certificate material, or raw identity
+claims.
+
+| Gate | Result |
+| --- | --- |
+| Deployed application | Commit `9df3544137c899b85478ce7627fbefb28b1cba8e` active and healthy |
+| Deployment validation | GitHub Actions run `31345223719` passed health, Creator, Resource, and package checks |
+| SQL migration validation | GitHub Actions run `31346969130` passed for the exact final commit |
+| Browser sign-in | Exact workspace sign-in, External ID callback, authoritative cookie session, and authenticated workspace response passed |
+| Durable session | The authenticated session survived deployment to a new App Service instance, proving shared Data Protection continuity |
+| Identity persistence | One platform user and one active external-identity mapping were present after first sign-in; evidence did not disclose issuer or subject values |
+| Creator boundary | Authentication did not grant Creator access; the workspace remained unavailable pending Slice 6 membership persistence |
+| Sign-out | Antiforgery-protected `POST /authentication/sign-out` passed; `GET` remained rejected with `405 Method Not Allowed` |
+| Administrative revocation | Four outstanding sessions for the sole development user were atomically revoked with zero active sessions remaining; the open browser returned to anonymous state on reload |
+| Public-host isolation | Development App Service did not bind the public Creator hostname; public-host and unknown-host behavior remains covered by the automated host-isolation suite |
+| Circuit security | Exact-origin SignalR transports and fail-closed circuit revalidation passed automated coverage; no live circuit mutation existed in the current server-rendered workspace shell to exercise independently |
+| Information leakage | Application and authentication telemetry retained PII logging disabled and contained no raw tokens, cookies, subjects, secrets, or certificate material |
+| Privileged cleanup | Temporary SQL administrator-group membership was removed, its CLI session was cleared, and the SQL administration VM was deallocated |
+
+The SQL preflight authenticated through the configured workforce-tenant SQL
+administrator group and targeted only `AdventuresSuiteDevelopment`. It observed
+one user and one active external identity before the guarded revocation. The
+revocation transaction required that inventory to match, changed only session
+revocation fields, and left no active session. The temporary member account had
+no Azure subscription access and its group membership was removed immediately
+after the gate.
+
+The final commit changes only workspace navigation behavior relative to the
+previous authoritative migration run. The exact-commit SQL workflow nevertheless
+rebuilt the solution, ran the SQL Server migration integration gate, published
+the immutable migrator artifact, and retained diagnostics and migration
+evidence.
+
+Slice 5F is therefore complete for the Azure development environment. Slice 6
+may begin, while production identity activation remains subject to its own
+environment approval and gates.

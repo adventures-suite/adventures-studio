@@ -11,11 +11,36 @@ namespace TheSimontonAdventures.Web.Tests;
 public sealed class WorkspaceRootTests
 {
     /// <summary>
+    /// Ensures sign-in uses a full navigation so the browser can follow the
+    /// cross-origin External ID challenge instead of an enhanced fetch.
+    /// </summary>
+    [Fact]
+    public async Task AnonymousWorkspace_DisablesEnhancedSignInNavigation()
+    {
+        var html = await RenderAsync(new ClaimsPrincipal(new ClaimsIdentity()));
+
+        Assert.Contains("href=\"/authentication/sign-in\"", html);
+        Assert.Contains("data-enhance-nav=\"false\"", html);
+    }
+
+    /// <summary>
     /// Ensures an authenticated workspace request renders a protected sign-out
     /// mutation without requiring public Creator Context.
     /// </summary>
     [Fact]
     public async Task AuthenticatedWorkspace_RendersProtectedPostSignOut()
+    {
+        var html = await RenderAsync(new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim(ClaimTypes.NameIdentifier, "opaque-user")],
+            authenticationType: "test")));
+
+        Assert.Contains("You are signed in", html);
+        Assert.Contains("method=\"post\"", html);
+        Assert.Contains("action=\"/authentication/sign-out\"", html);
+        Assert.DoesNotContain("opaque-user", html);
+    }
+
+    private static async Task<string> RenderAsync(ClaimsPrincipal user)
     {
         var services = new ServiceCollection();
         services.AddLogging();
@@ -25,9 +50,7 @@ public sealed class WorkspaceRootTests
         var context = new DefaultHttpContext
         {
             RequestServices = provider,
-            User = new ClaimsPrincipal(new ClaimsIdentity(
-                [new Claim(ClaimTypes.NameIdentifier, "opaque-user")],
-                authenticationType: "test"))
+            User = user
         };
         provider.GetRequiredService<IHttpContextAccessor>().HttpContext = context;
 
@@ -40,9 +63,6 @@ public sealed class WorkspaceRootTests
             return output.ToHtmlString();
         });
 
-        Assert.Contains("You are signed in", html);
-        Assert.Contains("method=\"post\"", html);
-        Assert.Contains("action=\"/authentication/sign-out\"", html);
-        Assert.DoesNotContain("opaque-user", html);
+        return html;
     }
 }
