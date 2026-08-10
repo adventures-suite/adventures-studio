@@ -31,6 +31,57 @@ or permanent protected-Resource URL crosses this boundary. OpenAPI schemas are
 designed from mobile use cases and approved information policy, never generated
 from tables.
 
+## Independent API Host and Deployment
+
+The Companion API does not run inside the Blazor web application and the web
+application does not proxy mobile traffic. It runs in a separate ASP.NET Core
+host, initially named `AdventuresSuite.Api`, with its own project, process,
+Azure App Service, Managed Identity, configuration, health endpoints,
+observability identity, deployment artifact, scaling policy, and rollback.
+
+```text
+AdventuresCompanion
+    -> api-dev.adventuressuite.com
+    -> AdventuresSuite.Api
+       -> shared application contracts and services
+       -> authorization and traveler information policy
+       -> Planning and Resource persistence adapters
+
+Creator Workspace browser
+    -> workspace host
+    -> TheSimontonAdventures.Web
+       -> the same approved application contracts and services
+```
+
+The hostname shown is the intended naming direction; DNS and production names
+require deployment approval. Mobile clients use the approved AdventuresSuite
+API origin and never depend permanently on an Azure-generated hostname.
+
+Separation is a deployment boundary, not permission to duplicate business
+logic. Domain, application-service, authorization, DTO, and persistence
+contracts live in appropriately bounded reusable projects. Both hosts compose
+those dependencies, while controllers, Minimal API route definitions, browser
+components, cookies, and mobile bearer-token middleware remain host-specific.
+
+The API host:
+
+- accepts OAuth bearer access tokens and never workspace cookies;
+- has no Razor, Blazor circuit, public Creator-host, or interactive workspace
+  routes;
+- receives a least-privilege runtime identity independent from the web host;
+- reaches SQL, private Blob Storage, Key Vault, and other dependencies through
+  approved private networking;
+- scales, deploys, rolls back, rate-limits, and fails independently from the
+  web experience;
+- exposes separate liveness, readiness, release identity, and safe dependency
+  diagnostics; and
+- cannot execute migrations or grant itself infrastructure permissions.
+
+This decision does not require one microservice per Engine. The first API host
+is a modular application boundary. Further service extraction requires measured
+scale, isolation, availability, ownership, or deployment evidence rather than
+speculative decomposition.
+
 ## Activation Gates
 
 Contract design and deterministic contract tests may begin immediately.

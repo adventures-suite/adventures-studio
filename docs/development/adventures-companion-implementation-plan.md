@@ -42,6 +42,12 @@ mobile-store review approve the initial boundary.
 
 ## M1: Versioned Mobile API Foundation
 
+Create a separate `AdventuresSuite.Api` ASP.NET Core host and deployable artifact;
+do not place Companion endpoints in or proxy them through the Blazor web host.
+Give the API its own OAuth bearer pipeline, configuration, health, telemetry,
+runtime identity, deployment, rollback, and independent scaling boundary while
+reusing approved domain, application, authorization, and persistence libraries.
+
 Add provider-neutral API contracts, versioning, OAuth-protected mobile access,
 server-side Creator/resource authorization, idempotency, safe errors, rate
 limits, and API observability. Implement the server boundary as Dapper

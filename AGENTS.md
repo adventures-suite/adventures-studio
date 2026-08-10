@@ -230,6 +230,10 @@
   notifications, ordinary audit metadata, or public content.
 - Mobile uses public-client browser-delegated authorization code with PKCE; it
   does not reuse workspace cookies or embed client secrets or certificates.
+- Host mobile APIs in a separately deployed `AdventuresSuite.Api` application,
+  never inside or proxied through the Blazor web host. Share approved domain,
+  application, authorization, and persistence libraries without duplicating
+  business rules, and keep bearer-token and cookie pipelines host-specific.
 
 ## Subscription and Notification Engine
 

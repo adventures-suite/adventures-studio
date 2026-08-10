@@ -806,3 +806,34 @@ notifications useful without weakening security or consistency.
 Status:
 
 Approved
+
+---
+
+## 2026-08-09
+
+### Mobile APIs Use an Independent Deployable Host
+
+Decision:
+
+AdventuresCompanion and future external client APIs will run in a separate
+ASP.NET Core application, initially `AdventuresSuite.Api`. The API will not run
+inside or be proxied through the Blazor web host. It has its own process, Azure
+App Service, Managed Identity, bearer-token pipeline, configuration, health,
+observability identity, immutable deployment artifact, scaling policy, and
+rollback.
+
+The API and web hosts reuse approved domain, application, authorization, DTO,
+and persistence libraries. Host-specific routes, browser components, cookies,
+mobile bearer-token middleware, and composition remain separate. This is a
+modular deployment boundary and does not establish one microservice per Engine.
+
+Reason:
+
+Mobile traffic, release cadence, availability, authentication, abuse controls,
+and scaling differ from the Creator Workspace. Independent deployment prevents
+mobile load or API changes from coupling web availability and lets each host
+scale and roll back safely without duplicating authoritative business rules.
+
+Status:
+
+Approved
