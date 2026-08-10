@@ -15,7 +15,6 @@ internal static partial class MigrationOperationRunner
             throw new InvalidOperationException("The migration operation identifier is invalid.");
         var releaseSha = RequireHex("ADVENTURESSUITE_RELEASE_SHA", 40);
         var imageDigest = RequireImageDigest("ADVENTURESSUITE_IMAGE_DIGEST");
-        var artifactChecksum = RequireHex("ADVENTURESSUITE_ARTIFACT_SHA256", 64);
         var tenantId = RequireGuid("ADVENTURESSUITE_MIGRATION_TENANT_ID");
         var objectId = RequireGuid("ADVENTURESSUITE_MIGRATION_PRINCIPAL_ID");
         var clientId = RequireGuid("ADVENTURESSUITE_MIGRATION_PRINCIPAL_CLIENT_ID");
@@ -31,7 +30,6 @@ internal static partial class MigrationOperationRunner
             startedAt,
             releaseSha,
             imageDigest,
-            artifactChecksum,
             orderedCatalog = MigrationCatalog.GetOrderedResourceNames(typeof(MigrationCatalog).Assembly)
         });
 
@@ -88,11 +86,19 @@ internal static partial class MigrationOperationRunner
             completedAt = DateTimeOffset.UtcNow,
             releaseSha,
             imageDigest,
-            artifactChecksum,
             selectedScripts,
             classification = classification.ToString(),
             exitCode
         });
+        MigrationContainerModes.WriteCompletionEnvelope(
+            operationId, releaseSha, imageDigest, startedAt,
+            classification.ToString(), exitCode, new
+            {
+                journalClassification = afterOutcome.ToString(),
+                schemaAndPermissionsVerified = VerifyExpectedPostState(after),
+                fingerprintMatched = string.Equals(
+                    before.ApplicationFingerprint, after.ApplicationFingerprint, StringComparison.Ordinal)
+            });
         return exitCode;
     }
 

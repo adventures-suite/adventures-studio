@@ -16,10 +16,6 @@ on:
         description: Registry-authoritative sha256 digest (required after publish)
         required: false
         type: string
-      artifact_sha256:
-        description: Reviewed wrapper and evidence-contract SHA-256 (required when starting)
-        required: false
-        type: string
       operation_id:
         description: Unique reviewed operation identifier
         required: true
@@ -45,7 +41,6 @@ jobs:
         env:
           RELEASE_SHA: ${{ inputs.release_sha }}
           IMAGE_DIGEST: ${{ inputs.image_digest }}
-          ARTIFACT_SHA256: ${{ inputs.artifact_sha256 }}
           OPERATION: ${{ inputs.operation }}
           OPERATION_ID: ${{ inputs.operation_id }}
         run: |
@@ -53,9 +48,6 @@ jobs:
           [[ "$OPERATION_ID" =~ ^[a-z0-9][a-z0-9-]{7,63}$ ]]
           if [ "$OPERATION" != publish-image ]; then
             [[ "$IMAGE_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
-          fi
-          if [[ "$OPERATION" != publish-image && "$OPERATION" != configure-dormant-job ]]; then
-            [[ "$ARTIFACT_SHA256" =~ ^[0-9a-f]{64}$ ]]
           fi
 
   publish-image:
@@ -117,12 +109,10 @@ jobs:
           login_server="$(az acr show --name "$REGISTRY" --query loginServer -o tsv)"
           registry_digest="$(az acr manifest show-metadata "$login_server/$REGISTRY_REPOSITORY:$RELEASE_SHA" --query digest -o tsv)"
           test "$registry_digest" = "$IMAGE_DIGEST"
-          az deployment group create --resource-group "$RESOURCE_GROUP" \
-            --template-file infrastructure/container-apps-migrations/job.bicep \
-            --parameters releaseSha="$RELEASE_SHA" imageDigest="$IMAGE_DIGEST" \
-              workforceTenantId="${{ vars.WORKFORCE_TENANT_ID }}" \
-              sqlServerFqdn="${{ vars.MIGRATION_SQL_SERVER_FQDN }}" \
-              sqlDatabaseName="${{ vars.MIGRATION_SQL_DATABASE }}"
+          az containerapp job update --resource-group "$RESOURCE_GROUP" --name "$JOB_NAME" \
+            --image "$login_server/$REGISTRY_REPOSITORY@$IMAGE_DIGEST" \
+            --set-env-vars ADVENTURESSUITE_RELEASE_SHA="$RELEASE_SHA" ADVENTURESSUITE_IMAGE_DIGEST="$IMAGE_DIGEST" \
+            --set tags.releaseSha="$RELEASE_SHA" tags.imageDigest="$IMAGE_DIGEST"
           deployed_image="$(az containerapp job show -g "$RESOURCE_GROUP" -n "$JOB_NAME" --query 'properties.template.containers[0].image' -o tsv)"
           test "$deployed_image" = "$login_server/$REGISTRY_REPOSITORY@$IMAGE_DIGEST"
 
@@ -134,37 +124,69 @@ jobs:
     timeout-minutes: 20
     permissions: { contents: read, id-token: write }
     steps:
+      - name: Checkout exact SHA
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: '${{ inputs.release_sha }}' }
       - name: Authenticate starter and reader identity
         uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac # v2
         with:
           client-id: ${{ vars.DATABASE_JOB_STARTER_CLIENT_ID }}
           tenant-id: ${{ vars.WORKFORCE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-      - name: Start exact dormant Job once with ephemeral operation values
+      - name: Validate live Job definition, start once, and prove exact outcome
         env:
           OPERATION: ${{ inputs.operation }}
           OPERATION_ID: ${{ inputs.operation_id }}
           RELEASE_SHA: ${{ inputs.release_sha }}
           IMAGE_DIGEST: ${{ inputs.image_digest }}
-          ARTIFACT_SHA256: ${{ inputs.artifact_sha256 }}
+          EXPECTED_ENVIRONMENT_ID: ${{ vars.MIGRATION_CONTAINERAPPS_ENVIRONMENT_ID }}
+          REGISTRY_LOGIN_SERVER: ${{ vars.MIGRATION_REGISTRY_LOGIN_SERVER }}
+          MIGRATION_IDENTITY_ID: ${{ vars.MIGRATION_IDENTITY_RESOURCE_ID }}
+          PULL_IDENTITY_ID: ${{ vars.MIGRATION_PULL_IDENTITY_RESOURCE_ID }}
         run: |
           case "$OPERATION" in
-            verify-execution-channel) mode=--verify-execution-channel ;;
-            capture-migration-state) mode=--capture-migration-state ;;
-            run-reviewed-operation) mode=--run-reviewed-operation ;;
-            verify-migration-state) mode=--verify-migration-state ;;
+            verify-execution-channel) mode=--verify-execution-channel; classification=ExecutionChannelComplete ;;
+            capture-migration-state) mode=--capture-migration-state; classification=StateCaptured ;;
+            run-reviewed-operation) mode=--run-reviewed-operation; classification=Complete ;;
+            verify-migration-state) mode=--verify-migration-state; classification=Complete ;;
             *) exit 2 ;;
           esac
-          image="$(az containerapp job show -g "$RESOURCE_GROUP" -n "$JOB_NAME" --query 'properties.template.containers[0].image' -o tsv)"
-          [[ "$image" = *@"$IMAGE_DIGEST" ]]
-          test "$(az containerapp job show -g "$RESOURCE_GROUP" -n "$JOB_NAME" --query 'tags.releaseSha' -o tsv)" = "$RELEASE_SHA"
-          active="$(az containerapp job execution list -g "$RESOURCE_GROUP" -n "$JOB_NAME" --query "[?properties.status=='Running'] | length(@)" -o tsv)"
+          expected_image="$REGISTRY_LOGIN_SERVER/$REGISTRY_REPOSITORY@$IMAGE_DIGEST"
+          az containerapp job show -g "$RESOURCE_GROUP" -n "$JOB_NAME" -o json > job-definition.json
+          node .github/scripts/validate-migration-job.mjs definition job-definition.json \
+            "$expected_image" "$EXPECTED_ENVIRONMENT_ID" "$MIGRATION_IDENTITY_ID" "$PULL_IDENTITY_ID" \
+            "$RELEASE_SHA" "$IMAGE_DIGEST"
+          test "$(jq -r '.tags.releaseSha' job-definition.json)" = "$RELEASE_SHA"
+          active="$(az containerapp job execution list -g "$RESOURCE_GROUP" -n "$JOB_NAME" --query "[?properties.status=='Running' || properties.status=='Processing' || properties.status=='Pending'] | length(@)" -o tsv)"
           test "$active" = 0
           execution="$(az containerapp job start -g "$RESOURCE_GROUP" -n "$JOB_NAME" \
             --container-name database-migrator --args "$mode" \
             --set-env-vars ADVENTURESSUITE_MIGRATION_OPERATION_ID="$OPERATION_ID" \
-              ADVENTURESSUITE_ARTIFACT_SHA256="$ARTIFACT_SHA256" \
             --query name -o tsv)"
           test -n "$execution"
-          printf '{"operationId":"%s","execution":"%s","releaseSha":"%s","imageDigest":"%s"}\n' \
+          terminal=false
+          for attempt in $(seq 1 96); do
+            az containerapp job execution show -g "$RESOURCE_GROUP" -n "$JOB_NAME" \
+              --job-execution-name "$execution" -o json > execution-status.json
+            status="$(jq -r '.properties.status' execution-status.json)"
+            case "$status" in
+              Succeeded|Failed|Stopped) terminal=true; break ;;
+              Running|Processing|Pending) sleep 10 ;;
+              *) echo "::error::Unexpected execution status"; exit 1 ;;
+            esac
+          done
+          test "$terminal" = true
+          test "$(az containerapp job execution list -g "$RESOURCE_GROUP" -n "$JOB_NAME" \
+            --query "[?properties.status=='Running' || properties.status=='Processing' || properties.status=='Pending'] | length(@)" -o tsv)" = 0
+          logs_received=false
+          for attempt in $(seq 1 6); do
+            if az containerapp job logs show -g "$RESOURCE_GROUP" -n "$JOB_NAME" \
+              --execution "$execution" --container database-migrator --tail 300 --format json > execution-logs.json \
+              && test -s execution-logs.json; then logs_received=true; break; fi
+            sleep 10
+          done
+          test "$logs_received" = true
+          node .github/scripts/validate-migration-job.mjs execution execution-status.json execution-logs.json \
+            "$OPERATION_ID" "$RELEASE_SHA" "$IMAGE_DIGEST" "$classification"
+          printf '{"operationId":"%s","execution":"%s","releaseSha":"%s","imageDigest":"%s","terminalStatus":"Succeeded","finalInactive":true}\n' \
             "$OPERATION_ID" "$execution" "$RELEASE_SHA" "$IMAGE_DIGEST"

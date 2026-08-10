@@ -11,9 +11,11 @@ registry/image bootstrap cycle:
    from ACR, comparing it with the digest returned by the push.
 3. `job.bicep` creates or updates the dormant Job only after that digest exists.
 
-The persistent Job template never stores an operation ID or artifact checksum.
-The separately authorized starter supplies both as per-execution overrides to
-`az containerapp job start`; an active execution prevents another start.
+The persistent Job template never stores an operation ID. The separately
+authorized starter supplies it as a per-execution override to
+`az containerapp job start`; an active execution prevents another start. The
+registry-authoritative image digest is the artifact identity, so no unbound
+caller-supplied artifact checksum is accepted.
 
 `10.40.3.0/27` does not overlap the recorded `10.40.0.0/26` App Service or
 `10.40.1.0/27` private-endpoint ranges and remains inside `10.40.0.0/16`.

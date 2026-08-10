@@ -110,9 +110,8 @@ internal static partial class MigrationContainerModes
             throw new InvalidOperationException("The migration operation identifier is invalid.");
         var releaseSha = RequireHex("ADVENTURESSUITE_RELEASE_SHA", 40);
         var imageDigest = RequireImageDigest("ADVENTURESSUITE_IMAGE_DIGEST");
-        var artifactChecksum = RequireHex("ADVENTURESSUITE_ARTIFACT_SHA256", 64);
         return new(
-            operationId, releaseSha, imageDigest, artifactChecksum,
+            operationId, releaseSha, imageDigest,
             DateTimeOffset.UtcNow,
             RequireGuid("ADVENTURESSUITE_MIGRATION_TENANT_ID"),
             RequireGuid("ADVENTURESSUITE_MIGRATION_PRINCIPAL_ID"),
@@ -124,16 +123,26 @@ internal static partial class MigrationContainerModes
 
     private static void WriteEnvelope(
         ContainerOperationContext context, string classification, int exitCode, object evidence)
+        => WriteCompletionEnvelope(context.OperationId, context.ReleaseSha, context.ImageDigest,
+            context.StartedAt, classification, exitCode, evidence);
+
+    internal static void WriteCompletionEnvelope(
+        string operationId,
+        string releaseSha,
+        string imageDigest,
+        DateTimeOffset startedAt,
+        string classification,
+        int exitCode,
+        object evidence)
     {
         var completedAt = DateTimeOffset.UtcNow;
         var payload = new
         {
             schemaVersion = 1,
-            operationId = context.OperationId,
-            releaseSha = context.ReleaseSha,
-            imageDigest = context.ImageDigest,
-            artifactChecksum = context.ArtifactChecksum,
-            processStartedAt = context.StartedAt,
+            operationId,
+            releaseSha,
+            imageDigest,
+            processStartedAt = startedAt,
             processCompletedAt = completedAt,
             classification,
             processExitCode = exitCode,
@@ -185,7 +194,6 @@ internal sealed record ContainerOperationContext(
     string OperationId,
     string ReleaseSha,
     string ImageDigest,
-    string ArtifactChecksum,
     DateTimeOffset StartedAt,
     Guid TenantId,
     Guid ObjectId,

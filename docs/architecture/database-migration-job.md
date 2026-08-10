@@ -51,22 +51,27 @@ the expected contained SQL principal. Tokens are never logged or persisted.
 Creating the identity and its contained SQL user is a later, separately approved
 bootstrap operation.
 
-The persistent Job definition omits operation ID and artifact checksum. The
-starter injects both as start-time container overrides, after rejecting another
-active execution, so stale operation values cannot survive in the template.
+The persistent Job definition omits the operation ID. The starter injects it as
+a start-time container override after rejecting another active execution, so a
+stale operation value cannot survive in the template. The registry-authoritative
+image digest is the artifact identity; no caller-asserted artifact checksum is
+accepted or echoed as evidence.
 
 | Identity | Minimum scope | Required actions | Explicit exclusions |
 | --- | --- | --- | --- |
 | GitHub image publisher | Migration ACR repository | ACR push/read metadata through OIDC | Job start/update, SQL, role assignment |
-| GitHub Job configurator | Development migration resource group | Validate/read/write the reviewed deployment; read/update dormant Job; read and attach existing migration/pull identities | Job start/delete, SQL, ACR push, identity creation or role assignment |
+| GitHub Job configurator | Exact migration Job; read-only migration ACR | Read/update the existing dormant Job by exact digest; read registry metadata | Other Jobs, Job start/delete, SQL, ACR push, identity or role administration |
 | GitHub Job starter/reader | Migration Job | Start one execution; read exact execution and logs | Job definition mutation, ACR push, SQL |
 | Migration user-assigned identity | `AdventuresSuiteDevelopment` contained principal | ARM token identity proof; reviewed migration DDL/journal access only | Azure control-plane role, ACR push, runtime DML, `db_owner` |
 | Registry pull identity | Migration ACR | Built-in `AcrPull` only | Push/delete, Job control, SQL |
 
 The foundation defines separate GitHub publisher, configurator, and
-starter/reader identities, their environment-scoped OIDC credentials, and the
-minimum built-in/custom role assignments. GitHub identities cannot assign
-roles; deploying those definitions remains a separately approved
+starter/reader identities, their environment-scoped OIDC credentials, and role
+definitions. The later Job deployment assigns configurator and starter roles at
+the exact Job resource scope. The starter receives a separate query-only grant
+on the dedicated Log Analytics workspace; the configurator receives read-only
+registry metadata access. GitHub identities cannot assign roles; initial Job
+creation and these exact-scope assignments remain a separately approved
 infrastructure-administrator action.
 
 ## Network and supply chain
@@ -88,13 +93,22 @@ image; generates an SBOM; and tests the SQL-free mode.
 ## Evidence contract
 
 Every finite execution emits one bounded JSON completion envelope containing
-operation ID, UTC timing, release SHA, image digest, artifact/catalog identity,
+operation ID, UTC timing, release SHA, registry-authoritative image digest,
 safe identity/target metadata when SQL is used, pre/post journal classification,
 verification booleans, fingerprint comparison, classification, process exit
 code, and final-state status. Missing terminal status, missing or malformed
 envelope, checksum mismatch, unbounded output, or ambiguous execution ID fails
 closed. SQL text, connection strings, tokens, environment dumps, exception
 details, private operational values, and application data are prohibited.
+
+Before start, the workflow reads and validates the live Job definition: exact
+image, environment, migration/pull identities, registry identity, manual
+trigger, single replica/parallelism, zero retries, 900-second timeout, reviewed
+entrypoint/default mode, no secrets, and no persistent operation values. It then
+polls the exact execution to a bounded terminal state, retrieves only that
+execution's bounded logs, requires exactly one completion envelope, recomputes
+its checksum, matches operation/SHA/digest/classification/exit code, and proves
+no execution remains active.
 
 ## Bridge retirement
 

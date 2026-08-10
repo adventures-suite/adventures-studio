@@ -142,22 +142,13 @@ resource configuratorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' =
   name: guid(resourceGroup().id, 'migration-job-configurator')
   properties: {
     roleName: 'AdventuresSuite Migration Job Configurator'
-    description: 'Creates or updates only reviewed Container Apps Job definitions.'
+    description: 'Updates only the exact existing reviewed Container Apps Job.'
     type: 'CustomRole'
     assignableScopes: [resourceGroup().id]
     permissions: [{
       actions: [
-        'Microsoft.Resources/deployments/read'
-        'Microsoft.Resources/deployments/write'
-        'Microsoft.Resources/deployments/validate/action'
-        'Microsoft.Resources/deployments/operationStatuses/read'
-        'Microsoft.Resources/deployments/operations/read'
         'Microsoft.App/jobs/read'
         'Microsoft.App/jobs/write'
-        'Microsoft.App/managedEnvironments/read'
-        'Microsoft.ContainerRegistry/registries/read'
-        'Microsoft.ManagedIdentity/userAssignedIdentities/read'
-        'Microsoft.ManagedIdentity/userAssignedIdentities/assign/action'
       ]
       notActions: ['Microsoft.App/jobs/start/action']
       dataActions: []
@@ -179,7 +170,6 @@ resource starterRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' = {
         'Microsoft.App/jobs/start/action'
         'Microsoft.App/jobs/executions/read'
         'Microsoft.App/jobs/executions/replicas/read'
-        'Microsoft.OperationalInsights/workspaces/query/read'
       ]
       notActions: ['Microsoft.App/jobs/write', 'Microsoft.App/jobs/delete']
       dataActions: []
@@ -188,20 +178,38 @@ resource starterRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' = {
   }
 }
 
-resource configuratorAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(resourceGroup().id, configuratorIdentity.id, configuratorRole.id)
+resource starterLogsRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' = {
+  name: guid(resourceGroup().id, 'migration-job-logs-reader')
   properties: {
-    roleDefinitionId: configuratorRole.id
-    principalId: configuratorIdentity.properties.principalId
+    roleName: 'AdventuresSuite Migration Job Logs Reader'
+    description: 'Queries only the migration Log Analytics workspace.'
+    type: 'CustomRole'
+    assignableScopes: [resourceGroup().id]
+    permissions: [{
+      actions: ['Microsoft.OperationalInsights/workspaces/query/read']
+      notActions: []
+      dataActions: []
+      notDataActions: []
+    }]
+  }
+}
+
+resource starterLogsAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(logs.id, starterIdentity.id, starterLogsRole.id)
+  scope: logs
+  properties: {
+    roleDefinitionId: starterLogsRole.id
+    principalId: starterIdentity.properties.principalId
     principalType: 'ServicePrincipal'
   }
 }
 
-resource starterAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(resourceGroup().id, starterIdentity.id, starterRole.id)
+resource configuratorRegistryReader 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(registry.id, configuratorIdentity.id, 'Reader')
+  scope: registry
   properties: {
-    roleDefinitionId: starterRole.id
-    principalId: starterIdentity.properties.principalId
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')
+    principalId: configuratorIdentity.properties.principalId
     principalType: 'ServicePrincipal'
   }
 }
