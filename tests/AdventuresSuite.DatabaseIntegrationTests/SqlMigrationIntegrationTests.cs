@@ -312,6 +312,7 @@ public sealed class SqlMigrationIntegrationTests
         await ExecuteAsync(connectionString, """
             CREATE USER companion_read_runtime_test WITHOUT LOGIN;
             ALTER ROLE AdventuresSuiteCompanionReadRuntime ADD MEMBER companion_read_runtime_test;
+            CREATE PROCEDURE dbo.CompanionDeniedExecutionProbe AS SELECT 1;
             """);
         foreach (var target in new[]
         {
@@ -329,6 +330,11 @@ public sealed class SqlMigrationIntegrationTests
                 REVERT;
                 SELECT @Allowed;
                 """));
+            await ExecuteAsync(connectionString, $"""
+                EXECUTE AS USER='companion_read_runtime_test';
+                SELECT TOP (0) * FROM {target};
+                REVERT;
+                """);
             foreach (var permission in new[] { "INSERT", "UPDATE", "DELETE", "ALTER", "CONTROL" })
             {
                 Assert.Equal(0, await ScalarAsync<int>(connectionString, $"""
@@ -351,6 +357,25 @@ public sealed class SqlMigrationIntegrationTests
             REVERT;
             SELECT @CanDdl;
             """));
+
+        foreach (var prohibitedOperation in new[]
+        {
+            "SELECT TOP (0) * FROM auth.Users;",
+            "INSERT planning.AdventurePlans (CreatorId, AdventurePlanId, Title, LifecycleStage, PlanningStatus, Version, CreatedAtUtc, UpdatedAtUtc) VALUES ('denied', 'denied', 'denied', 'Dream', 'Draft', 1, SYSUTCDATETIME(), SYSUTCDATETIME());",
+            "UPDATE planning.AdventurePlans SET Title = Title WHERE 1 = 0;",
+            "DELETE FROM planning.AdventurePlans WHERE 1 = 0;",
+            "EXECUTE dbo.CompanionDeniedExecutionProbe;",
+            "CREATE TABLE planning.CompanionDeniedDdlProbe (Id int NOT NULL);",
+            "INSERT dbo.AdventuresSuiteSchemaVersions (ScriptName, Applied) VALUES ('denied', SYSUTCDATETIME());",
+            "GRANT CONTROL ON OBJECT::planning.AdventurePlans TO companion_read_runtime_test;"
+        })
+        {
+            await AssertSqlRejectedAsync(connectionString, $"""
+                EXECUTE AS USER='companion_read_runtime_test';
+                {prohibitedOperation}
+                REVERT;
+                """);
+        }
     }
 
     private static async Task<string> GetSchemaSignatureAsync(string connectionString)
