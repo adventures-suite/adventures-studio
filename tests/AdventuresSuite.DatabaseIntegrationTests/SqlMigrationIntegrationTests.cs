@@ -359,23 +359,25 @@ public sealed class SqlMigrationIntegrationTests
             SELECT @CanDdl;
             """));
 
-        foreach (var prohibitedOperation in new[]
+        foreach (var (operationName, sql) in new[]
         {
-            "SELECT TOP (0) * FROM auth.Users;",
-            "INSERT planning.AdventurePlans (CreatorId, AdventurePlanId, Title, LifecycleStage, PlanningStatus, Version, CreatedAtUtc, UpdatedAtUtc) VALUES ('denied', 'denied', 'denied', 'Dream', 'Draft', 1, SYSUTCDATETIME(), SYSUTCDATETIME());",
-            "UPDATE planning.AdventurePlans SET Title = Title WHERE 1 = 0;",
-            "DELETE FROM planning.AdventurePlans WHERE 1 = 0;",
-            "EXECUTE dbo.CompanionDeniedExecutionProbe;",
-            "CREATE TABLE planning.CompanionDeniedDdlProbe (Id int NOT NULL);",
-            "INSERT dbo.AdventuresSuiteSchemaVersions (ScriptName, Applied) VALUES ('denied', SYSUTCDATETIME());",
-            "GRANT CONTROL ON OBJECT::planning.AdventurePlans TO companion_read_runtime_test;"
+            ("unapproved read", "SELECT TOP (0) * FROM auth.Users;"),
+            ("insert", "INSERT planning.AdventurePlans (CreatorId, AdventurePlanId, Title, LifecycleStage, PlanningStatus, Version, CreatedAtUtc, UpdatedAtUtc) VALUES ('denied', 'denied', 'denied', 'Dream', 'Draft', 1, SYSUTCDATETIME(), SYSUTCDATETIME());"),
+            ("update", "UPDATE planning.AdventurePlans SET Title = Title WHERE 1 = 0;"),
+            ("delete", "DELETE FROM planning.AdventurePlans WHERE 1 = 0;"),
+            ("execute", "EXECUTE dbo.CompanionDeniedExecutionProbe;"),
+            ("DDL", "CREATE TABLE planning.CompanionDeniedDdlProbe (Id int NOT NULL);"),
+            ("migration journal write", "INSERT dbo.AdventuresSuiteSchemaVersions (ScriptName, Applied) VALUES ('denied', SYSUTCDATETIME());"),
+            ("privilege escalation", "GRANT CONTROL ON OBJECT::planning.AdventurePlans TO companion_read_runtime_test;")
         })
         {
-            await AssertSqlRejectedAsync(connectionString, $"""
+            var exception = await Record.ExceptionAsync(() => ExecuteAsync(connectionString, $"""
                 EXECUTE AS USER='companion_read_runtime_test';
-                {prohibitedOperation}
+                {sql}
                 REVERT;
-                """);
+                """));
+            Assert.True(exception is SqlException,
+                $"Prohibited Companion operation '{operationName}' unexpectedly succeeded.");
         }
     }
 
