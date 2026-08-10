@@ -71,20 +71,23 @@ combine them or run DbUp using administrator authority.
    `ADVENTURESSUITE_ADMIN_SQL_CONNECTION_STRING` and the verified migration
    principal object ID, client ID, and exact display name, and runs
    `--bootstrap-sql`. This creates the migration contained user and the empty
-   `AdventuresSuiteAuthenticationRuntime` database role, and grants `CONNECT`,
+   `AdventuresSuiteAuthenticationRuntime` and
+   `AdventuresSuiteMembershipRuntime` database roles, and grants `CONNECT`,
    `db_ddladmin`, `db_datareader`, and `db_datawriter` for development
-   migrations. The bootstrap also assigns the migration user an explicit `dbo`
-   default schema so Microsoft Entra workload authentication can create the
-   source-controlled schemas without implicit-user or group-default-schema
-   behavior. No runtime identity is added to the empty role at this stage.
+   migrations. Pre-creating runtime roles under administrator authority keeps
+   role administration away from the migration identity. The bootstrap also
+   assigns the migration user an explicit `dbo` default schema so Microsoft
+   Entra workload authentication can create the source-controlled schemas
+   without implicit-user or group-default-schema behavior. No runtime identity
+   is added to either empty role at this stage.
 2. The migration workload identity supplies
    `ADVENTURESSUITE_SQL_CONNECTION_STRING` and runs `--migrate`. No
    administrator connection string is present for this operation.
-3. After migrations grant the intended `auth` schema permissions to
-   `AdventuresSuiteAuthenticationRuntime`, the Entra administrator supplies the
-   verified application principal object ID, client ID, and exact display name
-   and runs `--bind-runtime`. This creates the runtime contained user, adds it
-   only to the precreated role, and grants `CONNECT`.
+3. After migrations grant the intended permissions to the authentication and
+   membership runtime roles, the Entra administrator supplies the verified
+   application principal object ID, client ID, and exact display name and runs
+   `--bind-runtime`. This creates the runtime contained user, adds it only to
+   the precreated roles, and grants `CONNECT`.
 4. The migration workload identity runs `--verify-permissions`. The bounded
    verification proves its development migration roles, journal access, and
    required authentication schema without changing application data.

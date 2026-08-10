@@ -14,6 +14,14 @@ public sealed class AzureDevelopmentBootstrapperTests
             grants,
             StringComparison.Ordinal);
         Assert.Contains(
+            "CREATE ROLE [AdventuresSuiteMembershipRuntime] AUTHORIZATION [dbo];",
+            grants,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "The membership runtime principal name is not an approved database role.",
+            grants,
+            StringComparison.Ordinal);
+        Assert.Contains(
             "ALTER USER [migration-principal] WITH DEFAULT_SCHEMA = [dbo];",
             grants,
             StringComparison.Ordinal);

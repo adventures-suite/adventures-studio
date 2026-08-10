@@ -36,6 +36,14 @@ internal static class AzureDevelopmentBootstrapper
             THROW 51000, 'The authentication runtime principal name is not an approved database role.', 1;
         IF DATABASE_PRINCIPAL_ID(N'{RuntimeRoleName}') IS NULL
             CREATE ROLE [{RuntimeRoleName}] AUTHORIZATION [dbo];
+        IF DATABASE_PRINCIPAL_ID(N'{MembershipRuntimeRoleName}') IS NOT NULL
+            AND NOT EXISTS (
+                SELECT 1
+                FROM sys.database_principals
+                WHERE name = N'{MembershipRuntimeRoleName}' AND type = 'R')
+            THROW 51000, 'The membership runtime principal name is not an approved database role.', 1;
+        IF DATABASE_PRINCIPAL_ID(N'{MembershipRuntimeRoleName}') IS NULL
+            CREATE ROLE [{MembershipRuntimeRoleName}] AUTHORIZATION [dbo];
 
         ALTER USER {principalAlias} WITH DEFAULT_SCHEMA = [dbo];
         IF ISNULL(IS_ROLEMEMBER(N'db_ddladmin', @AliasParameter), 0) <> 1
