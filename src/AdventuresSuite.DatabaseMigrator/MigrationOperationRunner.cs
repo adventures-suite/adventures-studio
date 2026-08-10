@@ -14,6 +14,7 @@ internal static partial class MigrationOperationRunner
         if (!OperationIdPattern().IsMatch(operationId))
             throw new InvalidOperationException("The migration operation identifier is invalid.");
         var releaseSha = RequireHex("ADVENTURESSUITE_RELEASE_SHA", 40);
+        var imageDigest = RequireImageDigest("ADVENTURESSUITE_IMAGE_DIGEST");
         var artifactChecksum = RequireHex("ADVENTURESSUITE_ARTIFACT_SHA256", 64);
         var tenantId = RequireGuid("ADVENTURESSUITE_MIGRATION_TENANT_ID");
         var objectId = RequireGuid("ADVENTURESSUITE_MIGRATION_PRINCIPAL_ID");
@@ -29,11 +30,13 @@ internal static partial class MigrationOperationRunner
             operationId,
             startedAt,
             releaseSha,
+            imageDigest,
             artifactChecksum,
             orderedCatalog = MigrationCatalog.GetOrderedResourceNames(typeof(MigrationCatalog).Assembly)
         });
 
-        var credential = new ManagedIdentityCredential(ManagedIdentityId.SystemAssigned);
+        var credential = new ManagedIdentityCredential(
+            ManagedIdentityId.FromUserAssignedClientId(clientId.ToString()));
         var token = await credential.GetTokenAsync(
             new TokenRequestContext(["https://database.windows.net/.default"]));
         var identity = await MigrationIdentityValidator.ValidateAsync(
@@ -84,6 +87,7 @@ internal static partial class MigrationOperationRunner
             operationId,
             completedAt = DateTimeOffset.UtcNow,
             releaseSha,
+            imageDigest,
             artifactChecksum,
             selectedScripts,
             classification = classification.ToString(),
@@ -199,8 +203,18 @@ internal static partial class MigrationOperationRunner
             : throw new InvalidOperationException($"Set a valid {name} value.");
     }
 
+    private static string RequireImageDigest(string name)
+    {
+        var value = Require(name);
+        return ImageDigestPattern().IsMatch(value)
+            ? value : throw new InvalidOperationException($"Set a valid immutable {name} value.");
+    }
+
     [GeneratedRegex("^[a-z0-9][a-z0-9-]{7,63}$", RegexOptions.CultureInvariant)]
     private static partial Regex OperationIdPattern();
+
+    [GeneratedRegex("^sha256:[0-9a-f]{64}$", RegexOptions.CultureInvariant)]
+    private static partial Regex ImageDigestPattern();
 }
 
 internal enum MigrationOperationClassification
