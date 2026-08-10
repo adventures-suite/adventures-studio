@@ -128,8 +128,12 @@ jobs:
 
           jq -e '
             (.openapi | startswith("3.1")) and
-            ((.paths | keys) == ["/v1/companion/adventures"]) and
-            (.paths["/v1/companion/adventures"].get.operationId == "ListCompanionAdventures")
+            ((.paths | keys) == [
+              "/v1/companion/adventures",
+              "/v1/companion/adventures/{adventureId}"
+            ]) and
+            (.paths["/v1/companion/adventures"].get.operationId == "ListCompanionAdventures") and
+            (.paths["/v1/companion/adventures/{adventureId}"].get.operationId == "GetCompanionAdventure")
           ' "${{ env.EVIDENCE_DIR }}/companion-v1.openapi.json" >/dev/null
           kill "$api_pid"
           wait "$api_pid" || true
