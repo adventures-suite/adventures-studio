@@ -39,7 +39,7 @@ try
             return await MigrationOperationRunner.RunAsync(
                 RequireEnvironment(migrationConnectionVariable));
         case ["--verify-execution-channel"]:
-            return MigrationContainerModes.VerifyExecutionChannel();
+            return await MigrationContainerModes.VerifyExecutionChannelAsync();
         case ["--capture-migration-state"]:
             return await MigrationContainerModes.CaptureMigrationStateAsync(
                 RequireEnvironment(migrationConnectionVariable));

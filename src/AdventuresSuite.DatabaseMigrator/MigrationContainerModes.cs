@@ -10,13 +10,34 @@ namespace AdventuresSuite.DatabaseMigrator;
 /// <summary>Provides finite, reviewed Container Apps Job execution modes.</summary>
 internal static partial class MigrationContainerModes
 {
-    internal static int VerifyExecutionChannel()
+    internal static Task<int> VerifyExecutionChannelAsync()
+    {
+        var clientId = RequireGuid("ADVENTURESSUITE_MIGRATION_PRINCIPAL_CLIENT_ID");
+        var credential = new ManagedIdentityCredential(
+            ManagedIdentityId.FromUserAssignedClientId(clientId.ToString()));
+        return VerifyExecutionChannelAsync(credential);
+    }
+
+    internal static async Task<int> VerifyExecutionChannelAsync(TokenCredential credential)
     {
         var context = ReadContext(requireSqlTarget: false);
+        AccessToken token = await credential.GetTokenAsync(
+            new TokenRequestContext(["https://management.azure.com/.default"]),
+            CancellationToken.None);
+        var identity = MigrationIdentityValidator.ValidateWorkloadToken(
+            token, context.TenantId, context.ObjectId, context.ClientId,
+            "https://management.azure.com/");
         WriteEnvelope(context, "ExecutionChannelComplete", 0, new
         {
             sqlAccessAttempted = false,
-            environmentValidated = true
+            environmentValidated = true,
+            identity = new
+            {
+                identity.TenantId,
+                identity.ObjectId,
+                identity.ClientId,
+                identity.Audience
+            }
         });
         return 0;
     }

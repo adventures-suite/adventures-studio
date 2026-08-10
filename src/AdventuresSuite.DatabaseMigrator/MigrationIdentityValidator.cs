@@ -7,6 +7,25 @@ namespace AdventuresSuite.DatabaseMigrator;
 /// <summary>Validates the exact migration workload token and contained SQL principal.</summary>
 internal static class MigrationIdentityValidator
 {
+    internal static MigrationWorkloadIdentityEvidence ValidateWorkloadToken(
+        AccessToken token,
+        Guid expectedTenantId,
+        Guid expectedObjectId,
+        Guid expectedClientId,
+        string expectedAudience)
+    {
+        var claims = ReadClaims(token.Token);
+        RequireClaim(claims, "tid", expectedTenantId.ToString());
+        RequireClaim(claims, "oid", expectedObjectId.ToString());
+        RequireClaim(claims, "aud", expectedAudience);
+        var clientClaim = claims.TryGetValue("appid", out var appId) ? appId
+            : claims.TryGetValue("azp", out var authorizedParty) ? authorizedParty : null;
+        if (!string.Equals(clientClaim, expectedClientId.ToString(), StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("The migration token client identity is not approved.");
+
+        return new(expectedTenantId, expectedObjectId, expectedClientId, expectedAudience);
+    }
+
     internal static async Task<MigrationIdentityEvidence> ValidateAsync(
         AccessToken token,
         string connectionString,
@@ -17,14 +36,8 @@ internal static class MigrationIdentityValidator
         string expectedServer,
         string expectedDatabase)
     {
-        var claims = ReadClaims(token.Token);
-        RequireClaim(claims, "tid", expectedTenantId.ToString());
-        RequireClaim(claims, "oid", expectedObjectId.ToString());
-        RequireClaim(claims, "aud", "https://database.windows.net/");
-        var clientClaim = claims.TryGetValue("appid", out var appId) ? appId
-            : claims.TryGetValue("azp", out var authorizedParty) ? authorizedParty : null;
-        if (!string.Equals(clientClaim, expectedClientId.ToString(), StringComparison.OrdinalIgnoreCase))
-            throw new InvalidOperationException("The migration token client identity is not approved.");
+        _ = ValidateWorkloadToken(token, expectedTenantId, expectedObjectId, expectedClientId,
+            "https://database.windows.net/");
 
         var builder = new SqlConnectionStringBuilder(connectionString);
         if (builder.Authentication != SqlAuthenticationMethod.ActiveDirectoryManagedIdentity
@@ -103,6 +116,12 @@ internal static class MigrationIdentityValidator
         return Convert.FromBase64String(padded);
     }
 }
+
+internal sealed record MigrationWorkloadIdentityEvidence(
+    Guid TenantId,
+    Guid ObjectId,
+    Guid ClientId,
+    string Audience);
 
 internal sealed record MigrationIdentityEvidence(
     Guid TenantId,

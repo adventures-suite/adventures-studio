@@ -15,10 +15,17 @@ digest. A protected `database-development` GitHub Environment gates every Azure
 mutation or Job start. Automatic workflows may build and validate but cannot
 start migrations.
 
+Provisioning is two-phase. The foundation creates networking, logging, ACR,
+identities, OIDC federated credentials, minimum roles, and the Container Apps
+environment. Only after the full-SHA image is pushed and its manifest digest is
+resolved from ACR may the second template deploy the digest-bound dormant Job.
+This removes the registry/image bootstrap cycle.
+
 The container entrypoint allowlists four modes:
 
-- `--verify-execution-channel`: validates immutable execution metadata and
-  emits a checksummed completion envelope without constructing a SQL client;
+- `--verify-execution-channel`: obtains an ARM token through the explicitly
+  selected migration identity, validates tenant/object/client/audience, and
+  emits a checksummed completion envelope with `sqlAccessAttempted=false`;
 - `--capture-migration-state`: read-only journal/catalog/permission/count and
   fingerprint evidence;
 - `--run-reviewed-operation`: requires exact 0006, holds the zero-wait SQL
@@ -44,17 +51,23 @@ the expected contained SQL principal. Tokens are never logged or persisted.
 Creating the identity and its contained SQL user is a later, separately approved
 bootstrap operation.
 
+The persistent Job definition omits operation ID and artifact checksum. The
+starter injects both as start-time container overrides, after rejecting another
+active execution, so stale operation values cannot survive in the template.
+
 | Identity | Minimum scope | Required actions | Explicit exclusions |
 | --- | --- | --- | --- |
 | GitHub image publisher | Migration ACR repository | ACR push/read metadata through OIDC | Job start/update, SQL, role assignment |
-| GitHub Job configurator | Migration Job and its environment settings | Read/update dormant Job definition by exact digest | Job start, SQL, ACR push, identity administration |
+| GitHub Job configurator | Development migration resource group | Validate/read/write the reviewed deployment; read/update dormant Job; read and attach existing migration/pull identities | Job start/delete, SQL, ACR push, identity creation or role assignment |
 | GitHub Job starter/reader | Migration Job | Start one execution; read exact execution and logs | Job definition mutation, ACR push, SQL |
-| Migration user-assigned identity | `AdventuresSuiteDevelopment` contained principal | Reviewed migration DDL/journal access only | Azure control plane, ACR push, runtime DML, `db_owner` |
+| Migration user-assigned identity | `AdventuresSuiteDevelopment` contained principal | ARM token identity proof; reviewed migration DDL/journal access only | Azure control-plane role, ACR push, runtime DML, `db_owner` |
 | Registry pull identity | Migration ACR | Built-in `AcrPull` only | Push/delete, Job control, SQL |
 
-Prefer custom control-plane roles limited to the exact Job actions after their
-provider operations are validated. GitHub identities cannot assign roles. Role
-assignment remains a separately approved infrastructure-administrator action.
+The foundation defines separate GitHub publisher, configurator, and
+starter/reader identities, their environment-scoped OIDC credentials, and the
+minimum built-in/custom role assignments. GitHub identities cannot assign
+roles; deploying those definitions remains a separately approved
+infrastructure-administrator action.
 
 ## Network and supply chain
 
@@ -65,8 +78,10 @@ existing private DNS zone and private endpoint. The Job has no ingress or
 inbound private endpoint.
 
 Development uses ACR Basic with anonymous pull and admin credentials disabled.
-Images use a full-SHA tag for publication and an immutable digest for Job
-configuration and execution. GitHub uses OIDC. Validation builds the pinned,
+Images use a full-SHA tag for publication. The publisher compares the push
+manifest digest with the registry-authoritative ACR manifest digest, and only
+that exact digest flows into Job configuration and execution. GitHub uses OIDC.
+Validation builds the pinned,
 multi-stage, non-root image; inspects labels/user/runtime contents; scans the
 image; generates an SBOM; and tests the SQL-free mode.
 

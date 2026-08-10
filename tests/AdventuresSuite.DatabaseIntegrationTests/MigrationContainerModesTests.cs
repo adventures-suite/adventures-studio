@@ -8,7 +8,7 @@ namespace AdventuresSuite.DatabaseIntegrationTests;
 public sealed class MigrationContainerModesTests
 {
     [Fact]
-    public void ExecutionChannelProducesBoundedSqlFreeEnvelope()
+    public async Task ExecutionChannelProducesBoundedSqlFreeEnvelope()
     {
         using var environment = ValidEnvironment();
         using var writer = new StringWriter();
@@ -16,7 +16,14 @@ public sealed class MigrationContainerModesTests
         Console.SetOut(writer);
         try
         {
-            Assert.Equal(0, MigrationContainerModes.VerifyExecutionChannel());
+            Assert.Equal(0, await MigrationContainerModes.VerifyExecutionChannelAsync(
+                new FixedTokenCredential(Token(new Dictionary<string, string>
+                {
+                    ["tid"] = "00000000-0000-0000-0000-000000000001",
+                    ["oid"] = "00000000-0000-0000-0000-000000000002",
+                    ["appid"] = "00000000-0000-0000-0000-000000000003",
+                    ["aud"] = "https://management.azure.com/"
+                }))));
         }
         finally
         {
@@ -38,12 +45,12 @@ public sealed class MigrationContainerModesTests
     }
 
     [Fact]
-    public void MutableImageReferenceIsRejectedBeforeAnySqlAccess()
+    public async Task MutableImageReferenceIsRejectedBeforeAnySqlAccess()
     {
         using var environment = ValidEnvironment();
         environment.Set("ADVENTURESSUITE_IMAGE_DIGEST", "latest");
-        var exception = Assert.Throws<InvalidOperationException>(
-            () => _ = MigrationContainerModes.VerifyExecutionChannel());
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => MigrationContainerModes.VerifyExecutionChannelAsync(new FixedTokenCredential(default)));
         Assert.Equal("Set a valid immutable ADVENTURESSUITE_IMAGE_DIGEST value.", exception.Message);
     }
 
@@ -65,6 +72,30 @@ public sealed class MigrationContainerModesTests
                 Guid.Parse("00000000-0000-0000-0000-000000000003"),
                 "migration-job", "approved", "Approved"));
         Assert.Equal("The migration token tid claim is not approved.", exception.Message);
+    }
+
+    [Theory]
+    [InlineData("oid", "00000000-0000-0000-0000-000000000099", "The migration token oid claim is not approved.")]
+    [InlineData("appid", "00000000-0000-0000-0000-000000000099", "The migration token client identity is not approved.")]
+    [InlineData("aud", "https://database.windows.net/", "The migration token aud claim is not approved.")]
+    public void ArmIdentityProofRejectsMismatchedIdentityMetadata(
+        string claim, string value, string expectedMessage)
+    {
+        var claims = new Dictionary<string, string>
+        {
+            ["tid"] = "00000000-0000-0000-0000-000000000001",
+            ["oid"] = "00000000-0000-0000-0000-000000000002",
+            ["appid"] = "00000000-0000-0000-0000-000000000003",
+            ["aud"] = "https://management.azure.com/"
+        };
+        claims[claim] = value;
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            MigrationIdentityValidator.ValidateWorkloadToken(Token(claims),
+                Guid.Parse("00000000-0000-0000-0000-000000000001"),
+                Guid.Parse("00000000-0000-0000-0000-000000000002"),
+                Guid.Parse("00000000-0000-0000-0000-000000000003"),
+                "https://management.azure.com/"));
+        Assert.Equal(expectedMessage, exception.Message);
     }
 
     private static AccessToken Token(IReadOnlyDictionary<string, string> claims)
@@ -105,5 +136,14 @@ public sealed class MigrationContainerModesTests
             foreach (var value in original)
                 Environment.SetEnvironmentVariable(value.Key, value.Value);
         }
+    }
+
+    private sealed class FixedTokenCredential(AccessToken token) : TokenCredential
+    {
+        public override AccessToken GetToken(TokenRequestContext requestContext,
+            CancellationToken cancellationToken) => token;
+
+        public override ValueTask<AccessToken> GetTokenAsync(TokenRequestContext requestContext,
+            CancellationToken cancellationToken) => ValueTask.FromResult(token);
     }
 }

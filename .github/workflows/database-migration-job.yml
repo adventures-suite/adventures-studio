@@ -13,7 +13,11 @@ on:
         required: true
         type: string
       image_digest:
-        description: Exact reviewed sha256 image digest (required after publish)
+        description: Registry-authoritative sha256 digest (required after publish)
+        required: false
+        type: string
+      artifact_sha256:
+        description: Reviewed wrapper and evidence-contract SHA-256 (required when starting)
         required: false
         type: string
       operation_id:
@@ -28,6 +32,11 @@ concurrency:
   group: database-development-migration
   cancel-in-progress: false
 
+env:
+  RESOURCE_GROUP: ${{ vars.MIGRATION_RESOURCE_GROUP }}
+  REGISTRY_REPOSITORY: ${{ vars.MIGRATION_REGISTRY_REPOSITORY }}
+  JOB_NAME: ${{ vars.MIGRATION_JOB_NAME }}
+
 jobs:
   validate-input:
     runs-on: ubuntu-24.04
@@ -36,11 +45,17 @@ jobs:
         env:
           RELEASE_SHA: ${{ inputs.release_sha }}
           IMAGE_DIGEST: ${{ inputs.image_digest }}
+          ARTIFACT_SHA256: ${{ inputs.artifact_sha256 }}
           OPERATION: ${{ inputs.operation }}
+          OPERATION_ID: ${{ inputs.operation_id }}
         run: |
           [[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$OPERATION_ID" =~ ^[a-z0-9][a-z0-9-]{7,63}$ ]]
           if [ "$OPERATION" != publish-image ]; then
             [[ "$IMAGE_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
+          fi
+          if [[ "$OPERATION" != publish-image && "$OPERATION" != configure-dormant-job ]]; then
+            [[ "$ARTIFACT_SHA256" =~ ^[0-9a-f]{64}$ ]]
           fi
 
   publish-image:
@@ -48,57 +63,108 @@ jobs:
     needs: validate-input
     runs-on: ubuntu-24.04
     environment: database-development
-    permissions:
-      contents: read
-      id-token: write
+    permissions: { contents: read, id-token: write }
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout exact SHA
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with: { ref: '${{ inputs.release_sha }}' }
-      - uses: azure/login@v2
+      - name: Authenticate publisher identity
+        uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac # v2
         with:
           client-id: ${{ vars.DATABASE_IMAGE_PUBLISHER_CLIENT_ID }}
           tenant-id: ${{ vars.WORKFORCE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-      - name: Build, push full-SHA tag, and record immutable digest
+      - name: Build, push, and resolve registry-authoritative digest
         env:
           REGISTRY: ${{ vars.MIGRATION_REGISTRY_NAME }}
           RELEASE_SHA: ${{ inputs.release_sha }}
         run: |
           az acr login --name "$REGISTRY"
           login_server="$(az acr show --name "$REGISTRY" --query loginServer -o tsv)"
-          image="$login_server/adventures-suite-database-migrator:$RELEASE_SHA"
+          image="$login_server/$REGISTRY_REPOSITORY:$RELEASE_SHA"
           docker build --file src/AdventuresSuite.DatabaseMigrator/Dockerfile --build-arg RELEASE_SHA="$RELEASE_SHA" --tag "$image" .
-          docker push "$image"
-          digest="$(docker image inspect "$image" --format '{{index .RepoDigests 0}}' | cut -d@ -f2)"
-          [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
-          printf '{"releaseSha":"%s","imageDigest":"%s"}\n' "$RELEASE_SHA" "$digest"
+          push_output="$(docker push "$image")"
+          pushed_digest="$(sed -nE 's/^.*digest: (sha256:[0-9a-f]{64}).*$/\1/p' <<<"$push_output" | tail -n 1)"
+          registry_digest="$(az acr manifest show-metadata "$image" --query digest -o tsv)"
+          [[ "$pushed_digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+          [[ "$registry_digest" = "$pushed_digest" ]]
+          printf '{"releaseSha":"%s","pushedManifestDigest":"%s","registryDigest":"%s"}\n' \
+            "$RELEASE_SHA" "$pushed_digest" "$registry_digest" | tee digest-evidence.json
+          echo "Registry-authoritative deployment reference: $login_server/$REGISTRY_REPOSITORY@$registry_digest"
 
-  configure-or-run:
-    if: inputs.operation != 'publish-image'
+  configure-dormant-job:
+    if: inputs.operation == 'configure-dormant-job'
     needs: validate-input
     runs-on: ubuntu-24.04
     environment: database-development
-    permissions:
-      contents: read
-      id-token: write
+    permissions: { contents: read, id-token: write }
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout exact SHA
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with: { ref: '${{ inputs.release_sha }}' }
-      - uses: azure/login@v2
+      - name: Authenticate configurator identity
+        uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac # v2
         with:
-          client-id: ${{ vars.DATABASE_JOB_OPERATOR_CLIENT_ID }}
+          client-id: ${{ vars.DATABASE_JOB_CONFIGURATOR_CLIENT_ID }}
           tenant-id: ${{ vars.WORKFORCE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-      - name: Require exact digest and approved job controls
+      - name: Verify registry digest then deploy dormant digest-bound Job
         env:
+          REGISTRY: ${{ vars.MIGRATION_REGISTRY_NAME }}
+          RELEASE_SHA: ${{ inputs.release_sha }}
           IMAGE_DIGEST: ${{ inputs.image_digest }}
+        run: |
+          login_server="$(az acr show --name "$REGISTRY" --query loginServer -o tsv)"
+          registry_digest="$(az acr manifest show-metadata "$login_server/$REGISTRY_REPOSITORY:$RELEASE_SHA" --query digest -o tsv)"
+          test "$registry_digest" = "$IMAGE_DIGEST"
+          az deployment group create --resource-group "$RESOURCE_GROUP" \
+            --template-file infrastructure/container-apps-migrations/job.bicep \
+            --parameters releaseSha="$RELEASE_SHA" imageDigest="$IMAGE_DIGEST" \
+              workforceTenantId="${{ vars.WORKFORCE_TENANT_ID }}" \
+              sqlServerFqdn="${{ vars.MIGRATION_SQL_SERVER_FQDN }}" \
+              sqlDatabaseName="${{ vars.MIGRATION_SQL_DATABASE }}"
+          deployed_image="$(az containerapp job show -g "$RESOURCE_GROUP" -n "$JOB_NAME" --query 'properties.template.containers[0].image' -o tsv)"
+          test "$deployed_image" = "$login_server/$REGISTRY_REPOSITORY@$IMAGE_DIGEST"
+
+  start-reviewed-execution:
+    if: inputs.operation != 'publish-image' && inputs.operation != 'configure-dormant-job'
+    needs: validate-input
+    runs-on: ubuntu-24.04
+    environment: database-development
+    timeout-minutes: 20
+    permissions: { contents: read, id-token: write }
+    steps:
+      - name: Authenticate starter and reader identity
+        uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac # v2
+        with:
+          client-id: ${{ vars.DATABASE_JOB_STARTER_CLIENT_ID }}
+          tenant-id: ${{ vars.WORKFORCE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Start exact dormant Job once with ephemeral operation values
+        env:
           OPERATION: ${{ inputs.operation }}
           OPERATION_ID: ${{ inputs.operation_id }}
+          RELEASE_SHA: ${{ inputs.release_sha }}
+          IMAGE_DIGEST: ${{ inputs.image_digest }}
+          ARTIFACT_SHA256: ${{ inputs.artifact_sha256 }}
         run: |
-          [[ "$IMAGE_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
-          [[ "$OPERATION_ID" =~ ^[a-z0-9][a-z0-9-]{7,63}$ ]]
-          echo "Operation $OPERATION passed immutable-input validation."
-      - name: Repository-only increment guard
-        run: |
-          echo '::error::Azure mutation is intentionally disabled in this repository increment.'
-          exit 1
+          case "$OPERATION" in
+            verify-execution-channel) mode=--verify-execution-channel ;;
+            capture-migration-state) mode=--capture-migration-state ;;
+            run-reviewed-operation) mode=--run-reviewed-operation ;;
+            verify-migration-state) mode=--verify-migration-state ;;
+            *) exit 2 ;;
+          esac
+          image="$(az containerapp job show -g "$RESOURCE_GROUP" -n "$JOB_NAME" --query 'properties.template.containers[0].image' -o tsv)"
+          [[ "$image" = *@"$IMAGE_DIGEST" ]]
+          test "$(az containerapp job show -g "$RESOURCE_GROUP" -n "$JOB_NAME" --query 'tags.releaseSha' -o tsv)" = "$RELEASE_SHA"
+          active="$(az containerapp job execution list -g "$RESOURCE_GROUP" -n "$JOB_NAME" --query "[?properties.status=='Running'] | length(@)" -o tsv)"
+          test "$active" = 0
+          execution="$(az containerapp job start -g "$RESOURCE_GROUP" -n "$JOB_NAME" \
+            --container-name database-migrator --args "$mode" \
+            --set-env-vars ADVENTURESSUITE_MIGRATION_OPERATION_ID="$OPERATION_ID" \
+              ADVENTURESSUITE_ARTIFACT_SHA256="$ARTIFACT_SHA256" \
+            --query name -o tsv)"
+          test -n "$execution"
+          printf '{"operationId":"%s","execution":"%s","releaseSha":"%s","imageDigest":"%s"}\n' \
+            "$OPERATION_ID" "$execution" "$RELEASE_SHA" "$IMAGE_DIGEST"
