@@ -869,3 +869,19 @@ host-independent presentation assets.
 Status:
 
 Approved
+# ADR: Use a manual Azure Container Apps Job for database migrations
+
+**Decision:** AdventuresSuite database migrations run as a finite, manually
+started Azure Container Apps Job using an immutable image digest and dedicated
+user-assigned migration identity. The temporary App Service/Kudu/VM bridge is
+superseded but remains until the replacement proves both its SQL-free execution
+channel and one reviewed migration.
+
+**Rationale:** A Job provides authoritative execution identity/status, bounded
+timeout, explicit retry/parallelism controls, private VNet egress, and retained
+logs without interactive administration or coupling migration to application
+startup. See `docs/architecture/database-migration-job.md`.
+
+**Consequences:** Deployment and SQL bootstrap remain separate approvals; ACR,
+Container Apps environment/subnet, two user-assigned identities, and logging add
+development cost; only digest-addressed images may execute.

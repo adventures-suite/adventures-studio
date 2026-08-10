@@ -126,6 +126,15 @@ remove that elevation after creation and verification.
 
 ## Workload Identities
 
+### Proposed permanent migration runner (not provisioned)
+
+PR #18 defines a manual Azure Container Apps Job, Basic ACR, Consumption
+environment, dedicated `10.40.3.0/27` subnet, Log Analytics workspace, dedicated
+user-assigned migration identity, and separate ACR pull identity. None exists as
+a result of this repository increment. Live network ranges must be checked
+before deployment. The current migration App Service and temporary VM remain
+unchanged and may be retired only after successful replacement proofs.
+
 | Workload | Observed principal/object ID | Boundary |
 | --- | --- | --- |
 | Application App Service | `43f88b68-e853-4ece-9379-bd2079af8ec0` | Runtime DML and approved Key Vault/Blob data operations |

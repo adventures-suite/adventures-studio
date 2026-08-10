@@ -49,6 +49,14 @@ Supply the verified values only to the matching one-time operation:
 
 ## Private Execution Path Gate
 
+The permanent path is the manual Azure Container Apps migration Job documented
+in `docs/architecture/database-migration-job.md`. The App Service/Kudu/VM bridge
+is superseded and must not receive new operational approvals. It remains
+unchanged until the replacement passes a separately approved SQL-free channel
+proof and reviewed migration. The new user-assigned identity requires a later
+administrator bootstrap because a system-assigned App Service identity cannot
+be transferred.
+
 No bootstrap or migration begins until an approved execution environment can:
 
 - resolve the SQL logical hostname to the VNet private endpoint;

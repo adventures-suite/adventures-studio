@@ -343,3 +343,10 @@
   deployment outputs; never hardcode them in application behavior.
 - Keep the migration app stopped by default and return it to stopped state after
   success or failure with retained artifact and journal evidence.
+- Treat the Azure Container Apps migration Job as the permanent migration
+  execution boundary. It is manual-only, digest-addressed, ingress-free,
+  single-replica, zero-retry, and protected by the `database-development`
+  GitHub Environment.
+- Keep image publication, Job configuration/start, registry pull, and SQL
+  migration identities distinct. Never run database migration from web/API
+  startup or reuse the retired App Service/Kudu/VM bridge for new operations.
