@@ -34,7 +34,12 @@ Stop if any value differs from approved inventory.
 
 ## Ordered Operations
 
-1. Confirm the journal ends exactly at migration `0006`. Deploy one reviewed,
+1. Before SQL access, complete the SQL-free Azure Managed Run Command proof in
+   `azure-sql-migration-runbook.md`. It must prove private staging transfer,
+   checksums, private SCM execution, bounded output, protected evidence,
+   signed completion, and cleanup. Interactive SSH and transient
+   `run-command invoke` output are not acceptable evidence.
+2. Confirm the journal ends exactly at migration `0006`. Deploy one reviewed,
    self-contained migration package containing the executable evidence capture
    and wrapper under the same SHA-256 checksum. Through the approved private
    execution path, invoke only `run-reviewed-migration-operation.sh`. It must
@@ -54,7 +59,7 @@ Stop if any value differs from approved inventory.
    operation ID, release SHA, package checksum, bounded identity metadata,
    ordered catalog, wrapper/migrator exit code, journal, schema, permission,
    and fingerprint evidence.
-2. Only after the migration operation reports complete success, as the approved
+3. Only after the migration operation reports complete success, as the approved
    Entra SQL administrator run:
 
    ```text
