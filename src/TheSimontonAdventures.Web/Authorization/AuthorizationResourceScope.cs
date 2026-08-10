@@ -38,6 +38,8 @@ public static class AuthorizationResourceTypes
 {
     /// <summary>The Creator workspace and membership collection.</summary>
     public static readonly AuthorizationResourceType Creator = new("Creator");
+    /// <summary>One Creator membership administered within its owning Creator.</summary>
+    public static readonly AuthorizationResourceType CreatorMembership = new("CreatorMembership");
     /// <summary>The private Adventure Plan collection and its instances.</summary>
     public static readonly AuthorizationResourceType AdventurePlan = new("AdventurePlan");
     /// <summary>The future Planning proposal collection and its instances.</summary>
