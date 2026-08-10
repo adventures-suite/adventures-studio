@@ -1,9 +1,14 @@
 using AdventuresSuite.Companion.Contracts;
+using AdventuresSuite.Identity;
+using TheSimontonAdventures.Web.Authorization;
+using TheSimontonAdventures.Web.Creators;
 
 namespace AdventuresSuite.Companion.Application;
 
 /// <summary>Provides a fixed fictional Companion dataset for contract development and tests only.</summary>
-public sealed class DeterministicCompanionProjectionService(TimeProvider timeProvider) : ICompanionProjectionService
+public sealed class DeterministicCompanionProjectionService(
+    TimeProvider timeProvider,
+    IAuthorizationPolicyEvaluator authorization) : ICompanionProjectionService
 {
     /// <summary>Gets the only fictional user identity authorized by the fixture.</summary>
     public const string DemoUserId = "usr_demo_traveler";
@@ -18,12 +23,31 @@ public sealed class DeterministicCompanionProjectionService(TimeProvider timePro
 
     private const string SchemaVersion = "1.0";
     /// <inheritdoc />
-    public Task<CompanionQueryResult<CompanionAdventureCollectionDto>> ListAdventuresAsync(
+    public async Task<CompanionQueryResult<CompanionAdventureCollectionDto>> ListAdventuresAsync(
         CompanionAccessContext access, int limit, string? continuationToken, bool includeCompleted,
         string supportId, CancellationToken cancellationToken)
     {
-        if (!IsAuthorized(access) || continuationToken is not null and not "cursor_demo_completed")
-            return Unavailable<CompanionAdventureCollectionDto>();
+        if (access.IsRevoked
+            || access.TravelerId != DemoTravelerId
+            || !access.Scopes.Contains(RequiredScope)
+            || continuationToken is not null and not "cursor_demo_completed")
+        {
+            return await Unavailable<CompanionAdventureCollectionDto>();
+        }
+
+        var decision = await authorization.AuthorizeAsync(
+            new AuthorizationRequest(
+                access.Actor,
+                Permissions.AdventurePlanView,
+                AuthorizationResourceScope.ForCollection(
+                    access.CreatorId,
+                    AuthorizationResourceTypes.AdventurePlan),
+                membershipVersion: access.MembershipVersion),
+            cancellationToken);
+        if (!decision.IsAllowed)
+        {
+            return await Unavailable<CompanionAdventureCollectionDto>();
+        }
 
         var now = timeProvider.GetUtcNow();
         var fixtures = AdventureFixtures.All
@@ -41,66 +65,7 @@ public sealed class DeterministicCompanionProjectionService(TimeProvider timePro
             Adventures = fixtures,
             ContinuationToken = null
         };
-        return Available(dto);
-    }
-
-    /// <inheritdoc />
-    public Task<CompanionQueryResult<CompanionAdventureDto>> GetAdventureAsync(
-        CompanionAccessContext access, string adventureId, string supportId, CancellationToken cancellationToken)
-    {
-        if (!TryGetAdventure(access, adventureId, out var fixture)) return Unavailable<CompanionAdventureDto>();
-        var dto = CompanionDtoMapper.MapAdventure(fixture!, timeProvider.GetUtcNow(), supportId);
-        return Available(dto);
-    }
-
-    /// <inheritdoc />
-    public Task<CompanionQueryResult<CompanionTodayDto>> GetTodayAsync(
-        CompanionAccessContext access, string adventureId, string supportId, CancellationToken cancellationToken)
-    {
-        if (!TryGetAdventure(access, adventureId, out var fixture) || fixture!.Id != ItalyAdventureId)
-            return Unavailable<CompanionTodayDto>();
-        return Available(CompanionDtoMapper.MapToday(fixture, timeProvider.GetUtcNow(), supportId));
-    }
-
-    /// <inheritdoc />
-    public Task<CompanionQueryResult<CompanionItineraryDto>> GetItineraryAsync(
-        CompanionAccessContext access, string adventureId, string supportId, CancellationToken cancellationToken)
-    {
-        if (!TryGetAdventure(access, adventureId, out var fixture)) return Unavailable<CompanionItineraryDto>();
-        return Available(CompanionDtoMapper.MapItinerary(fixture!, timeProvider.GetUtcNow(), supportId));
-    }
-
-    /// <inheritdoc />
-    public Task<CompanionQueryResult<CompanionReadinessDto>> GetReadinessAsync(
-        CompanionAccessContext access, string adventureId, string supportId, CancellationToken cancellationToken)
-    {
-        if (!TryGetAdventure(access, adventureId, out var fixture)) return Unavailable<CompanionReadinessDto>();
-        return Available(CompanionDtoMapper.MapReadiness(fixture!, timeProvider.GetUtcNow(), supportId));
-    }
-
-    /// <inheritdoc />
-    public Task<CompanionQueryResult<CompanionPlaybookDto>> GetPlaybookAsync(
-        CompanionAccessContext access, string adventureId, string supportId, CancellationToken cancellationToken)
-    {
-        if (!TryGetAdventure(access, adventureId, out var fixture) || fixture!.Id != ItalyAdventureId)
-            return Unavailable<CompanionPlaybookDto>();
-        return Available(CompanionDtoMapper.MapPlaybook(fixture, timeProvider.GetUtcNow(), supportId));
-    }
-
-    private static bool IsAuthorized(CompanionAccessContext access) =>
-        !access.IsRevoked
-        && access.UserId == DemoUserId
-        && access.TravelerId == DemoTravelerId
-        && access.CreatorId == DemoCreatorId
-        && access.Scopes.Contains(RequiredScope);
-
-    private static bool TryGetAdventure(
-        CompanionAccessContext access, string adventureId, out AdventureFixture? fixture)
-    {
-        fixture = IsAuthorized(access)
-            ? AdventureFixtures.All.SingleOrDefault(value => value.Id == adventureId && value.Status != CompanionAdventureStatus.Completed)
-            : null;
-        return fixture is not null;
+        return await Available(dto);
     }
 
     private static Task<CompanionQueryResult<T>> Available<T>(T value) where T : CompanionProjectionDto =>
@@ -108,6 +73,41 @@ public sealed class DeterministicCompanionProjectionService(TimeProvider timePro
 
     private static Task<CompanionQueryResult<T>> Unavailable<T>() where T : CompanionProjectionDto =>
         Task.FromResult(new CompanionQueryResult<T>(null, null));
+}
+
+/// <summary>Provides fixed membership facts for the deterministic Test-only vertical slice.</summary>
+public sealed class DeterministicCompanionAuthorizationFacts(TimeProvider timeProvider)
+    : ICreatorMembershipProvider, IAuthorizationResourceFactsProvider
+{
+    /// <summary>Gets the fixed current membership version used by the fictional fixture.</summary>
+    public const long MembershipVersion = 7;
+
+    /// <inheritdoc />
+    public Task<CreatorMembershipSnapshot?> GetMembershipAsync(
+        UserId userId,
+        CreatorId creatorId,
+        CancellationToken cancellationToken = default)
+    {
+        CreatorMembershipSnapshot? membership =
+            userId == new UserId(DeterministicCompanionProjectionService.DemoUserId)
+            && creatorId == new CreatorId(DeterministicCompanionProjectionService.DemoCreatorId)
+                ? new CreatorMembershipSnapshot(
+                    new CreatorMembershipId("membership_demo_companion"),
+                    userId,
+                    creatorId,
+                    CreatorMembershipStatus.Active,
+                    [CreatorRole.Viewer],
+                    [],
+                    MembershipVersion,
+                    timeProvider.GetUtcNow().AddDays(-1))
+                : null;
+        return Task.FromResult(membership);
+    }
+
+    /// <inheritdoc />
+    public Task<AuthorizationResourceFacts?> GetResourceFactsAsync(
+        AuthorizationResourceScope resource,
+        CancellationToken cancellationToken = default) => Task.FromResult<AuthorizationResourceFacts?>(null);
 }
 
 internal sealed record AdventureFixture(

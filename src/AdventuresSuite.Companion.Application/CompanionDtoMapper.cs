@@ -45,10 +45,10 @@ internal static class CompanionDtoMapper
                 : "No traveler-visible blockers are present in this fictional projection.",
             CapabilityLinks = new Dictionary<string, string>(StringComparer.Ordinal)
             {
-                ["today"] = $"/api/v1/companion/adventures/{source.Id}/today",
-                ["itinerary"] = $"/api/v1/companion/adventures/{source.Id}/itinerary",
-                ["readiness"] = $"/api/v1/companion/adventures/{source.Id}/readiness",
-                ["playbook"] = $"/api/v1/companion/adventures/{source.Id}/playbook"
+                ["today"] = $"/v1/companion/adventures/{source.Id}/today",
+                ["itinerary"] = $"/v1/companion/adventures/{source.Id}/itinerary",
+                ["readiness"] = $"/v1/companion/adventures/{source.Id}/readiness",
+                ["playbook"] = $"/v1/companion/adventures/{source.Id}/playbook"
             },
             InformationProfileVersion = "info_demo_01"
         };

@@ -17,7 +17,7 @@ until their owning design is approved.
 
 ## Compatibility Position
 
-- The base path is `/api/v1/companion`.
+- The base path is `/v1/companion`.
 - Existing required fields keep their name, type, meaning, and nullability for
   the supported life of v1.
 - New optional fields and endpoints may be added to v1.
@@ -67,7 +67,7 @@ field allowlist.
 | `GetCompanionPlaybook` | `GET /adventures/{adventureId}/playbook` | Retrieve the structured traveler Playbook projection | Current participation and selected Playbook profile | Private ETag | Required when policy marks included sections sensitive |
 | `DownloadCompanionResource` | `GET /resources/{resourceId}/content` | Stream one currently authorized protected Resource | Current participation, Resource ownership, classification, rights, malware, and retention policy | No shared cache; range policy by media type | Audited protected download |
 
-All route fragments above follow `/api/v1/companion`. A caller does not submit a
+All route fragments above follow `/v1/companion`. A caller does not submit a
 Creator ID. The server resolves authoritative Creator ownership from the target
 resource and current participation. Another Creator's or traveler's identifier
 returns the same safe unavailable response as an unknown identifier where

@@ -9,7 +9,7 @@ public sealed class CompanionOpenApiTests(CompanionApiFactory factory)
 {
     private readonly HttpClient _client = factory.CreateClient();
 
-    /// <summary>Ensures OpenAPI 3.1 contains all seven uniquely named and documented operations.</summary>
+    /// <summary>Ensures OpenAPI 3.1 contains only the first fully documented read operation.</summary>
     [Fact]
     public async Task OpenApiContainsCompleteV1OperationMetadata()
     {
@@ -21,24 +21,22 @@ public sealed class CompanionOpenApiTests(CompanionApiFactory factory)
             .TryGetProperty("companionOAuth", out var security));
         Assert.Equal("oauth2", security.GetProperty("type").GetString());
 
-        var expected = new HashSet<string>(StringComparer.Ordinal)
-        {
-            "ListCompanionAdventures", "GetCompanionAdventure", "GetCompanionToday",
-            "GetCompanionItinerary", "GetCompanionReadiness", "GetCompanionPlaybook",
-            "DownloadCompanionResource"
-        };
-        var actual = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var path in document.RootElement.GetProperty("paths").EnumerateObject())
-        {
-            var operation = path.Value.GetProperty("get");
-            actual.Add(operation.GetProperty("operationId").GetString()!);
-            Assert.False(string.IsNullOrWhiteSpace(operation.GetProperty("summary").GetString()));
-            Assert.False(string.IsNullOrWhiteSpace(operation.GetProperty("description").GetString()));
-            var responses = operation.GetProperty("responses");
-            Assert.True(responses.TryGetProperty("401", out _));
-            Assert.True(responses.TryGetProperty("403", out _));
-        }
-        Assert.Equal(expected, actual);
+        var paths = document.RootElement.GetProperty("paths");
+        var path = Assert.Single(paths.EnumerateObject());
+        Assert.Equal("/v1/companion/adventures", path.Name);
+        var operation = path.Value.GetProperty("get");
+        Assert.Equal("ListCompanionAdventures", operation.GetProperty("operationId").GetString());
+        Assert.False(string.IsNullOrWhiteSpace(operation.GetProperty("summary").GetString()));
+        Assert.False(string.IsNullOrWhiteSpace(operation.GetProperty("description").GetString()));
+        var responses = operation.GetProperty("responses");
+        foreach (var status in new[] { "200", "304", "400", "401", "403", "404", "500" })
+            Assert.True(responses.TryGetProperty(status, out _), $"Missing response {status}.");
+        var parameters = operation.GetProperty("parameters").EnumerateArray().ToArray();
+        Assert.Equal(
+            new HashSet<string>(["limit", "continuationToken", "includeCompleted"], StringComparer.Ordinal),
+            parameters.Select(value => value.GetProperty("name").GetString()!).ToHashSet(StringComparer.Ordinal));
+        Assert.All(parameters, parameter =>
+            Assert.False(string.IsNullOrWhiteSpace(parameter.GetProperty("description").GetString())));
     }
 
     /// <summary>Ensures Scalar consumes the generated contract in Test.</summary>
@@ -78,7 +76,7 @@ public sealed class CompanionProductionGateTests(ProductionCompanionApiFactory f
     {
         Assert.Equal(HttpStatusCode.NotFound, (await _client.GetAsync("/openapi/companion-v1.json")).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await _client.GetAsync("/scalar/companion")).StatusCode);
-        var response = await _client.GetAsync("/api/v1/companion/adventures");
+        var response = await _client.GetAsync("/v1/companion/adventures");
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 

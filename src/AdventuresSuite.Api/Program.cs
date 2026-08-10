@@ -2,6 +2,7 @@ using System.Text.Json;
 using AdventuresSuite.Api;
 using AdventuresSuite.Companion.Application;
 using AdventuresSuite.Companion.Contracts;
+using TheSimontonAdventures.Web.Authorization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Policy;
@@ -47,6 +48,12 @@ if (deterministicMode)
         TestCompanionAuthenticationHandler.SchemeName, _ => { });
     builder.Services.AddSingleton<TimeProvider>(
         new FixedTimeProvider(new DateTimeOffset(2026, 8, 10, 10, 0, 0, TimeSpan.Zero)));
+    builder.Services.AddSingleton<DeterministicCompanionAuthorizationFacts>();
+    builder.Services.AddSingleton<ICreatorMembershipProvider>(provider =>
+        provider.GetRequiredService<DeterministicCompanionAuthorizationFacts>());
+    builder.Services.AddSingleton<IAuthorizationResourceFactsProvider>(provider =>
+        provider.GetRequiredService<DeterministicCompanionAuthorizationFacts>());
+    builder.Services.AddSingleton<IAuthorizationPolicyEvaluator, AuthorizationPolicyEvaluator>();
     builder.Services.AddSingleton<ICompanionProjectionService, DeterministicCompanionProjectionService>();
 }
 else
