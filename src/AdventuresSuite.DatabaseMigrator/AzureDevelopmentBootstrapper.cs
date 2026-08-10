@@ -10,6 +10,7 @@ internal static class AzureDevelopmentBootstrapper
 {
     private const string RuntimeRoleName = "AdventuresSuiteAuthenticationRuntime";
     private const string MembershipRuntimeRoleName = "AdventuresSuiteMembershipRuntime";
+    private const string CompanionReadRuntimeRoleName = "AdventuresSuiteCompanionReadRuntime";
     private const string WrappingKeyName = "adventures-suite-data-protection";
     private const string CertificateName = "adventures-suite-external-id";
 
@@ -77,6 +78,36 @@ internal static class AzureDevelopmentBootstrapper
                     ALTER ROLE [{MembershipRuntimeRoleName}] ADD MEMBER {principalAlias};
                 GRANT CONNECT TO {principalAlias};
                 """);
+
+    /// <summary>Binds only the Companion API principal to its migrated read-only role.</summary>
+    public static Task BindCompanionReadIdentityAsync(
+        string administratorConnectionString,
+        string? applicationPrincipalId,
+        string? applicationPrincipalClientId,
+        string? applicationPrincipalName) =>
+        ExecutePrincipalCommandAsync(
+            administratorConnectionString,
+            applicationPrincipalId,
+            applicationPrincipalClientId,
+            applicationPrincipalName,
+            BuildCompanionReadGrants);
+
+    /// <summary>Builds only the approved Companion read-role binding.</summary>
+    internal static string BuildCompanionReadGrants(string principalAlias) => $"""
+        IF DATABASE_PRINCIPAL_ID(N'{CompanionReadRuntimeRoleName}') IS NULL
+            THROW 51000, 'The Companion read runtime role has not been migrated.', 1;
+        IF ISNULL(IS_ROLEMEMBER(N'{CompanionReadRuntimeRoleName}', @AliasParameter), 0) <> 1
+            ALTER ROLE [{CompanionReadRuntimeRoleName}] ADD MEMBER {principalAlias};
+        GRANT CONNECT TO {principalAlias};
+        """;
+
+    /// <summary>Verifies the Companion identity has only its required read boundary.</summary>
+    public static async Task VerifyCompanionReadPermissionsAsync(string runtimeConnectionString)
+    {
+        var probe = new AdventuresSuite.Companion.SqlServer.CompanionSqlReadinessProbe(runtimeConnectionString);
+        if (!await probe.IsReadyAsync())
+            throw new InvalidOperationException("Companion read permissions are missing or exceed the approved boundary.");
+    }
 
     /// <summary>Verifies migration DDL, data, journal, and authentication-schema permissions.</summary>
     public static async Task VerifyMigrationPermissionsAsync(string migrationConnectionString)

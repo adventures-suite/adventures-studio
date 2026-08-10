@@ -12,6 +12,7 @@ public sealed class CompanionApiFactory : WebApplicationFactory<Program>
         builder.UseEnvironment("Test");
         builder.UseSetting("Companion:DeterministicMode", "true");
         builder.UseSetting("Companion:ActivationMode", "Disabled");
+        builder.UseSetting("Companion:ProjectionProvider", "Closed");
         builder.UseSetting("Deployment:CommitSha", "1111111111111111111111111111111111111111");
     }
 }
@@ -24,6 +25,7 @@ public sealed class ProductionCompanionApiFactory : WebApplicationFactory<Progra
     {
         builder.UseEnvironment("Production");
         builder.UseSetting("Companion:ActivationMode", "Disabled");
+        builder.UseSetting("Companion:ProjectionProvider", "Closed");
         builder.UseSetting("Deployment:CommitSha", "2222222222222222222222222222222222222222");
     }
 }
@@ -37,6 +39,7 @@ public sealed class InvalidProductionCompanionApiFactory : WebApplicationFactory
         builder.UseEnvironment("Production");
         builder.UseSetting("Companion:DeterministicMode", "true");
         builder.UseSetting("Companion:ActivationMode", "Disabled");
+        builder.UseSetting("Companion:ProjectionProvider", "Closed");
         builder.UseSetting("Deployment:CommitSha", "3333333333333333333333333333333333333333");
     }
 }
@@ -49,6 +52,7 @@ public sealed class MissingActivationModeCompanionApiFactory : WebApplicationFac
     {
         builder.UseEnvironment("Production");
         builder.UseSetting("Deployment:CommitSha", "4444444444444444444444444444444444444444");
+        builder.UseSetting("Companion:ProjectionProvider", "Closed");
     }
 }
 
@@ -60,5 +64,18 @@ public sealed class MissingReleaseShaCompanionApiFactory : WebApplicationFactory
     {
         builder.UseEnvironment("Production");
         builder.UseSetting("Companion:ActivationMode", "Disabled");
+        builder.UseSetting("Companion:ProjectionProvider", "Closed");
+    }
+}
+
+/// <summary>Attempts to start Production without an explicit projection provider.</summary>
+public sealed class MissingProjectionProviderCompanionApiFactory : WebApplicationFactory<Program>
+{
+    /// <inheritdoc />
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        builder.UseEnvironment("Production");
+        builder.UseSetting("Companion:ActivationMode", "Disabled");
+        builder.UseSetting("Deployment:CommitSha", "6666666666666666666666666666666666666666");
     }
 }

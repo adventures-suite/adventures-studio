@@ -567,6 +567,7 @@
           "AdventuresSuite.Authorization": "[1.0.0, )",
           "AdventuresSuite.Companion.Application": "[1.0.0, )",
           "AdventuresSuite.Companion.Contracts": "[1.0.0, )",
+          "AdventuresSuite.Companion.SqlServer": "[1.0.0, )",
           "AdventuresSuite.Identity": "[1.0.0, )",
           "Microsoft.AspNetCore.OpenApi": "[10.0.10, )",
           "Microsoft.OpenApi": "[2.11.0, )",

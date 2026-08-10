@@ -1,8 +1,14 @@
+extern alias api;
+
 using AdventuresSuite.Companion.Application;
 using AdventuresSuite.Companion.SqlServer;
 using AdventuresSuite.DatabaseMigrator;
 using AdventuresSuite.Identity;
 using Microsoft.Data.SqlClient;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using TheSimontonAdventures.Web.Creators;
 
 namespace AdventuresSuite.DatabaseIntegrationTests;
@@ -50,6 +56,8 @@ public sealed class CompanionReadProjectionIntegrationTests
                 detail.Destinations.Select(value => value.DestinationVisitId));
             Assert.Equal("Europe/Rome", detail.Adventure.PrimaryTimeZone);
 
+            await VerifyHttpEndpointsAsync(connectionString);
+
             Assert.Null(await queries.GetAsync(alpha, "plan_other_creator"));
             Assert.Null(await queries.GetAsync(alpha, "plan_other_traveler"));
             Assert.Null(await queries.GetAsync(alpha, "plan_archived"));
@@ -94,6 +102,9 @@ public sealed class CompanionReadProjectionIntegrationTests
         VALUES ('creator_alpha', 'membership_alpha', 'user_alpha', 'Active', 3,
                 '2026-08-01T00:00:00+00:00', NULL, '2026-08-01T00:00:00+00:00',
                 '2026-08-01T00:00:00+00:00', 'user_alpha', 'user_alpha');
+
+        INSERT auth.CreatorMembershipRoles (CreatorId, CreatorMembershipId, Role)
+        VALUES ('creator_alpha', 'membership_alpha', 'Viewer');
 
         INSERT planning.AdventurePlans
             (CreatorId, AdventurePlanId, Title, WorkingDescription, LifecycleStage,
@@ -142,6 +153,33 @@ public sealed class CompanionReadProjectionIntegrationTests
         Assert.Equal(1, Convert.ToInt32(await command.ExecuteScalarAsync()));
     }
 
+    private static async Task VerifyHttpEndpointsAsync(string connectionString)
+    {
+        await using var factory = new SqlCompanionApiFactory(connectionString);
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add("X-Companion-Test-User", "user_alpha");
+        client.DefaultRequestHeaders.Add("X-Companion-Test-Traveler", "traveler_alpha");
+        client.DefaultRequestHeaders.Add("X-Companion-Test-Creator", "creator_alpha");
+        client.DefaultRequestHeaders.Add("X-Companion-Test-Membership-Version", "3");
+
+        using var list = await client.GetAsync("/v1/companion/adventures?includeCompleted=true&limit=10");
+        Assert.Equal(System.Net.HttpStatusCode.OK, list.StatusCode);
+        Assert.NotNull(list.Headers.ETag);
+        var listPayload = await list.Content.ReadAsStringAsync();
+        Assert.Contains("\"plan_active\"", listPayload, StringComparison.Ordinal);
+        Assert.DoesNotContain("plan_other_traveler", listPayload, StringComparison.Ordinal);
+
+        using var detail = await client.GetAsync("/v1/companion/adventures/plan_active");
+        Assert.Equal(System.Net.HttpStatusCode.OK, detail.StatusCode);
+        Assert.NotNull(detail.Headers.ETag);
+        var detailPayload = await detail.Content.ReadAsStringAsync();
+        Assert.Contains("\"visit_first\"", detailPayload, StringComparison.Ordinal);
+        Assert.DoesNotContain("Safe description", detailPayload, StringComparison.Ordinal);
+
+        using var inaccessible = await client.GetAsync("/v1/companion/adventures/plan_other_traveler");
+        Assert.Equal(System.Net.HttpStatusCode.NotFound, inaccessible.StatusCode);
+    }
+
     private static async Task VerifyEstimatedPlanAsync(string connectionString)
     {
         await using var connection = new SqlConnection(connectionString);
@@ -175,5 +213,25 @@ public sealed class CompanionReadProjectionIntegrationTests
     {
         var builder = new SqlConnectionStringBuilder(master) { InitialCatalog = databaseName };
         return builder.ConnectionString;
+    }
+}
+
+internal sealed class SqlCompanionApiFactory(string connectionString) : WebApplicationFactory<api::Program>
+{
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        builder.UseEnvironment("Test");
+        builder.UseSetting("Companion:DeterministicMode", "true");
+        builder.UseSetting("Companion:ActivationMode", "Disabled");
+        builder.UseSetting("Companion:ProjectionProvider", "Closed");
+        builder.UseSetting("Deployment:CommitSha", "5555555555555555555555555555555555555555");
+        builder.ConfigureServices(services =>
+        {
+            services.RemoveAll<ICompanionProjectionService>();
+            var queries = new SqlCompanionAdventureQueries(connectionString);
+            services.AddSingleton<ICompanionAdventureSummaryQuery>(queries);
+            services.AddSingleton<ICompanionAdventureDetailQuery>(queries);
+            services.AddSingleton<ICompanionProjectionService, AuthoritativeCompanionProjectionService>();
+        });
     }
 }

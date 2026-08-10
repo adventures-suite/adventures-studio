@@ -2,6 +2,7 @@ using System.Text.Json;
 using AdventuresSuite.Api;
 using AdventuresSuite.Companion.Application;
 using AdventuresSuite.Companion.Contracts;
+using AdventuresSuite.Companion.SqlServer;
 using TheSimontonAdventures.Web.Authorization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -13,6 +14,7 @@ using Scalar.AspNetCore;
 var builder = WebApplication.CreateBuilder(args);
 var deterministicMode = builder.Configuration.GetValue<bool>(CompanionApiConstants.DeterministicModeKey);
 var activationMode = builder.Configuration[CompanionApiConstants.ActivationModeKey];
+var projectionProvider = builder.Configuration[CompanionApiConstants.ProjectionProviderKey];
 var releaseSha = builder.Configuration[CompanionApiConstants.ReleaseShaKey];
 if (deterministicMode && !builder.Environment.IsEnvironment("Test"))
 {
@@ -31,10 +33,17 @@ if (!builder.Environment.IsEnvironment("Test"))
     {
         throw new InvalidOperationException("Deployment:CommitSha must contain the exact lowercase 40-character release SHA.");
     }
+
+    if (projectionProvider is not (CompanionApiConstants.ClosedProjectionProvider
+        or CompanionApiConstants.SqlProjectionProvider))
+    {
+        throw new InvalidOperationException("Companion:ProjectionProvider must be explicitly Closed or Sql.");
+    }
 }
 
 activationMode ??= CompanionApiConstants.DisabledActivationMode;
 releaseSha ??= "0000000000000000000000000000000000000000";
+projectionProvider ??= CompanionApiConstants.ClosedProjectionProvider;
 
 builder.Services.Configure<JsonOptions>(options =>
 {
@@ -72,6 +81,22 @@ if (deterministicMode)
         provider.GetRequiredService<DeterministicCompanionAuthorizationFacts>());
     builder.Services.AddSingleton<IAuthorizationPolicyEvaluator, AuthorizationPolicyEvaluator>();
     builder.Services.AddSingleton<ICompanionProjectionService, DeterministicCompanionProjectionService>();
+}
+else if (projectionProvider == CompanionApiConstants.SqlProjectionProvider)
+{
+    var sqlConnectionString = CompanionSqlConfiguration.Validate(
+        builder.Configuration["Companion:Sql:ConnectionString"],
+        builder.Configuration["Companion:Sql:ApprovedServer"],
+        builder.Configuration["Companion:Sql:ApprovedDatabase"],
+        builder.Configuration["Companion:Sql:ManagedIdentityClientId"]);
+    builder.Services.AddSingleton(TimeProvider.System);
+    builder.Services.AddSingleton(new SqlCompanionAdventureQueries(sqlConnectionString));
+    builder.Services.AddSingleton<ICompanionAdventureSummaryQuery>(provider =>
+        provider.GetRequiredService<SqlCompanionAdventureQueries>());
+    builder.Services.AddSingleton<ICompanionAdventureDetailQuery>(provider =>
+        provider.GetRequiredService<SqlCompanionAdventureQueries>());
+    builder.Services.AddSingleton<ICompanionProjectionService, AuthoritativeCompanionProjectionService>();
+    builder.Services.AddSingleton(new CompanionSqlReadinessProbe(sqlConnectionString));
 }
 else
 {
@@ -126,9 +151,16 @@ var health = new CompanionHealthDto
 app.MapGet("/health/live", () => Results.Json(
     health,
     CompanionJsonSerializerContext.Default.CompanionHealthDto)).ExcludeFromDescription();
-app.MapGet("/health/ready", () => Results.Json(
-    health,
-    CompanionJsonSerializerContext.Default.CompanionHealthDto)).ExcludeFromDescription();
+app.MapGet("/health/ready", async (HttpContext context) =>
+{
+    var probe = context.RequestServices.GetService<CompanionSqlReadinessProbe>();
+    var ready = probe is null || await probe.IsReadyAsync(context.RequestAborted);
+    var readiness = health with { Status = ready ? "Healthy" : "Unhealthy" };
+    return Results.Json(
+        readiness,
+        CompanionJsonSerializerContext.Default.CompanionHealthDto,
+        statusCode: ready ? StatusCodes.Status200OK : StatusCodes.Status503ServiceUnavailable);
+}).ExcludeFromDescription();
 app.MapCompanionApi();
 app.Run();
 

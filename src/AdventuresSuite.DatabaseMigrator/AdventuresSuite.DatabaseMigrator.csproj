@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../AdventuresSuite.Companion.SqlServer/AdventuresSuite.Companion.SqlServer.csproj" />
     <EmbeddedResource Include="../../database/migrations/*.sql"
                       Link="Database/Migrations/%(Filename)%(Extension)" />
   </ItemGroup>

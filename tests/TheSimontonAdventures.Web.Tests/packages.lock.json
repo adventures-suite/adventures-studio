@@ -907,9 +907,29 @@
           "AdventuresSuite.Identity": "[1.0.0, )"
         }
       },
+      "adventuressuite.companion.application": {
+        "type": "Project",
+        "dependencies": {
+          "AdventuresSuite.Authorization": "[1.0.0, )",
+          "AdventuresSuite.Companion.Contracts": "[1.0.0, )",
+          "AdventuresSuite.Identity": "[1.0.0, )"
+        }
+      },
+      "adventuressuite.companion.contracts": {
+        "type": "Project"
+      },
+      "adventuressuite.companion.sqlserver": {
+        "type": "Project",
+        "dependencies": {
+          "AdventuresSuite.Companion.Application": "[1.0.0, )",
+          "Dapper": "[2.1.79, )",
+          "Microsoft.Data.SqlClient": "[7.0.2, )"
+        }
+      },
       "adventuressuite.databasemigrator": {
         "type": "Project",
         "dependencies": {
+          "AdventuresSuite.Companion.SqlServer": "[1.0.0, )",
           "Azure.Identity": "[1.21.0, )",
           "Azure.Security.KeyVault.Certificates": "[4.8.0, )",
           "Azure.Security.KeyVault.Keys": "[4.8.0, )",

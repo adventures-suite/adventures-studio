@@ -13,6 +13,7 @@
     <ProjectReference Include="../AdventuresSuite.Authorization/AdventuresSuite.Authorization.csproj" />
     <ProjectReference Include="../AdventuresSuite.Companion.Application/AdventuresSuite.Companion.Application.csproj" />
     <ProjectReference Include="../AdventuresSuite.Companion.Contracts/AdventuresSuite.Companion.Contracts.csproj" />
+    <ProjectReference Include="../AdventuresSuite.Companion.SqlServer/AdventuresSuite.Companion.SqlServer.csproj" />
     <ProjectReference Include="../AdventuresSuite.Identity/AdventuresSuite.Identity.csproj" />
   </ItemGroup>
 </Project>

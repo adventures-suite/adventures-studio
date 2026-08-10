@@ -48,6 +48,17 @@ public sealed class SqlCompanionAdventureQueries(string connectionString)
                 ORDER BY dv.Sequence, dv.DestinationVisitId
             ) AS firstVisit
             WHERE ap.CreatorId = @CreatorId
+              AND (
+                  EXISTS (
+                      SELECT 1 FROM auth.CreatorMembershipRoles AS mr
+                      WHERE mr.CreatorId = cm.CreatorId
+                        AND mr.CreatorMembershipId = cm.CreatorMembershipId
+                        AND mr.Role IN ('Owner', 'Administrator', 'Planner', 'Contributor', 'Viewer'))
+                  OR EXISTS (
+                      SELECT 1 FROM auth.CreatorMembershipPermissionGrants AS mpg
+                      WHERE mpg.CreatorId = cm.CreatorId
+                        AND mpg.CreatorMembershipId = cm.CreatorMembershipId
+                        AND mpg.Permission = 'AdventurePlan.View'))
               AND ap.PlanningStatus IN ('Planned', 'Upcoming', 'InProgress', 'Completed')
               AND (@IncludeCompleted = 1 OR ap.PlanningStatus <> 'Completed')
             ORDER BY ap.StartDate, ap.AdventurePlanId;
@@ -101,6 +112,17 @@ public sealed class SqlCompanionAdventureQueries(string connectionString)
                 ORDER BY dv.Sequence, dv.DestinationVisitId
             ) AS firstVisit
             WHERE ap.CreatorId = @CreatorId
+              AND (
+                  EXISTS (
+                      SELECT 1 FROM auth.CreatorMembershipRoles AS mr
+                      WHERE mr.CreatorId = cm.CreatorId
+                        AND mr.CreatorMembershipId = cm.CreatorMembershipId
+                        AND mr.Role IN ('Owner', 'Administrator', 'Planner', 'Contributor', 'Viewer'))
+                  OR EXISTS (
+                      SELECT 1 FROM auth.CreatorMembershipPermissionGrants AS mpg
+                      WHERE mpg.CreatorId = cm.CreatorId
+                        AND mpg.CreatorMembershipId = cm.CreatorMembershipId
+                        AND mpg.Permission = 'AdventurePlan.View'))
               AND ap.AdventurePlanId = @AdventureId
               AND ap.PlanningStatus IN ('Planned', 'Upcoming', 'InProgress', 'Completed');
             """;
@@ -127,6 +149,17 @@ public sealed class SqlCompanionAdventureQueries(string connectionString)
                 AND cm.EffectiveFromUtc <= @EvaluatedAtUtc
                 AND (cm.ExpiresAtUtc IS NULL OR cm.ExpiresAtUtc > @EvaluatedAtUtc)
             WHERE ap.CreatorId = @CreatorId
+              AND (
+                  EXISTS (
+                      SELECT 1 FROM auth.CreatorMembershipRoles AS mr
+                      WHERE mr.CreatorId = cm.CreatorId
+                        AND mr.CreatorMembershipId = cm.CreatorMembershipId
+                        AND mr.Role IN ('Owner', 'Administrator', 'Planner', 'Contributor', 'Viewer'))
+                  OR EXISTS (
+                      SELECT 1 FROM auth.CreatorMembershipPermissionGrants AS mpg
+                      WHERE mpg.CreatorId = cm.CreatorId
+                        AND mpg.CreatorMembershipId = cm.CreatorMembershipId
+                        AND mpg.Permission = 'AdventurePlan.View'))
               AND ap.AdventurePlanId = @AdventureId
               AND ap.PlanningStatus IN ('Planned', 'Upcoming', 'InProgress', 'Completed')
             ORDER BY dv.Sequence, dv.DestinationVisitId;

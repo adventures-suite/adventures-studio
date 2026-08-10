@@ -125,6 +125,7 @@ jobs:
           0005_bind_sessions_to_external_identities.sql
           0006_create_creator_memberships.sql
           0007_create_traveler_participations.sql
+          0008_create_companion_read_role.sql
           EOF
 
           diff -u \

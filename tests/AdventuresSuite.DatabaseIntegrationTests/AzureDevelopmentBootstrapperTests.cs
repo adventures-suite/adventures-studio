@@ -4,6 +4,21 @@ namespace AdventuresSuite.DatabaseIntegrationTests;
 
 public sealed class AzureDevelopmentBootstrapperTests
 {
+    /// <summary>Ensures Companion binding cannot inherit broad or write roles.</summary>
+    [Fact]
+    public void CompanionReadBinding_ContainsOnlyDedicatedRoleAndConnect()
+    {
+        var grants = AzureDevelopmentBootstrapper.BuildCompanionReadGrants("[companion-principal]");
+
+        Assert.Contains("AdventuresSuiteCompanionReadRuntime", grants, StringComparison.Ordinal);
+        Assert.Contains("GRANT CONNECT", grants, StringComparison.Ordinal);
+        Assert.DoesNotContain("db_datareader", grants, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("db_datawriter", grants, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("db_ddladmin", grants, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("AdventuresSuiteAuthenticationRuntime", grants, StringComparison.Ordinal);
+        Assert.DoesNotContain("AdventuresSuiteMembershipRuntime", grants, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void MigrationGrantsAssignOwnershipCapableDefaultSchema()
     {
