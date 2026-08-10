@@ -235,7 +235,37 @@ explainable readiness, change-impact evaluation, document linkage,
 traveler-specific projections, acknowledgments, Today and Next, contingencies,
 decisions, financial deadlines, and reusable templates. These capabilities do
 not duplicate or reverse-update the aggregate through presentation state. See
-`docs/architecture/adventure-readiness-and-change-management.md`.
+`docs/architecture/adventure-readiness-and-change-management.md` and
+`docs/architecture/adventure-templates.md`.
+
+Adventure Templates are versioned blueprints that instantiate new independent,
+private, customer Creator-owned plans. They are not live plans, bookings, live
+inventory, or continuing authorization for the template owner. Published
+template versions are immutable, and later revisions may propose—but never
+silently apply—changes to an existing plan.
+
+Planning also provides an authorized spatial projection with progressive detail
+across the whole Adventure, transportation or journey segments, destination
+visits, itinerary days, selected places, and candidate points of interest.
+Accepted plan records remain visually and structurally distinct from AI,
+professional, template, or research suggestions. Maps never become the source
+of truth or implicitly publish private Planning state. See
+`docs/architecture/adventure-map-experience.md`.
+
+Creators may also ingest a cruise or other itinerary from protected images,
+documents, or pasted text. OCR and interpretation produce confidence-scored,
+source-linked Journey Stop proposals for places, dates, arrival/departure times,
+and IANA time zones. Only Creator-approved proposals mutate private Planning
+records; a separate publication operation is required to create public Content
+Engine `JourneyStop` records. See
+`docs/architecture/itinerary-ingestion.md`.
+
+Group Travel adds Adventure-scoped traveler participation, contextual
+discussion, structured polls, planner decisions, announcements, and
+acknowledgments. Participation does not grant Creator membership. Votes and
+messages remain advisory inputs; only an authorized, validated Planning
+operation changes the plan. See
+`docs/architecture/group-travel-collaboration.md`.
 
 ## Initial Non-Goals
 

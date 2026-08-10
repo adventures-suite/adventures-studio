@@ -78,6 +78,13 @@ customer records.
 - A customer may work with different professionals on different Adventures.
 - Engagement status never changes public publication state.
 
+Agency-owned Adventure Templates provide a separate route for sharing reusable
+expertise. Instantiating one creates an independent customer-owned plan and
+records versioned provenance and license evidence. Template ownership or
+attribution grants no customer-plan access; ongoing help still requires an
+accepted, active, plan-scoped Planning Engagement. See
+`docs/architecture/adventure-templates.md`.
+
 ## Planning Engagement
 
 A future `PlanningEngagement` should include concepts equivalent to:
@@ -305,4 +312,3 @@ migrations.
 - Booking systems remain authoritative outside AdventuresSuite.
 - Co-branding preserves customer identity and resource ownership.
 - Revocation blocks access immediately while retaining required audit history.
-

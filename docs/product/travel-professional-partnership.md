@@ -43,6 +43,22 @@ deferred. This document defines the product and technology experience.
 - professional attribution and approved co-branding
 - a lasting post-trip relationship through preservation and publishing
 
+### Agency Adventure Templates
+
+Travel professionals may publish pre-planned, agency-branded Adventure
+Templates that customers adapt for dates, duration, destinations, pace,
+accessibility, traveler preferences, and budget. This lets agencies productize
+expertise and begin customer conversations from a strong plan.
+
+Using a template creates a new private plan owned by the customer Creator. The
+agency retains template intellectual property, attribution, and license
+evidence, but receives no implicit access to that plan. The customer may
+separately request professional help through a plan-scoped engagement.
+
+AdventuresSuite presents templates and collaboration; it does not claim live
+availability, guarantee prices, sell travel, or displace the professional's
+booking and fulfillment role.
+
 ## Primary Experiences
 
 ### Agency Onboarding
@@ -161,4 +177,3 @@ documentation.
 - broad customer marketing access
 - automated customer enrollment without consent
 - native mobile partner applications
-

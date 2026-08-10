@@ -33,6 +33,11 @@ The initial product centers on:
 - traveler-specific readiness, material-change acknowledgment, required
   actions, contingencies, and smart reminders.
 
+For a future Group Travel increment, Companion also provides the traveler's
+authorized discussions, open polls, submitted preferences, announcements, and
+acknowledgments in their itinerary context. It does not become a general chat
+client, and votes or messages do not directly change the Adventure Plan.
+
 ## Traveler-Controlled Breadcrumbs
 
 When a traveler chooses to enable breadcrumbs, Companion can privately capture
@@ -90,6 +95,17 @@ Memories and media captured during travel remain private Resources until the
 Creator deliberately preserves, authors, and publishes selected material. A
 future AI Companion may propose assistance, but AI remains advisory and cannot
 enable tracking, grant sharing, or publish a route.
+
+Companion obtains its experience from versioned JSON REST responses and
+authorized media or document delivery. It never connects to SQL or consumes
+Dapper/persistence models. Offline content is a minimized encrypted JSON/media
+projection with visible freshness and revocation behavior, not a database
+replica.
+
+Push notifications keep the experience relevant but carry only a safe signal
+and deep-link hint. Companion retrieves the current authorized JSON after the
+traveler opens or refreshes the notification. The in-app notification center
+remains useful when native push is delayed, disabled, duplicated, or lost.
 
 ## Initial Success Measures
 

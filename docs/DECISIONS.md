@@ -616,3 +616,193 @@ information, or creating unreliable automation.
 Status:
 
 Approved
+
+---
+
+## 2026-08-09
+
+### Adventure Templates Instantiate Independent Customer-Owned Plans
+
+Decision:
+
+AdventuresSuite will support versioned Adventure Templates owned by the
+platform, Creators, and travel-agency Creators. A template is a reusable
+planning blueprint, not an Adventure Plan, booking, live inventory record, or
+price guarantee.
+
+Using a template creates a new private plan owned by the customer Creator with
+new plan-owned identities and immutable provenance identifying the exact
+template version, attribution, license decision, actor, time, and bounded
+parameter summary. Published template versions are immutable. Later template
+changes never silently mutate existing plans.
+
+Template authorship, licensing, attribution, or catalog visibility grants no
+access to an instantiated plan. Ongoing agency collaboration requires a
+separate accepted, active, plan-scoped Planning Engagement. Agency booking and
+fulfillment systems remain authoritative; AdventuresSuite does not become the
+travel seller, agent, merchant, or GDS through templates.
+
+Reason:
+
+Templates make high-quality planning repeatable and give travel professionals
+a valuable way to package expertise while preserving customer ownership,
+privacy, explicit authorization, and the platform's partner-first strategy.
+
+Status:
+
+Approved
+
+---
+
+## 2026-08-09
+
+### Planning Maps Are Authorized Progressive-Detail Projections
+
+Decision:
+
+The Creator Planning Workspace will provide a map that progresses from the
+whole Adventure through journey or transportation segments, destination visits,
+itinerary days, selected places, and possible points of interest. Accepted plan
+state and candidate suggestions must remain visibly and structurally distinct.
+
+The map is an authorized projection of Creator-owned Planning state, not an
+alternate aggregate, implicit publication, booking claim, live-location view,
+or turn-by-turn navigation system. Planning remains authoritative. Mapping,
+places, geocoding, and routing dependencies stay behind provider-neutral
+adapters and preserve source, freshness, geographic precision, attribution,
+licensing, privacy, accessibility, and cost controls.
+
+Reason:
+
+Complex Adventures are easier to understand spatially, but map markers and
+route lines can overstate certainty and expose private locations. Progressive
+detail provides planning value while explicit status, authorization, and
+provider boundaries protect the customer and the platform.
+
+Status:
+
+Approved
+
+---
+
+## 2026-08-09
+
+### Uploaded Itineraries Produce Reviewed Journey Stop Proposals
+
+Decision:
+
+An authorized Creator may upload protected itinerary images or documents, or
+paste itinerary text. AdventuresSuite will extract ordered Journey Stop
+proposals containing places, local dates, arrival and departure times, proposed
+IANA time zones, source evidence, confidence, and explicit versus inferred
+state.
+
+OCR, AI interpretation, geocoding, and time-zone resolution are untrusted and
+cannot write Planning directly. Creator approval transactionally applies valid
+proposals to private Destination Visits, Itinerary Days, transportation, and
+schedule records. The public Content Engine `JourneyStop` remains a separate
+model created only through explicit publication.
+
+Reason:
+
+Cruise itineraries are commonly delivered as screenshots, PDFs, and text.
+Reviewed extraction eliminates repetitive data entry while preserving date and
+time-zone correctness, source provenance, privacy, Creator authority, and the
+private-to-public boundary.
+
+Status:
+
+Approved
+
+---
+
+## 2026-08-09
+
+### Group Travel Uses Contextual Collaboration, Not General-Purpose Chat
+
+Decision:
+
+Creators may create group Adventures and invite authenticated travelers through
+an Adventure-scoped participation relationship distinct from Creator membership
+and professional engagement. Collaboration consists of contextual discussion
+threads, structured advisory polls, explicit planner decisions, announcements,
+and acknowledgments.
+
+AdventuresSuite will not build general-purpose direct messaging, contacts,
+social graphs, presence, voice, or video as part of this capability. Messages
+and votes never mutate the Adventure Plan directly. An authorized planner must
+record a decision, and the Planning Engine must validate and commit the
+resulting operation.
+
+Reason:
+
+Groups need to discuss choices, express preferences, and understand important
+changes in their itinerary context. Bounded collaboration creates that value
+without turning AdventuresSuite into another messaging network or weakening
+Creator authority, traveler privacy, and Planning consistency.
+
+Status:
+
+Approved
+
+---
+
+## 2026-08-09
+
+### Companion Consumes Versioned JSON and Authorized Media
+
+Decision:
+
+AdventuresCompanion will retrieve traveler-specific state through versioned
+JSON REST contracts and explicitly authorized media, document, map, or offline-
+package delivery. It will never connect to Azure SQL or receive Dapper records,
+persistence models, complete domain aggregates, provider credentials, or
+permanent protected-resource URLs.
+
+The server converts Dapper persistence results into application query
+projections, applies authorization and traveler information policy, creates
+purpose-built mobile DTOs, and only then serializes JSON. Offline state is a
+minimized, encrypted, versioned, expiring, and revocation-aware projection
+rather than a database replica.
+
+Reason:
+
+This boundary lets the server remain authoritative, prevents persistence and
+private-field leakage, permits API and database schemas to evolve independently,
+and gives Companion a secure, testable, offline-capable contract.
+
+Status:
+
+Approved
+
+---
+
+## 2026-08-09
+
+### Push Signals Change; Companion Fetches Authoritative State
+
+Decision:
+
+AdventuresSuite will provide a durable Notification Engine with distinct public
+audience and private Companion policy lanes. Companion supports critical
+operational, action-required, informational, collaboration, audience, and
+promotional categories with separate preferences, urgency, quiet hours,
+digesting, safe previews, and retention.
+
+Native push is a best-effort wake-up or navigation hint containing minimal
+opaque identifiers. It never carries authoritative Adventure state or proves
+identity, authorization, viewing, acknowledgment, acceptance, or completion.
+Companion reauthenticates and retrieves current authorized JSON, and a server-
+backed in-app notification center remains available when push is delayed,
+duplicated, reordered, disabled, or lost.
+
+Reason:
+
+Travelers need timely and relevant information, but provider delivery is not
+reliable enough to become state and lock-screen payloads create disclosure
+risk. Durable intent, policy, outbox delivery, and authenticated retrieval make
+notifications useful without weakening security or consistency.
+
+Status:
+
+Approved

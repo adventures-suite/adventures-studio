@@ -38,9 +38,10 @@
   time zones, and UTC timestamps for system audit events.
 - Read `docs/architecture/adventure-travel-playbook.md`,
   `docs/architecture/adventure-calendar-integration.md`, and
-  `docs/architecture/adventure-readiness-and-change-management.md` before
+  `docs/architecture/adventure-readiness-and-change-management.md`, and
+  `docs/architecture/adventure-map-experience.md` before
   changing plan exports, calendar behavior, readiness, countdowns, change
-  impact, protected travel documents, or offline travel packages.
+  impact, protected travel documents, planning maps, or offline travel packages.
 - Treat Playbooks and calendar events as versioned, authorized projections of
   Planning state, never as authoritative plan records or implicit publication.
 - Never place ticket codes, booking PINs, private notes, precise breadcrumbs,
@@ -54,6 +55,33 @@
   travel guidance as authorized projections; they never replace Planning state.
 - Treat document extraction and AI classification as untrusted proposals with
   provenance and human review before Planning mutation.
+- Read `docs/architecture/itinerary-ingestion.md` before changing itinerary
+  upload, OCR, cruise-schedule parsing, place resolution, or Journey Stop
+  proposal behavior.
+- Store uploaded itinerary images and documents as protected Resources. Extract
+  into confidence-scored, source-linked proposals; never write Journey Stops,
+  Destination Visits, dates, times, or time zones directly from OCR or AI.
+- Preserve the boundary between private Planning stop proposals and the public
+  Content Engine `JourneyStop`; public records require a later explicit
+  publication transformation.
+- Read `docs/architecture/group-travel-collaboration.md` before changing group
+  invitations, traveler participation, voting, discussion, announcements,
+  acknowledgments, or collaborative Planning behavior.
+- Treat traveler participation as an Adventure-scoped relationship, not Creator
+  membership. Invitations, subgroup access, expiry, removal, and information
+  policy must be explicit and enforced below the UI.
+- Keep collaboration contextual: threads attach to Planning subjects, polls
+  collect advisory preferences, and announcements communicate approved facts.
+  Do not build general-purpose chat, presence, contacts, voice, or video.
+- Never mutate Planning from a message or vote. Use the boundary: discussion or
+  poll, authorized decision, validated Planning mutation, atomic audit intent.
+- Treat maps as authorized projections of Planning state. Distinguish planned
+  route segments, destination visits, selected places, and untrusted candidate
+  points of interest; a marker or route line never proves a booking, exact
+  route, availability, safety, accessibility, or navigation suitability.
+- Keep map and geocoding providers behind provider-neutral adapters. Preserve
+  attribution, licensing, freshness, source, and coordinate precision, and
+  never expose private plans or precise traveler location through public maps.
 - Implement Planning Engine phases in order and do not combine them into a
   broad rewrite.
 
@@ -75,6 +103,27 @@
 - Keep external agency systems behind provider-neutral adapters.
 - Do not add speculative partner fields or tables to the current Planning
   persistence phase.
+
+## Adventure Templates
+
+- Read `docs/architecture/adventure-templates.md` before changing reusable
+  planning blueprints, template catalogs, template licensing, or plan creation
+  from a template.
+- Treat a template as a versioned blueprint, never as an Adventure Plan,
+  booking, live inventory, or guaranteed price.
+- Instantiate templates into new private, customer Creator-owned plans. Never
+  live-link a plan so later template changes silently mutate customer state.
+- Preserve template authorship, version, provenance, attribution, and license
+  evidence without granting the template owner access to the resulting plan.
+- Exclude traveler identities, reservations, payment data, private notes,
+  precise breadcrumbs, protected media, and permanent Resource URLs from
+  templates.
+- Keep template parameters typed and validated; do not permit executable
+  scripts, SQL, prompts, or provider calls inside template content.
+- Agency-authored templates support professional partnerships. They do not
+  make AdventuresSuite a travel agency, seller, merchant, or booking system.
+- Require a separate accepted, active, plan-scoped Planning Engagement for a
+  professional to collaborate after template instantiation.
 
 ## Identity and Authorization
 
@@ -149,6 +198,7 @@
 ## AdventuresCompanion Mobile
 
 - Read `docs/architecture/adventures-companion.md`,
+  `docs/architecture/companion-api-sync.md`,
   `docs/product/adventures-companion.md`, and
   `docs/development/adventures-companion-implementation-plan.md` before changing
   mobile APIs, MAUI projects, offline synchronization, device storage,
@@ -160,6 +210,15 @@
   every API operation with explicit Creator and resource scope.
 - Keep only minimized, encrypted, revocation-aware offline projections; never
   replicate the Planning database to a device.
+- Companion consumes only versioned JSON API contracts and authorized media or
+  document streams. Never expose SQL, Dapper records, persistence models,
+  domain aggregates, provider credentials, or permanent protected URLs.
+- Build Companion responses as: Dapper persistence records, application query
+  projection, authorization and traveler information policy, mobile DTO, JSON.
+  Never serialize database rows or domain aggregates directly.
+- Push notifications signal that authorized state changed; they are not the
+  state. Use minimal opaque payloads and require Companion to fetch current
+  JSON after server reauthorization.
 - Keep GPS breadcrumbs off by default. Only the authenticated traveler on that
   device may explicitly start capture, and capture must be visible, pausable,
   stoppable, retention-bound, and private until separately published.
@@ -170,6 +229,26 @@
   notifications, ordinary audit metadata, or public content.
 - Mobile uses public-client browser-delegated authorization code with PKCE; it
   does not reuse workspace cookies or embed client secrets or certificates.
+
+## Subscription and Notification Engine
+
+- Read `docs/architecture/subscription-notification-engine.md` before changing
+  subscribers, device installations, notification events, intents, policies,
+  delivery, preferences, push payloads, digests, or acknowledgments.
+- Keep public audience notifications and private Companion operational
+  notifications as separate policy lanes. Neither relationship grants access
+  to the other.
+- Commit required notification intent with authoritative state through the
+  owning transaction or transactional outbox; deliver asynchronously and
+  idempotently through provider-neutral adapters.
+- Treat native push as best-effort signaling, never authoritative state or proof
+  of identity, authorization, delivery to a human, viewing, acknowledgment,
+  acceptance, or completion.
+- Put only minimal opaque routing data in push payloads. Companion must fetch
+  current authorized JSON before presenting protected detail.
+- Enforce category, urgency, traveler preferences, time-zone-aware quiet hours,
+  digest, deduplication, supersession, expiry, suppression, rate-limit, safe-
+  preview, consent, and environment-isolation policy.
 
 ## Platform Billing and Entitlements
 

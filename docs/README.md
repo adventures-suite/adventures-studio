@@ -21,12 +21,16 @@ human-approved AI assistance.
 Read these documents together and in this order:
 
 1. `architecture/planning-engine.md`
-2. `architecture/adventure-travel-playbook.md`
-3. `architecture/adventure-calendar-integration.md`
-4. `architecture/adventure-readiness-and-change-management.md`
-5. `architecture/ai-planning-copilot.md`
-6. `product/creator-planning-workspace.md`
-7. `development/planning-engine-implementation-plan.md`
+2. `architecture/adventure-templates.md`
+3. `architecture/adventure-map-experience.md`
+4. `architecture/itinerary-ingestion.md`
+5. `architecture/group-travel-collaboration.md`
+6. `architecture/adventure-travel-playbook.md`
+7. `architecture/adventure-calendar-integration.md`
+8. `architecture/adventure-readiness-and-change-management.md`
+9. `architecture/ai-planning-copilot.md`
+10. `product/creator-planning-workspace.md`
+11. `development/planning-engine-implementation-plan.md`
 
 The governing principle is:
 
@@ -34,6 +38,19 @@ The governing principle is:
 
 > Playbooks and calendar events are authorized projections of the plan. They
 > are neither the source of truth nor implicit public content.
+
+> Adventure Templates create independent private plans. Template ownership
+> never grants access to a customer's Adventure.
+
+> Planning maps reveal the right level of spatial detail without turning
+> candidate places, inferred routes, or private location into authoritative or
+> public facts.
+
+> Uploaded itineraries produce reviewable Journey Stop proposals. OCR and AI
+> never silently create authoritative or public travel records.
+
+> Group conversation exists to support Adventure decisions. Travelers express
+> preferences; authorized planners commit Planning changes.
 
 ## Identity and Authorization
 
@@ -87,10 +104,23 @@ The governing principle is:
 ## AdventuresCompanion Mobile
 
 1. `architecture/adventures-companion.md`
-2. `product/adventures-companion.md`
-3. `development/adventures-companion-implementation-plan.md`
+2. `architecture/companion-api-sync.md`
+3. `product/adventures-companion.md`
+4. `development/adventures-companion-implementation-plan.md`
 
 > The traveler controls capture. Private synchronization is not publication.
+
+> Companion receives versioned JSON and authorized media—not SQL or Dapper
+> models. Push signals change; the API returns authoritative current state.
+
+## Subscriptions and Notifications
+
+1. `architecture/subscription-notification-engine.md`
+2. `architecture/companion-api-sync.md`
+3. `architecture/adventure-readiness-and-change-management.md`
+
+> Public audience updates and private traveler operations use separate policy
+> lanes. Durable intent drives delivery; provider push never becomes state.
 
 ## Platform Billing and Entitlements
 

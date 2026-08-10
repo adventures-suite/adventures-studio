@@ -188,6 +188,26 @@ Acceptance criteria:
 - co-branding is removable without changing Adventure ownership
 - workspace meets accessibility and responsive-design expectations
 
+## Phase 6A: Agency Adventure Templates
+
+Scope:
+
+- agency Creator-owned template authoring and immutable publication
+- catalog visibility, attribution, and license/entitlement decisions
+- customer-controlled instantiation into an independent private plan
+- optional request-for-professional-help handoff
+- authorized adoption and outcome reporting projections
+
+Acceptance criteria:
+
+- agency template ownership never grants customer-plan access
+- instantiation does not create a Planning Engagement
+- ongoing collaboration requires separate customer acceptance
+- customer plans never live-link to later template changes
+- platform language and workflows do not represent AdventuresSuite as the
+  travel seller, booking agent, or merchant of record
+- cross-customer, cross-agency, license, privacy, and audit tests pass
+
 ## Phase 7: Provider-Neutral Imports
 
 Scope:
@@ -236,4 +256,3 @@ Acceptance criteria:
 
 These decisions may affect later product configuration but must not redefine
 Creator ownership or weaken authorization boundaries.
-

@@ -4,7 +4,7 @@
 
 **Status:** Approved Direction
 
-**Last Updated:** August 7, 2026
+**Last Updated:** August 9, 2026
 
 ---
 
@@ -29,6 +29,23 @@ and internal review are authoring activity and must not notify subscribers.
 A subscriber-facing notification is created only after a successful public
 publication or another explicit, approved public event. A Creator may choose to
 publish a minor correction silently.
+
+The Notification Engine also supports private, authorized Companion delivery.
+Audience publication notifications and operational traveler notifications are
+separate policy lanes even when they reuse durable intent, outbox, provider,
+delivery, suppression, and preference infrastructure.
+
+```text
+Public audience lane
+    publication event -> subscriber policy -> audience delivery
+
+Private Companion lane
+    Planning/collaboration event -> traveler policy -> in-app/push delivery
+```
+
+Private notifications never depend on public subscription and never make
+Planning state public. Public subscription never grants private Adventure
+access.
 
 ---
 
@@ -66,6 +83,22 @@ Candidate subscriber events include:
 Each event must identify its Creator, event type, subject, publication, and
 occurrence time. Events must be durable, auditable, and safe to process more
 than once.
+
+Private Companion event categories may include:
+
+- critical or material itinerary change;
+- action required, deadline, readiness issue, or offline-package refresh;
+- upcoming departure or activity reminder;
+- professional or AI proposal awaiting authorized review;
+- group poll opened, closing, or decided;
+- contextual mention or bounded discussion digest;
+- planner announcement and acknowledgment request; and
+- calendar or Playbook stale-state notification.
+
+Operational, action-required, collaboration, audience, and promotional
+categories have separate urgency, channel, quiet-hour, digest, preview,
+retention, and consent policies. The system must not label routine engagement
+as critical merely to bypass user preferences.
 
 ---
 
@@ -198,6 +231,15 @@ Future channels may include:
 - SMS for explicitly appropriate use cases
 - Web push
 - Creator-configured digests
+
+For Companion, native iOS and Android push services remain delivery adapters.
+The platform also provides an authoritative in-application notification center.
+Push payloads are minimal wake-up/navigation hints; Companion retrieves current
+authorized JSON through the versioned mobile API.
+
+Push delivery is not guaranteed and never proves that a human viewed,
+acknowledged, accepted, or completed anything. Those states require explicit
+application operations.
 
 Channel providers are adapters. Domain concepts, consent, audience selection,
 and delivery history must not depend on a particular vendor.

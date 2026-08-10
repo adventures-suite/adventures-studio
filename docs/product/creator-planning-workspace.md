@@ -32,18 +32,23 @@ domain and authorization model preserve a path to multiple members.
 1. Sign in and enter an authorized Creator Workspace.
 2. Create or open a private Adventure Plan.
 3. Enter working title, dates, travelers, preferences, and constraints.
-4. Add and sequence destination visits.
+4. Add and sequence destination visits manually or review Journey Stops
+   extracted from uploaded itinerary text or images.
 5. Build itinerary days and add activities, travel, and accommodations.
-6. Record reservation state, notes, tasks, packing, and budget items.
-7. Ask AI for a bounded proposal.
-8. Review a clear before/after change preview.
-9. Accept or reject individual suggestions.
-10. Continue editing the authoritative plan manually.
-11. Preview a private summary of the Adventure.
-12. Generate a versioned private Adventure Travel Playbook.
-13. Optionally export selected itinerary items to the user's calendar.
-14. Review the Adventure countdown, readiness, changes, and required actions.
-15. Explicitly choose information for a future publication workflow.
+6. Explore the Adventure, route segments, destinations, days, and candidate
+   points of interest on a layered map.
+7. Invite travelers into an Adventure-scoped group experience.
+8. Discuss proposals, collect structured votes, and record planner decisions.
+9. Record reservation state, notes, tasks, packing, and budget items.
+10. Ask AI for a bounded proposal.
+11. Review a clear before/after change preview.
+12. Accept or reject individual suggestions.
+13. Continue editing the authoritative plan manually.
+14. Preview a private summary of the Adventure.
+15. Generate a versioned private Adventure Travel Playbook.
+16. Optionally export selected itinerary items to the user's calendar.
+17. Review the Adventure countdown, readiness, changes, and required actions.
+18. Explicitly choose information for a future publication workflow.
 
 ## Initial Workspace Areas
 
@@ -78,6 +83,54 @@ domain and authorization model preserve a path to multiple members.
 - transportation and accommodations
 - reservation linkage
 - conflict and missing-information indicators
+
+### Adventure Map
+
+- whole-Adventure overview with ordered destinations and major travel legs
+- progressive drill-down by journey segment, destination visit, itinerary day,
+  and place
+- filters for planned, proposed, reserved, confirmed, cancelled, and candidate
+  items
+- selected and possible points of interest with source, freshness, confidence,
+  and planning status
+- visible route, timing, missing-coordinate, and stale-data warnings
+- accessible textual itinerary and list alternative to the visual map
+- no implication that inferred routes or candidate places are booked, open,
+  safe, accessible, or navigation-ready
+
+See `docs/architecture/adventure-map-experience.md`.
+
+### Itinerary Import
+
+- upload a protected cruise-itinerary image or PDF, or paste itinerary text
+- review ordered Journey Stop proposals beside the source
+- capture place, local date, arrival and departure time, and proposed IANA time
+  zone without inventing missing values
+- see field-level confidence, source evidence, ambiguity, duplicates, conflicts,
+  and explicit versus inferred values
+- correct, accept, or reject stops before any private Planning mutation
+- require a separate publication workflow before any stop becomes public
+
+See `docs/architecture/itinerary-ingestion.md`.
+
+### Group Travel Collaboration
+
+- invite authenticated travelers without granting Creator membership
+- organize optional households, rooms, cabins, vehicles, or activity subgroups
+- discuss an Adventure, proposal, destination, day, activity, poll, or change in
+  its own contextual thread
+- run structured polls for dates, destinations, activities, lodging,
+  transportation, budget ranges, and other planning choices
+- support preference, ranking, approval, availability, interest, and abstention
+  without forcing travelers to disclose private reasons
+- close a poll and record an explicit planner decision before any Planning
+  mutation
+- issue safe announcements with distinct delivery, viewing, acknowledgment,
+  acceptance, and completion states
+- avoid general direct messaging, contacts, social graphs, presence, voice, and
+  video features
+
+See `docs/architecture/group-travel-collaboration.md`.
 
 ### Planning Lists
 
@@ -196,8 +249,9 @@ The first release provides only:
 - schedule gap and conflict review
 - unresolved planning-task suggestions
 
-Research, packing, photography planning, reservation extraction, companion
-chat, and publication assistance follow after the proposal boundary is proven.
+Research, packing, photography planning, reviewed itinerary and reservation
+extraction, companion chat, and publication assistance follow after the
+proposal boundary is proven.
 
 ## Accessibility and Responsive Design
 
