@@ -112,17 +112,35 @@ internal static class AzureDevelopmentBootstrapper
             || !Guid.TryParse(applicationPrincipalClientId, out _))
             throw new InvalidOperationException("The approved Companion workload identity is required.");
 
+        const string userPrefix = "AdventuresSuiteCompanionVerifyUser_";
+        const string procedurePrefix = "AdventuresSuiteCompanionVerifyProc_";
         var alias = CreatePrincipalAlias(applicationPrincipalName, objectId);
+        var suffix = Guid.NewGuid().ToString("N")[..12];
+        var probeUser = userPrefix + suffix;
+        var probeProcedure = procedurePrefix + suffix;
+        var quotedProbeUser = QuoteIdentifier(probeUser);
+        var quotedProbeProcedure = QuoteIdentifier(probeProcedure);
         await using var connection = new SqlConnection(administratorConnectionString);
         await connection.OpenAsync();
         await using var administratorCommand = connection.CreateCommand();
         administratorCommand.CommandText = "SELECT USER_NAME();";
         var administratorUser = Convert.ToString(await administratorCommand.ExecuteScalarAsync())
             ?? throw new InvalidOperationException("The SQL administrator context is unavailable.");
-        await using var transaction = (SqlTransaction)await connection.BeginTransactionAsync();
+        await AcquireCompanionVerifierLockAsync(connection);
+        SqlTransaction? transaction = null;
         var impersonating = false;
+        var fingerprintBefore = string.Empty;
         try
         {
+            await CleanupCompanionVerifierFixturesAsync(connection, userPrefix, procedurePrefix);
+            fingerprintBefore = await GetCompanionDataFingerprintAsync(connection);
+            await ExecuteAdministratorAsync(
+                $"CREATE USER {quotedProbeUser} WITHOUT LOGIN;", connection);
+            await ExecuteAdministratorAsync(
+                $"CREATE PROCEDURE dbo.{quotedProbeProcedure} AS SELECT CAST(1 AS int) AS Probe;",
+                connection);
+
+            transaction = (SqlTransaction)await connection.BeginTransactionAsync();
             await ExecuteAsync("SET XACT_ABORT OFF;", connection, transaction);
             await ExecuteAsync("""
                 IF DATABASE_PRINCIPAL_ID(@Alias) IS NULL
@@ -134,13 +152,9 @@ internal static class AzureDevelopmentBootstrapper
                     OR ISNULL(IS_ROLEMEMBER(N'db_datareader', @Alias), 0) <> 0
                     OR ISNULL(IS_ROLEMEMBER(N'db_datawriter', @Alias), 0) <> 0
                     THROW 51000, 'The Companion principal has a prohibited broad role.', 1;
-                IF DATABASE_PRINCIPAL_ID(N'companion_verification_target') IS NOT NULL
-                    THROW 51000, 'The verification target already exists.', 1;
-                CREATE USER companion_verification_target WITHOUT LOGIN;
-                EXEC(N'CREATE PROCEDURE dbo.CompanionVerificationDeniedExecute AS SELECT 1;');
                 """, connection, transaction, alias);
 
-            await ExecuteAsync("EXECUTE AS USER = N'companion_verification_target';", connection, transaction);
+            await ExecuteAsync("EXECUTE AS USER = @Alias;", connection, transaction, probeUser);
             impersonating = true;
             if (await ScalarAsync("SELECT HAS_PERMS_BY_NAME(N'planning.AdventurePlans', N'OBJECT', N'SELECT');", connection, transaction) != 0)
                 throw new InvalidOperationException("The Companion delegation baseline is invalid.");
@@ -159,7 +173,8 @@ internal static class AzureDevelopmentBootstrapper
                 await AssertAuthorizationDeniedAsync($"DELETE FROM {target} WHERE 1 = 0;", connection, transaction);
             }
             await AssertAuthorizationDeniedAsync("SELECT TOP (0) * FROM auth.Users;", connection, transaction);
-            await AssertAuthorizationDeniedAsync("EXECUTE dbo.CompanionVerificationDeniedExecute;", connection, transaction);
+            await AssertAuthorizationDeniedAsync(
+                $"EXECUTE dbo.{quotedProbeProcedure};", connection, transaction);
             await AssertAuthorizationDeniedAsync("SELECT TOP (0) * FROM dbo.AdventuresSuiteSchemaVersions;", connection, transaction);
             await AssertAuthorizationDeniedAsync("INSERT dbo.AdventuresSuiteSchemaVersions DEFAULT VALUES;", connection, transaction);
             await AssertAuthorizationDeniedAsync("CREATE TABLE planning.CompanionVerificationDeniedDdl (Id int);", connection, transaction);
@@ -170,12 +185,12 @@ internal static class AzureDevelopmentBootstrapper
             if (controlBefore != 0 || controlAfter != 0)
                 throw new InvalidOperationException("Companion CONTROL verification failed.");
             await AssertAuthorizationDeniedAsync(
-                "GRANT SELECT ON OBJECT::planning.AdventurePlans TO companion_verification_target;",
+                $"GRANT SELECT ON OBJECT::planning.AdventurePlans TO {quotedProbeUser};",
                 connection, transaction);
 
             await ExecuteAsync("REVERT;", connection, transaction);
             impersonating = false;
-            await ExecuteAsync("EXECUTE AS USER = N'companion_verification_target';", connection, transaction);
+            await ExecuteAsync("EXECUTE AS USER = @Alias;", connection, transaction, probeUser);
             impersonating = true;
             if (await ScalarAsync("SELECT HAS_PERMS_BY_NAME(N'planning.AdventurePlans', N'OBJECT', N'SELECT');", connection, transaction) != 0)
                 throw new InvalidOperationException("Companion delegation verification failed.");
@@ -184,17 +199,41 @@ internal static class AzureDevelopmentBootstrapper
         }
         finally
         {
-            if (impersonating)
+            try
             {
-                await ExecuteAsync("REVERT;", connection, transaction);
+                try
+                {
+                    if (impersonating && transaction is not null)
+                        await ExecuteAsync("REVERT;", connection, transaction);
+                }
+                finally
+                {
+                    if (transaction is not null && transaction.Connection is not null)
+                        await transaction.RollbackAsync();
+                }
             }
-            await transaction.RollbackAsync();
+            finally
+            {
+                try
+                {
+                    await CleanupCompanionVerifierFixturesAsync(connection, userPrefix, procedurePrefix);
+                }
+                finally
+                {
+                    await ReleaseCompanionVerifierLockAsync(connection);
+                    if (transaction is not null) await transaction.DisposeAsync();
+                }
+            }
         }
 
         await using var residue = connection.CreateCommand();
         residue.CommandText = """
-            SELECT CASE WHEN DATABASE_PRINCIPAL_ID(N'companion_verification_target') IS NULL
-                         AND OBJECT_ID(N'dbo.CompanionVerificationDeniedExecute', N'P') IS NULL
+            SELECT CASE WHEN NOT EXISTS (
+                             SELECT 1 FROM sys.database_principals
+                             WHERE LEFT(name, LEN(@UserPrefix)) = @UserPrefix)
+                         AND NOT EXISTS (
+                             SELECT 1 FROM sys.procedures
+                             WHERE LEFT(name, LEN(@ProcedurePrefix)) = @ProcedurePrefix)
                          AND NOT EXISTS (
                              SELECT 1 FROM sys.database_permissions
                              WHERE grantee_principal_id = USER_ID(@Alias)
@@ -205,8 +244,91 @@ internal static class AzureDevelopmentBootstrapper
             """;
         residue.Parameters.AddWithValue("@AdministratorUser", administratorUser);
         residue.Parameters.AddWithValue("@Alias", alias);
+        residue.Parameters.AddWithValue("@UserPrefix", userPrefix);
+        residue.Parameters.AddWithValue("@ProcedurePrefix", procedurePrefix);
         if (Convert.ToInt32(await residue.ExecuteScalarAsync()) != 0)
             throw new InvalidOperationException("Companion verification cleanup failed.");
+        if (!string.Equals(
+                fingerprintBefore,
+                await GetCompanionDataFingerprintAsync(connection),
+                StringComparison.Ordinal))
+            throw new InvalidOperationException("Companion verification changed application data.");
+    }
+
+    private static async Task AcquireCompanionVerifierLockAsync(SqlConnection connection)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            DECLARE @Result int;
+            EXEC @Result = sys.sp_getapplock
+                @Resource=N'AdventuresSuite.Companion.PermissionVerifier',
+                @LockMode=N'Exclusive', @LockOwner=N'Session', @LockTimeout=15000;
+            SELECT @Result;
+            """;
+        if (Convert.ToInt32(await command.ExecuteScalarAsync()) < 0)
+            throw new InvalidOperationException("The Companion verifier lock is unavailable.");
+    }
+
+    private static async Task ReleaseCompanionVerifierLockAsync(SqlConnection connection)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            EXEC sys.sp_releaseapplock
+                @Resource=N'AdventuresSuite.Companion.PermissionVerifier', @LockOwner=N'Session';
+            """;
+        await command.ExecuteNonQueryAsync();
+    }
+
+    private static async Task CleanupCompanionVerifierFixturesAsync(
+        SqlConnection connection, string userPrefix, string procedurePrefix)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            IF EXISTS (
+                SELECT 1 FROM sys.database_principals
+                WHERE LEFT(name, LEN(@UserPrefix)) = @UserPrefix
+                  AND (type <> 'S' OR authentication_type <> 0))
+                OR EXISTS (
+                SELECT 1 FROM sys.objects AS objects
+                INNER JOIN sys.schemas AS schemas ON schemas.schema_id = objects.schema_id
+                WHERE LEFT(objects.name, LEN(@ProcedurePrefix)) = @ProcedurePrefix
+                  AND (objects.type <> 'P' OR schemas.name <> N'dbo'))
+                THROW 51000, 'Unexpected Companion verification fixtures exist.', 1;
+
+            DECLARE @Sql nvarchar(max) = N'';
+            SELECT @Sql = @Sql + N'DROP PROCEDURE dbo.' + QUOTENAME(name) + N';'
+            FROM sys.procedures WHERE LEFT(name, LEN(@ProcedurePrefix)) = @ProcedurePrefix;
+            EXEC sys.sp_executesql @Sql;
+            SET @Sql = N'';
+            SELECT @Sql = @Sql + N'DROP USER ' + QUOTENAME(name) + N';'
+            FROM sys.database_principals WHERE LEFT(name, LEN(@UserPrefix)) = @UserPrefix;
+            EXEC sys.sp_executesql @Sql;
+            """;
+        command.Parameters.AddWithValue("@UserPrefix", userPrefix);
+        command.Parameters.AddWithValue("@ProcedurePrefix", procedurePrefix);
+        await command.ExecuteNonQueryAsync();
+    }
+
+    private static async Task<string> GetCompanionDataFingerprintAsync(SqlConnection connection)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT CONCAT(
+                (SELECT CONCAT(COUNT_BIG(*), ':', COALESCE(CHECKSUM_AGG(BINARY_CHECKSUM(*)), 0)) FROM planning.AdventurePlans), '|',
+                (SELECT CONCAT(COUNT_BIG(*), ':', COALESCE(CHECKSUM_AGG(BINARY_CHECKSUM(*)), 0)) FROM planning.TravelerParticipations), '|',
+                (SELECT CONCAT(COUNT_BIG(*), ':', COALESCE(CHECKSUM_AGG(BINARY_CHECKSUM(*)), 0)) FROM planning.DestinationVisits), '|',
+                (SELECT CONCAT(COUNT_BIG(*), ':', COALESCE(CHECKSUM_AGG(BINARY_CHECKSUM(*)), 0)) FROM auth.CreatorMemberships), '|',
+                (SELECT CONCAT(COUNT_BIG(*), ':', COALESCE(CHECKSUM_AGG(BINARY_CHECKSUM(*)), 0)) FROM auth.CreatorMembershipRoles), '|',
+                (SELECT CONCAT(COUNT_BIG(*), ':', COALESCE(CHECKSUM_AGG(BINARY_CHECKSUM(*)), 0)) FROM auth.CreatorMembershipPermissionGrants));
+            """;
+        return Convert.ToString(await command.ExecuteScalarAsync()) ?? string.Empty;
+    }
+
+    private static async Task ExecuteAdministratorAsync(string sql, SqlConnection connection)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        await command.ExecuteNonQueryAsync();
     }
 
     private static readonly string[] CompanionReadObjects =
