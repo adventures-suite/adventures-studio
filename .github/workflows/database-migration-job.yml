@@ -1,0 +1,104 @@
+name: Database Migration Job
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Reviewed finite operation
+        required: true
+        type: choice
+        options: [publish-image, configure-dormant-job, verify-execution-channel, capture-migration-state, run-reviewed-operation, verify-migration-state]
+      release_sha:
+        description: Exact 40-character reviewed commit SHA
+        required: true
+        type: string
+      image_digest:
+        description: Exact reviewed sha256 image digest (required after publish)
+        required: false
+        type: string
+      operation_id:
+        description: Unique reviewed operation identifier
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: database-development-migration
+  cancel-in-progress: false
+
+jobs:
+  validate-input:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Validate immutable inputs
+        env:
+          RELEASE_SHA: ${{ inputs.release_sha }}
+          IMAGE_DIGEST: ${{ inputs.image_digest }}
+          OPERATION: ${{ inputs.operation }}
+        run: |
+          [[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          if [ "$OPERATION" != publish-image ]; then
+            [[ "$IMAGE_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
+          fi
+
+  publish-image:
+    if: inputs.operation == 'publish-image'
+    needs: validate-input
+    runs-on: ubuntu-24.04
+    environment: database-development
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: '${{ inputs.release_sha }}' }
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.DATABASE_IMAGE_PUBLISHER_CLIENT_ID }}
+          tenant-id: ${{ vars.WORKFORCE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Build, push full-SHA tag, and record immutable digest
+        env:
+          REGISTRY: ${{ vars.MIGRATION_REGISTRY_NAME }}
+          RELEASE_SHA: ${{ inputs.release_sha }}
+        run: |
+          az acr login --name "$REGISTRY"
+          login_server="$(az acr show --name "$REGISTRY" --query loginServer -o tsv)"
+          image="$login_server/adventures-suite-database-migrator:$RELEASE_SHA"
+          docker build --file src/AdventuresSuite.DatabaseMigrator/Dockerfile --build-arg RELEASE_SHA="$RELEASE_SHA" --tag "$image" .
+          docker push "$image"
+          digest="$(docker image inspect "$image" --format '{{index .RepoDigests 0}}' | cut -d@ -f2)"
+          [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+          printf '{"releaseSha":"%s","imageDigest":"%s"}\n' "$RELEASE_SHA" "$digest"
+
+  configure-or-run:
+    if: inputs.operation != 'publish-image'
+    needs: validate-input
+    runs-on: ubuntu-24.04
+    environment: database-development
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: '${{ inputs.release_sha }}' }
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.DATABASE_JOB_OPERATOR_CLIENT_ID }}
+          tenant-id: ${{ vars.WORKFORCE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Require exact digest and approved job controls
+        env:
+          IMAGE_DIGEST: ${{ inputs.image_digest }}
+          OPERATION: ${{ inputs.operation }}
+          OPERATION_ID: ${{ inputs.operation_id }}
+        run: |
+          [[ "$IMAGE_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
+          [[ "$OPERATION_ID" =~ ^[a-z0-9][a-z0-9-]{7,63}$ ]]
+          echo "Operation $OPERATION passed immutable-input validation."
+      - name: Repository-only increment guard
+        run: |
+          echo '::error::Azure mutation is intentionally disabled in this repository increment.'
+          exit 1

@@ -1,0 +1,107 @@
+name: Validate Migration Container
+
+on:
+  pull_request:
+    paths:
+      - src/AdventuresSuite.DatabaseMigrator/**
+      - database/migrations/**
+      - infrastructure/container-apps-migrations/**
+      - tests/AdventuresSuite.DatabaseIntegrationTests/**
+      - .github/workflows/validate-migration-container.yml
+      - .github/workflows/database-migration-job.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Container and infrastructure policy gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      RELEASE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      IMAGE_NAME: adventures-suite-database-migrator
+    steps:
+      - name: Checkout exact SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_SHA }}
+
+      - name: Build migration container
+        run: |
+          docker build \
+            --file src/AdventuresSuite.DatabaseMigrator/Dockerfile \
+            --build-arg RELEASE_SHA="$RELEASE_SHA" \
+            --tag "$IMAGE_NAME:$RELEASE_SHA" .
+
+      - name: Inspect hardened runtime image
+        run: |
+          test "$(docker image inspect "$IMAGE_NAME:$RELEASE_SHA" --format '{{.Config.User}}')" = '1654:1654'
+          test "$(docker image inspect "$IMAGE_NAME:$RELEASE_SHA" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}')" = "$RELEASE_SHA"
+          docker run --rm --entrypoint /bin/false "$IMAGE_NAME:$RELEASE_SHA" 2>/dev/null && exit 1 || true
+          if docker run --rm --entrypoint dotnet "$IMAGE_NAME:$RELEASE_SHA" --info 2>/dev/null; then
+            echo '::error::Runtime image unexpectedly contains SDK/runtime tooling.'
+            exit 1
+          fi
+
+      - name: Prove SQL-free execution channel mode
+        run: |
+          output="$(docker run --rm \
+            -e ADVENTURESSUITE_MIGRATION_OPERATION_ID=container-proof-${GITHUB_RUN_ID} \
+            -e ADVENTURESSUITE_RELEASE_SHA="$RELEASE_SHA" \
+            -e ADVENTURESSUITE_IMAGE_DIGEST=sha256:$(printf '0%.0s' {1..64}) \
+            -e ADVENTURESSUITE_ARTIFACT_SHA256=$(printf '1%.0s' {1..64}) \
+            -e ADVENTURESSUITE_MIGRATION_TENANT_ID=00000000-0000-0000-0000-000000000001 \
+            -e ADVENTURESSUITE_MIGRATION_PRINCIPAL_ID=00000000-0000-0000-0000-000000000002 \
+            -e ADVENTURESSUITE_MIGRATION_PRINCIPAL_CLIENT_ID=00000000-0000-0000-0000-000000000003 \
+            -e ADVENTURESSUITE_MIGRATION_PRINCIPAL_NAME=container-proof \
+            "$IMAGE_NAME:$RELEASE_SHA" --verify-execution-channel)"
+          grep -q '"classification":"ExecutionChannelComplete"' <<<"$output"
+          grep -q '"sqlAccessAttempted":false' <<<"$output"
+          ! grep -Eiq 'connection string|access.token|select |insert |update |delete ' <<<"$output"
+
+      - name: Prove entrypoint denial and failure propagation
+        run: |
+          set +e
+          docker run --rm "$IMAGE_NAME:$RELEASE_SHA" --migrate >/tmp/direct.out 2>&1
+          direct_exit=$?
+          docker run --rm "$IMAGE_NAME:$RELEASE_SHA" --verify-execution-channel >/tmp/failure.out 2>&1
+          failure_exit=$?
+          set -e
+          test "$direct_exit" -eq 2
+          test "$failure_exit" -eq 1
+          grep -q 'unreviewed-entrypoint' /tmp/direct.out
+          grep -q '"exitCode":1' /tmp/failure.out
+          ! grep -Eiq 'connection string|access.token|select |insert |update |delete ' /tmp/direct.out /tmp/failure.out
+
+      - name: Validate migration catalog and infrastructure policy
+        run: |
+          test "$(find database/migrations -name '*.sql' -printf '%f\n' | sort | tail -n 2 | tr '\n' ' ')" = \
+            '0007_create_traveler_participations.sql 0008_create_companion_read_role.sql '
+          grep -q "triggerType: 'Manual'" infrastructure/container-apps-migrations/main.bicep
+          grep -q 'replicaRetryLimit: 0' infrastructure/container-apps-migrations/main.bicep
+          grep -q 'replicaTimeout: 900' infrastructure/container-apps-migrations/main.bicep
+          grep -q 'parallelism: 1' infrastructure/container-apps-migrations/main.bicep
+          grep -q 'replicaCompletionCount: 1' infrastructure/container-apps-migrations/main.bicep
+          grep -q 'timeout --signal=TERM --kill-after=30s 900s' src/AdventuresSuite.DatabaseMigrator/container-entrypoint.sh
+          grep -q '@${imageDigest}' infrastructure/container-apps-migrations/main.bicep
+          ! grep -Eiq 'ingress:|external: true|latest' infrastructure/container-apps-migrations/main.bicep
+
+      - name: Build Bicep template
+        run: az bicep build --file infrastructure/container-apps-migrations/main.bicep
+
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ env.IMAGE_NAME }}:${{ env.RELEASE_SHA }}
+          artifact-name: migration-container-sbom-${{ env.RELEASE_SHA }}.spdx.json
+
+      - name: Scan container image
+        uses: aquasecurity/trivy-action@0.30.0
+        with:
+          image-ref: ${{ env.IMAGE_NAME }}:${{ env.RELEASE_SHA }}
+          format: table
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: '1'
