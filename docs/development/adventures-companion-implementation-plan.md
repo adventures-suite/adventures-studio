@@ -49,6 +49,13 @@ Give the API its own OAuth bearer pipeline, configuration, health, telemetry,
 runtime identity, deployment, rollback, and independent scaling boundary while
 reusing approved domain, application, authorization, and persistence libraries.
 
+Create cohesive contract boundaries rather than a universal Common project.
+Use a Companion contract project for API DTOs and JSON metadata, server-only
+application projects for authorized projections, and a host-independent Razor
+class library only for presentation that is genuinely shared by Web and MAUI.
+Companion must not reference server application, domain, authorization,
+persistence, ASP.NET, Azure, SQL, Dapper, or identity-provider projects.
+
 Add provider-neutral API contracts, versioning, OAuth-protected mobile access,
 server-side Creator/resource authorization, idempotency, safe errors, rate
 limits, and API observability. Implement the server boundary as Dapper
@@ -72,6 +79,10 @@ metadata for every route. Retain the generated contract as a CI artifact and
 use Scalar as the development-only interactive API reference. Do not use the
 deprecated `.WithOpenApi()` customization pattern or make an interactive UI the
 contract source.
+
+Generate or verify the MAUI client from the retained OpenAPI artifact. A shared
+contract assembly may improve compile-time reuse, but it must not bypass
+OpenAPI compatibility checks or become a channel for server-only types.
 
 Implement the initial endpoint matrix, DTO fields, safe problems, examples, and
 deferrals in `docs/architecture/companion-api-v1-contract.md`. Treat required

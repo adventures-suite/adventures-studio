@@ -110,6 +110,59 @@ is a modular application boundary. Further service extraction requires measured
 scale, isolation, availability, ownership, or deployment evidence rather than
 speculative decomposition.
 
+## Shared Library and Dependency Boundaries
+
+AdventuresSuite uses narrowly scoped shared libraries rather than a universal
+`Common` or `Shared` project. A library exists only when its consumers share a
+cohesive contract with the same stability, security, and deployment semantics.
+
+Initial project direction:
+
+```text
+AdventuresSuite.Contracts
+    safe cross-process primitives and wire conventions
+
+AdventuresSuite.Companion.Contracts
+    Companion request/response DTOs, API enums, and JSON context
+
+AdventuresSuite.Application
+    server application services and authorized query projections
+
+AdventuresSuite.Domain and Engine projects
+    authoritative server-side domain models and business rules
+
+AdventuresSuite.UI
+    host-independent Razor components and design tokens where genuinely shared
+```
+
+The exact project names may be refined during implementation, but the dependency
+rules are binding:
+
+- Companion never references server domain, application, authorization,
+  persistence, Dapper, SQL, ASP.NET, Azure, or identity-provider projects.
+- The API host references Companion contracts plus server application and
+  infrastructure composition.
+- The web host may reuse server application services and host-independent UI;
+  it references Companion contracts only for an approved traveler-preview or
+  other real contract-consumer use case.
+- Shared UI receives presentation-safe models and never performs persistence or
+  authorization enforcement.
+- Provider and host types do not enter cross-process contracts.
+- Project references remain acyclic and point inward toward stable contracts.
+
+`AdventuresSuite.Contracts`, if needed, remains intentionally small. Suitable
+contents include schema-version constants, safe problem codes, pagination
+envelopes, units, currency representations, and genuinely cross-process wire
+primitives. It is not a home for miscellaneous helpers, business services,
+configuration, authorization decisions, domain aggregates, or provider types.
+
+`AdventuresSuite.Companion.Contracts` defines the API's intentional DTO
+allowlist. The API generates OpenAPI from those contracts. OpenAPI remains the
+authoritative cross-process compatibility artifact, and CI generates or verifies
+the MAUI client against it. A direct project reference must never let an
+unreleased contract change bypass OpenAPI generation, compatibility comparison,
+or consumer tests.
+
 ## Activation Gates
 
 Contract design and deterministic contract tests may begin immediately.

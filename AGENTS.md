@@ -241,6 +241,11 @@
   never inside or proxied through the Blazor web host. Share approved domain,
   application, authorization, and persistence libraries without duplicating
   business rules, and keep bearer-token and cookie pipelines host-specific.
+- Prefer cohesive shared contract and UI libraries over a universal Common or
+  Shared project. Companion must not reference server domain, application,
+  authorization, persistence, Dapper, SQL, ASP.NET, Azure, or identity-provider
+  projects. OpenAPI remains the cross-process compatibility authority even when
+  API DTO source is held in a shared Companion contracts assembly.
 
 ## Subscription and Notification Engine
 
