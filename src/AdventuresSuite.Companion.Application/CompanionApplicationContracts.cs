@@ -30,6 +30,10 @@ public interface ICompanionProjectionService
         CompanionAccessContext access, int limit, string? continuationToken, bool includeCompleted,
         string supportId, CancellationToken cancellationToken);
 
+    /// <summary>Gets one authorized traveler-safe Adventure overview.</summary>
+    Task<CompanionQueryResult<CompanionAdventureDto>> GetAdventureAsync(
+        CompanionAccessContext access, string adventureId, string supportId,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>Provides fail-closed projections when deterministic fixtures are not explicitly enabled.</summary>
@@ -39,6 +43,12 @@ public sealed class ClosedCompanionProjectionService : ICompanionProjectionServi
     public Task<CompanionQueryResult<CompanionAdventureCollectionDto>> ListAdventuresAsync(
         CompanionAccessContext access, int limit, string? continuationToken, bool includeCompleted,
         string supportId, CancellationToken cancellationToken) => Unavailable<CompanionAdventureCollectionDto>();
+
+    /// <inheritdoc />
+    public Task<CompanionQueryResult<CompanionAdventureDto>> GetAdventureAsync(
+        CompanionAccessContext access, string adventureId, string supportId,
+        CancellationToken cancellationToken) => Unavailable<CompanionAdventureDto>();
+
     private static Task<CompanionQueryResult<T>> Unavailable<T>() where T : CompanionProjectionDto =>
         Task.FromResult(new CompanionQueryResult<T>(null, null));
 }

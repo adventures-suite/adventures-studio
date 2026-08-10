@@ -11,11 +11,12 @@ public sealed class CompanionEndpointContractTests(CompanionApiFactory factory)
     : IClassFixture<CompanionApiFactory>
 {
     private const string Route = "/v1/companion/adventures";
+    private const string DetailRoute = "/v1/companion/adventures/adv_demo_italy_2026";
     private readonly HttpClient _client = factory.CreateClient();
 
     /// <summary>Ensures only the JSON collection slice is active and media delivery remains separate.</summary>
     [Fact]
-    public async Task OnlyAdventureCollectionIsExposed()
+    public async Task AdventureJsonReadsAreExposedWhileMediaRemainsSeparate()
     {
         using var response = await _client.GetAsync(Route);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -25,11 +26,99 @@ public sealed class CompanionEndpointContractTests(CompanionApiFactory factory)
         var bytes = await response.Content.ReadAsByteArrayAsync();
         Assert.InRange(bytes.Length, 1, CompanionContractLimits.MaximumJsonResponseBytes);
 
-        Assert.Equal(HttpStatusCode.NotFound,
-            (await _client.GetAsync("/v1/companion/adventures/adv_demo_italy_2026")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await _client.GetAsync(DetailRoute)).StatusCode);
         using var media = await _client.GetAsync("/v1/companion/resources/res_demo/content");
         Assert.Equal(HttpStatusCode.NotFound, media.StatusCode);
         Assert.Empty(await media.Content.ReadAsByteArrayAsync());
+    }
+
+    /// <summary>Ensures detail JSON is explicitly mapped, bounded, versioned, and minimized.</summary>
+    [Fact]
+    public async Task AdventureDetailIsTravelerSafeAndSourceGenerated()
+    {
+        using var response = await _client.GetAsync(DetailRoute);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("application/json", response.Content.Headers.ContentType?.MediaType);
+        Assert.True(response.Headers.CacheControl?.Private);
+        Assert.True(response.Headers.CacheControl?.MustRevalidate);
+        Assert.True(response.Headers.Contains("ETag"));
+        Assert.True(response.Headers.Contains("X-Support-Id"));
+
+        var bytes = await response.Content.ReadAsByteArrayAsync();
+        Assert.InRange(bytes.Length, 1, CompanionContractLimits.MaximumJsonResponseBytes);
+        var dto = JsonSerializer.Deserialize(bytes, CompanionJsonSerializerContext.Default.CompanionAdventureDto);
+        Assert.NotNull(dto);
+        Assert.Equal("1.0", dto.SchemaVersion);
+        Assert.Equal("adv_demo_italy_2026", dto.AdventureId);
+        Assert.Equal("Italian Cities by Rail", dto.Title);
+        Assert.Equal([1, 2], dto.Destinations.Select(value => value.Sequence));
+        Assert.Empty(dto.CapabilityLinks);
+
+        var json = System.Text.Encoding.UTF8.GetString(bytes);
+        foreach (var prohibited in new[]
+        {
+            "reservation", "privateNote", "providerToken", "latitude", "longitude",
+            "precise", "gps", "accessToken", "refreshToken", "contentPath"
+        })
+        {
+            Assert.DoesNotContain(prohibited, json, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    /// <summary>Ensures detail conditional reads never bypass a fresh authorization evaluation.</summary>
+    [Fact]
+    public async Task AdventureDetailMatchingEtagReturnsBodylessNotModified()
+    {
+        using var initial = await _client.GetAsync(DetailRoute);
+        var etag = Assert.Single(initial.Headers.GetValues("ETag"));
+        using var request = new HttpRequestMessage(HttpMethod.Get, DetailRoute);
+        request.Headers.TryAddWithoutValidation("If-None-Match", etag);
+        using var response = await _client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.NotModified, response.StatusCode);
+        Assert.Empty(await response.Content.ReadAsByteArrayAsync());
+    }
+
+    /// <summary>Ensures unknown and unauthorized detail identities are enumeration-safe.</summary>
+    [Fact]
+    public async Task AdventureDetailAuthorizationFailuresAreEnumerationSafe()
+    {
+        using var unknown = await _client.GetAsync("/v1/companion/adventures/adv_demo_unknown");
+        var unknownProblem = await ReadProblemAsync(unknown);
+        Assert.Equal(HttpStatusCode.NotFound, unknown.StatusCode);
+        Assert.Equal("resource_unavailable", unknownProblem.Code);
+
+        var requests = new[]
+        {
+            RequestWith("X-Companion-Test-User", "usr_demo_other", DetailRoute),
+            RequestWith("X-Companion-Test-Creator", "creator_demo_other", DetailRoute),
+            RequestWith("X-Companion-Test-Traveler", "trav_demo_other", DetailRoute),
+            RequestWith("X-Companion-Test-Membership-Version", "6", DetailRoute),
+            RequestWith("X-Companion-Test-Revoked", "true", DetailRoute)
+        };
+        foreach (var request in requests)
+        {
+            using var ownedRequest = request;
+            using var response = await _client.SendAsync(request);
+            var problem = await ReadProblemAsync(response);
+            Assert.Equal(unknown.StatusCode, response.StatusCode);
+            Assert.Equal(unknownProblem.Code, problem.Code);
+            Assert.Equal(unknownProblem.Title, problem.Title);
+            var body = await response.Content.ReadAsStringAsync();
+            Assert.DoesNotContain("creator", body, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("traveler", body, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("membership", body, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    /// <summary>Ensures malformed or case-altered identifiers do not broaden lookup behavior.</summary>
+    [Fact]
+    public async Task AdventureDetailIdentifiersAreBoundedAndCaseSensitive()
+    {
+        using var malformed = await _client.GetAsync("/v1/companion/adventures/%20invalid");
+        await AssertSafeProblemAsync(malformed, HttpStatusCode.BadRequest, "invalid_request");
+
+        using var caseAltered = await _client.GetAsync("/v1/companion/adventures/ADV_demo_italy_2026");
+        await AssertSafeProblemAsync(caseAltered, HttpStatusCode.NotFound, "resource_unavailable");
     }
 
     /// <summary>Ensures explicit source-generated JSON is deterministic and bounded.</summary>
@@ -108,8 +197,11 @@ public sealed class CompanionEndpointContractTests(CompanionApiFactory factory)
     }
 
     /// <summary>Ensures traces and metrics use only stable, low-cardinality dimensions.</summary>
-    [Fact]
-    public async Task OperationalSignalsExcludeIdentityAndResourceDimensions()
+    [Theory]
+    [InlineData(Route, "companion.adventures.list", CompanionTelemetry.ListAdventuresOperation)]
+    [InlineData(DetailRoute, "companion.adventures.get", CompanionTelemetry.GetAdventureOperation)]
+    public async Task OperationalSignalsExcludeIdentityAndResourceDimensions(
+        string route, string activityName, string operation)
     {
         Activity? stopped = null;
         using var activityListener = new ActivityListener
@@ -132,10 +224,11 @@ public sealed class CompanionEndpointContractTests(CompanionApiFactory factory)
             measurements.Add((instrument.Name, tags.ToArray())));
         meterListener.Start();
 
-        using var response = await _client.GetAsync(Route);
+        using var response = await _client.GetAsync(route);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.NotNull(stopped);
-        Assert.Equal("companion.adventures.list", stopped.DisplayName);
+        Assert.Equal(activityName, stopped.DisplayName);
+        Assert.Equal(operation, stopped.GetTagItem("operation"));
         Assert.NotEmpty(measurements);
         var signalTags = stopped.Tags.Select(tag => tag.Key)
             .Concat(measurements.SelectMany(value => value.Tags.Select(tag => tag.Key)))
@@ -152,9 +245,9 @@ public sealed class CompanionEndpointContractTests(CompanionApiFactory factory)
         || name.Contains("resource", StringComparison.OrdinalIgnoreCase)
         || name.Contains("host", StringComparison.OrdinalIgnoreCase);
 
-    private static HttpRequestMessage RequestWith(string header, string value)
+    private static HttpRequestMessage RequestWith(string header, string value, string route = Route)
     {
-        var request = new HttpRequestMessage(HttpMethod.Get, Route);
+        var request = new HttpRequestMessage(HttpMethod.Get, route);
         request.Headers.Add(header, value);
         return request;
     }

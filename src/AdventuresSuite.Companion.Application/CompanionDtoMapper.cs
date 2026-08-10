@@ -43,13 +43,8 @@ internal static class CompanionDtoMapper
             ReadinessSummary = source.Id == DeterministicCompanionProjectionService.ItalyAdventureId
                 ? "One traveler-visible action needs attention."
                 : "No traveler-visible blockers are present in this fictional projection.",
-            CapabilityLinks = new Dictionary<string, string>(StringComparer.Ordinal)
-            {
-                ["today"] = $"/v1/companion/adventures/{source.Id}/today",
-                ["itinerary"] = $"/v1/companion/adventures/{source.Id}/itinerary",
-                ["readiness"] = $"/v1/companion/adventures/{source.Id}/readiness",
-                ["playbook"] = $"/v1/companion/adventures/{source.Id}/playbook"
-            },
+            // Capabilities appear only when their independently authorized route is active.
+            CapabilityLinks = new Dictionary<string, string>(StringComparer.Ordinal),
             InformationProfileVersion = "info_demo_01"
         };
 

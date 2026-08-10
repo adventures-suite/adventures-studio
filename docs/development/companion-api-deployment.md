@@ -47,8 +47,16 @@ integration subnet. SQL, Key Vault, and Blob public access remain disabled.
 ## Identity and Permission Boundary
 
 GitHub authenticates through the dedicated user-assigned identity and the exact
-GitHub `dev` Environment subject. That identity has `Website Contributor` only
-at the `adventures-suite-api-dev` App Service scope. It has no subscription or
+GitHub `dev` Environment subject:
+
+```text
+repo:ssimonton007@55812276/adventures-studio@1317655952:environment:dev
+```
+
+The issuer is `https://token.actions.githubusercontent.com` and the audience is
+`api://AzureADTokenExchange`. These are workload-federation identifiers, not
+credential material. The deployment identity has `Website Contributor` only at
+the `adventures-suite-api-dev` App Service scope. It has no subscription or
 resource-group Contributor assignment and no SQL, Key Vault, Blob, migration,
 or application-runtime permission.
 

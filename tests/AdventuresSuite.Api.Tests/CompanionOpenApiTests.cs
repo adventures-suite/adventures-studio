@@ -23,9 +23,10 @@ public sealed class CompanionOpenApiTests(CompanionApiFactory factory)
         Assert.Equal("oauth2", security.GetProperty("type").GetString());
 
         var paths = document.RootElement.GetProperty("paths");
-        var path = Assert.Single(paths.EnumerateObject());
-        Assert.Equal("/v1/companion/adventures", path.Name);
-        var operation = path.Value.GetProperty("get");
+        Assert.Equal(
+            new[] { "/v1/companion/adventures", "/v1/companion/adventures/{adventureId}" },
+            paths.EnumerateObject().Select(value => value.Name).Order(StringComparer.Ordinal));
+        var operation = paths.GetProperty("/v1/companion/adventures").GetProperty("get");
         Assert.Equal("ListCompanionAdventures", operation.GetProperty("operationId").GetString());
         Assert.False(string.IsNullOrWhiteSpace(operation.GetProperty("summary").GetString()));
         Assert.False(string.IsNullOrWhiteSpace(operation.GetProperty("description").GetString()));
@@ -38,6 +39,19 @@ public sealed class CompanionOpenApiTests(CompanionApiFactory factory)
             parameters.Select(value => value.GetProperty("name").GetString()!).ToHashSet(StringComparer.Ordinal));
         Assert.All(parameters, parameter =>
             Assert.False(string.IsNullOrWhiteSpace(parameter.GetProperty("description").GetString())));
+
+        var detail = paths.GetProperty("/v1/companion/adventures/{adventureId}").GetProperty("get");
+        Assert.Equal("GetCompanionAdventure", detail.GetProperty("operationId").GetString());
+        Assert.False(string.IsNullOrWhiteSpace(detail.GetProperty("summary").GetString()));
+        Assert.False(string.IsNullOrWhiteSpace(detail.GetProperty("description").GetString()));
+        var detailResponses = detail.GetProperty("responses");
+        foreach (var status in new[] { "200", "304", "400", "401", "403", "404", "500" })
+            Assert.True(detailResponses.TryGetProperty(status, out _), $"Missing detail response {status}.");
+        var detailParameter = Assert.Single(detail.GetProperty("parameters").EnumerateArray());
+        Assert.Equal("adventureId", detailParameter.GetProperty("name").GetString());
+        Assert.Equal("path", detailParameter.GetProperty("in").GetString());
+        Assert.True(detailParameter.GetProperty("required").GetBoolean());
+        Assert.False(string.IsNullOrWhiteSpace(detailParameter.GetProperty("description").GetString()));
     }
 
     /// <summary>Ensures Scalar consumes the generated contract in Test.</summary>
@@ -86,6 +100,8 @@ public sealed class CompanionProductionGateTests(ProductionCompanionApiFactory f
         Assert.Equal(HttpStatusCode.NotFound, (await _client.GetAsync("/scalar/companion")).StatusCode);
         var response = await _client.GetAsync("/v1/companion/adventures");
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        var detail = await _client.GetAsync("/v1/companion/adventures/adv_demo_italy_2026");
+        Assert.Equal(HttpStatusCode.Unauthorized, detail.StatusCode);
     }
 
     /// <summary>Ensures a production attempt to select deterministic identities and fixtures fails startup.</summary>
