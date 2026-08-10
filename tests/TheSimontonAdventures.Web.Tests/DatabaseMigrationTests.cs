@@ -14,12 +14,13 @@ public sealed class DatabaseMigrationTests
     {
         var migrations = MigrationCatalog.GetOrderedResourceNames(MigratorAssembly);
 
-        Assert.Equal(5, migrations.Count);
+        Assert.Equal(6, migrations.Count);
         Assert.EndsWith("0001_create_planning_schema.sql", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("0002_create_adventure_plans.sql", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("0003_create_planning_children.sql", migrations[2], StringComparison.Ordinal);
         Assert.EndsWith("0004_create_authentication_persistence.sql", migrations[3], StringComparison.Ordinal);
         Assert.EndsWith("0005_bind_sessions_to_external_identities.sql", migrations[4], StringComparison.Ordinal);
+        Assert.EndsWith("0006_create_creator_memberships.sql", migrations[5], StringComparison.Ordinal);
         Assert.Equal(migrations.Count, migrations.Distinct(StringComparer.Ordinal).Count());
     }
 
@@ -78,6 +79,24 @@ public sealed class DatabaseMigrationTests
         Assert.Contains("GRANT SELECT, INSERT, UPDATE ON SCHEMA::auth", migration, StringComparison.Ordinal);
         Assert.DoesNotContain("GRANT SELECT, INSERT, UPDATE, DELETE", migration, StringComparison.Ordinal);
         Assert.Contains("DENY ALTER ON SCHEMA::auth", migration, StringComparison.Ordinal);
+    }
+
+    /// <summary>Ensures membership state is Creator-scoped and audit evidence is append-only.</summary>
+    [Fact]
+    public void MembershipSchema_DeclaresIsolationConcurrencyAndAuditBoundaries()
+    {
+        var migration = ReadMigration("0006_create_creator_memberships.sql");
+
+        Assert.Contains("PRIMARY KEY (CreatorId, CreatorMembershipId)", migration, StringComparison.Ordinal);
+        Assert.Contains("UNIQUE (CreatorId, UserId)", migration, StringComparison.Ordinal);
+        Assert.Contains("Version bigint NOT NULL", migration, StringComparison.Ordinal);
+        Assert.Contains("CREATE TABLE auth.CreatorMembershipRoles", migration, StringComparison.Ordinal);
+        Assert.Contains("CREATE TABLE auth.CreatorMembershipPermissionGrants", migration, StringComparison.Ordinal);
+        Assert.Contains("CREATE TABLE audit.AuditEvents", migration, StringComparison.Ordinal);
+        Assert.Contains("GRANT SELECT, INSERT ON OBJECT::audit.AuditEvents", migration, StringComparison.Ordinal);
+        Assert.Contains("DENY UPDATE, DELETE ON OBJECT::audit.AuditEvents", migration, StringComparison.Ordinal);
+        Assert.Contains("DENY DELETE ON OBJECT::auth.CreatorMemberships", migration, StringComparison.Ordinal);
+        Assert.DoesNotContain("GRANT DELETE ON OBJECT::auth.CreatorMemberships", migration, StringComparison.Ordinal);
     }
 
     private static string ReadMigration(string fileName)
