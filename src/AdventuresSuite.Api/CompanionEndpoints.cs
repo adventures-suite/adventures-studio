@@ -47,7 +47,77 @@ public static class CompanionEndpoints
                 return Task.CompletedTask;
             });
 
+        group.MapGet("/adventures/{adventureId}", GetAdventureAsync)
+            .WithName("GetCompanionAdventure")
+            .WithSummary("Gets one Adventure available to the current traveler")
+            .WithDescription("Returns one bounded traveler-safe overview after current identity, Creator membership, authoritative ownership, and AdventurePlan.View evaluation. Unknown and inaccessible identifiers produce the same safe response.")
+            .Produces<CompanionAdventureDto>(StatusCodes.Status200OK, "application/json")
+            .Produces(StatusCodes.Status304NotModified)
+            .Produces<CompanionProblemDto>(StatusCodes.Status400BadRequest, "application/problem+json")
+            .Produces<CompanionProblemDto>(StatusCodes.Status401Unauthorized, "application/problem+json")
+            .Produces<CompanionProblemDto>(StatusCodes.Status403Forbidden, "application/problem+json")
+            .Produces<CompanionProblemDto>(StatusCodes.Status404NotFound, "application/problem+json")
+            .Produces<CompanionProblemDto>(StatusCodes.Status500InternalServerError, "application/problem+json")
+            .AddOpenApiOperationTransformer((operation, _, _) =>
+            {
+                var parameter = operation.Parameters?.OfType<OpenApiParameter>()
+                    .SingleOrDefault(value => value.Name == "adventureId");
+                if (parameter is not null)
+                    parameter.Description = "Bounded opaque Adventure identity; matching is case-sensitive.";
+                return Task.CompletedTask;
+            });
+
         return endpoints;
+    }
+
+    private static async Task<IResult> GetAdventureAsync(
+        HttpContext context,
+        ICompanionProjectionService service,
+        ISupportIdProvider supportIds,
+        string adventureId,
+        CancellationToken cancellationToken)
+    {
+        var started = Stopwatch.GetTimestamp();
+        using var activity = CompanionTelemetry.StartGetAdventure();
+        var outcome = "error";
+        var supportId = supportIds.Create();
+        try
+        {
+            if (!IsValidOpaqueIdentity(adventureId))
+            {
+                outcome = "invalid";
+                return Problem(context, StatusCodes.Status400BadRequest, "invalid_request", supportId);
+            }
+
+            var result = await service.GetAdventureAsync(
+                CreateAccessContext(context.User), adventureId, supportId, cancellationToken);
+            if (!result.IsAvailable)
+            {
+                outcome = "unavailable";
+                return Problem(context, StatusCodes.Status404NotFound, "resource_unavailable", supportId);
+            }
+
+            var etag = $"\"{result.ProjectionVersion}\"";
+            context.Response.Headers["X-Support-Id"] = supportId;
+            context.Response.Headers.ETag = etag;
+            context.Response.Headers.CacheControl = "private, max-age=0, must-revalidate";
+            if (context.Request.Headers.IfNoneMatch.Any(value => value == etag || value == "*"))
+            {
+                outcome = "not_modified";
+                return Results.StatusCode(StatusCodes.Status304NotModified);
+            }
+
+            outcome = "allowed";
+            return Results.Ok(result.Value);
+        }
+        finally
+        {
+            CompanionTelemetry.Record(
+                CompanionTelemetry.GetAdventureOperation,
+                outcome,
+                Stopwatch.GetElapsedTime(started),
+                activity);
+        }
     }
 
     private static async Task<IResult> ListAdventuresAsync(
@@ -125,4 +195,10 @@ public static class CompanionEndpoints
             string.Equals(principal.FindFirstValue("revoked"), "true", StringComparison.Ordinal),
             scopes);
     }
+
+    private static bool IsValidOpaqueIdentity(string value) =>
+        value.Length is >= 1 and <= CompanionContractLimits.MaximumIdentityLength
+        && char.IsAsciiLetterOrDigit(value[0])
+        && value.All(character => char.IsAsciiLetterOrDigit(character)
+            || character is '.' or '_' or ':' or '-');
 }

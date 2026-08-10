@@ -68,6 +68,39 @@ public sealed class DeterministicCompanionProjectionService(
         return await Available(dto);
     }
 
+    /// <inheritdoc />
+    public async Task<CompanionQueryResult<CompanionAdventureDto>> GetAdventureAsync(
+        CompanionAccessContext access, string adventureId, string supportId,
+        CancellationToken cancellationToken)
+    {
+        if (access.IsRevoked || !access.Scopes.Contains(RequiredScope))
+            return await Unavailable<CompanionAdventureDto>();
+
+        var source = AdventureFixtures.All.FirstOrDefault(value =>
+            string.Equals(value.Id, adventureId, StringComparison.Ordinal));
+        if (source is null
+            || source.CreatorId != access.CreatorId.Value
+            || source.TravelerId != access.TravelerId)
+        {
+            return await Unavailable<CompanionAdventureDto>();
+        }
+
+        var decision = await authorization.AuthorizeAsync(
+            new AuthorizationRequest(
+                access.Actor,
+                Permissions.AdventurePlanView,
+                AuthorizationResourceScope.ForInstance(
+                    new CreatorId(source.CreatorId),
+                    AuthorizationResourceTypes.AdventurePlan,
+                    source.Id),
+                membershipVersion: access.MembershipVersion),
+            cancellationToken);
+        if (!decision.IsAllowed)
+            return await Unavailable<CompanionAdventureDto>();
+
+        return await Available(CompanionDtoMapper.MapAdventure(source, timeProvider.GetUtcNow(), supportId));
+    }
+
     private static Task<CompanionQueryResult<T>> Available<T>(T value) where T : CompanionProjectionDto =>
         Task.FromResult(new CompanionQueryResult<T>(value, value.ProjectionVersion));
 
@@ -107,11 +140,27 @@ public sealed class DeterministicCompanionAuthorizationFacts(TimeProvider timePr
     /// <inheritdoc />
     public Task<AuthorizationResourceFacts?> GetResourceFactsAsync(
         AuthorizationResourceScope resource,
-        CancellationToken cancellationToken = default) => Task.FromResult<AuthorizationResourceFacts?>(null);
+        CancellationToken cancellationToken = default)
+    {
+        var source = AdventureFixtures.All.FirstOrDefault(value =>
+            resource.ScopeType == AuthorizationResourceScopeType.ResourceInstance
+            && resource.ResourceType == AuthorizationResourceTypes.AdventurePlan
+            && string.Equals(value.Id, resource.ResourceId, StringComparison.Ordinal));
+        AuthorizationResourceFacts? facts = source is null
+            ? null
+            : new AuthorizationResourceFacts(
+                new CreatorId(source.CreatorId),
+                AuthorizationResourceTypes.AdventurePlan,
+                source.Id,
+                source.Status == CompanionAdventureStatus.Completed,
+                version: 1);
+        return Task.FromResult(facts);
+    }
 }
 
 internal sealed record AdventureFixture(
-    string Id, string Title, string? Subtitle, string Description,
+    string Id, string CreatorId, string TravelerId,
+    string Title, string? Subtitle, string Description,
     CompanionAdventureStatus Status, DateOnly StartDate, DateOnly EndDate,
     string TimeZone, CompanionOfflineState OfflineState,
     IReadOnlyList<DestinationFixture> Destinations, IReadOnlyList<ScheduleFixture> Items);
@@ -131,6 +180,8 @@ internal static class AdventureFixtures
     [
         new(
             DeterministicCompanionProjectionService.ItalyAdventureId,
+            DeterministicCompanionProjectionService.DemoCreatorId,
+            DeterministicCompanionProjectionService.DemoTravelerId,
             "Italian Cities by Rail", "Rome and Florence", "A fictional active journey through two Italian cities.",
             CompanionAdventureStatus.InProgress, new(2026, 8, 9), new(2026, 8, 16), "Europe/Rome",
             CompanionOfflineState.Available,
@@ -144,19 +195,25 @@ internal static class AdventureFixtures
                 new("item_demo_florence_day", "activity", "Florence exploration", null, new(2026, 8, 13), null, null, "Europe/Rome", CompanionTimeStatus.AllDay, CompanionOperationalStatus.Confirmed, "Florence", null, 3, false)
             ]),
         new(
-            "adv_demo_phoenix_coast_2027", "Desert to Pacific", "Phoenix to Los Angeles", "A fictional committed domestic journey.",
+            "adv_demo_phoenix_coast_2027", DeterministicCompanionProjectionService.DemoCreatorId,
+            DeterministicCompanionProjectionService.DemoTravelerId,
+            "Desert to Pacific", "Phoenix to Los Angeles", "A fictional committed domestic journey.",
             CompanionAdventureStatus.Committed, new(2027, 3, 5), new(2027, 3, 9), "America/Phoenix",
             CompanionOfflineState.Available,
             [new("visit_demo_phoenix", "Phoenix", new(2027, 3, 5), new(2027, 3, 6), "America/Phoenix", 1), new("visit_demo_la", "Los Angeles", new(2027, 3, 6), new(2027, 3, 9), "America/Los_Angeles", 2)],
             [new("item_demo_coast", "activity", "Coastal afternoon", null, new(2027, 3, 7), null, null, "America/Los_Angeles", CompanionTimeStatus.Cancelled, CompanionOperationalStatus.Cancelled, "Pacific coast", null, 1, false)]),
         new(
-            "adv_demo_spain_2027", "Spain and Atlantic Crossing", "Barcelona to Florida", "A fictional planned journey.",
+            "adv_demo_spain_2027", DeterministicCompanionProjectionService.DemoCreatorId,
+            DeterministicCompanionProjectionService.DemoTravelerId,
+            "Spain and Atlantic Crossing", "Barcelona to Florida", "A fictional planned journey.",
             CompanionAdventureStatus.Planned, new(2027, 10, 25), new(2027, 11, 15), "Europe/Madrid",
             CompanionOfflineState.Available,
             [new("visit_demo_barcelona", "Barcelona", new(2027, 10, 25), new(2027, 10, 29), "Europe/Madrid", 1)],
             [new("item_demo_spain_activity", "activity", "Barcelona activity", null, new(2027, 10, 27), null, null, "Europe/Madrid", CompanionTimeStatus.ToBeConfirmed, CompanionOperationalStatus.Proposed, "Barcelona", null, 1, false)]),
         new(
-            "adv_demo_completed_2025", "Completed Demo Journey", null, "A fictional completed history fixture.",
+            "adv_demo_completed_2025", DeterministicCompanionProjectionService.DemoCreatorId,
+            DeterministicCompanionProjectionService.DemoTravelerId,
+            "Completed Demo Journey", null, "A fictional completed history fixture.",
             CompanionAdventureStatus.Completed, new(2025, 5, 1), new(2025, 5, 4), "America/Phoenix",
             CompanionOfflineState.Expired, [], [])
     ];
