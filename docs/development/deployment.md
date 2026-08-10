@@ -109,6 +109,19 @@ Azure settings and connection information are maintained through GitHub
 Environments and Azure configuration. Managed Identity is preferred where the
 selected Azure integration supports it.
 
+### Development Deployment Sources
+
+`main` is the only automatic development-deployment source. A successful push
+to `main` independently starts the web workflow and the Companion API workflow.
+Both retain `workflow_dispatch` for a controlled deployment or rollback of an
+explicit immutable revision. Feature branches never deploy automatically.
+
+The web and Companion API are separate packages, App Services, deployment
+identities, health contracts, workflow concurrency groups, artifacts, and
+rollback boundaries. Their current Azure inventory and API-specific operating
+procedure are recorded in
+`docs/development/companion-api-deployment.md`.
+
 ## Failure and Rollback
 
 Telemetry export failure does not make the application unavailable and does not
