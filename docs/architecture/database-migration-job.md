@@ -60,19 +60,18 @@ accepted or echoed as evidence.
 | Identity | Minimum scope | Required actions | Explicit exclusions |
 | --- | --- | --- | --- |
 | GitHub image publisher | Migration ACR repository | ACR push/read metadata through OIDC | Job start/update, SQL, role assignment |
-| GitHub Job configurator | Exact migration Job; read-only migration ACR | Read/update the existing dormant Job by exact digest; read registry metadata | Other Jobs, Job start/delete, SQL, ACR push, identity or role administration |
 | GitHub Job starter/reader | Migration Job | Start one execution; read exact execution and logs | Job definition mutation, ACR push, SQL |
+| Infrastructure administrator | Reviewed foundation and Job templates | Approval-gated deployment of `foundation.bicep` and digest-bound `job.bicep` | Routine execution, SQL migration authority |
 | Migration user-assigned identity | `AdventuresSuiteDevelopment` contained principal | ARM token identity proof; reviewed migration DDL/journal access only | Azure control-plane role, ACR push, runtime DML, `db_owner` |
 | Registry pull identity | Migration ACR | Built-in `AcrPull` only | Push/delete, Job control, SQL |
 
-The foundation defines separate GitHub publisher, configurator, and
-starter/reader identities, their environment-scoped OIDC credentials, and role
-definitions. The later Job deployment assigns configurator and starter roles at
-the exact Job resource scope. The starter receives a separate query-only grant
-on the dedicated Log Analytics workspace; the configurator receives read-only
-registry metadata access. GitHub identities cannot assign roles; initial Job
-creation and these exact-scope assignments remain a separately approved
-infrastructure-administrator action.
+The foundation defines separate GitHub publisher and starter/reader identities,
+their environment-scoped OIDC credentials, and the starter role definition.
+The later Job deployment assigns the starter role at the exact Job resource
+scope. The starter receives a separate query-only grant on the dedicated Log
+Analytics workspace. No GitHub configurator identity or Job-mutation workflow
+exists. Initial Job creation and every later Job definition or digest update are
+separately approved infrastructure-administrator deployments of `job.bicep`.
 
 ## Network and supply chain
 

@@ -77,8 +77,9 @@ jobs:
           ! grep -q "{ name: 'ADVENTURESSUITE_MIGRATION_OPERATION_ID'" infrastructure/container-apps-migrations/job.bicep
           ! grep -q "{ name: 'ADVENTURESSUITE_ARTIFACT_SHA256'" infrastructure/container-apps-migrations/job.bicep
           grep -A4 "resource starterAssignment" infrastructure/container-apps-migrations/job.bicep | grep -q 'scope: job'
-          grep -A4 "resource configuratorAssignment" infrastructure/container-apps-migrations/job.bicep | grep -q 'scope: job'
           ! grep -q "resource starterAssignment" infrastructure/container-apps-migrations/foundation.bicep
+          ! rg -q 'configurator|configure-dormant-job|DATABASE_JOB_CONFIGURATOR' \
+            infrastructure/container-apps-migrations/*.bicep .github/workflows/database-migration-job.yml
           ! grep -Eiq 'ingress:|external: true|latest' infrastructure/container-apps-migrations/*.bicep
 
       - name: Build Bicep template

@@ -76,12 +76,6 @@ resource publisherIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@202
   tags: commonTags
 }
 
-resource configuratorIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
-  name: 'id-adventures-suite-migrate-configurator-dev'
-  location: location
-  tags: commonTags
-}
-
 resource starterIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: 'id-adventures-suite-migrate-starter-dev'
   location: location
@@ -90,16 +84,6 @@ resource starterIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-
 
 resource publisherFederation 'Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentityCredentials@2023-01-31' = {
   parent: publisherIdentity
-  name: 'github-database-development'
-  properties: {
-    issuer: 'https://token.actions.githubusercontent.com'
-    subject: environmentSubject
-    audiences: ['api://AzureADTokenExchange']
-  }
-}
-
-resource configuratorFederation 'Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentityCredentials@2023-01-31' = {
-  parent: configuratorIdentity
   name: 'github-database-development'
   properties: {
     issuer: 'https://token.actions.githubusercontent.com'
@@ -135,25 +119,6 @@ resource acrPush 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '8311e382-0749-4cb8-b61a-304f252e45ec')
     principalId: publisherIdentity.properties.principalId
     principalType: 'ServicePrincipal'
-  }
-}
-
-resource configuratorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' = {
-  name: guid(resourceGroup().id, 'migration-job-configurator')
-  properties: {
-    roleName: 'AdventuresSuite Migration Job Configurator'
-    description: 'Updates only the exact existing reviewed Container Apps Job.'
-    type: 'CustomRole'
-    assignableScopes: [resourceGroup().id]
-    permissions: [{
-      actions: [
-        'Microsoft.App/jobs/read'
-        'Microsoft.App/jobs/write'
-      ]
-      notActions: ['Microsoft.App/jobs/start/action']
-      dataActions: []
-      notDataActions: []
-    }]
   }
 }
 
@@ -204,16 +169,6 @@ resource starterLogsAssignment 'Microsoft.Authorization/roleAssignments@2022-04-
   }
 }
 
-resource configuratorRegistryReader 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(registry.id, configuratorIdentity.id, 'Reader')
-  scope: registry
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')
-    principalId: configuratorIdentity.properties.principalId
-    principalType: 'ServicePrincipal'
-  }
-}
-
 resource environment 'Microsoft.App/managedEnvironments@2025-01-01' = {
   name: environmentName
   location: location
@@ -238,6 +193,5 @@ output registryLoginServer string = registry.properties.loginServer
 output migrationIdentityPrincipalId string = migrationIdentity.properties.principalId
 output migrationIdentityClientId string = migrationIdentity.properties.clientId
 output publisherClientId string = publisherIdentity.properties.clientId
-output configuratorClientId string = configuratorIdentity.properties.clientId
 output starterClientId string = starterIdentity.properties.clientId
 output environmentResourceId string = environment.id

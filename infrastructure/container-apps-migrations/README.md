@@ -9,7 +9,11 @@ registry/image bootstrap cycle:
    Apps environment, and `AcrPull` assignment.
 2. The publisher pushes the reviewed full-SHA image and resolves its digest
    from ACR, comparing it with the digest returned by the push.
-3. `job.bicep` creates or updates the dormant Job only after that digest exists.
+3. An approved infrastructure administrator deploys `job.bicep` to create or
+   update the dormant Job only after that digest exists.
+
+GitHub has no Job configurator identity or Job-definition mutation path. It may
+publish reviewed images and start/observe separately approved executions only.
 
 The persistent Job template never stores an operation ID. The separately
 authorized starter supplies it as a per-execution override to

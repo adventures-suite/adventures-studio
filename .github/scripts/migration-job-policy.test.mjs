@@ -25,10 +25,10 @@ const definitionExpected = { image: 'registry/repository@sha256:digest', environ
 test('accepts exact reviewed runtime configuration', () => assert.equal(validateJobDefinition(job(), definitionExpected), true));
 test('rejects runtime configuration drift', () => { const value = job(); value.properties.configuration.replicaRetryLimit = 1; assert.throws(() => validateJobDefinition(value, definitionExpected), /retry drift/); });
 test('rejects broader starter role scope', () => assert.throws(() => validateRoleAssignmentScope('/subscriptions/s/resourceGroups/rg', '/subscriptions/s/resourceGroups/rg/providers/Microsoft.App/jobs/job'), /broader/));
-test('IaC assigns starter and configurator only at exact Job scope', () => {
+test('IaC assigns starter only at exact Job scope and defines no configurator', () => {
   const foundation = readFileSync('infrastructure/container-apps-migrations/foundation.bicep', 'utf8');
   const jobTemplate = readFileSync('infrastructure/container-apps-migrations/job.bicep', 'utf8');
-  assert.doesNotMatch(foundation, /resource (starter|configurator)Assignment/);
+  assert.doesNotMatch(foundation, /resource starterAssignment/);
   assert.match(jobTemplate, /resource starterAssignment[\s\S]*?scope: job/);
-  assert.match(jobTemplate, /resource configuratorAssignment[\s\S]*?scope: job/);
+  assert.doesNotMatch(`${foundation}\n${jobTemplate}`, /configurator/i);
 });

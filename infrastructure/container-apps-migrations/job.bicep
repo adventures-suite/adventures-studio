@@ -19,11 +19,7 @@ resource registry 'Microsoft.ContainerRegistry/registries@2023-07-01' existing =
 resource environment 'Microsoft.App/managedEnvironments@2025-01-01' existing = { name: environmentName }
 resource migrationIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = { name: migrationIdentityName }
 resource pullIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = { name: pullIdentityName }
-resource configuratorIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = { name: 'id-adventures-suite-migrate-configurator-dev' }
 resource starterIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = { name: 'id-adventures-suite-migrate-starter-dev' }
-resource configuratorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
-  name: guid(resourceGroup().id, 'migration-job-configurator')
-}
 resource starterRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: guid(resourceGroup().id, 'migration-job-starter-reader')
 }
@@ -73,16 +69,6 @@ resource job 'Microsoft.App/jobs@2025-01-01' = {
         resources: { cpu: json('0.5'), memory: '1Gi' }
       }]
     }
-  }
-}
-
-resource configuratorAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(job.id, configuratorIdentity.id, configuratorRole.id)
-  scope: job
-  properties: {
-    roleDefinitionId: configuratorRole.id
-    principalId: configuratorIdentity.properties.principalId
-    principalType: 'ServicePrincipal'
   }
 }
 

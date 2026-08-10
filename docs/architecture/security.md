@@ -26,8 +26,10 @@ continues to follow Creator host-resolution and publication policies.
 ## Trust Boundaries
 
 The database migration supply chain is a separate privileged trust boundary.
-GitHub build identity may publish images but cannot access SQL. Job configurator
-and starter identities receive only their narrowly scoped control-plane actions.
+GitHub build identity may publish images but cannot access SQL. There is no
+GitHub Job configurator; definition changes require an approved infrastructure
+administrator deployment. The starter receives only exact-Job start/read access
+and query-only access to the dedicated migration logs workspace.
 The migration Job identity can connect only as its reviewed contained database
 principal and cannot publish/pull images through registry credentials. The pull
 identity can only pull from the migration repository. Mutable tags, automatic

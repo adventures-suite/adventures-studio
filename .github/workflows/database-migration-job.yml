@@ -7,7 +7,7 @@ on:
         description: Reviewed finite operation
         required: true
         type: choice
-        options: [publish-image, configure-dormant-job, verify-execution-channel, capture-migration-state, run-reviewed-operation, verify-migration-state]
+        options: [publish-image, verify-execution-channel, capture-migration-state, run-reviewed-operation, verify-migration-state]
       release_sha:
         description: Exact 40-character reviewed commit SHA
         required: true
@@ -84,40 +84,8 @@ jobs:
             "$RELEASE_SHA" "$pushed_digest" "$registry_digest" | tee digest-evidence.json
           echo "Registry-authoritative deployment reference: $login_server/$REGISTRY_REPOSITORY@$registry_digest"
 
-  configure-dormant-job:
-    if: inputs.operation == 'configure-dormant-job'
-    needs: validate-input
-    runs-on: ubuntu-24.04
-    environment: database-development
-    permissions: { contents: read, id-token: write }
-    steps:
-      - name: Checkout exact SHA
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with: { ref: '${{ inputs.release_sha }}' }
-      - name: Authenticate configurator identity
-        uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac # v2
-        with:
-          client-id: ${{ vars.DATABASE_JOB_CONFIGURATOR_CLIENT_ID }}
-          tenant-id: ${{ vars.WORKFORCE_TENANT_ID }}
-          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-      - name: Verify registry digest then deploy dormant digest-bound Job
-        env:
-          REGISTRY: ${{ vars.MIGRATION_REGISTRY_NAME }}
-          RELEASE_SHA: ${{ inputs.release_sha }}
-          IMAGE_DIGEST: ${{ inputs.image_digest }}
-        run: |
-          login_server="$(az acr show --name "$REGISTRY" --query loginServer -o tsv)"
-          registry_digest="$(az acr manifest show-metadata "$login_server/$REGISTRY_REPOSITORY:$RELEASE_SHA" --query digest -o tsv)"
-          test "$registry_digest" = "$IMAGE_DIGEST"
-          az containerapp job update --resource-group "$RESOURCE_GROUP" --name "$JOB_NAME" \
-            --image "$login_server/$REGISTRY_REPOSITORY@$IMAGE_DIGEST" \
-            --set-env-vars ADVENTURESSUITE_RELEASE_SHA="$RELEASE_SHA" ADVENTURESSUITE_IMAGE_DIGEST="$IMAGE_DIGEST" \
-            --set tags.releaseSha="$RELEASE_SHA" tags.imageDigest="$IMAGE_DIGEST"
-          deployed_image="$(az containerapp job show -g "$RESOURCE_GROUP" -n "$JOB_NAME" --query 'properties.template.containers[0].image' -o tsv)"
-          test "$deployed_image" = "$login_server/$REGISTRY_REPOSITORY@$IMAGE_DIGEST"
-
   start-reviewed-execution:
-    if: inputs.operation != 'publish-image' && inputs.operation != 'configure-dormant-job'
+    if: inputs.operation != 'publish-image'
     needs: validate-input
     runs-on: ubuntu-24.04
     environment: database-development
