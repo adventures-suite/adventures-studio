@@ -17,5 +17,8 @@ DENY INSERT, UPDATE, DELETE ON OBJECT::auth.CreatorMemberships TO AdventuresSuit
 DENY INSERT, UPDATE, DELETE ON OBJECT::auth.CreatorMembershipRoles TO AdventuresSuiteCompanionReadRuntime;
 DENY INSERT, UPDATE, DELETE ON OBJECT::auth.CreatorMembershipPermissionGrants TO AdventuresSuiteCompanionReadRuntime;
 
-DENY ALTER, CONTROL ON SCHEMA::planning TO AdventuresSuiteCompanionReadRuntime;
-DENY ALTER, CONTROL ON SCHEMA::auth TO AdventuresSuiteCompanionReadRuntime;
+-- CONTROL implies SELECT. Denying it at schema scope would override the six
+-- intentional object grants, so deny schema mutation explicitly and verify
+-- that CONTROL remains absent through the effective-permission gate.
+DENY ALTER ON SCHEMA::planning TO AdventuresSuiteCompanionReadRuntime;
+DENY ALTER ON SCHEMA::auth TO AdventuresSuiteCompanionReadRuntime;

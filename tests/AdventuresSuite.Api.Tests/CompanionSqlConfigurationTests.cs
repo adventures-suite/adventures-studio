@@ -17,8 +17,11 @@ public sealed class CompanionSqlConfigurationTests
             "AdventuresSuiteDevelopment",
             ClientId);
 
-        Assert.DoesNotContain("Password", value, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("Active Directory Managed Identity", value, StringComparison.Ordinal);
+        var parsed = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(value);
+        Assert.Empty(parsed.Password);
+        Assert.Equal(
+            Microsoft.Data.SqlClient.SqlAuthenticationMethod.ActiveDirectoryManagedIdentity,
+            parsed.Authentication);
     }
 
     /// <summary>Rejects secrets, wrong targets, trust bypasses, and wrong identities.</summary>

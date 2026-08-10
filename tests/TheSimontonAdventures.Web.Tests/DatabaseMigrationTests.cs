@@ -127,7 +127,9 @@ public sealed class DatabaseMigrationTests
         Assert.Contains("GRANT SELECT ON OBJECT::auth.CreatorMemberships", migration, StringComparison.Ordinal);
         Assert.DoesNotContain("GRANT SELECT ON SCHEMA", migration, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("DENY INSERT, UPDATE, DELETE", migration, StringComparison.Ordinal);
-        Assert.Contains("DENY ALTER, CONTROL ON SCHEMA::planning", migration, StringComparison.Ordinal);
+        Assert.Contains("DENY ALTER ON SCHEMA::planning", migration, StringComparison.Ordinal);
+        Assert.Contains("DENY ALTER ON SCHEMA::auth", migration, StringComparison.Ordinal);
+        Assert.DoesNotContain("DENY CONTROL ON SCHEMA", migration, StringComparison.Ordinal);
         Assert.DoesNotContain("db_datareader", migration, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("db_datawriter", migration, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("db_ddladmin", migration, StringComparison.OrdinalIgnoreCase);

@@ -13,7 +13,9 @@
   identity.
 - No schema-level read grant is permitted. The migrated
   `AdventuresSuiteCompanionReadRuntime` role reads six explicit objects and has
-  explicit mutation and schema-control denials.
+  explicit mutation and schema-ALTER denials. Effective-permission checks must
+  also prove that schema CONTROL remains absent; it is not explicitly denied
+  because CONTROL implies SELECT and would override the approved object reads.
 - Production remains disabled. The MAUI application is outside this slice.
 
 ## Required Approved Inventory
