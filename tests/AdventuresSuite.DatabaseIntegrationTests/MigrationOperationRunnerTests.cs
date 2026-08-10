@@ -116,7 +116,7 @@ public sealed class MigrationOperationRunnerTests
             0,
             0,
             complete ? "dbo" : string.Empty,
-            complete || migration0007 ? 6 : 0,
+            complete || migration0007 ? 7 : 0,
             complete || migration0007);
 
     private static IReadOnlyList<string> Journal(int count) =>

@@ -115,7 +115,7 @@ internal static partial class MigrationOperationRunner
     internal static bool VerifyExpectedPostState(MigrationStateEvidence state)
     {
         if (!state.TravelerParticipationsExists
-            || state.TravelerConstraintCount != 6
+            || state.TravelerConstraintCount != 7
             || !state.TravelerAuthorizedListIndexExists
             || !state.CompanionRoleExists
             || state.CompanionRoleMemberCount != 0
@@ -151,7 +151,7 @@ internal static partial class MigrationOperationRunner
 
     private static bool VerifyExpected0007State(MigrationStateEvidence state) =>
         state.TravelerParticipationsExists
-        && state.TravelerConstraintCount == 6
+        && state.TravelerConstraintCount == 7
         && state.TravelerAuthorizedListIndexExists
         && !state.CompanionRoleExists
         && state.CompanionPermissions.Count == 0
