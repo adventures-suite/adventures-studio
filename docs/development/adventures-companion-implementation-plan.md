@@ -15,6 +15,9 @@ Read first:
 - `AGENTS.md`
 - `docs/architecture/adventures-companion.md`
 - `docs/architecture/companion-api-sync.md`
+- `docs/architecture/companion-openapi.md`
+- `docs/architecture/companion-api-v1-contract.md`
+- `docs/development/companion-api-v1-implementation-baseline.md`
 - `docs/product/adventures-companion.md`
 - `docs/architecture/planning-engine.md`
 - `docs/architecture/resource-engine.md`
@@ -41,6 +44,19 @@ mobile-store review approve the initial boundary.
 
 ## M1: Versioned Mobile API Foundation
 
+Create a separate `AdventuresSuite.Api` ASP.NET Core host and deployable artifact;
+do not place Companion endpoints in or proxy them through the Blazor web host.
+Give the API its own OAuth bearer pipeline, configuration, health, telemetry,
+runtime identity, deployment, rollback, and independent scaling boundary while
+reusing approved domain, application, authorization, and persistence libraries.
+
+Create cohesive contract boundaries rather than a universal Common project.
+Use a Companion contract project for API DTOs and JSON metadata, server-only
+application projects for authorized projections, and a host-independent Razor
+class library only for presentation that is genuinely shared by Web and MAUI.
+Companion must not reference server application, domain, authorization,
+persistence, ASP.NET, Azure, SQL, Dapper, or identity-provider projects.
+
 Add provider-neutral API contracts, versioning, OAuth-protected mobile access,
 server-side Creator/resource authorization, idempotency, safe errors, rate
 limits, and API observability. Implement the server boundary as Dapper
@@ -51,6 +67,39 @@ database, Dapper, domain aggregate, or provider models.
 Define JSON wire formats, compatibility, `ETag`/conditional requests, opaque
 sync cursors, pagination, safe problem categories, short-lived protected-media
 delivery, and contract tests independently from SQL migrations.
+
+Follow `docs/architecture/companion-openapi.md` as the authoritative HTTP and
+JSON contract direction. Contract design and fictional deterministic clients
+may proceed before endpoint activation. Production reads remain gated on an
+authoritative user-to-traveler participation relationship, Planning
+application-service authorization, mobile OAuth access-token validation, and
+protected Resource delivery.
+
+Use ASP.NET Core's built-in OpenAPI 3.1 generation and complete endpoint
+metadata for every route. Retain the generated contract as a CI artifact and
+use Scalar as the development-only interactive API reference. Do not use the
+deprecated `.WithOpenApi()` customization pattern or make an interactive UI the
+contract source.
+
+Generate or verify the MAUI client from the retained OpenAPI artifact. A shared
+contract assembly may improve compile-time reuse, but it must not bypass
+OpenAPI compatibility checks or become a channel for server-only types.
+
+Implement the initial endpoint matrix, DTO fields, safe problems, examples, and
+deferrals in `docs/architecture/companion-api-v1-contract.md`. Treat required
+v1 field names, types, meanings, and nullability as compatibility commitments;
+extend v1 additively and use a new major version for breaking changes.
+
+Follow `docs/development/companion-api-v1-implementation-baseline.md` for the
+approved project graph, status projection, contract bounds, provisional OAuth
+names, fictional fixtures, client generation, JSON source generation, and
+deterministic test-host composition.
+
+Use explicit hand-written mappings from Dapper records to validated application
+projections and from authorized projections to Companion DTOs. Contract tests
+must prove that adding persistence or domain properties cannot automatically
+change serialized JSON or the generated OpenAPI document. Do not introduce
+reflection-based or convention-based mapping across these boundaries.
 
 Exit gate: anonymous, token, audience, Creator-isolation, IDOR, replay,
 enumeration, revocation, compatibility, and prohibited-data tests pass. A

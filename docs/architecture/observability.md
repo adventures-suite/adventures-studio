@@ -268,3 +268,7 @@ and dashboards. Security owns sensitive-data and audit review.
 Review this architecture when a new telemetry destination, public API,
 background processor, AI provider, protected data class, analytics capability,
 or production environment is introduced.
+
+Performance, load, stress, spike, soak, scalability, and recovery testing follow
+`performance-load-testing.md`. Load-test telemetry uses the same privacy,
+cardinality, environment-isolation, retention, and cost rules defined here.

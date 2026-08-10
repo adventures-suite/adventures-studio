@@ -83,6 +83,22 @@ result rather than failing an otherwise healthy release. Production may use a
 stricter explicitly approved promotion policy, but application availability and
 rollback remain independent of telemetry export.
 
+### Performance Promotion Evidence
+
+Load testing follows `docs/architecture/performance-load-testing.md`. Ordinary
+feature deployments do not run an expensive high-scale test automatically.
+Before limited external alpha, a production launch, an infrastructure capacity
+change, or a material performance-sensitive release, the exact immutable
+candidate must pass the approved production-like baseline, expected-peak, and
+post-load recovery gates.
+
+The load result records the candidate SHA, environment fingerprint, workload
+and synthetic-data versions, thresholds, cost, and retained evidence. Failure
+of an approved performance threshold blocks promotion until disposition or an
+explicit reviewed exception. Load-test infrastructure or telemetry failure is
+reported separately from an application performance failure and never prevents
+rollback.
+
 ## Azure Separation
 
 Development and production use separate Azure Monitor/Application Insights

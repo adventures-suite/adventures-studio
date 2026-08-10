@@ -105,13 +105,25 @@ The governing principle is:
 
 1. `architecture/adventures-companion.md`
 2. `architecture/companion-api-sync.md`
-3. `product/adventures-companion.md`
-4. `development/adventures-companion-implementation-plan.md`
+3. `architecture/companion-openapi.md`
+4. `architecture/companion-api-v1-contract.md`
+5. `product/adventures-companion.md`
+6. `development/adventures-companion-implementation-plan.md`
+7. `development/companion-api-v1-implementation-baseline.md`
 
 > The traveler controls capture. Private synchronization is not publication.
 
 > Companion receives versioned JSON and authorized media—not SQL or Dapper
 > models. Push signals change; the API returns authoritative current state.
+
+## Performance and Load Testing
+
+1. `architecture/performance-load-testing.md`
+2. `architecture/observability.md`
+3. `development/deployment.md`
+
+> Performance evidence names its workload and environment. Throughput never
+> weakens authorization, correctness, audit, privacy, or recovery.
 
 ## Subscriptions and Notifications
 

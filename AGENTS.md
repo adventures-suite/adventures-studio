@@ -199,8 +199,11 @@
 
 - Read `docs/architecture/adventures-companion.md`,
   `docs/architecture/companion-api-sync.md`,
-  `docs/product/adventures-companion.md`, and
-  `docs/development/adventures-companion-implementation-plan.md` before changing
+  `docs/architecture/companion-openapi.md`,
+  `docs/architecture/companion-api-v1-contract.md`,
+  `docs/product/adventures-companion.md`,
+  `docs/development/adventures-companion-implementation-plan.md`, and
+  `docs/development/companion-api-v1-implementation-baseline.md` before changing
   mobile APIs, MAUI projects, offline synchronization, device storage,
   notifications, media capture, maps, or location behavior.
 - Treat AdventuresCompanion as the first iOS and Android application and use
@@ -216,6 +219,12 @@
 - Build Companion responses as: Dapper persistence records, application query
   projection, authorization and traveler information policy, mobile DTO, JSON.
   Never serialize database rows or domain aggregates directly.
+- Map Dapper records to validated application projections and authorized
+  projections to Companion DTOs with explicit, hand-written mapping code.
+  Reflection-based copying, AutoMapper-style convention mapping, generic
+  same-name property copying, and serialization-as-mapping are prohibited
+  across persistence, domain/application, and API boundaries. Adding a source
+  property must never make it appear in an API response automatically.
 - Push notifications signal that authorized state changed; they are not the
   state. Use minimal opaque payloads and require Companion to fetch current
   JSON after server reauthorization.
@@ -229,6 +238,32 @@
   notifications, ordinary audit metadata, or public content.
 - Mobile uses public-client browser-delegated authorization code with PKCE; it
   does not reuse workspace cookies or embed client secrets or certificates.
+- Host mobile APIs in a separately deployed `AdventuresSuite.Api` application,
+  never inside or proxied through the Blazor web host. Share approved domain,
+  application, authorization, and persistence libraries without duplicating
+  business rules, and keep bearer-token and cookie pipelines host-specific.
+- Prefer cohesive shared contract and UI libraries over a universal Common or
+  Shared project. Companion must not reference server domain, application,
+  authorization, persistence, Dapper, SQL, ASP.NET, Azure, or identity-provider
+  projects. OpenAPI remains the cross-process compatibility authority even when
+  API DTO source is held in a shared Companion contracts assembly.
+
+## Performance and Load Testing
+
+- Read `docs/architecture/performance-load-testing.md` before changing public
+  APIs, deployed performance gates, scaling, load scripts, response-size bounds,
+  caches, rate limits, or customer-facing service objectives.
+- Keep pull-request performance smoke deterministic, short, and independent of
+  noisy machine wall-clock assertions. Treat only approved production-like
+  environment runs as deployment-capacity evidence.
+- Use fictional synthetic data and normal authorization paths. Never load-test
+  production without explicit approval, clone production customer data, bypass
+  Creator/traveler isolation, or place tokens, bodies, private content, signed
+  URLs, or precise location in test evidence.
+- Record release SHA, infrastructure, workload, data shape, duration,
+  concurrency, thresholds, cost, and recovery for every authoritative run.
+  Performance never overrides correctness, audit integrity, privacy, or safe
+  failure.
 
 ## Subscription and Notification Engine
 
