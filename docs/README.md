@@ -104,10 +104,23 @@ The governing principle is:
 ## AdventuresCompanion Mobile
 
 1. `architecture/adventures-companion.md`
-2. `product/adventures-companion.md`
-3. `development/adventures-companion-implementation-plan.md`
+2. `architecture/companion-api-sync.md`
+3. `product/adventures-companion.md`
+4. `development/adventures-companion-implementation-plan.md`
 
 > The traveler controls capture. Private synchronization is not publication.
+
+> Companion receives versioned JSON and authorized media—not SQL or Dapper
+> models. Push signals change; the API returns authoritative current state.
+
+## Subscriptions and Notifications
+
+1. `architecture/subscription-notification-engine.md`
+2. `architecture/companion-api-sync.md`
+3. `architecture/adventure-readiness-and-change-management.md`
+
+> Public audience updates and private traveler operations use separate policy
+> lanes. Durable intent drives delivery; provider push never becomes state.
 
 ## Platform Billing and Entitlements
 

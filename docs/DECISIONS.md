@@ -744,3 +744,65 @@ Creator authority, traveler privacy, and Planning consistency.
 Status:
 
 Approved
+
+---
+
+## 2026-08-09
+
+### Companion Consumes Versioned JSON and Authorized Media
+
+Decision:
+
+AdventuresCompanion will retrieve traveler-specific state through versioned
+JSON REST contracts and explicitly authorized media, document, map, or offline-
+package delivery. It will never connect to Azure SQL or receive Dapper records,
+persistence models, complete domain aggregates, provider credentials, or
+permanent protected-resource URLs.
+
+The server converts Dapper persistence results into application query
+projections, applies authorization and traveler information policy, creates
+purpose-built mobile DTOs, and only then serializes JSON. Offline state is a
+minimized, encrypted, versioned, expiring, and revocation-aware projection
+rather than a database replica.
+
+Reason:
+
+This boundary lets the server remain authoritative, prevents persistence and
+private-field leakage, permits API and database schemas to evolve independently,
+and gives Companion a secure, testable, offline-capable contract.
+
+Status:
+
+Approved
+
+---
+
+## 2026-08-09
+
+### Push Signals Change; Companion Fetches Authoritative State
+
+Decision:
+
+AdventuresSuite will provide a durable Notification Engine with distinct public
+audience and private Companion policy lanes. Companion supports critical
+operational, action-required, informational, collaboration, audience, and
+promotional categories with separate preferences, urgency, quiet hours,
+digesting, safe previews, and retention.
+
+Native push is a best-effort wake-up or navigation hint containing minimal
+opaque identifiers. It never carries authoritative Adventure state or proves
+identity, authorization, viewing, acknowledgment, acceptance, or completion.
+Companion reauthenticates and retrieves current authorized JSON, and a server-
+backed in-app notification center remains available when push is delayed,
+duplicated, reordered, disabled, or lost.
+
+Reason:
+
+Travelers need timely and relevant information, but provider delivery is not
+reliable enough to become state and lock-screen payloads create disclosure
+risk. Durable intent, policy, outbox delivery, and authenticated retrieval make
+notifications useful without weakening security or consistency.
+
+Status:
+
+Approved

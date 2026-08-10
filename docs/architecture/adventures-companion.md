@@ -62,6 +62,14 @@ minimized, encrypted offline projection. Mobile operations carry explicit
 Creator and resource scope; the server reauthorizes every read, mutation,
 synchronization, upload, and notification-registration operation.
 
+Companion receives only versioned JSON API contracts and authorized media,
+document, map, or offline-package delivery. Dapper records, SQL/persistence
+models, complete domain aggregates, provider credentials, and permanent
+protected URLs never cross the mobile boundary. Server application services
+query through Dapper adapters, apply authorization and traveler information
+policy, create purpose-built mobile DTOs, and only then serialize JSON. See
+`docs/architecture/companion-api-sync.md`.
+
 The public Content Engine and private Planning Engine remain distinct. Mobile
 capture never becomes public merely because it was synchronized.
 
@@ -112,6 +120,8 @@ version, synchronization state, and minimum necessary fields.
 Synchronization uses:
 
 - versioned API contracts;
+- JSON snapshots and incremental changes using projection versions, conditional
+  requests, or opaque cursors;
 - idempotency identities for retryable mutations;
 - optimistic concurrency and explicit conflict results;
 - bounded background work and retry;
@@ -227,6 +237,12 @@ registration is user- and installation-scoped, revocable, environment-specific,
 and never treated as identity or authorization. Push payloads contain no private
 itinerary, reservation, location, or authentication data; the app fetches
 authorized detail after activation.
+
+Companion maintains a server-backed in-app notification center because push
+delivery is best-effort. Operational travel, action-required, collaboration,
+and optional audience/promotional notifications remain distinct categories with
+separate policy and preferences. Notification delivery, opening, viewing,
+acknowledgment, acceptance, and task completion are different facts.
 
 ## Travel Playbook and Device Calendar
 

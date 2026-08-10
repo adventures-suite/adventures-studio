@@ -198,6 +198,7 @@
 ## AdventuresCompanion Mobile
 
 - Read `docs/architecture/adventures-companion.md`,
+  `docs/architecture/companion-api-sync.md`,
   `docs/product/adventures-companion.md`, and
   `docs/development/adventures-companion-implementation-plan.md` before changing
   mobile APIs, MAUI projects, offline synchronization, device storage,
@@ -209,6 +210,15 @@
   every API operation with explicit Creator and resource scope.
 - Keep only minimized, encrypted, revocation-aware offline projections; never
   replicate the Planning database to a device.
+- Companion consumes only versioned JSON API contracts and authorized media or
+  document streams. Never expose SQL, Dapper records, persistence models,
+  domain aggregates, provider credentials, or permanent protected URLs.
+- Build Companion responses as: Dapper persistence records, application query
+  projection, authorization and traveler information policy, mobile DTO, JSON.
+  Never serialize database rows or domain aggregates directly.
+- Push notifications signal that authorized state changed; they are not the
+  state. Use minimal opaque payloads and require Companion to fetch current
+  JSON after server reauthorization.
 - Keep GPS breadcrumbs off by default. Only the authenticated traveler on that
   device may explicitly start capture, and capture must be visible, pausable,
   stoppable, retention-bound, and private until separately published.
@@ -219,6 +229,26 @@
   notifications, ordinary audit metadata, or public content.
 - Mobile uses public-client browser-delegated authorization code with PKCE; it
   does not reuse workspace cookies or embed client secrets or certificates.
+
+## Subscription and Notification Engine
+
+- Read `docs/architecture/subscription-notification-engine.md` before changing
+  subscribers, device installations, notification events, intents, policies,
+  delivery, preferences, push payloads, digests, or acknowledgments.
+- Keep public audience notifications and private Companion operational
+  notifications as separate policy lanes. Neither relationship grants access
+  to the other.
+- Commit required notification intent with authoritative state through the
+  owning transaction or transactional outbox; deliver asynchronously and
+  idempotently through provider-neutral adapters.
+- Treat native push as best-effort signaling, never authoritative state or proof
+  of identity, authorization, delivery to a human, viewing, acknowledgment,
+  acceptance, or completion.
+- Put only minimal opaque routing data in push payloads. Companion must fetch
+  current authorized JSON before presenting protected detail.
+- Enforce category, urgency, traveler preferences, time-zone-aware quiet hours,
+  digest, deduplication, supersession, expiry, suppression, rate-limit, safe-
+  preview, consent, and environment-isolation policy.
 
 ## Platform Billing and Entitlements
 

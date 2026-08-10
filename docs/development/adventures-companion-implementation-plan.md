@@ -14,6 +14,7 @@ Read first:
 
 - `AGENTS.md`
 - `docs/architecture/adventures-companion.md`
+- `docs/architecture/companion-api-sync.md`
 - `docs/product/adventures-companion.md`
 - `docs/architecture/planning-engine.md`
 - `docs/architecture/resource-engine.md`
@@ -42,7 +43,14 @@ mobile-store review approve the initial boundary.
 
 Add provider-neutral API contracts, versioning, OAuth-protected mobile access,
 server-side Creator/resource authorization, idempotency, safe errors, rate
-limits, and API observability. Do not expose database or provider models.
+limits, and API observability. Implement the server boundary as Dapper
+persistence records to application query projection to authorization and
+traveler information policy to purpose-built mobile DTO to JSON. Do not expose
+database, Dapper, domain aggregate, or provider models.
+
+Define JSON wire formats, compatibility, `ETag`/conditional requests, opaque
+sync cursors, pagination, safe problem categories, short-lived protected-media
+delivery, and contract tests independently from SQL migrations.
 
 Exit gate: anonymous, token, audience, Creator-isolation, IDOR, replay,
 enumeration, revocation, compatibility, and prohibited-data tests pass. A
@@ -77,6 +85,10 @@ today/upcoming itinerary, time-zone context, reservations, tasks, maps, and
 essential references. Include an authorized, minimized Travel Playbook package
 with explicit section/Resource selection, version, retention, expiration, and
 stale-data presentation.
+
+Use versioned JSON manifests plus explicitly authorized encrypted media. Add
+incremental additions, replacements, deletion/revocation tombstones, full-resync
+fallback, integrity checks, schema migration, expiration, and local clearing.
 
 Exit gate: airplane-mode, partial sync, interrupted retry, cross-Creator,
 revocation, local clearing, time-zone transition, schema upgrade, and storage
@@ -125,8 +137,16 @@ quota, and deletion tests pass.
 ## M7: Notifications and Travel Readiness
 
 Add provider-neutral push registration and privacy-safe plan-change
-notifications. Complete offline readiness, accessibility, performance, battery,
-support, incident, store-distribution, signing, and staged-release procedures.
+notifications plus a server-backed in-app notification center. Push signals
+that data changed; Companion must fetch the current authorized JSON rather than
+treating a payload as state. Complete offline readiness, accessibility,
+performance, battery, support, incident, store-distribution, signing, and
+staged-release procedures.
+
+Separate critical operational, action-required, informational, collaboration,
+audience, and promotional policies. Apply category/channel preferences,
+time-zone-aware quiet hours, digesting, deduplication, supersession,
+rate-limiting, expiry, safe lock-screen previews, and retry/suppression rules.
 
 Include derived countdowns for Planned, Upcoming, and approved committed
 Adventures; date-only and authoritative time-zone semantics; traveler-specific
@@ -139,8 +159,10 @@ acknowledgment. Follow
 `docs/architecture/adventure-readiness-and-change-management.md`.
 
 Exit gate: notification payloads contain no private detail; registrations are
-revocable and environment-isolated; production runbooks and phased rollout are
-approved.
+revocable and environment-isolated; duplicates, reordering, stale pushes,
+provider outage, token rotation, quiet hours, digests, supersession, deep links,
+and cross-traveler access are tested; production runbooks and phased rollout
+are approved.
 
 ## M8: Preserve and Publish Breadcrumbs
 

@@ -96,6 +96,17 @@ Creator deliberately preserves, authors, and publishes selected material. A
 future AI Companion may propose assistance, but AI remains advisory and cannot
 enable tracking, grant sharing, or publish a route.
 
+Companion obtains its experience from versioned JSON REST responses and
+authorized media or document delivery. It never connects to SQL or consumes
+Dapper/persistence models. Offline content is a minimized encrypted JSON/media
+projection with visible freshness and revocation behavior, not a database
+replica.
+
+Push notifications keep the experience relevant but carry only a safe signal
+and deep-link hint. Companion retrieves the current authorized JSON after the
+traveler opens or refreshes the notification. The in-app notification center
+remains useful when native push is delayed, disabled, duplicated, or lost.
+
 ## Initial Success Measures
 
 - Travelers can access essential information without connectivity.

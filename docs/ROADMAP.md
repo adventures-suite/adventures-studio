@@ -371,6 +371,25 @@ Next
 - Digest delivery
 - In-application and mobile notifications
 
+Companion notifications use a separate private operational lane for itinerary
+changes, required actions, readiness, reminders, group polls, announcements,
+acknowledgments, and offline refresh. Push payloads carry only safe opaque hints;
+the app retrieves current authorized JSON. Audience subscription and private
+traveler notification policies never grant access to one another.
+
+## Companion API and Offline Data Direction
+
+AdventuresCompanion will operate from versioned JSON REST responses and
+explicitly authorized media, protected-document, map, and offline-package
+delivery. Azure SQL and Dapper remain server-side. Application query services
+apply authorization and traveler information policy before producing
+purpose-built mobile DTOs and serializing JSON.
+
+Offline state is a minimized, encrypted, versioned projection with freshness,
+expiration, incremental synchronization, deletion/revocation, integrity, and
+full-resync semantics. It is not a database replica. See
+`docs/architecture/companion-api-sync.md`.
+
 Implementation depends on identity, database-backed publication, security, and
 consent foundations. The architecture is defined before Creator Workspace so
 publication workflows emit the correct durable events from the beginning.
