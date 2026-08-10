@@ -92,13 +92,13 @@ jobs:
         run: az bicep build --file infrastructure/container-apps-migrations/main.bicep
 
       - name: Generate SBOM
-        uses: anchore/sbom-action@v0
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
         with:
           image: ${{ env.IMAGE_NAME }}:${{ env.RELEASE_SHA }}
           artifact-name: migration-container-sbom-${{ env.RELEASE_SHA }}.spdx.json
 
       - name: Scan container image
-        uses: aquasecurity/trivy-action@0.30.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: ${{ env.IMAGE_NAME }}:${{ env.RELEASE_SHA }}
           format: table
