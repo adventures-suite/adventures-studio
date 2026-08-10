@@ -124,6 +124,7 @@ jobs:
           0004_create_authentication_persistence.sql
           0005_bind_sessions_to_external_identities.sql
           0006_create_creator_memberships.sql
+          0007_create_traveler_participations.sql
           EOF
 
           diff -u \

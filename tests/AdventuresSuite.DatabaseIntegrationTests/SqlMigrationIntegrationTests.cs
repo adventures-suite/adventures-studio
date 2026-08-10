@@ -29,7 +29,7 @@ public sealed class SqlMigrationIntegrationTests
         try
         {
             var firstRun = DatabaseMigratorRunner.Migrate(databaseConnectionString);
-            Assert.Equal(6, firstRun.Count);
+            Assert.Equal(7, firstRun.Count);
 
             await VerifySchemaAsync(databaseConnectionString);
             await VerifyConstraintsAsync(databaseConnectionString);
@@ -39,7 +39,7 @@ public sealed class SqlMigrationIntegrationTests
             var secondRun = DatabaseMigratorRunner.Migrate(databaseConnectionString);
 
             Assert.Empty(secondRun);
-            Assert.Equal(6, await ScalarAsync<int>(databaseConnectionString,
+            Assert.Equal(7, await ScalarAsync<int>(databaseConnectionString,
                 "SELECT COUNT(*) FROM dbo.AdventuresSuiteSchemaVersions;"));
             Assert.Equal(signatureBefore, await GetSchemaSignatureAsync(databaseConnectionString));
 
@@ -69,7 +69,8 @@ public sealed class SqlMigrationIntegrationTests
                     MigrationCatalog.IsMigrationResource(assembly, name)
                     && !name.EndsWith("0004_create_authentication_persistence.sql", StringComparison.Ordinal)
                     && !name.EndsWith("0005_bind_sessions_to_external_identities.sql", StringComparison.Ordinal)
-                    && !name.EndsWith("0006_create_creator_memberships.sql", StringComparison.Ordinal))
+                    && !name.EndsWith("0006_create_creator_memberships.sql", StringComparison.Ordinal)
+                    && !name.EndsWith("0007_create_traveler_participations.sql", StringComparison.Ordinal))
                 .JournalToSqlTable("dbo", "AdventuresSuiteSchemaVersions")
                 .WithTransactionPerScript()
                 .Build()
@@ -78,7 +79,7 @@ public sealed class SqlMigrationIntegrationTests
             Assert.Equal(3, await ScalarAsync<int>(connectionString,
                 "SELECT COUNT(*) FROM dbo.AdventuresSuiteSchemaVersions;"));
 
-            Assert.Equal(3, DatabaseMigratorRunner.Migrate(connectionString).Count);
+            Assert.Equal(4, DatabaseMigratorRunner.Migrate(connectionString).Count);
             Assert.Equal(6, await ScalarAsync<int>(connectionString, """
                 SELECT COUNT(*) FROM sys.tables t JOIN sys.schemas s ON s.schema_id=t.schema_id
                 WHERE s.name='auth';
@@ -110,7 +111,7 @@ public sealed class SqlMigrationIntegrationTests
                 Assert.Equal("Another database migration is already running.", exception.Message);
             }
 
-            Assert.Equal(6, DatabaseMigratorRunner.Migrate(connectionString).Count);
+            Assert.Equal(7, DatabaseMigratorRunner.Migrate(connectionString).Count);
         }
         finally
         {
@@ -136,7 +137,7 @@ public sealed class SqlMigrationIntegrationTests
             WHERE schemas.name = 'planning'
               AND tables.name <> 'AdventurePlans';
             """;
-        Assert.Equal(12, await ScalarAsync<int>(connectionString, childTableSql));
+        Assert.Equal(13, await ScalarAsync<int>(connectionString, childTableSql));
         Assert.Equal(1, await ScalarAsync<int>(connectionString, """
             SELECT COUNT(*) FROM sys.tables AS tables
             INNER JOIN sys.schemas AS schemas ON schemas.schema_id = tables.schema_id
@@ -194,7 +195,7 @@ public sealed class SqlMigrationIntegrationTests
                   WHERE columns.object_id = tables.object_id AND columns.name = 'CreatorId'
               );
             """);
-        Assert.Equal(13, creatorColumns);
+        Assert.Equal(14, creatorColumns);
 
         Assert.True(await ScalarAsync<int>(connectionString,
             "SELECT COUNT(*) FROM sys.foreign_keys WHERE name LIKE 'FK[_]%';") >= 12);

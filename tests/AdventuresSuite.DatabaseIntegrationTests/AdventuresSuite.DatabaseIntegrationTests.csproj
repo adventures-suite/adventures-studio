@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/AdventuresSuite.DatabaseMigrator/AdventuresSuite.DatabaseMigrator.csproj" />
+    <ProjectReference Include="../../src/AdventuresSuite.Companion.SqlServer/AdventuresSuite.Companion.SqlServer.csproj" />
     <ProjectReference Include="../../src/AdventuresSuite.Authorization.SqlServer/AdventuresSuite.Authorization.SqlServer.csproj" />
     <ProjectReference Include="../../src/AdventuresSuite.Identity/AdventuresSuite.Identity.csproj" />
     <ProjectReference Include="../../src/AdventuresSuite.Identity.SqlServer/AdventuresSuite.Identity.SqlServer.csproj" />

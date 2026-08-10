@@ -4,6 +4,7 @@
     <Project Path="src/AdventuresSuite.Authorization/AdventuresSuite.Authorization.csproj" />
     <Project Path="src/AdventuresSuite.Companion.Application/AdventuresSuite.Companion.Application.csproj" />
     <Project Path="src/AdventuresSuite.Companion.Contracts/AdventuresSuite.Companion.Contracts.csproj" />
+    <Project Path="src/AdventuresSuite.Companion.SqlServer/AdventuresSuite.Companion.SqlServer.csproj" />
     <Project Path="src/AdventuresSuite.DatabaseMigrator/AdventuresSuite.DatabaseMigrator.csproj" />
     <Project Path="src/AdventuresSuite.Authorization.SqlServer/AdventuresSuite.Authorization.SqlServer.csproj" />
     <Project Path="src/AdventuresSuite.Identity/AdventuresSuite.Identity.csproj" />
