@@ -1,7 +1,8 @@
 # AdventuresSuite Database Migrations
 
-Planning schema changes use ordered, forward-only SQL scripts executed by the
-standalone `AdventuresSuite.DatabaseMigrator` project.
+Planning, authentication, Creator-membership, and audit schema changes use
+ordered, forward-only SQL scripts executed by the standalone
+`AdventuresSuite.DatabaseMigrator` project.
 
 ## Conventions
 
@@ -10,7 +11,8 @@ standalone `AdventuresSuite.DatabaseMigrator` project.
 - Correct a deployed schema with a new migration; never edit migration history.
 - Keep scripts safe for one transactional execution whenever SQL Server permits.
 - Do not add automatic destructive down-migrations.
-- Keep Creator identity in every Planning table, key, foreign key, and index.
+- Keep Creator identity in every Creator-owned table, key, foreign key, and
+  index.
 - Do not add Content Engine or AI proposal foreign keys to the Planning schema.
 - Never execute migrations from web application startup.
 
@@ -24,13 +26,14 @@ The migrator reads `ADVENTURESSUITE_SQL_CONNECTION_STRING`. Supply it through a
 local environment variable or protected deployment configuration. Do not commit
 credentials or pass secrets as command-line arguments.
 
-The migration identity requires bounded DDL permission for the Planning schema
-and migration journal. The web application's Managed Identity uses a separate
-runtime principal with `SELECT`, `INSERT`, and `UPDATE` on Planning tables and
-`DELETE` only on aggregate child tables needed for transactional replacement.
-It receives no schema-management permission, no DbUp-journal write permission,
-and no `DELETE` permission on `planning.AdventurePlans`. Exact Azure SQL grants
-must be reviewed before deployment integration is enabled.
+The migration identity requires bounded DDL permission for application schemas
+and the migration journal. The web application's Managed Identity uses a
+separate runtime principal with the minimum DML roles required by each adapter.
+Creator membership rows cannot be hard-deleted; role and permission assignment
+rows may be replaced transactionally. Required membership audit evidence is
+insert-only for runtime mutations. The runtime identity receives no
+schema-management permission and no DbUp-journal write permission. Exact Azure
+SQL grants must be reviewed before deployment integration is enabled.
 
 ## Deployment Networking
 

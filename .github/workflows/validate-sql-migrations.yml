@@ -7,6 +7,7 @@ on:
     paths:
       - database/**
       - src/AdventuresSuite.DatabaseMigrator/**
+      - src/AdventuresSuite.Authorization.SqlServer/**
       - src/AdventuresSuite.Identity.SqlServer/**
       - src/AdventuresSuite.Planning.SqlServer/**
       - tests/AdventuresSuite.DatabaseIntegrationTests/**
@@ -122,6 +123,7 @@ jobs:
           0003_create_planning_children.sql
           0004_create_authentication_persistence.sql
           0005_bind_sessions_to_external_identities.sql
+          0006_create_creator_memberships.sql
           EOF
 
           diff -u \

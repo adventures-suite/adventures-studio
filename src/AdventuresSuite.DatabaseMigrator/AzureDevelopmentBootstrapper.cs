@@ -9,6 +9,7 @@ namespace AdventuresSuite.DatabaseMigrator;
 internal static class AzureDevelopmentBootstrapper
 {
     private const string RuntimeRoleName = "AdventuresSuiteAuthenticationRuntime";
+    private const string MembershipRuntimeRoleName = "AdventuresSuiteMembershipRuntime";
     private const string WrappingKeyName = "adventures-suite-data-protection";
     private const string CertificateName = "adventures-suite-external-id";
 
@@ -60,8 +61,12 @@ internal static class AzureDevelopmentBootstrapper
             principalAlias => $"""
                 IF DATABASE_PRINCIPAL_ID(N'{RuntimeRoleName}') IS NULL
                     THROW 51000, 'The authentication runtime role has not been migrated.', 1;
+                IF DATABASE_PRINCIPAL_ID(N'{MembershipRuntimeRoleName}') IS NULL
+                    THROW 51000, 'The membership runtime role has not been migrated.', 1;
                 IF ISNULL(IS_ROLEMEMBER(N'{RuntimeRoleName}', @AliasParameter), 0) <> 1
                     ALTER ROLE [{RuntimeRoleName}] ADD MEMBER {principalAlias};
+                IF ISNULL(IS_ROLEMEMBER(N'{MembershipRuntimeRoleName}', @AliasParameter), 0) <> 1
+                    ALTER ROLE [{MembershipRuntimeRoleName}] ADD MEMBER {principalAlias};
                 GRANT CONNECT TO {principalAlias};
                 """);
 
@@ -80,6 +85,10 @@ internal static class AzureDevelopmentBootstrapper
                 OR OBJECT_ID(N'auth.Users', N'U') IS NULL
                 OR OBJECT_ID(N'auth.ExternalIdentities', N'U') IS NULL
                 OR OBJECT_ID(N'auth.UserSessions', N'U') IS NULL
+                OR OBJECT_ID(N'auth.CreatorMemberships', N'U') IS NULL
+                OR OBJECT_ID(N'auth.CreatorMembershipRoles', N'U') IS NULL
+                OR OBJECT_ID(N'auth.CreatorMembershipPermissionGrants', N'U') IS NULL
+                OR OBJECT_ID(N'audit.AuditEvents', N'U') IS NULL
                 THROW 51000, 'Migration permissions or schema are unavailable.', 1;
 
             SELECT TOP (0) ScriptName FROM dbo.AdventuresSuiteSchemaVersions;

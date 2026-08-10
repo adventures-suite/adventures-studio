@@ -29,7 +29,7 @@ public sealed class SqlMigrationIntegrationTests
         try
         {
             var firstRun = DatabaseMigratorRunner.Migrate(databaseConnectionString);
-            Assert.Equal(5, firstRun.Count);
+            Assert.Equal(6, firstRun.Count);
 
             await VerifySchemaAsync(databaseConnectionString);
             await VerifyConstraintsAsync(databaseConnectionString);
@@ -39,7 +39,7 @@ public sealed class SqlMigrationIntegrationTests
             var secondRun = DatabaseMigratorRunner.Migrate(databaseConnectionString);
 
             Assert.Empty(secondRun);
-            Assert.Equal(5, await ScalarAsync<int>(databaseConnectionString,
+            Assert.Equal(6, await ScalarAsync<int>(databaseConnectionString,
                 "SELECT COUNT(*) FROM dbo.AdventuresSuiteSchemaVersions;"));
             Assert.Equal(signatureBefore, await GetSchemaSignatureAsync(databaseConnectionString));
 
@@ -68,7 +68,8 @@ public sealed class SqlMigrationIntegrationTests
                 .WithScriptsEmbeddedInAssembly(assembly, name =>
                     MigrationCatalog.IsMigrationResource(assembly, name)
                     && !name.EndsWith("0004_create_authentication_persistence.sql", StringComparison.Ordinal)
-                    && !name.EndsWith("0005_bind_sessions_to_external_identities.sql", StringComparison.Ordinal))
+                    && !name.EndsWith("0005_bind_sessions_to_external_identities.sql", StringComparison.Ordinal)
+                    && !name.EndsWith("0006_create_creator_memberships.sql", StringComparison.Ordinal))
                 .JournalToSqlTable("dbo", "AdventuresSuiteSchemaVersions")
                 .WithTransactionPerScript()
                 .Build()
@@ -77,8 +78,8 @@ public sealed class SqlMigrationIntegrationTests
             Assert.Equal(3, await ScalarAsync<int>(connectionString,
                 "SELECT COUNT(*) FROM dbo.AdventuresSuiteSchemaVersions;"));
 
-            Assert.Equal(2, DatabaseMigratorRunner.Migrate(connectionString).Count);
-            Assert.Equal(3, await ScalarAsync<int>(connectionString, """
+            Assert.Equal(3, DatabaseMigratorRunner.Migrate(connectionString).Count);
+            Assert.Equal(6, await ScalarAsync<int>(connectionString, """
                 SELECT COUNT(*) FROM sys.tables t JOIN sys.schemas s ON s.schema_id=t.schema_id
                 WHERE s.name='auth';
                 """));
@@ -109,7 +110,7 @@ public sealed class SqlMigrationIntegrationTests
                 Assert.Equal("Another database migration is already running.", exception.Message);
             }
 
-            Assert.Equal(5, DatabaseMigratorRunner.Migrate(connectionString).Count);
+            Assert.Equal(6, DatabaseMigratorRunner.Migrate(connectionString).Count);
         }
         finally
         {
@@ -119,12 +120,12 @@ public sealed class SqlMigrationIntegrationTests
 
     private static async Task VerifySchemaAsync(string connectionString)
     {
-        Assert.Equal(2, await ScalarAsync<int>(connectionString, """
+        Assert.Equal(3, await ScalarAsync<int>(connectionString, """
             SELECT COUNT(*)
             FROM sys.schemas AS schemas
             INNER JOIN sys.database_principals AS principals
                 ON principals.principal_id = schemas.principal_id
-            WHERE schemas.name IN ('planning', 'auth')
+            WHERE schemas.name IN ('planning', 'auth', 'audit')
               AND principals.name = 'db_ddladmin';
             """));
 
@@ -147,6 +148,18 @@ public sealed class SqlMigrationIntegrationTests
             INNER JOIN sys.schemas AS schemas ON schemas.schema_id = tables.schema_id
             WHERE schemas.name = 'auth'
               AND tables.name IN ('Users', 'ExternalIdentities', 'UserSessions');
+            """));
+        Assert.Equal(3, await ScalarAsync<int>(connectionString, """
+            SELECT COUNT(*) FROM sys.tables AS tables
+            INNER JOIN sys.schemas AS schemas ON schemas.schema_id = tables.schema_id
+            WHERE schemas.name = 'auth'
+              AND tables.name IN ('CreatorMemberships', 'CreatorMembershipRoles',
+                                  'CreatorMembershipPermissionGrants');
+            """));
+        Assert.Equal(1, await ScalarAsync<int>(connectionString, """
+            SELECT COUNT(*) FROM sys.tables AS tables
+            INNER JOIN sys.schemas AS schemas ON schemas.schema_id = tables.schema_id
+            WHERE schemas.name = 'audit' AND tables.name = 'AuditEvents';
             """));
         Assert.Equal(1, await ScalarAsync<int>(connectionString, """
             SELECT COUNT(*) FROM sys.columns AS columns
@@ -265,6 +278,34 @@ public sealed class SqlMigrationIntegrationTests
             REVERT;
             SELECT @CanWriteJournal;
             """));
+        await ExecuteAsync(connectionString, """
+            CREATE USER membership_runtime_test WITHOUT LOGIN;
+            ALTER ROLE AdventuresSuiteMembershipRuntime ADD MEMBER membership_runtime_test;
+            """);
+        Assert.Equal(1, await ScalarAsync<int>(connectionString, """
+            EXECUTE AS USER='membership_runtime_test';
+            DECLARE @CanInsert int = HAS_PERMS_BY_NAME('audit.AuditEvents', 'OBJECT', 'INSERT');
+            REVERT;
+            SELECT @CanInsert;
+            """));
+        Assert.Equal(0, await ScalarAsync<int>(connectionString, """
+            EXECUTE AS USER='membership_runtime_test';
+            DECLARE @CanUpdate int = HAS_PERMS_BY_NAME('audit.AuditEvents', 'OBJECT', 'UPDATE');
+            REVERT;
+            SELECT @CanUpdate;
+            """));
+        Assert.Equal(0, await ScalarAsync<int>(connectionString, """
+            EXECUTE AS USER='membership_runtime_test';
+            DECLARE @CanDelete int = HAS_PERMS_BY_NAME('audit.AuditEvents', 'OBJECT', 'DELETE');
+            REVERT;
+            SELECT @CanDelete;
+            """));
+        Assert.Equal(0, await ScalarAsync<int>(connectionString, """
+            EXECUTE AS USER='membership_runtime_test';
+            DECLARE @CanDelete int = HAS_PERMS_BY_NAME('auth.CreatorMemberships', 'OBJECT', 'DELETE');
+            REVERT;
+            SELECT @CanDelete;
+            """));
     }
 
     private static async Task<string> GetSchemaSignatureAsync(string connectionString)
@@ -277,14 +318,14 @@ public sealed class SqlMigrationIntegrationTests
             INNER JOIN sys.schemas AS schemas ON schemas.schema_id = tables.schema_id
             INNER JOIN sys.columns AS columns ON columns.object_id = tables.object_id
             INNER JOIN sys.types AS types ON types.user_type_id = columns.user_type_id
-            WHERE schemas.name IN ('planning', 'auth', 'dbo')
-              AND (schemas.name IN ('planning', 'auth') OR tables.name = 'AdventuresSuiteSchemaVersions')
+            WHERE schemas.name IN ('planning', 'auth', 'audit', 'dbo')
+              AND (schemas.name IN ('planning', 'auth', 'audit') OR tables.name = 'AdventuresSuiteSchemaVersions')
             UNION ALL
             SELECT CONCAT('O|', schemas.name, '|', objects.name, '|', objects.type, '|', objects.object_id)
                 COLLATE DATABASE_DEFAULT
             FROM sys.objects AS objects
             INNER JOIN sys.schemas AS schemas ON schemas.schema_id = objects.schema_id
-            WHERE schemas.name IN ('planning', 'auth')
+            WHERE schemas.name IN ('planning', 'auth', 'audit')
               AND objects.type IN ('PK', 'F', 'C', 'UQ')
             ORDER BY 1;
             """;
