@@ -1,0 +1,337 @@
+name: Deploy AdventuresCompanion API Dev
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: adventures-companion-api-dev-deployment
+  cancel-in-progress: true
+
+env:
+  DOTNET_VERSION: "10.0.x"
+  PROJECT: src/AdventuresSuite.Api/AdventuresSuite.Api.csproj
+  PUBLISH_DIR: ./artifacts/companion-api/publish
+  PACKAGE_DIR: ./artifacts/companion-api/package
+  EVIDENCE_DIR: ./artifacts/companion-api/evidence
+  PACKAGE_NAME: adventures-companion-api-${{ github.sha }}-${{ github.run_attempt }}.zip
+
+jobs:
+  build-and-deploy:
+    name: Build, validate, and deploy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    environment: dev
+
+    steps:
+      - name: Checkout exact release SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Verify exact and current release SHA
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "$(git rev-parse HEAD)" != "${{ github.sha }}" ]; then
+            echo "::error::The checked-out commit does not match the release SHA."
+            exit 1
+          fi
+
+          if [ "${{ github.event_name }}" = "push" ]; then
+            git fetch --quiet origin main
+            if [ "$(git rev-parse origin/main)" != "${{ github.sha }}" ]; then
+              echo "::error::A newer main commit exists; refusing to deploy this superseded release."
+              exit 1
+            fi
+          fi
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore locked dependency graph
+        run: dotnet restore TheSimontonAdventures.slnx --locked-mode
+
+      - name: Build release solution
+        run: dotnet build TheSimontonAdventures.slnx --configuration Release --no-restore
+
+      - name: Run full bounded test suite
+        run: >
+          dotnet test
+          TheSimontonAdventures.slnx
+          --configuration Release
+          --no-build
+          --no-restore
+
+      - name: Run focused API and authorization tests
+        run: |
+          dotnet test tests/AdventuresSuite.Api.Tests/AdventuresSuite.Api.Tests.csproj --configuration Release --no-build --no-restore
+          dotnet test tests/AdventuresSuite.Authorization.Tests/AdventuresSuite.Authorization.Tests.csproj --configuration Release --no-build --no-restore
+          dotnet test tests/AdventuresSuite.Companion.Contracts.Tests/AdventuresSuite.Companion.Contracts.Tests.csproj --configuration Release --no-build --no-restore
+
+      - name: Audit vulnerable dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          audit_file="$(mktemp)"
+          dotnet list TheSimontonAdventures.slnx package --vulnerable --include-transitive | tee "$audit_file"
+          if grep -q 'has the following vulnerable packages' "$audit_file"; then
+            echo "::error::A vulnerable NuGet dependency was detected."
+            exit 1
+          fi
+
+      - name: Publish immutable API payload
+        run: >
+          dotnet publish
+          "${{ env.PROJECT }}"
+          --configuration Release
+          --no-restore
+          --no-self-contained
+          -p:SourceRevisionId="${{ github.sha }}"
+          --output "${{ env.PUBLISH_DIR }}"
+
+      - name: Generate and validate OpenAPI 3.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "${{ env.EVIDENCE_DIR }}"
+          export ASPNETCORE_ENVIRONMENT=Test
+          export ASPNETCORE_URLS=http://127.0.0.1:5077
+          export Companion__DeterministicMode=true
+          export Companion__ActivationMode=Disabled
+          export Deployment__CommitSha="${{ github.sha }}"
+          "${{ env.PUBLISH_DIR }}/AdventuresSuite.Api" >"${{ env.EVIDENCE_DIR }}/openapi-host.log" 2>&1 &
+          api_pid=$!
+          trap 'kill "$api_pid" 2>/dev/null || true' EXIT
+
+          for attempt in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:5077/openapi/companion-v1.json \
+              --output "${{ env.EVIDENCE_DIR }}/companion-v1.openapi.json"; then
+              break
+            fi
+            if [ "$attempt" -eq 20 ]; then
+              echo "::error::The generated OpenAPI document was unavailable."
+              exit 1
+            fi
+            sleep 1
+          done
+
+          jq -e '
+            (.openapi | startswith("3.1")) and
+            ((.paths | keys) == ["/v1/companion/adventures"]) and
+            (.paths["/v1/companion/adventures"].get.operationId == "ListCompanionAdventures")
+          ' "${{ env.EVIDENCE_DIR }}/companion-v1.openapi.json" >/dev/null
+          kill "$api_pid"
+          wait "$api_pid" || true
+          trap - EXIT
+
+      - name: Create immutable package and checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "${{ env.PACKAGE_DIR }}"
+          cd "${{ env.PUBLISH_DIR }}"
+          zip -q -r "$GITHUB_WORKSPACE/${{ env.PACKAGE_DIR }}/${{ env.PACKAGE_NAME }}" .
+          cd "$GITHUB_WORKSPACE"
+          sha256sum "${{ env.PACKAGE_DIR }}/${{ env.PACKAGE_NAME }}" \
+            > "${{ env.PACKAGE_DIR }}/${{ env.PACKAGE_NAME }}.sha256"
+
+      - name: Retain immutable build evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: adventures-companion-api-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ env.PACKAGE_DIR }}/${{ env.PACKAGE_NAME }}
+            ${{ env.PACKAGE_DIR }}/${{ env.PACKAGE_NAME }}.sha256
+            ${{ env.EVIDENCE_DIR }}/companion-v1.openapi.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Azure Login with dedicated API deployment identity
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_COMPANION_API_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Validate closed activation configuration
+        shell: bash
+        env:
+          ACTIVATION_MODE: ${{ vars.COMPANION_API_ACTIVATION_MODE }}
+          API_ORIGIN: ${{ vars.AZURE_COMPANION_API_ORIGIN }}
+        run: |
+          set -euo pipefail
+          if [ "$ACTIVATION_MODE" != "Disabled" ]; then
+            echo "::error::The Azure Companion API must remain explicitly Disabled."
+            exit 1
+          fi
+          if [ "$API_ORIGIN" != "https://${{ vars.AZURE_COMPANION_API_WEBAPP_NAME }}.azurewebsites.net" ]; then
+            echo "::error::The configured API origin is not the exact approved App Service origin."
+            exit 1
+          fi
+
+      - name: Configure release identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          az webapp config appsettings set \
+            --resource-group "${{ vars.AZURE_COMPANION_API_RESOURCE_GROUP }}" \
+            --name "${{ vars.AZURE_COMPANION_API_WEBAPP_NAME }}" \
+            --settings \
+              ASPNETCORE_ENVIRONMENT=Production \
+              Companion__ActivationMode=Disabled \
+              Companion__DeterministicMode=false \
+              Deployment__CommitSha="${{ github.sha }}" \
+              Deployment__RunId="${{ github.run_id }}" \
+              Deployment__RunAttempt="${{ github.run_attempt }}" \
+              WEBSITE_HEALTHCHECK_MAXPINGFAILURES=3 \
+              WEBSITES_CONTAINER_START_TIME_LIMIT=600 \
+              WEBSITE_RUN_FROM_PACKAGE=1 \
+            --output none
+
+          az webapp config set \
+            --resource-group "${{ vars.AZURE_COMPANION_API_RESOURCE_GROUP }}" \
+            --name "${{ vars.AZURE_COMPANION_API_WEBAPP_NAME }}" \
+            --startup-file "dotnet AdventuresSuite.Api.dll" \
+            --generic-configurations '{"healthCheckPath":"/health/ready","vnetRouteAllEnabled":true}' \
+            --output none
+
+      - name: Deploy package without implicit restart
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "DEPLOYMENT_STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+          previous_id="$(az webapp log deployment list \
+            --resource-group "${{ vars.AZURE_COMPANION_API_RESOURCE_GROUP }}" \
+            --name "${{ vars.AZURE_COMPANION_API_WEBAPP_NAME }}" \
+            --query '[0].id' --output tsv)"
+
+          az webapp deploy \
+            --resource-group "${{ vars.AZURE_COMPANION_API_RESOURCE_GROUP }}" \
+            --name "${{ vars.AZURE_COMPANION_API_WEBAPP_NAME }}" \
+            --src-path "${{ env.PACKAGE_DIR }}/${{ env.PACKAGE_NAME }}" \
+            --type zip --async false --clean true --restart false --track-status false \
+            --enriched-errors true --output none
+
+          deployment_record=''
+          for attempt in {1..18}; do
+            candidate="$(az webapp log deployment list \
+              --resource-group "${{ vars.AZURE_COMPANION_API_RESOURCE_GROUP }}" \
+              --name "${{ vars.AZURE_COMPANION_API_WEBAPP_NAME }}" \
+              --query '[0]' --output json)"
+            if jq -e --arg previous "$previous_id" \
+              '.status == 4 and .complete == true and .end_time != null and (.id | tostring) != $previous' \
+              >/dev/null <<<"$candidate"; then
+              deployment_record="$candidate"
+              break
+            fi
+            sleep 5
+          done
+
+          if [ -z "$deployment_record" ]; then
+            echo "::error::Azure did not report a new successful deployment record."
+            exit 1
+          fi
+          echo "DEPLOYMENT_RECORD_ID=$(jq -r '.id' <<<"$deployment_record")" >> "$GITHUB_ENV"
+
+      - name: Explicitly restart API
+        run: |
+          az webapp restart \
+            --resource-group "${{ vars.AZURE_COMPANION_API_RESOURCE_GROUP }}" \
+            --name "${{ vars.AZURE_COMPANION_API_WEBAPP_NAME }}"
+          echo "APPLICATION_RESTARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+
+      - name: Verify exact release and closed product behavior
+        shell: bash
+        env:
+          API_ORIGIN: ${{ vars.AZURE_COMPANION_API_ORIGIN }}
+        run: |
+          set -euo pipefail
+          mkdir -p "${{ env.EVIDENCE_DIR }}"
+          verified=false
+          for attempt in {1..30}; do
+            live="$(curl --fail --silent "$API_ORIGIN/health/live" || true)"
+            ready="$(curl --fail --silent "$API_ORIGIN/health/ready" || true)"
+            if jq -e --arg sha "${{ github.sha }}" \
+              '.status == "Healthy" and .service == "AdventuresSuite.Api" and .releaseSha == $sha and .activationState == "Disabled"' \
+              >/dev/null <<<"$live" && jq -e --arg sha "${{ github.sha }}" \
+              '.status == "Healthy" and .service == "AdventuresSuite.Api" and .releaseSha == $sha and .activationState == "Disabled"' \
+              >/dev/null <<<"$ready"; then
+              printf '%s\n' "$live" > "${{ env.EVIDENCE_DIR }}/live.json"
+              printf '%s\n' "$ready" > "${{ env.EVIDENCE_DIR }}/ready.json"
+              verified=true
+              break
+            fi
+            sleep 10
+          done
+          if [ "$verified" != true ]; then
+            echo "::error::The deployed probes did not report the exact expected release."
+            exit 1
+          fi
+
+          status="$(curl --silent --output "${{ env.EVIDENCE_DIR }}/adventures-response.json" \
+            --write-out '%{http_code}' "$API_ORIGIN/v1/companion/adventures")"
+          if [ "$status" != 401 ]; then
+            echo "::error::The protected endpoint did not remain fail-closed."
+            exit 1
+          fi
+          jq -e '.status == 401 and .code == "authentication_required"' \
+            "${{ env.EVIDENCE_DIR }}/adventures-response.json" >/dev/null
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' "$API_ORIGIN/openapi/companion-v1.json")" = 404
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' "$API_ORIGIN/scalar/companion")" = 404
+
+          {
+            echo "## Companion API dev deployment"
+            echo ""
+            echo "- Commit: \`${{ github.sha }}\`"
+            echo "- Package: \`${{ env.PACKAGE_NAME }}\`"
+            echo "- Deployment record: \`$DEPLOYMENT_RECORD_ID\`"
+            echo "- Restarted: \`$APPLICATION_RESTARTED_AT\`"
+            echo "- Liveness and readiness: exact SHA verified"
+            echo "- Product activation: \`Disabled\`"
+            echo "- Protected endpoint: fail-closed (401)"
+            echo "- Production OpenAPI and Scalar: unavailable (404)"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Retain sanitized runtime evidence
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: adventures-companion-api-runtime-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ env.EVIDENCE_DIR }}/live.json
+            ${{ env.EVIDENCE_DIR }}/ready.json
+            ${{ env.EVIDENCE_DIR }}/adventures-response.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Report sanitized failure diagnostics
+        if: failure()
+        shell: bash
+        run: |
+          set +e
+          state="$(az webapp show \
+            --resource-group "${{ vars.AZURE_COMPANION_API_RESOURCE_GROUP }}" \
+            --name "${{ vars.AZURE_COMPANION_API_WEBAPP_NAME }}" \
+            --query state --output tsv 2>/dev/null)"
+          reported_sha="$(curl --silent "${{ vars.AZURE_COMPANION_API_ORIGIN }}/health/ready" \
+            | jq -r '.releaseSha // "unavailable"' 2>/dev/null)"
+          {
+            echo "## Companion API deployment failure"
+            echo ""
+            echo "- Expected SHA: \`${{ github.sha }}\`"
+            echo "- Reported SHA: \`${reported_sha:-unavailable}\`"
+            echo "- Package artifact: \`adventures-companion-api-${{ github.sha }}-${{ github.run_attempt }}\`"
+            echo "- Deployment record: \`${DEPLOYMENT_RECORD_ID:-unavailable}\`"
+            echo "- App Service state: \`${state:-unavailable}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

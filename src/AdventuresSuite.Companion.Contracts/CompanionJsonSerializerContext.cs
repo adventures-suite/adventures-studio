@@ -16,6 +16,7 @@ namespace AdventuresSuite.Companion.Contracts;
 [JsonSerializable(typeof(CompanionReadinessDto))]
 [JsonSerializable(typeof(CompanionPlaybookDto))]
 [JsonSerializable(typeof(CompanionProblemDto))]
+[JsonSerializable(typeof(CompanionHealthDto))]
 [JsonSerializable(typeof(IReadOnlyList<CompanionAdventureSummaryDto>))]
 [JsonSerializable(typeof(IReadOnlyList<CompanionDestinationSummaryDto>))]
 [JsonSerializable(typeof(IReadOnlyList<CompanionScheduleItemDto>))]

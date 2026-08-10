@@ -11,4 +11,12 @@ public static class CompanionApiConstants
     public const string AuthorizationPolicy = "CompanionApiAccess";
     /// <summary>Gets the explicit deterministic-mode configuration key.</summary>
     public const string DeterministicModeKey = "Companion:DeterministicMode";
+    /// <summary>Gets the explicit product activation-mode configuration key.</summary>
+    public const string ActivationModeKey = "Companion:ActivationMode";
+    /// <summary>Gets the deployment release-SHA configuration key.</summary>
+    public const string ReleaseShaKey = "Deployment:CommitSha";
+    /// <summary>Gets the only approved deployed activation mode.</summary>
+    public const string DisabledActivationMode = "Disabled";
+    /// <summary>Gets the stable API service identity.</summary>
+    public const string ServiceName = "AdventuresSuite.Api";
 }

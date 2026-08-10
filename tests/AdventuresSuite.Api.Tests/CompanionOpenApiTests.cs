@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using AdventuresSuite.Companion.Contracts;
 
 namespace AdventuresSuite.Api.Tests;
 
@@ -56,7 +57,14 @@ public sealed class CompanionOpenApiTests(CompanionApiFactory factory)
     {
         using var response = await _client.GetAsync(route);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal("Healthy", await response.Content.ReadAsStringAsync());
+        var health = JsonSerializer.Deserialize(
+            await response.Content.ReadAsStringAsync(),
+            CompanionJsonSerializerContext.Default.CompanionHealthDto);
+        Assert.NotNull(health);
+        Assert.Equal("Healthy", health.Status);
+        Assert.Equal("AdventuresSuite.Api", health.Service);
+        Assert.Equal("Disabled", health.ActivationState);
+        Assert.Equal("1111111111111111111111111111111111111111", health.ReleaseSha);
 
         using var openApiResponse = await _client.GetAsync("/openapi/companion-v1.json");
         using var document = JsonDocument.Parse(await openApiResponse.Content.ReadAsStringAsync());
@@ -87,5 +95,23 @@ public sealed class CompanionProductionGateTests(ProductionCompanionApiFactory f
         using var invalidFactory = new InvalidProductionCompanionApiFactory();
         var error = Assert.Throws<InvalidOperationException>(() => invalidFactory.CreateClient());
         Assert.Contains("deterministic Companion adapter", error.ToString(), StringComparison.Ordinal);
+    }
+
+    /// <summary>Ensures Production cannot infer the disabled activation gate from a default.</summary>
+    [Fact]
+    public void ProductionRequiresExplicitDisabledActivationMode()
+    {
+        using var invalidFactory = new MissingActivationModeCompanionApiFactory();
+        var error = Assert.Throws<InvalidOperationException>(() => invalidFactory.CreateClient());
+        Assert.Contains("Companion:ActivationMode", error.ToString(), StringComparison.Ordinal);
+    }
+
+    /// <summary>Ensures Production health cannot report an ambiguous or mutable release identity.</summary>
+    [Fact]
+    public void ProductionRequiresExactReleaseSha()
+    {
+        using var invalidFactory = new MissingReleaseShaCompanionApiFactory();
+        var error = Assert.Throws<InvalidOperationException>(() => invalidFactory.CreateClient());
+        Assert.Contains("Deployment:CommitSha", error.ToString(), StringComparison.Ordinal);
     }
 }
