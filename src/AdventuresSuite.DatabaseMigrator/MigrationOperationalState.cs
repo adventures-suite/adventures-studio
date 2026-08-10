@@ -21,7 +21,9 @@ internal static class MigrationOperationalState
             ORDER BY ScriptName;
             """);
         var objects = await ReadStringsAsync(connection, """
-            SELECT CONCAT(schemas.name, N'.', objects.name, N'|', objects.type_desc)
+            SELECT CONCAT(schemas.name COLLATE DATABASE_DEFAULT, N'.',
+                          objects.name COLLATE DATABASE_DEFAULT, N'|',
+                          objects.type_desc COLLATE DATABASE_DEFAULT)
             FROM sys.objects AS objects
             INNER JOIN sys.schemas AS schemas ON schemas.schema_id = objects.schema_id
             WHERE (schemas.name = N'planning' AND objects.name = N'TravelerParticipations')
@@ -29,8 +31,10 @@ internal static class MigrationOperationalState
             ORDER BY schemas.name, objects.name, objects.type_desc;
             """);
         var permissions = await ReadStringsAsync(connection, """
-            SELECT CONCAT(permissions.state_desc, N'|', permissions.permission_name, N'|',
-                          COALESCE(schemas.name, N''), N'|', COALESCE(objects.name, N''))
+            SELECT CONCAT(permissions.state_desc COLLATE DATABASE_DEFAULT, N'|',
+                          permissions.permission_name COLLATE DATABASE_DEFAULT, N'|',
+                          COALESCE(schemas.name COLLATE DATABASE_DEFAULT, N''), N'|',
+                          COALESCE(objects.name COLLATE DATABASE_DEFAULT, N''))
             FROM sys.database_permissions AS permissions
             INNER JOIN sys.database_principals AS principals
                 ON principals.principal_id = permissions.grantee_principal_id
