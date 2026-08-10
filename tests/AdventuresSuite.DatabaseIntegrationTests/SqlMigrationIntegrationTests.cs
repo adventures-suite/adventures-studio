@@ -312,8 +312,9 @@ public sealed class SqlMigrationIntegrationTests
         await ExecuteAsync(connectionString, """
             CREATE USER companion_read_runtime_test WITHOUT LOGIN;
             ALTER ROLE AdventuresSuiteCompanionReadRuntime ADD MEMBER companion_read_runtime_test;
-            CREATE PROCEDURE dbo.CompanionDeniedExecutionProbe AS SELECT 1;
             """);
+        await ExecuteAsync(connectionString,
+            "CREATE PROCEDURE dbo.CompanionDeniedExecutionProbe AS SELECT 1;");
         foreach (var target in new[]
         {
             "planning.AdventurePlans",
