@@ -1,0 +1,106 @@
+name: Validate Pull Request
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Build, test, and security gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      DOTNET_VERSION: "10.0.x"
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
+
+    steps:
+      - name: Checkout exact pull-request SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.HEAD_SHA }}
+          fetch-depth: 0
+
+      - name: Verify exact pull-request SHA
+        run: |
+          if [ "$(git rev-parse HEAD)" != "$HEAD_SHA" ]; then
+            echo "::error::The checked-out commit does not match the pull-request head SHA."
+            exit 1
+          fi
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore TheSimontonAdventures.slnx
+
+      - name: Validate changed-file formatting and diff
+        shell: bash
+        run: |
+          git diff --check "$BASE_SHA...$HEAD_SHA"
+          mapfile -t changed_csharp < <(
+            git diff --name-only --diff-filter=ACMR "$BASE_SHA...$HEAD_SHA" -- '*.cs'
+          )
+          if [ "${#changed_csharp[@]}" -gt 0 ]; then
+            dotnet format TheSimontonAdventures.slnx \
+              --verify-no-changes \
+              --no-restore \
+              --verbosity minimal \
+              --include "${changed_csharp[@]}"
+          fi
+
+      - name: Scan pull-request additions for credential material
+        shell: bash
+        run: |
+          credential_prefix='client_'
+          credential_suffix='secret'
+          token_prefix='access_'
+          token_suffix='token'
+          key_prefix='BEGIN '
+          key_suffix='PRIVATE KEY'
+          pattern="${credential_prefix}${credential_suffix}|${token_prefix}${token_suffix}|refresh_${token_suffix}|${key_prefix}(RSA |EC )?${key_suffix}"
+          if git diff --unified=0 "$BASE_SHA...$HEAD_SHA" \
+            | sed -n '/^+/p' \
+            | grep -Eiq "$pattern"; then
+            echo "::error::Potential credential material was found in pull-request additions."
+            exit 1
+          fi
+
+      - name: Build
+        run: dotnet build TheSimontonAdventures.slnx --configuration Release --no-restore
+
+      - name: Run full bounded test suite
+        run: >
+          dotnet test
+          TheSimontonAdventures.slnx
+          --configuration Release
+          --no-build
+          --no-restore
+
+      - name: Validate generated Companion OpenAPI contract
+        run: >
+          dotnet test
+          tests/AdventuresSuite.Api.Tests/AdventuresSuite.Api.Tests.csproj
+          --configuration Release
+          --no-build
+          --no-restore
+          --filter FullyQualifiedName~CompanionOpenApiTests
+
+      - name: Audit vulnerable dependencies
+        shell: bash
+        run: |
+          audit_file="$(mktemp)"
+          dotnet list TheSimontonAdventures.slnx package \
+            --vulnerable \
+            --include-transitive \
+            | tee "$audit_file"
+          if grep -q 'has the following vulnerable packages' "$audit_file"; then
+            echo "::error::A vulnerable NuGet dependency was detected."
+            exit 1
+          fi
