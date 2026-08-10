@@ -120,6 +120,49 @@ public sealed class SqlMigrationIntegrationTests
         }
     }
 
+    /// <summary>Proves the reviewed operational state advances exactly from 0006 to 0008.</summary>
+    [Fact]
+    public async Task ReviewedOperationState_AdvancesFrom0006To0008WithStableApplicationFingerprint()
+    {
+        var masterConnectionString = Environment.GetEnvironmentVariable(ConnectionVariable);
+        Assert.False(string.IsNullOrWhiteSpace(masterConnectionString),
+            $"Set {ConnectionVariable} for the SQL integration gate.");
+        var databaseName = $"AdventuresSuiteReviewedOperationTest_{Guid.NewGuid():N}";
+        var connectionString = BuildDatabaseConnectionString(masterConnectionString, databaseName);
+        await CreateDatabaseAsync(masterConnectionString, databaseName);
+        try
+        {
+            var assembly = typeof(MigrationCatalog).Assembly;
+            var baseline = DeployChanges.To.SqlDatabase(connectionString)
+                .WithScriptsEmbeddedInAssembly(assembly, name =>
+                    MigrationCatalog.IsMigrationResource(assembly, name)
+                    && !name.EndsWith("0007_create_traveler_participations.sql", StringComparison.Ordinal)
+                    && !name.EndsWith("0008_create_companion_read_role.sql", StringComparison.Ordinal))
+                .JournalToSqlTable("dbo", "AdventuresSuiteSchemaVersions")
+                .WithTransactionPerScript()
+                .Build()
+                .PerformUpgrade();
+            Assert.True(baseline.Successful, baseline.Error?.Message);
+
+            using var migrationLock = DatabaseMigratorRunner.AcquireMigrationLock(connectionString);
+            var before = await MigrationOperationalState.CaptureAsync(connectionString);
+            Assert.Equal(MigrationJournalOutcome.At0006,
+                MigrationOperationalState.Classify(before.Journal));
+
+            Assert.Equal(2, DatabaseMigratorRunner.MigrateWithLockHeld(connectionString).Count);
+            var after = await MigrationOperationalState.CaptureAsync(connectionString);
+
+            Assert.Equal(MigrationJournalOutcome.At0008,
+                MigrationOperationalState.Classify(after.Journal));
+            Assert.Equal(before.ApplicationFingerprint, after.ApplicationFingerprint);
+            Assert.True(MigrationOperationRunner.VerifyExpectedPostState(after));
+        }
+        finally
+        {
+            await DropDatabaseAsync(masterConnectionString, databaseName);
+        }
+    }
+
     private static async Task VerifySchemaAsync(string connectionString)
     {
         Assert.Equal(3, await ScalarAsync<int>(connectionString, """

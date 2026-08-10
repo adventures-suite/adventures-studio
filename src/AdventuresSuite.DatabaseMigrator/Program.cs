@@ -35,6 +35,9 @@ try
                 RequireEnvironment(migrationConnectionVariable));
             Console.WriteLine("Migration identity permission verification completed successfully.");
             break;
+        case ["--run-reviewed-operation"]:
+            return await MigrationOperationRunner.RunAsync(
+                RequireEnvironment(migrationConnectionVariable));
         case ["--bind-companion-read-runtime"]:
             await AzureDevelopmentBootstrapper.BindCompanionReadIdentityAsync(
                 RequireEnvironment(administratorConnectionVariable),

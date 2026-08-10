@@ -36,6 +36,7 @@ jobs:
       DOTNET_VERSION: "10.0.x"
       RESULTS_DIR: artifacts/sql-migration-results
       MIGRATOR_PUBLISH_DIR: artifacts/database-migrator
+      MIGRATOR_PACKAGE_DIR: artifacts/database-migrator-package
 
     steps:
       - name: Require SQL test secret
@@ -81,6 +82,8 @@ jobs:
         run: |
           dotnet restore TheSimontonAdventures.slnx
           dotnet restore tests/AdventuresSuite.DatabaseIntegrationTests/AdventuresSuite.DatabaseIntegrationTests.csproj
+          dotnet restore src/AdventuresSuite.DatabaseMigrator/AdventuresSuite.DatabaseMigrator.csproj \
+            --runtime linux-x64
 
       - name: Build
         run: |
@@ -108,12 +111,17 @@ jobs:
         run: |
           dotnet publish src/AdventuresSuite.DatabaseMigrator/AdventuresSuite.DatabaseMigrator.csproj \
             --configuration Release \
+            --runtime linux-x64 \
+            --self-contained true \
             --no-restore \
             --output "$MIGRATOR_PUBLISH_DIR"
 
-          test -f "$MIGRATOR_PUBLISH_DIR/AdventuresSuite.DatabaseMigrator.dll"
+          test -x "$MIGRATOR_PUBLISH_DIR/AdventuresSuite.DatabaseMigrator"
+          cp src/AdventuresSuite.DatabaseMigrator/run-reviewed-migration-operation.sh \
+            "$MIGRATOR_PUBLISH_DIR/run-reviewed-migration-operation.sh"
+          chmod 0755 "$MIGRATOR_PUBLISH_DIR/run-reviewed-migration-operation.sh"
 
-          dotnet "$MIGRATOR_PUBLISH_DIR/AdventuresSuite.DatabaseMigrator.dll" --list \
+          "$MIGRATOR_PUBLISH_DIR/AdventuresSuite.DatabaseMigrator" --list \
             | sed 's/.*Database.Migrations.//' \
             > "$RESULTS_DIR/published-migrations.txt"
 
@@ -132,6 +140,12 @@ jobs:
             "$RESULTS_DIR/expected-migrations.txt" \
             "$RESULTS_DIR/published-migrations.txt"
 
+          mkdir -p "$MIGRATOR_PACKAGE_DIR"
+          package="$MIGRATOR_PACKAGE_DIR/adventures-suite-database-migrator-${GITHUB_SHA}-${GITHUB_RUN_ATTEMPT}.tar.gz"
+          tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner \
+            -C "$MIGRATOR_PUBLISH_DIR" -czf "$package" .
+          sha256sum "$package" > "$package.sha256"
+
       - name: Capture SQL Server diagnostics
         if: always()
         run: |
@@ -148,6 +162,6 @@ jobs:
           name: sql-migration-evidence-${{ github.sha }}-${{ github.run_attempt }}
           path: |
             ${{ env.RESULTS_DIR }}
-            ${{ env.MIGRATOR_PUBLISH_DIR }}
+            ${{ env.MIGRATOR_PACKAGE_DIR }}
           if-no-files-found: error
           retention-days: 14

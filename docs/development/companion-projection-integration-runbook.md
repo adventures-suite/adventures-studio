@@ -34,9 +34,28 @@ Stop if any value differs from approved inventory.
 
 ## Ordered Operations
 
-1. Deploy migration `0008_create_companion_read_role.sql` using only the
-   migration Managed Identity through the approved private execution path.
-2. As the approved Entra SQL administrator, run only:
+1. Confirm the journal ends exactly at migration `0006`. Deploy one reviewed,
+   self-contained migration package containing the executable evidence capture
+   and wrapper under the same SHA-256 checksum. Through the approved private
+   execution path, invoke only `run-reviewed-migration-operation.sh`. It must
+   verify the migration App Service system-assigned Managed Identity before
+   DbUp, hold the zero-wait SQL migration lock across pre-state, migration, and
+   post-state capture, and apply pending scripts in order with one transaction
+   per script: `0007_create_traveler_participations.sql`, then
+   `0008_create_companion_read_role.sql`.
+   Classify the only approved outcomes as:
+
+   - `0006` to `0008`: complete success;
+   - `0006` to `0007`: `0007` committed and `0008` failed; stop;
+   - remains at `0006`: failure before a script committed; stop; or
+   - any other state: unexpected; fail closed.
+
+   Never automatically rerun after a failure outcome. Retain process start,
+   operation ID, release SHA, package checksum, bounded identity metadata,
+   ordered catalog, wrapper/migrator exit code, journal, schema, permission,
+   and fingerprint evidence.
+2. Only after the migration operation reports complete success, as the approved
+   Entra SQL administrator run:
 
    ```text
    AdventuresSuite.DatabaseMigrator --bind-companion-read-runtime

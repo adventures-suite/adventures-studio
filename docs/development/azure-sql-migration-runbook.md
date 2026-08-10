@@ -124,24 +124,43 @@ Before execution verify:
 
 1. Confirm the migration app is stopped.
 2. Confirm its public ingress remains disabled and VNet/DNS resolution passes.
-3. Deploy the exact immutable migrator artifact through the approved private or
-   Azure-native package path.
+3. Deploy the exact immutable, self-contained `linux-x64` migrator package
+   through the approved private or Azure-native package path. The package must
+   include `run-reviewed-migration-operation.sh` and the evidence-capable
+   executable under one reviewed SHA-256 checksum.
 4. Configure only non-secret target server/database and release identity.
-5. Start the migration app through the Azure control plane.
-6. Acquire an Azure SQL token using the migration app's own Managed Identity.
-7. Acquire an application lock so only one migrator executes for the database.
-8. Run `--migrate` once using per-script transaction and
+5. Use a unique operation ID and a bounded 60-to-1800-second timeout. Invoke the
+   reviewed wrapper only through the private migration App Service execution
+   path; do not depend on the App Service web-startup probe to infer completion.
+6. Acquire an Azure SQL token using the migration app's own system-assigned
+   Managed Identity. Before DbUp, validate safe token tenant, audience,
+   object/client identity metadata and require SQL to confirm the expected
+   contained migration principal. Never print or retain the token.
+7. Acquire the zero-wait `AdventuresSuite.DatabaseMigrator` application lock
+   and hold it across pre-state capture, DbUp, and post-state capture. Reject a
+   second active operation and stop if the journal is not exactly the approved
+   pre-state.
+8. Run the reviewed operation once using per-script transaction and
    `dbo.AdventuresSuiteSchemaVersions` journal behavior.
    Source-controlled application schemas are owned by the stable
    `db_ddladmin` database role. The migration principal is already a member of
    that role, so schema creation does not require the unsafe
    `IMPERSONATE dbo` permission or bind ownership to a rotating workload user.
-9. Record script identifiers, safe outcome, duration, target version, release
-   SHA, and support identity without SQL text containing data or credentials.
+9. Record process start/completion, real wrapper and migrator exit status,
+   operation ID, script identifiers, safe outcome, duration, target version,
+   release SHA, package checksum, identity evidence, schema/permission evidence,
+   and before/after application fingerprints without SQL text containing data
+   or credentials. A committed `0007` followed by failed `0008` is a recoverable
+   stopped state, not an all-or-nothing rollback and not permission to rerun.
 10. Complete administrator `--bind-runtime`, then run workload
     `--verify-permissions` as separate operations.
 11. Stop the migration app even when migration or validation fails.
 12. Verify stopped state, revoke temporary package access, and retain evidence.
+
+The wrapper's exit trap records the original process exit code and attempts
+cleanup without replacing that code. Do not automatically rerun an operation
+that remains at `0006` or stops at `0007`; retain evidence and obtain a new
+approval after diagnosis.
 
 The migration app must not host a customer endpoint or remain continuously
 running.
