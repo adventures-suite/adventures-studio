@@ -105,8 +105,9 @@ The governing principle is:
 
 1. `architecture/adventures-companion.md`
 2. `architecture/companion-api-sync.md`
-3. `product/adventures-companion.md`
-4. `development/adventures-companion-implementation-plan.md`
+3. `architecture/companion-openapi.md`
+4. `product/adventures-companion.md`
+5. `development/adventures-companion-implementation-plan.md`
 
 > The traveler controls capture. Private synchronization is not publication.
 

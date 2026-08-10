@@ -199,6 +199,7 @@
 
 - Read `docs/architecture/adventures-companion.md`,
   `docs/architecture/companion-api-sync.md`,
+  `docs/architecture/companion-openapi.md`,
   `docs/product/adventures-companion.md`, and
   `docs/development/adventures-companion-implementation-plan.md` before changing
   mobile APIs, MAUI projects, offline synchronization, device storage,

@@ -15,6 +15,7 @@ Read first:
 - `AGENTS.md`
 - `docs/architecture/adventures-companion.md`
 - `docs/architecture/companion-api-sync.md`
+- `docs/architecture/companion-openapi.md`
 - `docs/product/adventures-companion.md`
 - `docs/architecture/planning-engine.md`
 - `docs/architecture/resource-engine.md`
@@ -51,6 +52,13 @@ database, Dapper, domain aggregate, or provider models.
 Define JSON wire formats, compatibility, `ETag`/conditional requests, opaque
 sync cursors, pagination, safe problem categories, short-lived protected-media
 delivery, and contract tests independently from SQL migrations.
+
+Follow `docs/architecture/companion-openapi.md` as the authoritative HTTP and
+JSON contract direction. Contract design and fictional deterministic clients
+may proceed before endpoint activation. Production reads remain gated on an
+authoritative user-to-traveler participation relationship, Planning
+application-service authorization, mobile OAuth access-token validation, and
+protected Resource delivery.
 
 Exit gate: anonymous, token, audience, Creator-isolation, IDOR, replay,
 enumeration, revocation, compatibility, and prohibited-data tests pass. A
