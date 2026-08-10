@@ -20,12 +20,18 @@ else
                 </span>
                 <span><strong>AdventuresSuite</strong><small>Companion</small></span>
             </div>
-            <button class="avatar" aria-label="Open traveler profile">SS</button>
+            <div class="header-actions">
+                <span class="creator-badge" aria-label="Presented by Simonton Adventures">
+                    <span class="creator-mark">S</span>
+                    <span><small>By</small><strong>Simonton</strong></span>
+                </span>
+                <button class="avatar" aria-label="Open traveler profile">SS</button>
+            </div>
         </header>
 
         <section class="adventure-switcher" aria-label="Choose an Adventure">
             <button class="adventure-switcher-trigger" @onclick="ToggleAdventureMenu" aria-expanded="@_adventureMenuOpen">
-                <span><small>@(_adventure.IsCurrent ? "Current Adventure" : "Planned Adventure")</small><strong>@_adventure.Title</strong></span>
+                <span><small>Adventure</small><strong>@_adventure.Title</strong></span>
                 <b aria-hidden="true">@(_adventureMenuOpen ? "⌃" : "⌄")</b>
             </button>
             @if (_adventureMenuOpen)
@@ -42,11 +48,6 @@ else
                 </div>
             }
         </section>
-
-        <div class="creator-context" aria-label="Creator: Simonton Adventures">
-            <span class="creator-mark">S</span>
-            <span><small>Presented by</small><strong>Simonton Adventures</strong></span>
-        </div>
 
         <ErrorBoundary>
             <ChildContent>
