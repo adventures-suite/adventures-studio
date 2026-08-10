@@ -7,16 +7,34 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Policy;
 using Microsoft.AspNetCore.Http.Json;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 var deterministicMode = builder.Configuration.GetValue<bool>(CompanionApiConstants.DeterministicModeKey);
+var activationMode = builder.Configuration[CompanionApiConstants.ActivationModeKey];
+var releaseSha = builder.Configuration[CompanionApiConstants.ReleaseShaKey];
 if (deterministicMode && !builder.Environment.IsEnvironment("Test"))
 {
     throw new InvalidOperationException("The deterministic Companion adapter can activate only in Test.");
 }
+if (!builder.Environment.IsEnvironment("Test"))
+{
+    if (!string.Equals(activationMode, CompanionApiConstants.DisabledActivationMode, StringComparison.Ordinal))
+    {
+        throw new InvalidOperationException("Companion:ActivationMode must be explicitly set to Disabled until production activation gates pass.");
+    }
+
+    if (releaseSha is null
+        || releaseSha.Length != 40
+        || releaseSha.Any(value => value is not (>= '0' and <= '9') and not (>= 'a' and <= 'f')))
+    {
+        throw new InvalidOperationException("Deployment:CommitSha must contain the exact lowercase 40-character release SHA.");
+    }
+}
+
+activationMode ??= CompanionApiConstants.DisabledActivationMode;
+releaseSha ??= "0000000000000000000000000000000000000000";
 
 builder.Services.Configure<JsonOptions>(options =>
 {
@@ -30,7 +48,6 @@ builder.Services.AddOpenApi(CompanionApiConstants.OpenApiDocumentName, options =
     options.AddDocumentTransformer<CompanionOpenApiDocumentTransformer>();
 });
 builder.Services.AddSingleton<ISupportIdProvider, SequentialSupportIdProvider>();
-builder.Services.AddHealthChecks();
 builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, CompanionAuthorizationResultHandler>();
 builder.Services.AddAuthentication(options =>
 {
@@ -99,14 +116,19 @@ if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Test"))
     });
 }
 
-app.MapHealthChecks("/health/live", new()
+var health = new CompanionHealthDto
 {
-    Predicate = _ => false
-}).ExcludeFromDescription();
-app.MapHealthChecks("/health/ready", new()
-{
-    Predicate = registration => registration.Tags.Contains("ready", StringComparer.Ordinal)
-}).ExcludeFromDescription();
+    Status = "Healthy",
+    Service = CompanionApiConstants.ServiceName,
+    ReleaseSha = releaseSha,
+    ActivationState = activationMode
+};
+app.MapGet("/health/live", () => Results.Json(
+    health,
+    CompanionJsonSerializerContext.Default.CompanionHealthDto)).ExcludeFromDescription();
+app.MapGet("/health/ready", () => Results.Json(
+    health,
+    CompanionJsonSerializerContext.Default.CompanionHealthDto)).ExcludeFromDescription();
 app.MapCompanionApi();
 app.Run();
 
