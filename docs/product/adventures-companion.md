@@ -33,6 +33,11 @@ The initial product centers on:
 - traveler-specific readiness, material-change acknowledgment, required
   actions, contingencies, and smart reminders.
 
+For a future Group Travel increment, Companion also provides the traveler's
+authorized discussions, open polls, submitted preferences, announcements, and
+acknowledgments in their itinerary context. It does not become a general chat
+client, and votes or messages do not directly change the Adventure Plan.
+
 ## Traveler-Controlled Breadcrumbs
 
 When a traveler chooses to enable breadcrumbs, Companion can privately capture

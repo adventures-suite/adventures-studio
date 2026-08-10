@@ -78,6 +78,13 @@ revocable authorization basis for that Adventure and operation. Display names,
 email addresses, device identifiers, and possession of a plan link never bind a
 traveler to an account or grant access.
 
+For Group Travel, that authorization basis may be an accepted, active,
+Adventure-scoped `TravelerParticipation`. Companion may then expose minimized
+contextual discussions, polls, announcements, and acknowledgments permitted by
+the traveler's information policy. Participation does not grant Creator
+membership, and a vote or message cannot mutate Planning. See
+`docs/architecture/group-travel-collaboration.md`.
+
 ## Mobile Authentication
 
 The mobile application is a public client and cannot safely hold a client

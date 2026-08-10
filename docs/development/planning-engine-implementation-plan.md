@@ -207,6 +207,8 @@ Scope:
 - activities, transportation, accommodations, and reservations
 - notes, tasks, packing, and budget items
 - private read-only preview
+- authorized layered Adventure map with overview, segment, destination, day,
+  selected-place, and candidate-point-of-interest views
 - deterministic private Adventure Travel Playbook preview and first PDF export
 - privacy-safe ICS calendar export for selected itinerary items
 
@@ -225,6 +227,8 @@ Acceptance criteria:
 - concurrency conflicts do not silently overwrite work
 - private values do not appear in public endpoints or HTML
 - critical flows work on desktop and mobile layouts
+- map state distinguishes authoritative plan items from candidate suggestions,
+  preserves Creator isolation, and has an accessible non-map alternative
 - generated output records source plan/template/profile versions and becomes
   visibly stale when an authoritative input changes
 - repeated ICS generation preserves stable UIDs and correct destination-local
@@ -234,7 +238,35 @@ Exit gate:
 
 - product, accessibility, security, and regression review approved
 - Playbook rendering, profile allowlist, calendar duplicate/update/cancellation,
-  and prohibited-data tests pass
+  map privacy/accessibility/provider-failure, and prohibited-data tests pass
+
+## Phase 4A: Adventure Template Foundation
+
+Scope:
+
+- framework-independent template, immutable version, parameter, provenance,
+  license-reference, and instantiation contracts
+- deterministic creation of a new private customer Creator-owned plan
+- privacy and prohibited-data validation
+- Creator-scoped SQL persistence and Dapper adapters after contract approval
+- private Creator template creation and plan instantiation services
+
+Acceptance criteria:
+
+- a template cannot be confused with an Adventure Plan or booking
+- published versions are immutable
+- instantiation creates new plan-owned identities and records exact provenance
+- template revisions cannot silently mutate existing plans
+- traveler, reservation, payment, private-note, protected-Resource, and precise
+  location data are rejected from reusable templates
+- template ownership, license, and attribution grant no access to the new plan
+- authorization, entitlement, audit, and authoritative SQL isolation tests pass
+
+Exit gate:
+
+- architecture, privacy, security, partner-boundary, and regression review
+  approved
+- `docs/architecture/adventure-templates.md` definition of done is satisfied
 
 ## Phase 5: AI Proposal Foundation
 
@@ -291,6 +323,79 @@ Acceptance criteria:
 Exit gate:
 
 - reference scenario meets agreed quality, latency, and cost thresholds
+
+## Phase 6A: Reviewed Itinerary Ingestion
+
+Scope:
+
+- protected itinerary image/PDF upload and pasted-text input
+- framework-independent source-evidence, extracted-field, confidence, and
+  `JourneyStopProposal` contracts
+- OCR/document interpretation, place resolution, and IANA time-zone adapters
+- side-by-side review, correction, duplicate/conflict detection, and stale-plan
+  handling
+- transactional application of accepted proposals to private Planning records
+
+Acceptance criteria:
+
+- supported cruise fixtures capture ordered places, local dates, arrival and
+  departure times, sea/overnight status, and proposed IANA time zones
+- every extracted value retains source evidence, confidence, and explicit or
+  inferred state
+- missing or ambiguous values remain unresolved instead of being invented
+- OCR, AI, and provider results cannot mutate Planning before Creator approval
+- applying approved changes is Creator-scoped, concurrency-safe, atomic, and
+  audited
+- public Content Engine `JourneyStop` records are never created by ingestion
+- malicious-document, prompt-injection, duplicate, cross-Creator, provider-
+  failure, accessibility, retention, and prohibited-data tests pass
+
+Exit gate:
+
+- Resource, Planning, AI, security, privacy, accessibility, provider, and
+  regression review approved
+- `docs/architecture/itinerary-ingestion.md` definition of done is satisfied
+
+## Phase 6B: Group Travel Collaboration Foundation
+
+Scope:
+
+- Adventure-scoped traveler invitations and participation independent from
+  Creator membership
+- subgroup and traveler information-policy contracts
+- contextual threads attached to Planning subjects
+- structured polls, eligible participants, response privacy, deadlines, and
+  explicit planner decisions
+- announcements, safe notification projections, and acknowledgments
+- moderation, retention, export, audit, and Companion API boundaries
+
+Exclusions:
+
+- general-purpose direct messaging
+- contacts, social graphs, presence, voice, or video
+- messages or votes that mutate Planning directly
+- real-time transport as a prerequisite for the first release
+
+Acceptance criteria:
+
+- every operation is Creator-, Adventure-, participant-, and subject-scoped
+- participation never grants Creator membership or professional engagement
+- revocation and subgroup visibility changes fail closed immediately
+- poll eligibility, privacy, deadline, concurrency, and result integrity tests
+  pass
+- an authorized planner decision and normal Planning validation are required
+  before adopting a result
+- sensitive discussion and voting data do not leak through notifications,
+  telemetry, AI, exports, attachments, or public routes
+- moderation, retention, deletion, accessibility, audit, and cross-Creator
+  negative tests pass
+
+Exit gate:
+
+- identity, authorization, Planning, privacy, security, moderation,
+  accessibility, notification, audit, and product review approved
+- `docs/architecture/group-travel-collaboration.md` definition of done is
+  satisfied
 
 ## Phase 7: Grounded Research
 

@@ -114,6 +114,11 @@ inbox.
   status, retention, malware-scan result, and affected plan items.
 - Treat OCR, barcode recognition, and AI extraction as untrusted proposals.
 - Show extracted values with provenance and confidence for human review.
+- For cruise and other itinerary sources, produce ordered Journey Stop
+  proposals containing place, local dates, arrival/departure times, proposed
+  IANA time zones, confidence, and source evidence. Approval maps them into
+  private Planning records; extraction never writes public `JourneyStop`
+  content directly.
 - Never let a document silently overwrite Planning state or prove payment,
   identity, or confirmation by itself.
 - Detect duplicates and superseded documents without destroying evidence.
@@ -199,7 +204,8 @@ inside Slice 5F or as one large subsystem. Delivery remains incremental:
 2. Add countdown and explainable readiness projections.
 3. Add action-required and acknowledgment contracts.
 4. Add change-impact relationships and durable projection refresh.
-5. Add the protected Document Inbox and reviewed extraction.
+5. Add the protected Document Inbox and reviewed itinerary/Journey Stop
+   extraction described in `docs/architecture/itinerary-ingestion.md`.
 6. Add traveler-specific information policies.
 7. Add active-travel and Companion offline experiences.
 8. Add provider integrations only behind approved adapters and security gates.

@@ -104,6 +104,63 @@ These capabilities are approved requirements but will be delivered through
 bounded increments after the current authentication gate. See
 `docs/architecture/adventure-readiness-and-change-management.md`.
 
+## Adventure Template Direction
+
+Creators and travel professionals will be able to offer versioned,
+pre-planned Adventure Templates that customers adapt for dates, duration,
+time zones, destinations, travelers, preferences, accessibility, pace, and
+budget. Instantiation creates a new private customer Creator-owned plan with
+immutable template provenance; it does not live-link the plan or grant its
+author access.
+
+Agency-authored templates are a partnership channel, not a travel-agency
+replacement. Booking and fulfillment remain with the professional, supplier,
+or a future neutral provider adapter. See
+`docs/architecture/adventure-templates.md`.
+
+## Planning Map Direction
+
+The private Planning Workspace will provide a layered map with progressively
+greater detail: whole-Adventure overview, journey or transportation segments,
+destination visits, itinerary days, selected places, and possible points of
+interest. Filters and status styling will distinguish accepted Planning state
+from AI, template, professional, and research candidates.
+
+The map remains an authorized projection rather than a second planning model,
+publication operation, booking claim, or navigation system. Mapping, places,
+geocoding, and routing services remain provider-neutral and must preserve
+Creator isolation, source, freshness, precision, attribution, licensing,
+accessibility, privacy, and cost controls. See
+`docs/architecture/adventure-map-experience.md`.
+
+## Itinerary Ingestion Direction
+
+Creators will be able to upload an image or document, or paste text, containing
+a cruise or other itinerary. AdventuresSuite will extract ordered Journey Stop
+proposals with places, local dates, arrival and departure times, proposed IANA
+time zones, source evidence, confidence, and ambiguity warnings.
+
+Uploads remain protected Resources. OCR, AI, and place resolution are untrusted
+and cannot silently change Planning. Creator approval transactionally applies
+accepted proposals to private Planning records; creating public Content Engine
+`JourneyStop` records remains a separate publication operation. See
+`docs/architecture/itinerary-ingestion.md`.
+
+## Group Travel and Collaboration Direction
+
+A Creator will be able to create a group Adventure and invite travelers through
+an Adventure-scoped participation relationship that does not grant Creator
+membership. Travelers can join contextual discussions, vote on proposed dates,
+destinations, activities, lodging, transportation, and budgets, receive
+announcements, and acknowledge important changes according to explicit
+information policies.
+
+AdventuresSuite will provide the collaboration needed to make Adventure
+decisions without becoming another general-purpose chat service. Threads attach
+to Planning subjects, polls are advisory, and only an authorized planner
+decision followed by a validated Planning operation changes the Adventure. See
+`docs/architecture/group-travel-collaboration.md`.
+
 ## Travel Professional Partnership Direction
 
 AdventuresSuite will partner with travel professionals rather than replace
