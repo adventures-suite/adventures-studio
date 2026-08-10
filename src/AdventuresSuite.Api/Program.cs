@@ -96,7 +96,8 @@ else if (projectionProvider == CompanionApiConstants.SqlProjectionProvider)
     builder.Services.AddSingleton<ICompanionAdventureDetailQuery>(provider =>
         provider.GetRequiredService<SqlCompanionAdventureQueries>());
     builder.Services.AddSingleton<ICompanionProjectionService, AuthoritativeCompanionProjectionService>();
-    builder.Services.AddSingleton(new CompanionSqlReadinessProbe(sqlConnectionString));
+    builder.Services.AddSingleton<ICompanionSqlReadinessProbe>(
+        new CompanionSqlReadinessProbe(sqlConnectionString));
 }
 else
 {
@@ -153,8 +154,38 @@ app.MapGet("/health/live", () => Results.Json(
     CompanionJsonSerializerContext.Default.CompanionHealthDto)).ExcludeFromDescription();
 app.MapGet("/health/ready", async (HttpContext context) =>
 {
-    var probe = context.RequestServices.GetService<CompanionSqlReadinessProbe>();
-    var ready = probe is null || await probe.IsReadyAsync(context.RequestAborted);
+    var probe = context.RequestServices.GetService<ICompanionSqlReadinessProbe>();
+    var ready = projectionProvider != CompanionApiConstants.SqlProjectionProvider;
+    var failureCategory = "None";
+    if (projectionProvider == CompanionApiConstants.SqlProjectionProvider)
+    {
+        if (probe is null)
+        {
+            failureCategory = "ProviderUnavailable";
+        }
+        else
+        {
+            try
+            {
+                ready = await probe.IsReadyAsync(context.RequestAborted);
+                if (!ready) failureCategory = "ProbeRejected";
+            }
+            catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (CompanionSqlReadinessException exception)
+            {
+                failureCategory = exception.Category.ToString();
+            }
+        }
+    }
+    if (!ready)
+    {
+        context.RequestServices.GetRequiredService<ILoggerFactory>()
+            .CreateLogger("CompanionReadiness")
+            .LogWarning("Companion SQL readiness failed with category {FailureCategory}.", failureCategory);
+    }
     var readiness = health with { Status = ready ? "Healthy" : "Unhealthy" };
     return Results.Json(
         readiness,

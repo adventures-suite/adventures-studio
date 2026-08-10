@@ -45,7 +45,10 @@ try
             break;
         case ["--verify-companion-read-permissions"]:
             await AzureDevelopmentBootstrapper.VerifyCompanionReadPermissionsAsync(
-                RequireEnvironment(migrationConnectionVariable));
+                RequireEnvironment(administratorConnectionVariable),
+                Environment.GetEnvironmentVariable("ADVENTURESSUITE_COMPANION_PRINCIPAL_ID"),
+                Environment.GetEnvironmentVariable("ADVENTURESSUITE_COMPANION_PRINCIPAL_CLIENT_ID"),
+                Environment.GetEnvironmentVariable("ADVENTURESSUITE_COMPANION_PRINCIPAL_NAME"));
             Console.WriteLine("Companion read permission verification completed successfully.");
             break;
         case ["--bootstrap-key-vault"]:

@@ -102,11 +102,154 @@ internal static class AzureDevelopmentBootstrapper
         """;
 
     /// <summary>Verifies the Companion identity has only its required read boundary.</summary>
-    public static async Task VerifyCompanionReadPermissionsAsync(string runtimeConnectionString)
+    public static async Task VerifyCompanionReadPermissionsAsync(
+        string administratorConnectionString,
+        string? applicationPrincipalId,
+        string? applicationPrincipalClientId,
+        string? applicationPrincipalName)
     {
-        var probe = new AdventuresSuite.Companion.SqlServer.CompanionSqlReadinessProbe(runtimeConnectionString);
-        if (!await probe.IsReadyAsync())
-            throw new InvalidOperationException("Companion read permissions are missing or exceed the approved boundary.");
+        if (!Guid.TryParse(applicationPrincipalId, out var objectId)
+            || !Guid.TryParse(applicationPrincipalClientId, out _))
+            throw new InvalidOperationException("The approved Companion workload identity is required.");
+
+        var alias = CreatePrincipalAlias(applicationPrincipalName, objectId);
+        await using var connection = new SqlConnection(administratorConnectionString);
+        await connection.OpenAsync();
+        await using var administratorCommand = connection.CreateCommand();
+        administratorCommand.CommandText = "SELECT USER_NAME();";
+        var administratorUser = Convert.ToString(await administratorCommand.ExecuteScalarAsync())
+            ?? throw new InvalidOperationException("The SQL administrator context is unavailable.");
+        await using var transaction = (SqlTransaction)await connection.BeginTransactionAsync();
+        var impersonating = false;
+        try
+        {
+            await ExecuteAsync("SET XACT_ABORT OFF;", connection, transaction);
+            await ExecuteAsync("""
+                IF DATABASE_PRINCIPAL_ID(@Alias) IS NULL
+                    THROW 51000, 'The approved Companion principal is not bound.', 1;
+                IF ISNULL(IS_ROLEMEMBER(N'AdventuresSuiteCompanionReadRuntime', @Alias), 0) <> 1
+                    THROW 51000, 'The approved Companion role binding is missing.', 1;
+                IF ISNULL(IS_ROLEMEMBER(N'db_owner', @Alias), 0) <> 0
+                    OR ISNULL(IS_ROLEMEMBER(N'db_ddladmin', @Alias), 0) <> 0
+                    OR ISNULL(IS_ROLEMEMBER(N'db_datareader', @Alias), 0) <> 0
+                    OR ISNULL(IS_ROLEMEMBER(N'db_datawriter', @Alias), 0) <> 0
+                    THROW 51000, 'The Companion principal has a prohibited broad role.', 1;
+                IF DATABASE_PRINCIPAL_ID(N'companion_verification_target') IS NOT NULL
+                    THROW 51000, 'The verification target already exists.', 1;
+                CREATE USER companion_verification_target WITHOUT LOGIN;
+                EXEC(N'CREATE PROCEDURE dbo.CompanionVerificationDeniedExecute AS SELECT 1;');
+                """, connection, transaction, alias);
+
+            await ExecuteAsync("EXECUTE AS USER = N'companion_verification_target';", connection, transaction);
+            impersonating = true;
+            if (await ScalarAsync("SELECT HAS_PERMS_BY_NAME(N'planning.AdventurePlans', N'OBJECT', N'SELECT');", connection, transaction) != 0)
+                throw new InvalidOperationException("The Companion delegation baseline is invalid.");
+            await ExecuteAsync("REVERT;", connection, transaction);
+            impersonating = false;
+
+            await ExecuteAsync("EXECUTE AS USER = @Alias;", connection, transaction, alias);
+            impersonating = true;
+            foreach (var target in CompanionReadObjects)
+                await ExecuteAsync($"SELECT TOP (0) * FROM {target};", connection, transaction);
+
+            foreach (var target in CompanionReadObjects)
+            {
+                await AssertAuthorizationDeniedAsync($"INSERT INTO {target} DEFAULT VALUES;", connection, transaction);
+                await AssertAuthorizationDeniedAsync($"UPDATE {target} SET CreatorId = CreatorId WHERE 1 = 0;", connection, transaction);
+                await AssertAuthorizationDeniedAsync($"DELETE FROM {target} WHERE 1 = 0;", connection, transaction);
+            }
+            await AssertAuthorizationDeniedAsync("SELECT TOP (0) * FROM auth.Users;", connection, transaction);
+            await AssertAuthorizationDeniedAsync("EXECUTE dbo.CompanionVerificationDeniedExecute;", connection, transaction);
+            await AssertAuthorizationDeniedAsync("SELECT TOP (0) * FROM dbo.AdventuresSuiteSchemaVersions;", connection, transaction);
+            await AssertAuthorizationDeniedAsync("INSERT dbo.AdventuresSuiteSchemaVersions DEFAULT VALUES;", connection, transaction);
+            await AssertAuthorizationDeniedAsync("CREATE TABLE planning.CompanionVerificationDeniedDdl (Id int);", connection, transaction);
+
+            var controlBefore = await ScalarAsync("SELECT HAS_PERMS_BY_NAME(N'planning.AdventurePlans', N'OBJECT', N'CONTROL');", connection, transaction);
+            await ExecuteAsync("GRANT CONTROL ON OBJECT::planning.AdventurePlans TO " + QuoteIdentifier(alias) + ";", connection, transaction);
+            var controlAfter = await ScalarAsync("SELECT HAS_PERMS_BY_NAME(N'planning.AdventurePlans', N'OBJECT', N'CONTROL');", connection, transaction);
+            if (controlBefore != 0 || controlAfter != 0)
+                throw new InvalidOperationException("Companion CONTROL verification failed.");
+            await AssertAuthorizationDeniedAsync(
+                "GRANT SELECT ON OBJECT::planning.AdventurePlans TO companion_verification_target;",
+                connection, transaction);
+
+            await ExecuteAsync("REVERT;", connection, transaction);
+            impersonating = false;
+            await ExecuteAsync("EXECUTE AS USER = N'companion_verification_target';", connection, transaction);
+            impersonating = true;
+            if (await ScalarAsync("SELECT HAS_PERMS_BY_NAME(N'planning.AdventurePlans', N'OBJECT', N'SELECT');", connection, transaction) != 0)
+                throw new InvalidOperationException("Companion delegation verification failed.");
+            await ExecuteAsync("REVERT;", connection, transaction);
+            impersonating = false;
+        }
+        finally
+        {
+            if (impersonating)
+            {
+                await ExecuteAsync("REVERT;", connection, transaction);
+            }
+            await transaction.RollbackAsync();
+        }
+
+        await using var residue = connection.CreateCommand();
+        residue.CommandText = """
+            SELECT CASE WHEN DATABASE_PRINCIPAL_ID(N'companion_verification_target') IS NULL
+                         AND OBJECT_ID(N'dbo.CompanionVerificationDeniedExecute', N'P') IS NULL
+                         AND NOT EXISTS (
+                             SELECT 1 FROM sys.database_permissions
+                             WHERE grantee_principal_id = USER_ID(@Alias)
+                               AND permission_name = N'CONTROL'
+                               AND major_id = OBJECT_ID(N'planning.AdventurePlans'))
+                         AND USER_NAME() = @AdministratorUser
+                        THEN 0 ELSE 1 END;
+            """;
+        residue.Parameters.AddWithValue("@AdministratorUser", administratorUser);
+        residue.Parameters.AddWithValue("@Alias", alias);
+        if (Convert.ToInt32(await residue.ExecuteScalarAsync()) != 0)
+            throw new InvalidOperationException("Companion verification cleanup failed.");
+    }
+
+    private static readonly string[] CompanionReadObjects =
+    [
+        "planning.AdventurePlans",
+        "planning.TravelerParticipations",
+        "planning.DestinationVisits",
+        "auth.CreatorMemberships",
+        "auth.CreatorMembershipRoles",
+        "auth.CreatorMembershipPermissionGrants"
+    ];
+
+    private static async Task AssertAuthorizationDeniedAsync(
+        string sql, SqlConnection connection, SqlTransaction transaction)
+    {
+        try
+        {
+            await ExecuteAsync(sql, connection, transaction);
+        }
+        catch (SqlException exception) when (exception.Number is 229 or 262 or 15151)
+        {
+            return;
+        }
+        throw new InvalidOperationException("A prohibited Companion SQL operation was not denied by authorization.");
+    }
+
+    private static async Task ExecuteAsync(
+        string sql, SqlConnection connection, SqlTransaction transaction, string? alias = null)
+    {
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = sql;
+        if (alias is not null) command.Parameters.AddWithValue("@Alias", alias);
+        await command.ExecuteNonQueryAsync();
+    }
+
+    private static async Task<int> ScalarAsync(
+        string sql, SqlConnection connection, SqlTransaction transaction)
+    {
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = sql;
+        return Convert.ToInt32(await command.ExecuteScalarAsync());
     }
 
     /// <summary>Verifies migration DDL, data, journal, and authentication-schema permissions.</summary>

@@ -401,6 +401,20 @@ public sealed class SqlMigrationIntegrationTests
                    AND permission_name = N'SELECT'
                    AND major_id = OBJECT_ID(N'planning.AdventurePlans'));
             """));
+
+        const string operationalObjectId = "11111111-2222-3333-4444-555555555555";
+        const string operationalClientId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+        var operationalAlias = AzureDevelopmentBootstrapper.CreatePrincipalAlias(
+            "companion-api-verifier", Guid.Parse(operationalObjectId));
+        await ExecuteAsync(connectionString, $"""
+            CREATE USER [{operationalAlias}] WITHOUT LOGIN;
+            ALTER ROLE AdventuresSuiteCompanionReadRuntime ADD MEMBER [{operationalAlias}];
+            """);
+        await AzureDevelopmentBootstrapper.VerifyCompanionReadPermissionsAsync(
+            connectionString,
+            operationalObjectId,
+            operationalClientId,
+            "companion-api-verifier");
     }
 
     private static async Task<PrivilegeEscalationDiagnostic> DiagnosePrivilegeEscalationAsync(

@@ -60,16 +60,13 @@ Stop if any value differs from approved inventory.
    server, database, and Companion Managed Identity client ID.
 6. Manually dispatch the API deployment with projection provider `Sql`.
    Activation remains `Disabled`. Verify the exact SHA, liveness, SQL-backed
-   readiness, safe 401 endpoint behavior, and unavailable OpenAPI/Scalar.
-7. Run the approved authenticated development-token smoke for list and detail.
-   Verify Creator/traveler isolation, ETags, conditional 304, and enumeration-
-   safe 404. This step requires the separately approved mobile bearer identity
-   configuration; no test header or deterministic identity is permitted in
-   Azure.
+   readiness, inaccessible list/detail endpoints, and unavailable
+   OpenAPI/Scalar.
 
-Development product activation may change only after steps 1-7 pass and the
-bearer authentication change is separately reviewed. Production remains
-`Disabled`.
+Authenticated list/detail data smoke, including Creator/traveler isolation,
+ETags, conditional 304, and enumeration-safe 404, belongs to a later,
+separately approved development-activation gate. No test header or
+deterministic identity is permitted in Azure. Production remains `Disabled`.
 
 ## Rollback
 
