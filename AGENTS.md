@@ -248,6 +248,23 @@
   projects. OpenAPI remains the cross-process compatibility authority even when
   API DTO source is held in a shared Companion contracts assembly.
 
+## Performance and Load Testing
+
+- Read `docs/architecture/performance-load-testing.md` before changing public
+  APIs, deployed performance gates, scaling, load scripts, response-size bounds,
+  caches, rate limits, or customer-facing service objectives.
+- Keep pull-request performance smoke deterministic, short, and independent of
+  noisy machine wall-clock assertions. Treat only approved production-like
+  environment runs as deployment-capacity evidence.
+- Use fictional synthetic data and normal authorization paths. Never load-test
+  production without explicit approval, clone production customer data, bypass
+  Creator/traveler isolation, or place tokens, bodies, private content, signed
+  URLs, or precise location in test evidence.
+- Record release SHA, infrastructure, workload, data shape, duration,
+  concurrency, thresholds, cost, and recovery for every authoritative run.
+  Performance never overrides correctness, audit integrity, privacy, or safe
+  failure.
+
 ## Subscription and Notification Engine
 
 - Read `docs/architecture/subscription-notification-engine.md` before changing

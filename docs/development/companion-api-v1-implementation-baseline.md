@@ -246,3 +246,8 @@ OpenAPI, Scalar-environment, and prohibited-dependency behavior.
 - No SQL, Azure, live provider, production identity, or protected bytes are
   required or enabled.
 - Production configuration cannot activate deterministic adapters.
+
+The deterministic foundation includes only bounded performance smoke and
+maximum-shape contract tests. Authoritative deployed load and capacity gates
+follow `docs/architecture/performance-load-testing.md` and are required before
+limited external alpha, not before the fictional API foundation.

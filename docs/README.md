@@ -116,6 +116,15 @@ The governing principle is:
 > Companion receives versioned JSON and authorized media—not SQL or Dapper
 > models. Push signals change; the API returns authoritative current state.
 
+## Performance and Load Testing
+
+1. `architecture/performance-load-testing.md`
+2. `architecture/observability.md`
+3. `development/deployment.md`
+
+> Performance evidence names its workload and environment. Throughput never
+> weakens authorization, correctness, audit, privacy, or recovery.
+
 ## Subscriptions and Notifications
 
 1. `architecture/subscription-notification-engine.md`
