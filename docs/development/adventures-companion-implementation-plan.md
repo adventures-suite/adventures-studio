@@ -16,6 +16,7 @@ Read first:
 - `docs/architecture/adventures-companion.md`
 - `docs/architecture/companion-api-sync.md`
 - `docs/architecture/companion-openapi.md`
+- `docs/architecture/companion-api-v1-contract.md`
 - `docs/product/adventures-companion.md`
 - `docs/architecture/planning-engine.md`
 - `docs/architecture/resource-engine.md`
@@ -71,6 +72,11 @@ metadata for every route. Retain the generated contract as a CI artifact and
 use Scalar as the development-only interactive API reference. Do not use the
 deprecated `.WithOpenApi()` customization pattern or make an interactive UI the
 contract source.
+
+Implement the initial endpoint matrix, DTO fields, safe problems, examples, and
+deferrals in `docs/architecture/companion-api-v1-contract.md`. Treat required
+v1 field names, types, meanings, and nullability as compatibility commitments;
+extend v1 additively and use a new major version for breaking changes.
 
 Exit gate: anonymous, token, audience, Creator-isolation, IDOR, replay,
 enumeration, revocation, compatibility, and prohibited-data tests pass. A

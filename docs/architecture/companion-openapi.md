@@ -15,6 +15,10 @@ The first contract is read-only and traveler-focused. It lets the mobile team,
 server team, tests, and feedback prototypes converge before production API
 activation.
 
+The concrete endpoint matrix and initial DTO field baseline are defined in
+`companion-api-v1-contract.md`. That baseline is intentionally implementable
+now and evolves additively as later domain decisions are approved.
+
 ## Delivery Boundary
 
 ```text
