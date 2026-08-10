@@ -64,6 +64,68 @@ The initial media type is `application/json`. Errors use
 `application/problem+json`. Vendor media types are deferred until compatibility
 needs justify them.
 
+## .NET OpenAPI and Interactive Documentation
+
+The server uses ASP.NET Core's built-in `Microsoft.AspNetCore.OpenApi` document
+generation and emits OpenAPI 3.1. The generated document is the authoritative
+machine-readable contract. Scalar is the preferred interactive API reference
+for developers because it consumes that standard document without becoming a
+second contract source. Swagger UI or another standards-compatible viewer may
+be substituted later without changing endpoint contracts.
+
+Every Companion endpoint supplies complete OpenAPI metadata as part of its
+route definition:
+
+- stable, unique operation ID;
+- Companion tag and concise summary;
+- purpose, authorization, freshness, and failure description;
+- route, query, header, and body parameter descriptions and constraints;
+- request media type and schema for commands;
+- success response type, media type, and description;
+- every supported problem response and its description; and
+- OAuth bearer security requirements and required scopes.
+
+Minimal API endpoints use typed request and response DTOs plus endpoint metadata
+such as `WithName`, `WithSummary`, `WithDescription`, `WithTags`, `Accepts`, and
+`Produces`. Endpoint-specific operation transformers are used only when normal
+metadata cannot express an approved contract detail. The deprecated
+`.WithOpenApi()` customization pattern is prohibited on .NET 10.
+
+Illustrative composition—not executable implementation—is:
+
+```csharp
+builder.Services.AddOpenApi("companion-v1", options =>
+{
+    options.OpenApiVersion = OpenApiSpecVersion.OpenApi3_1;
+});
+
+var companion = app.MapGroup("/api/v1/companion")
+    .WithTags("AdventuresCompanion")
+    .RequireAuthorization("CompanionApi");
+
+companion.MapGet("/adventures", GetAdventuresAsync)
+    .WithName("ListCompanionAdventures")
+    .WithSummary("Lists Adventures available to the current traveler")
+    .Produces<CompanionAdventureCollectionDto>(StatusCodes.Status200OK)
+    .Produces(StatusCodes.Status304NotModified)
+    .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
+    .Produces<ProblemDetails>(StatusCodes.Status429TooManyRequests);
+```
+
+The exact framework APIs and reviewed package versions are selected in the
+implementation increment and locked centrally. XML documentation may enrich
+the generated descriptions, but public contract accuracy cannot depend on
+comments alone.
+
+The JSON document is generated during build and retained as an immutable CI
+artifact. Development may serve it at `/openapi/companion-v1.json` and serve
+Scalar at an associated developer route. Interactive documentation is disabled
+in production by default. If production contract publication is approved, the
+document is read-only and deliberately exposed; interactive execution remains
+disabled or separately authenticated and authorized. Scalar never receives
+production client secrets, certificates, refresh tokens, or reusable sample
+credentials.
+
 ## Initial Read Contract
 
 The first implementation increment contains only the smallest traveler-ready
@@ -276,4 +338,3 @@ tokens, signed URLs, or private Adventures.
    calendars, breadcrumbs, and capture only through their approved boundaries.
 
 Each increment is separately reviewable, testable, deployable, and reversible.
-

@@ -60,6 +60,12 @@ authoritative user-to-traveler participation relationship, Planning
 application-service authorization, mobile OAuth access-token validation, and
 protected Resource delivery.
 
+Use ASP.NET Core's built-in OpenAPI 3.1 generation and complete endpoint
+metadata for every route. Retain the generated contract as a CI artifact and
+use Scalar as the development-only interactive API reference. Do not use the
+deprecated `.WithOpenApi()` customization pattern or make an interactive UI the
+contract source.
+
 Exit gate: anonymous, token, audience, Creator-isolation, IDOR, replay,
 enumeration, revocation, compatibility, and prohibited-data tests pass. A
 Planning `Traveler` record, display name, email, device identity, or plan link
