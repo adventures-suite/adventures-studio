@@ -38,11 +38,8 @@ button:focus-visible { outline: 3px solid #e1a64e; outline-offset: 3px; }
 .brand-mark { width: 38px; height: 38px; display: grid; place-items: center; border: 2px solid var(--forest); border-radius: 50% 50% 48% 52%; font: italic 700 23px Georgia, serif; color: var(--forest); transform: rotate(-5deg); }
 .header-actions, .creator-badge { display: flex; align-items: center; }
 .header-actions { gap: 8px; }
-.creator-badge { gap: 5px; padding: 4px 7px 4px 5px; border: 1px solid var(--glass-border); border-radius: 99px; background: var(--glass-background); box-shadow: inset 0 1px rgba(255,255,255,.5); -webkit-backdrop-filter: blur(14px) saturate(var(--glass-saturation)); backdrop-filter: blur(14px) saturate(var(--glass-saturation)); }
-.creator-badge .creator-mark { width: 24px; height: 24px; font-size: 14px; }
-.creator-badge small, .creator-badge strong { display: block; line-height: 1; }
-.creator-badge small { color: var(--muted); text-transform: uppercase; letter-spacing: .1em; font-size: 6px; font-weight: 800; }
-.creator-badge strong { margin-top: 3px; font: 600 9px Georgia, serif; }
+.creator-badge { position: relative; width: 94px; height: 34px; justify-content: center; padding: 4px 7px; border: 1px solid var(--glass-border); border-radius: 99px; background: var(--glass-background); box-shadow: inset 0 1px rgba(255,255,255,.5); -webkit-backdrop-filter: blur(14px) saturate(var(--glass-saturation)); backdrop-filter: blur(14px) saturate(var(--glass-saturation)); }
+.creator-badge img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .avatar { width: 36px; height: 36px; border: 1px solid rgba(255,255,255,.32); border-radius: 50%; background: var(--forest); color: white; box-shadow: 0 7px 16px rgba(18,53,47,.18); font-size: 11px; font-weight: 700; }
 .screen { padding: 4px 18px 26px; }
 .adventure-switcher { position: relative; z-index: 4; padding: 2px 18px 9px; }
@@ -63,7 +60,6 @@ button:focus-visible { outline: 3px solid #e1a64e; outline-offset: 3px; }
 .adventure-state { padding: 6px 5px; border-radius: 99px; text-align: center; text-transform: uppercase; letter-spacing: .07em; font-size: 7px; font-weight: 900; }
 .adventure-state.current { background: #dcece1; color: #2d714a; }
 .adventure-state.planned { background: #f2e5d3; color: #935d35; }
-.creator-mark { width: 25px; height: 25px; display: grid; place-items: center; flex: 0 0 auto; border: 1px solid var(--forest); border-radius: 50%; font: italic 700 15px Georgia, serif; }
 .eyebrow-row, .section-heading, .route-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .eyebrow { color: var(--forest-soft); text-transform: uppercase; letter-spacing: .16em; font-size: 10px; font-weight: 800; }
 .sync-pill { color: #3b6752; font-size: 10px; font-weight: 700; display: flex; align-items: center; gap: 5px; }
