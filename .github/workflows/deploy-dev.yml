@@ -3,7 +3,7 @@ name: Deploy AdventuresSuite Dev
 on:
   push:
     branches:
-      - feature/journey-engine
+      - main
 
   workflow_dispatch:
 
