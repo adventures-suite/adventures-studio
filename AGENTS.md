@@ -201,8 +201,9 @@
   `docs/architecture/companion-api-sync.md`,
   `docs/architecture/companion-openapi.md`,
   `docs/architecture/companion-api-v1-contract.md`,
-  `docs/product/adventures-companion.md`, and
-  `docs/development/adventures-companion-implementation-plan.md` before changing
+  `docs/product/adventures-companion.md`,
+  `docs/development/adventures-companion-implementation-plan.md`, and
+  `docs/development/companion-api-v1-implementation-baseline.md` before changing
   mobile APIs, MAUI projects, offline synchronization, device storage,
   notifications, media capture, maps, or location behavior.
 - Treat AdventuresCompanion as the first iOS and Android application and use

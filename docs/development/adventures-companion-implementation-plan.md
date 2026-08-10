@@ -17,6 +17,7 @@ Read first:
 - `docs/architecture/companion-api-sync.md`
 - `docs/architecture/companion-openapi.md`
 - `docs/architecture/companion-api-v1-contract.md`
+- `docs/development/companion-api-v1-implementation-baseline.md`
 - `docs/product/adventures-companion.md`
 - `docs/architecture/planning-engine.md`
 - `docs/architecture/resource-engine.md`
@@ -88,6 +89,11 @@ Implement the initial endpoint matrix, DTO fields, safe problems, examples, and
 deferrals in `docs/architecture/companion-api-v1-contract.md`. Treat required
 v1 field names, types, meanings, and nullability as compatibility commitments;
 extend v1 additively and use a new major version for breaking changes.
+
+Follow `docs/development/companion-api-v1-implementation-baseline.md` for the
+approved project graph, status projection, contract bounds, provisional OAuth
+names, fictional fixtures, client generation, JSON source generation, and
+deterministic test-host composition.
 
 Use explicit hand-written mappings from Dapper records to validated application
 projections and from authorized projections to Companion DTOs. Contract tests
