@@ -181,7 +181,7 @@ non-sensitive data and cannot become production authentication fallbacks.
 
 ## Version and Discovery
 
-- The first base path is `/api/v1/companion`.
+- The first base path is `/v1/companion`.
 - A breaking wire-contract change requires a new major path.
 - Additive optional fields may ship within a major version when older clients
   can ignore them safely.
@@ -231,7 +231,7 @@ builder.Services.AddOpenApi("companion-v1", options =>
     options.OpenApiVersion = OpenApiSpecVersion.OpenApi3_1;
 });
 
-var companion = app.MapGroup("/api/v1/companion")
+var companion = app.MapGroup("/v1/companion")
     .WithTags("AdventuresCompanion")
     .RequireAuthorization("CompanionApi");
 
@@ -264,13 +264,13 @@ The first implementation increment contains only the smallest traveler-ready
 read model:
 
 ```text
-GET /api/v1/companion/adventures
-GET /api/v1/companion/adventures/{adventureId}
-GET /api/v1/companion/adventures/{adventureId}/today
-GET /api/v1/companion/adventures/{adventureId}/itinerary
-GET /api/v1/companion/adventures/{adventureId}/readiness
-GET /api/v1/companion/adventures/{adventureId}/playbook
-GET /api/v1/companion/resources/{resourceId}/content
+GET /v1/companion/adventures
+GET /v1/companion/adventures/{adventureId}
+GET /v1/companion/adventures/{adventureId}/today
+GET /v1/companion/adventures/{adventureId}/itinerary
+GET /v1/companion/adventures/{adventureId}/readiness
+GET /v1/companion/adventures/{adventureId}/playbook
+GET /v1/companion/resources/{resourceId}/content
 ```
 
 The list response contains current, committed, and planned Adventures visible

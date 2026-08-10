@@ -4,7 +4,7 @@ namespace AdventuresSuite.Api;
 public static class CompanionApiConstants
 {
     /// <summary>Gets the API base path.</summary>
-    public const string BasePath = "/api/v1/companion";
+    public const string BasePath = "/v1/companion";
     /// <summary>Gets the OpenAPI document name.</summary>
     public const string OpenApiDocumentName = "companion-v1";
     /// <summary>Gets the authorization policy name.</summary>

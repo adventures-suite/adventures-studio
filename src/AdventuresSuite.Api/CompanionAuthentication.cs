@@ -43,13 +43,17 @@ public sealed class TestCompanionAuthenticationHandler(
         var creator = HeaderOrDefault("X-Companion-Test-Creator", DeterministicCompanionProjectionService.DemoCreatorId);
         var scope = HeaderOrDefault("X-Companion-Test-Scope", DeterministicCompanionProjectionService.RequiredScope);
         var revoked = HeaderOrDefault("X-Companion-Test-Revoked", "false");
+        var membershipVersion = HeaderOrDefault(
+            "X-Companion-Test-Membership-Version",
+            DeterministicCompanionAuthorizationFacts.MembershipVersion.ToString(System.Globalization.CultureInfo.InvariantCulture));
         var claims = new[]
         {
             new Claim(ClaimTypes.NameIdentifier, user),
             new Claim("traveler_id", traveler),
             new Claim("creator_id", creator),
             new Claim("scope", scope),
-            new Claim("revoked", revoked)
+            new Claim("revoked", revoked),
+            new Claim("membership_version", membershipVersion)
         };
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, SchemeName));
         return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(principal, SchemeName)));

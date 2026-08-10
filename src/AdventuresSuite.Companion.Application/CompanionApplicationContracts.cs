@@ -1,12 +1,15 @@
 using AdventuresSuite.Companion.Contracts;
+using AdventuresSuite.Identity;
+using TheSimontonAdventures.Web.Creators;
 
 namespace AdventuresSuite.Companion.Application;
 
 /// <summary>Contains the authenticated, server-derived facts required by a Companion query.</summary>
 public sealed record CompanionAccessContext(
-    string UserId,
+    ActorIdentity Actor,
     string TravelerId,
-    string CreatorId,
+    CreatorId CreatorId,
+    long MembershipVersion,
     bool IsRevoked,
     IReadOnlySet<string> Scopes);
 
@@ -27,25 +30,6 @@ public interface ICompanionProjectionService
         CompanionAccessContext access, int limit, string? continuationToken, bool includeCompleted,
         string supportId, CancellationToken cancellationToken);
 
-    /// <summary>Gets one traveler-safe Adventure overview.</summary>
-    Task<CompanionQueryResult<CompanionAdventureDto>> GetAdventureAsync(
-        CompanionAccessContext access, string adventureId, string supportId, CancellationToken cancellationToken);
-
-    /// <summary>Gets Today and Next.</summary>
-    Task<CompanionQueryResult<CompanionTodayDto>> GetTodayAsync(
-        CompanionAccessContext access, string adventureId, string supportId, CancellationToken cancellationToken);
-
-    /// <summary>Gets the traveler-safe itinerary.</summary>
-    Task<CompanionQueryResult<CompanionItineraryDto>> GetItineraryAsync(
-        CompanionAccessContext access, string adventureId, string supportId, CancellationToken cancellationToken);
-
-    /// <summary>Gets traveler-visible readiness.</summary>
-    Task<CompanionQueryResult<CompanionReadinessDto>> GetReadinessAsync(
-        CompanionAccessContext access, string adventureId, string supportId, CancellationToken cancellationToken);
-
-    /// <summary>Gets the structured traveler Playbook.</summary>
-    Task<CompanionQueryResult<CompanionPlaybookDto>> GetPlaybookAsync(
-        CompanionAccessContext access, string adventureId, string supportId, CancellationToken cancellationToken);
 }
 
 /// <summary>Provides fail-closed projections when deterministic fixtures are not explicitly enabled.</summary>
@@ -55,22 +39,6 @@ public sealed class ClosedCompanionProjectionService : ICompanionProjectionServi
     public Task<CompanionQueryResult<CompanionAdventureCollectionDto>> ListAdventuresAsync(
         CompanionAccessContext access, int limit, string? continuationToken, bool includeCompleted,
         string supportId, CancellationToken cancellationToken) => Unavailable<CompanionAdventureCollectionDto>();
-    /// <inheritdoc />
-    public Task<CompanionQueryResult<CompanionAdventureDto>> GetAdventureAsync(
-        CompanionAccessContext access, string adventureId, string supportId, CancellationToken cancellationToken) => Unavailable<CompanionAdventureDto>();
-    /// <inheritdoc />
-    public Task<CompanionQueryResult<CompanionTodayDto>> GetTodayAsync(
-        CompanionAccessContext access, string adventureId, string supportId, CancellationToken cancellationToken) => Unavailable<CompanionTodayDto>();
-    /// <inheritdoc />
-    public Task<CompanionQueryResult<CompanionItineraryDto>> GetItineraryAsync(
-        CompanionAccessContext access, string adventureId, string supportId, CancellationToken cancellationToken) => Unavailable<CompanionItineraryDto>();
-    /// <inheritdoc />
-    public Task<CompanionQueryResult<CompanionReadinessDto>> GetReadinessAsync(
-        CompanionAccessContext access, string adventureId, string supportId, CancellationToken cancellationToken) => Unavailable<CompanionReadinessDto>();
-    /// <inheritdoc />
-    public Task<CompanionQueryResult<CompanionPlaybookDto>> GetPlaybookAsync(
-        CompanionAccessContext access, string adventureId, string supportId, CancellationToken cancellationToken) => Unavailable<CompanionPlaybookDto>();
-
     private static Task<CompanionQueryResult<T>> Unavailable<T>() where T : CompanionProjectionDto =>
         Task.FromResult(new CompanionQueryResult<T>(null, null));
 }
