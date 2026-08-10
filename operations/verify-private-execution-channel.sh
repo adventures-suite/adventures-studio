@@ -118,6 +118,13 @@ curl --fail --silent --show-error --request PUT \
 curl --fail --silent --show-error --request PUT \
   --header 'x-ms-blob-type: BlockBlob' --header 'x-ms-version: 2023-11-03' \
   --upload-file "$envelope" "$envelope_blob_uri"
+evidence_checksum="$(sha256sum "$evidence" | cut -d ' ' -f 1)"
+envelope_checksum="$(sha256sum "$envelope" | cut -d ' ' -f 1)"
+rm -f "$evidence" "$envelope"
+curl --fail --silent --show-error --location "$evidence_blob_uri" --output "$evidence"
+curl --fail --silent --show-error --location "$envelope_blob_uri" --output "$envelope"
+[[ "$(sha256sum "$evidence" | cut -d ' ' -f 1)" == "$evidence_checksum" ]]
+[[ "$(sha256sum "$envelope" | cut -d ' ' -f 1)" == "$envelope_checksum" ]]
 cat "$envelope"
 
 cleanup_json="$work_dir/cleanup.json"
