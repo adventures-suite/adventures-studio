@@ -311,6 +311,7 @@ public sealed class SqlMigrationIntegrationTests
 
         await ExecuteAsync(connectionString, """
             CREATE USER companion_read_runtime_test WITHOUT LOGIN;
+            CREATE USER companion_privilege_target WITHOUT LOGIN;
             ALTER ROLE AdventuresSuiteCompanionReadRuntime ADD MEMBER companion_read_runtime_test;
             """);
         await ExecuteAsync(connectionString,
@@ -367,8 +368,7 @@ public sealed class SqlMigrationIntegrationTests
             ("delete", "DELETE FROM planning.AdventurePlans WHERE 1 = 0;"),
             ("execute", "EXECUTE dbo.CompanionDeniedExecutionProbe;"),
             ("DDL", "CREATE TABLE planning.CompanionDeniedDdlProbe (Id int NOT NULL);"),
-            ("migration journal write", "INSERT dbo.AdventuresSuiteSchemaVersions (ScriptName, Applied) VALUES ('denied', SYSUTCDATETIME());"),
-            ("privilege escalation", "GRANT CONTROL ON OBJECT::planning.AdventurePlans TO companion_read_runtime_test;")
+            ("migration journal write", "INSERT dbo.AdventuresSuiteSchemaVersions (ScriptName, Applied) VALUES ('denied', SYSUTCDATETIME());")
         })
         {
             var exception = await Record.ExceptionAsync(() => ExecuteAsync(connectionString, $"""
@@ -379,7 +379,101 @@ public sealed class SqlMigrationIntegrationTests
             Assert.True(exception is SqlException,
                 $"Prohibited Companion operation '{operationName}' unexpectedly succeeded.");
         }
+
+        var escalation = await DiagnosePrivilegeEscalationAsync(connectionString);
+        Assert.Equal(0, escalation.ControlBefore);
+        Assert.Equal(0, escalation.ControlAfter);
+        Assert.Equal(0, escalation.TargetSelectAfter);
+        Assert.Equal(1, escalation.SelfControlGrantRows);
+        Assert.Equal(1, escalation.SelfGrantedByRuntimeRows);
+        Assert.Equal(0, escalation.TargetGrantRows);
+        Assert.Equal("dbo", escalation.RoleOwner);
+        Assert.Equal(0, await ScalarAsync<int>(connectionString, """
+            SELECT COUNT(*) FROM sys.database_permissions
+            WHERE (grantee_principal_id = USER_ID(N'companion_read_runtime_test')
+                   AND permission_name = N'CONTROL'
+                   AND major_id = OBJECT_ID(N'planning.AdventurePlans'))
+               OR (grantee_principal_id = USER_ID(N'companion_privilege_target')
+                   AND permission_name = N'SELECT'
+                   AND major_id = OBJECT_ID(N'planning.AdventurePlans'));
+            """));
     }
+
+    private static async Task<PrivilegeEscalationDiagnostic> DiagnosePrivilegeEscalationAsync(
+        string connectionString)
+    {
+        const string sql = """
+            SET XACT_ABORT ON;
+            BEGIN TRANSACTION;
+            DECLARE @ControlBefore int;
+            DECLARE @ControlAfter int;
+            DECLARE @TargetSelectAfter int;
+            DECLARE @SelfControlGrantRows int;
+            DECLARE @SelfGrantedByRuntimeRows int;
+            DECLARE @TargetGrantRows int;
+            DECLARE @RoleOwner sysname;
+
+            EXECUTE AS USER = N'companion_read_runtime_test';
+            SET @ControlBefore = HAS_PERMS_BY_NAME(
+                N'planning.AdventurePlans', N'OBJECT', N'CONTROL');
+            GRANT CONTROL ON OBJECT::planning.AdventurePlans TO companion_read_runtime_test;
+            SET @ControlAfter = HAS_PERMS_BY_NAME(
+                N'planning.AdventurePlans', N'OBJECT', N'CONTROL');
+            BEGIN TRY
+                GRANT SELECT ON OBJECT::planning.AdventurePlans TO companion_privilege_target;
+            END TRY
+            BEGIN CATCH
+                -- Rejection is expected; effective authority is verified below.
+            END CATCH;
+            REVERT;
+
+            EXECUTE AS USER = N'companion_privilege_target';
+            SET @TargetSelectAfter = HAS_PERMS_BY_NAME(
+                N'planning.AdventurePlans', N'OBJECT', N'SELECT');
+            REVERT;
+
+            SELECT @SelfControlGrantRows = COUNT(*) FROM sys.database_permissions
+            WHERE grantee_principal_id = USER_ID(N'companion_read_runtime_test')
+              AND permission_name = N'CONTROL'
+              AND major_id = OBJECT_ID(N'planning.AdventurePlans');
+            SELECT @SelfGrantedByRuntimeRows = COUNT(*) FROM sys.database_permissions
+            WHERE grantee_principal_id = USER_ID(N'companion_read_runtime_test')
+              AND grantor_principal_id = USER_ID(N'companion_read_runtime_test')
+              AND permission_name = N'CONTROL'
+              AND major_id = OBJECT_ID(N'planning.AdventurePlans');
+            SELECT @TargetGrantRows = COUNT(*) FROM sys.database_permissions
+            WHERE grantee_principal_id = USER_ID(N'companion_privilege_target')
+              AND permission_name = N'SELECT'
+              AND major_id = OBJECT_ID(N'planning.AdventurePlans');
+            SELECT @RoleOwner = owner.name
+            FROM sys.database_principals AS role
+            INNER JOIN sys.database_principals AS owner
+                ON owner.principal_id = role.owning_principal_id
+            WHERE role.name = N'AdventuresSuiteCompanionReadRuntime';
+            ROLLBACK TRANSACTION;
+            SELECT @ControlBefore, @ControlAfter, @TargetSelectAfter,
+                   @SelfControlGrantRows, @SelfGrantedByRuntimeRows,
+                   @TargetGrantRows, @RoleOwner;
+            """;
+
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+        await using var command = new SqlCommand(sql, connection);
+        await using var reader = await command.ExecuteReaderAsync();
+        Assert.True(await reader.ReadAsync());
+        return new(
+            reader.GetInt32(0), reader.GetInt32(1), reader.GetInt32(2),
+            reader.GetInt32(3), reader.GetInt32(4), reader.GetInt32(5), reader.GetString(6));
+    }
+
+    private sealed record PrivilegeEscalationDiagnostic(
+        int ControlBefore,
+        int ControlAfter,
+        int TargetSelectAfter,
+        int SelfControlGrantRows,
+        int SelfGrantedByRuntimeRows,
+        int TargetGrantRows,
+        string RoleOwner);
 
     private static async Task<string> GetSchemaSignatureAsync(string connectionString)
     {
