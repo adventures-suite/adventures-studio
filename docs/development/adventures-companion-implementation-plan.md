@@ -78,6 +78,12 @@ deferrals in `docs/architecture/companion-api-v1-contract.md`. Treat required
 v1 field names, types, meanings, and nullability as compatibility commitments;
 extend v1 additively and use a new major version for breaking changes.
 
+Use explicit hand-written mappings from Dapper records to validated application
+projections and from authorized projections to Companion DTOs. Contract tests
+must prove that adding persistence or domain properties cannot automatically
+change serialized JSON or the generated OpenAPI document. Do not introduce
+reflection-based or convention-based mapping across these boundaries.
+
 Exit gate: anonymous, token, audience, Creator-isolation, IDOR, replay,
 enumeration, revocation, compatibility, and prohibited-data tests pass. A
 Planning `Traveler` record, display name, email, device identity, or plan link

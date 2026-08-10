@@ -218,6 +218,12 @@
 - Build Companion responses as: Dapper persistence records, application query
   projection, authorization and traveler information policy, mobile DTO, JSON.
   Never serialize database rows or domain aggregates directly.
+- Map Dapper records to validated application projections and authorized
+  projections to Companion DTOs with explicit, hand-written mapping code.
+  Reflection-based copying, AutoMapper-style convention mapping, generic
+  same-name property copying, and serialization-as-mapping are prohibited
+  across persistence, domain/application, and API boundaries. Adding a source
+  property must never make it appear in an API response automatically.
 - Push notifications signal that authorized state changed; they are not the
   state. Use minimal opaque payloads and require Companion to fetch current
   JSON after server reauthorization.

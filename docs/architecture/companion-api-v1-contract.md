@@ -49,6 +49,12 @@ Resource delivery.
 - JSON property names use camel case.
 - Unknown JSON properties are ignored by clients.
 
+DTOs are constructed only through explicit, hand-written mappings from
+authorized application projections. They are never produced through reflection
+copying, convention mapping, matching-property helpers, or serialization of a
+Dapper record or domain aggregate. API DTO properties form an intentional
+field allowlist.
+
 ## Initial Endpoint Matrix
 
 | Operation ID | Route | Purpose | Policy | Cache | Audit |
@@ -334,4 +340,3 @@ contract tests in the independent `AdventuresSuite.Api` host.
 It must not enable production data, Azure deployment, real bearer
 authentication, protected downloads, or persistence queries until the
 activation gates in `companion-openapi.md` pass.
-

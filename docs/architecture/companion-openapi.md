@@ -35,6 +35,30 @@ or permanent protected-Resource URL crosses this boundary. OpenAPI schemas are
 designed from mobile use cases and approved information policy, never generated
 from tables.
 
+### Explicit Mapping Rule
+
+Boundary mapping is deliberate and hand-written:
+
+```text
+Dapper row
+    -> explicit validation and application projection mapping
+    -> authorization and traveler information policy
+    -> explicit Companion DTO mapping
+    -> System.Text.Json serialization
+```
+
+Reflection-based object copying, AutoMapper-style convention mapping, generic
+same-name property copying, and using serialization/deserialization as a mapper
+are prohibited across persistence, domain/application, and API boundaries.
+Adding a column, Dapper property, or domain property cannot silently add a JSON
+field or alter OpenAPI. The DTO is an allowlist, and each field assignment is
+reviewable.
+
+This rule does not prohibit the approved JSON serializer from performing its
+normal serialization work after an authorized DTO has been constructed. Source
+generation may be used for serializer performance when it preserves the exact
+approved wire contract.
+
 ## Independent API Host and Deployment
 
 The Companion API does not run inside the Blazor web application and the web
