@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 set -uo pipefail
 
-# Managed Run Command passes these values positionally. The first four must be
-# declared as protectedParameters on the run-command resource.
-artifact_url="${1:-}"
-container_sas_uri="${2:-}"
-arm_token="${3:-}"
-completion_key="${4:-}"
-operation_id="${5:-}"
-release_sha="${6:-}"
-artifact_checksum="${7:-}"
-site_resource_id="${8:-}"
-scm_host="${9:-}"
+# Managed Run Command appends protectedParameters after ordinary parameters.
+# Preserve this exact order when creating the run-command resource.
+operation_id="${1:-}"
+release_sha="${2:-}"
+artifact_checksum="${3:-}"
+site_resource_id="${4:-}"
+scm_host="${5:-}"
+artifact_url="${6:-}"
+container_sas_uri="${7:-}"
+arm_token="${8:-}"
+completion_key="${9:-}"
 
 work_dir="/var/tmp/adventures-suite-channel-${operation_id}"
 remote_dir="/home/data/adventures-suite-channel-${operation_id}"
