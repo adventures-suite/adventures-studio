@@ -120,39 +120,6 @@ Before execution verify:
 - package retention and rollback/recovery evidence; and
 - no secrets or connection passwords in the package.
 
-### Private execution-channel prerequisite
-
-Before requesting approval for a database migration, run a separately approved,
-SQL-free execution-channel proof. Use an Azure Managed Run Command resource,
-not interactive SSH or the transient `run-command invoke` action. Its immutable
-source is `operations/verify-private-execution-channel.sh` at the reviewed SHA.
-
-The proof must:
-
-1. start with the migration App Service stopped;
-2. receive artifact authorization, a container-scoped staging SAS, a short-lived
-   operator ARM token, and a random completion HMAC key only as Managed Run
-   Command `protectedParameters`;
-3. use a unique private staging container in the existing private-endpoint
-   storage account, with a SAS lifetime no longer than the proof window;
-4. verify the package SHA-256 before staging, upload it to private Blob, remove
-   the first copy, download through the private endpoint, and verify it again;
-5. obtain App Service publishing credentials transiently through the ARM token,
-   invoke only private SCM, and execute `run-execution-channel-proof.sh`;
-6. make no SQL connection and emit `sqlAccessAttempted: false`;
-7. return the signed completion envelope in bounded Managed Run Command output
-   and store the identical envelope in the protected evidence blob;
-8. independently verify the HMAC, operation ID, release SHA, artifact checksum,
-   real exit code, `Complete` classification, evidence checksum, and timestamps;
-   and
-9. remove the SCM work directory, staged package blob, VM files, protected
-   parameters/run-command resource, SAS, and temporary container, then restore
-   stopped/deallocated states.
-
-Fail closed if output is absent or truncated, the envelopes differ, any
-signature/checksum differs, cleanup is inconclusive, or SQL access is observed.
-A successful proof authorizes no migration.
-
 ## Migration App Procedure
 
 1. Confirm the migration app is stopped.

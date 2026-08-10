@@ -119,13 +119,7 @@ jobs:
           test -x "$MIGRATOR_PUBLISH_DIR/AdventuresSuite.DatabaseMigrator"
           cp src/AdventuresSuite.DatabaseMigrator/run-reviewed-migration-operation.sh \
             "$MIGRATOR_PUBLISH_DIR/run-reviewed-migration-operation.sh"
-          cp src/AdventuresSuite.DatabaseMigrator/run-execution-channel-proof.sh \
-            "$MIGRATOR_PUBLISH_DIR/run-execution-channel-proof.sh"
-          cp operations/verify-private-execution-channel.sh \
-            "$MIGRATOR_PUBLISH_DIR/verify-private-execution-channel.sh"
           chmod 0755 "$MIGRATOR_PUBLISH_DIR/run-reviewed-migration-operation.sh"
-          chmod 0755 "$MIGRATOR_PUBLISH_DIR/run-execution-channel-proof.sh"
-          chmod 0755 "$MIGRATOR_PUBLISH_DIR/verify-private-execution-channel.sh"
 
           "$MIGRATOR_PUBLISH_DIR/AdventuresSuite.DatabaseMigrator" --list \
             | sed 's/.*Database.Migrations.//' \
