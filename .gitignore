@@ -3,3 +3,4 @@
 **/obj/
 artifacts/
 /Library/
+.DS_Store
