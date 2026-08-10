@@ -254,7 +254,7 @@ public sealed class CreatorMembershipRepositoryIntegrationTests
             Permissions.CreatorManageMembers,
             AuthorizationResourceScope.ForInstance(
                 creatorId,
-                AuthorizationResourceTypes.Creator,
+                AuthorizationResourceTypes.CreatorMembership,
                 membership.Id.Value),
             AuditOutcome.Succeeded,
             AuditReasonCategory.Completed,

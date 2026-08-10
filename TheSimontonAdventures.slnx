@@ -1,5 +1,9 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/AdventuresSuite.Api/AdventuresSuite.Api.csproj" />
+    <Project Path="src/AdventuresSuite.Authorization/AdventuresSuite.Authorization.csproj" />
+    <Project Path="src/AdventuresSuite.Companion.Application/AdventuresSuite.Companion.Application.csproj" />
+    <Project Path="src/AdventuresSuite.Companion.Contracts/AdventuresSuite.Companion.Contracts.csproj" />
     <Project Path="src/AdventuresSuite.DatabaseMigrator/AdventuresSuite.DatabaseMigrator.csproj" />
     <Project Path="src/AdventuresSuite.Authorization.SqlServer/AdventuresSuite.Authorization.SqlServer.csproj" />
     <Project Path="src/AdventuresSuite.Identity/AdventuresSuite.Identity.csproj" />
@@ -9,6 +13,9 @@
     <Project Path="src/TheSimontonAdventures.Web/TheSimontonAdventures.Web.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/AdventuresSuite.Api.Tests/AdventuresSuite.Api.Tests.csproj" />
+    <Project Path="tests/AdventuresSuite.Authorization.Tests/AdventuresSuite.Authorization.Tests.csproj" />
+    <Project Path="tests/AdventuresSuite.Companion.Contracts.Tests/AdventuresSuite.Companion.Contracts.Tests.csproj" />
     <Project Path="tests/TheSimontonAdventures.Web.Tests/TheSimontonAdventures.Web.Tests.csproj" />
   </Folder>
 </Solution>

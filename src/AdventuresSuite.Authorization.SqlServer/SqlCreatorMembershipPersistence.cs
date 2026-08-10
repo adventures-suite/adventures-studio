@@ -379,7 +379,8 @@ internal sealed class DapperCreatorMembershipRepository(
         if (!auditEvent.Actor.IsHuman || !auditEvent.Actor.UserId.HasValue
             || auditEvent.CreatorId != transactionCreatorId
             || auditEvent.Permission != Permissions.CreatorManageMembers
-            || auditEvent.Resource.ResourceType != AuthorizationResourceTypes.Creator
+            || auditEvent.Resource.ScopeType != AuthorizationResourceScopeType.ResourceInstance
+            || auditEvent.Resource.ResourceType != AuthorizationResourceTypes.CreatorMembership
             || auditEvent.Resource.ResourceId != membership.Id.Value
             || auditEvent.Outcome != AuditOutcome.Succeeded
             || auditEvent.ReasonCategory != AuditReasonCategory.Completed

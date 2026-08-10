@@ -82,6 +82,9 @@ public sealed class AuthorizationContractTests
         Assert.Throws<ArgumentException>(() => new Permission("AdventurePlan"));
         Assert.Throws<ArgumentException>(() => new Permission(" AdventurePlan.View"));
         Assert.Throws<ArgumentException>(() => new Permission("AdventurePlan.View.Private"));
+        Assert.Throws<ArgumentException>(() => new Permission("Creator.Delete"));
+        Assert.True(Permission.IsApproved(Permissions.CreatorManageMembers.Value));
+        Assert.False(Permission.IsApproved("Creator.Delete"));
     }
 
     /// <summary>Exercises the initial authorization matrix with a deterministic fake.</summary>

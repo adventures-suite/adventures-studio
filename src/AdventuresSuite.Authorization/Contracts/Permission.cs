@@ -1,8 +1,31 @@
+using System.Collections.Frozen;
+
 namespace TheSimontonAdventures.Web.Authorization;
 
 /// <summary>Names one provider-independent operation that may be authorized.</summary>
 public readonly record struct Permission
 {
+    private static readonly FrozenSet<string> ApprovedValues = new[]
+    {
+        "Creator.View",
+        "Creator.ManageMembers",
+        "AdventurePlan.View",
+        "AdventurePlan.Create",
+        "AdventurePlan.Edit",
+        "AdventurePlan.ViewArchived",
+        "AdventurePlan.Archive",
+        "AdventurePlan.Restore",
+        "AdventurePlan.ViewSensitiveReservations",
+        "PlanningProposal.Submit",
+        "PlanningProposal.Review",
+        "PlanningProposal.ApplyApproved",
+        "PlanningEngagement.Invite",
+        "PlanningEngagement.Manage",
+        "PlanningEngagement.DirectEdit",
+        "Audit.View",
+        "Support.Impersonate"
+    }.ToFrozenSet(StringComparer.Ordinal);
+
     /// <summary>Initializes a canonical permission name.</summary>
     public Permission(string value)
     {
@@ -10,10 +33,11 @@ public readonly record struct Permission
             || value != value.Trim()
             || value.Length > 100
             || value.Count(character => character == '.') != 1
-            || value.Any(character => !char.IsAsciiLetterOrDigit(character) && character != '.'))
+            || value.Any(character => !char.IsAsciiLetterOrDigit(character) && character != '.')
+            || !ApprovedValues.Contains(value))
         {
             throw new ArgumentException(
-                "Permissions must use a normalized 'Resource.Operation' name.",
+                "Permission must be a member of the approved operation vocabulary.",
                 nameof(value));
         }
 
@@ -25,6 +49,9 @@ public readonly record struct Permission
 
     /// <inheritdoc />
     public override string ToString() => Value ?? string.Empty;
+
+    /// <summary>Determines whether a value belongs to the approved permission vocabulary.</summary>
+    public static bool IsApproved(string? value) => value is not null && ApprovedValues.Contains(value);
 }
 
 /// <summary>Defines the approved initial authorization permission vocabulary.</summary>
