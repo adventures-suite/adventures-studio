@@ -384,9 +384,13 @@ public sealed class SqlMigrationIntegrationTests
         Assert.Equal(0, escalation.ControlBefore);
         Assert.Equal(0, escalation.ControlAfter);
         Assert.Equal(0, escalation.TargetSelectAfter);
-        Assert.Equal(1, escalation.SelfControlGrantRows);
-        Assert.Equal(1, escalation.SelfGrantedByRuntimeRows);
+        Assert.Equal(escalation.SelfControlGrantRows, escalation.SelfGrantedByRuntimeRows);
         Assert.Equal(0, escalation.TargetGrantRows);
+        Assert.Equal(0, escalation.DelegationAccepted);
+        Assert.Equal("PermissionDenied", escalation.DelegationErrorCategory);
+        Assert.True(escalation.DelegationErrorNumber > 0);
+        Assert.Equal(1, escalation.ImpersonationCleared);
+        Assert.Equal(1, escalation.TransactionCleared);
         Assert.Equal("dbo", escalation.RoleOwner);
         Assert.Equal(0, await ScalarAsync<int>(connectionString, """
             SELECT COUNT(*) FROM sys.database_permissions
@@ -403,8 +407,7 @@ public sealed class SqlMigrationIntegrationTests
         string connectionString)
     {
         const string sql = """
-            SET XACT_ABORT ON;
-            BEGIN TRANSACTION;
+            SET XACT_ABORT OFF;
             DECLARE @ControlBefore int;
             DECLARE @ControlAfter int;
             DECLARE @TargetSelectAfter int;
@@ -412,48 +415,80 @@ public sealed class SqlMigrationIntegrationTests
             DECLARE @SelfGrantedByRuntimeRows int;
             DECLARE @TargetGrantRows int;
             DECLARE @RoleOwner sysname;
+            DECLARE @AdminUser sysname = USER_NAME();
+            DECLARE @Impersonating bit = 0;
+            DECLARE @ImpersonationCleared int = 0;
+            DECLARE @TransactionCleared int = 0;
+            DECLARE @DelegationAccepted int = 0;
+            DECLARE @DelegationErrorNumber int = 0;
+            DECLARE @DelegationErrorCategory nvarchar(32) = N'None';
 
-            EXECUTE AS USER = N'companion_read_runtime_test';
-            SET @ControlBefore = HAS_PERMS_BY_NAME(
-                N'planning.AdventurePlans', N'OBJECT', N'CONTROL');
-            GRANT CONTROL ON OBJECT::planning.AdventurePlans TO companion_read_runtime_test;
-            SET @ControlAfter = HAS_PERMS_BY_NAME(
-                N'planning.AdventurePlans', N'OBJECT', N'CONTROL');
             BEGIN TRY
-                GRANT SELECT ON OBJECT::planning.AdventurePlans TO companion_privilege_target;
+                BEGIN TRANSACTION;
+                EXECUTE AS USER = N'companion_read_runtime_test';
+                SET @Impersonating = 1;
+                SET @ControlBefore = HAS_PERMS_BY_NAME(
+                    N'planning.AdventurePlans', N'OBJECT', N'CONTROL');
+                GRANT CONTROL ON OBJECT::planning.AdventurePlans TO companion_read_runtime_test;
+                SET @ControlAfter = HAS_PERMS_BY_NAME(
+                    N'planning.AdventurePlans', N'OBJECT', N'CONTROL');
+                BEGIN TRY
+                    GRANT SELECT ON OBJECT::planning.AdventurePlans TO companion_privilege_target;
+                    SET @DelegationAccepted = 1;
+                END TRY
+                BEGIN CATCH
+                    SET @DelegationErrorNumber = ERROR_NUMBER();
+                    SET @DelegationErrorCategory = CASE
+                        WHEN ERROR_NUMBER() IN (229, 15151) THEN N'PermissionDenied'
+                        ELSE N'Other'
+                    END;
+                END CATCH;
+                REVERT;
+                SET @Impersonating = 0;
+
+                EXECUTE AS USER = N'companion_privilege_target';
+                SET @Impersonating = 1;
+                SET @TargetSelectAfter = HAS_PERMS_BY_NAME(
+                    N'planning.AdventurePlans', N'OBJECT', N'SELECT');
+                REVERT;
+                SET @Impersonating = 0;
+
+                SELECT @SelfControlGrantRows = COUNT(*) FROM sys.database_permissions
+                WHERE grantee_principal_id = USER_ID(N'companion_read_runtime_test')
+                  AND permission_name = N'CONTROL'
+                  AND major_id = OBJECT_ID(N'planning.AdventurePlans');
+                SELECT @SelfGrantedByRuntimeRows = COUNT(*) FROM sys.database_permissions
+                WHERE grantee_principal_id = USER_ID(N'companion_read_runtime_test')
+                  AND grantor_principal_id = USER_ID(N'companion_read_runtime_test')
+                  AND permission_name = N'CONTROL'
+                  AND major_id = OBJECT_ID(N'planning.AdventurePlans');
+                SELECT @TargetGrantRows = COUNT(*) FROM sys.database_permissions
+                WHERE grantee_principal_id = USER_ID(N'companion_privilege_target')
+                  AND permission_name = N'SELECT'
+                  AND major_id = OBJECT_ID(N'planning.AdventurePlans');
+                SELECT @RoleOwner = owner.name
+                FROM sys.database_principals AS role
+                INNER JOIN sys.database_principals AS owner
+                    ON owner.principal_id = role.owning_principal_id
+                WHERE role.name = N'AdventuresSuiteCompanionReadRuntime';
             END TRY
             BEGIN CATCH
-                -- Rejection is expected; effective authority is verified below.
+                IF @Impersonating = 1
+                BEGIN
+                    REVERT;
+                    SET @Impersonating = 0;
+                END;
+                IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+                THROW;
             END CATCH;
-            REVERT;
-
-            EXECUTE AS USER = N'companion_privilege_target';
-            SET @TargetSelectAfter = HAS_PERMS_BY_NAME(
-                N'planning.AdventurePlans', N'OBJECT', N'SELECT');
-            REVERT;
-
-            SELECT @SelfControlGrantRows = COUNT(*) FROM sys.database_permissions
-            WHERE grantee_principal_id = USER_ID(N'companion_read_runtime_test')
-              AND permission_name = N'CONTROL'
-              AND major_id = OBJECT_ID(N'planning.AdventurePlans');
-            SELECT @SelfGrantedByRuntimeRows = COUNT(*) FROM sys.database_permissions
-            WHERE grantee_principal_id = USER_ID(N'companion_read_runtime_test')
-              AND grantor_principal_id = USER_ID(N'companion_read_runtime_test')
-              AND permission_name = N'CONTROL'
-              AND major_id = OBJECT_ID(N'planning.AdventurePlans');
-            SELECT @TargetGrantRows = COUNT(*) FROM sys.database_permissions
-            WHERE grantee_principal_id = USER_ID(N'companion_privilege_target')
-              AND permission_name = N'SELECT'
-              AND major_id = OBJECT_ID(N'planning.AdventurePlans');
-            SELECT @RoleOwner = owner.name
-            FROM sys.database_principals AS role
-            INNER JOIN sys.database_principals AS owner
-                ON owner.principal_id = role.owning_principal_id
-            WHERE role.name = N'AdventuresSuiteCompanionReadRuntime';
-            ROLLBACK TRANSACTION;
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            SET @ImpersonationCleared = CASE WHEN USER_NAME() = @AdminUser THEN 1 ELSE 0 END;
+            SET @TransactionCleared = CASE WHEN @@TRANCOUNT = 0 THEN 1 ELSE 0 END;
             SELECT @ControlBefore, @ControlAfter, @TargetSelectAfter,
                    @SelfControlGrantRows, @SelfGrantedByRuntimeRows,
-                   @TargetGrantRows, @RoleOwner;
+                   @TargetGrantRows, @RoleOwner, @DelegationAccepted,
+                   @DelegationErrorNumber, @DelegationErrorCategory,
+                   @ImpersonationCleared, @TransactionCleared;
             """;
 
         await using var connection = new SqlConnection(connectionString);
@@ -463,7 +498,9 @@ public sealed class SqlMigrationIntegrationTests
         Assert.True(await reader.ReadAsync());
         return new(
             reader.GetInt32(0), reader.GetInt32(1), reader.GetInt32(2),
-            reader.GetInt32(3), reader.GetInt32(4), reader.GetInt32(5), reader.GetString(6));
+            reader.GetInt32(3), reader.GetInt32(4), reader.GetInt32(5), reader.GetString(6),
+            reader.GetInt32(7), reader.GetInt32(8), reader.GetString(9),
+            reader.GetInt32(10), reader.GetInt32(11));
     }
 
     private sealed record PrivilegeEscalationDiagnostic(
@@ -473,7 +510,12 @@ public sealed class SqlMigrationIntegrationTests
         int SelfControlGrantRows,
         int SelfGrantedByRuntimeRows,
         int TargetGrantRows,
-        string RoleOwner);
+        string RoleOwner,
+        int DelegationAccepted,
+        int DelegationErrorNumber,
+        string DelegationErrorCategory,
+        int ImpersonationCleared,
+        int TransactionCleared);
 
     private static async Task<string> GetSchemaSignatureAsync(string connectionString)
     {
