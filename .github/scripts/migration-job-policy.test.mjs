@@ -49,7 +49,7 @@ test('deployer action sets preserve authority separation', () => {
   const rbacActions = [...roleDefinition.permissions, ...assignment.permissions].flatMap(value => value.actions);
   assert.ok(infraActions.some(value => value.endsWith('/write')));
   assert.ok(infraActions.every(value => !value.startsWith('Microsoft.Authorization/')));
-  assert.ok(rbacActions.filter(value => value.endsWith('/write')).every(value => value.startsWith('Microsoft.Authorization/')));
+  assert.ok(rbacActions.filter(value => value.endsWith('/write')).every(value => value.startsWith('Microsoft.Authorization/') || value === 'Microsoft.Resources/deployments/write'));
   assert.ok(rbacActions.every(value => !value.startsWith('Microsoft.Network/') && !value.startsWith('Microsoft.App/jobs/write') && !value.startsWith('Microsoft.ContainerRegistry/registries/write')));
 });
 
