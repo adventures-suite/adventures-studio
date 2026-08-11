@@ -6,6 +6,10 @@
     <p>Keep moments organized while you travel. Nothing is published automatically.</p>
 </div>
 
+<AdventureSelector Adventures="Adventures"
+                   SelectedAdventure="SelectedAdventure"
+                   SelectedAdventureChanged="SelectedAdventureChanged" />
+
 <button class="memory-card" @onclick='() => FeedbackAsync("Journal entry started locally in the prototype.")'>
     <span>✎</span><div><strong>Write a journal note</strong><small>Save a thought for later</small></div><b>›</b>
 </button>
@@ -26,6 +30,18 @@
 <p class="poc-notice"><strong>Experience prototype</strong><br />Authentication, secure storage, GPS, calendar writes, and synchronization are intentionally simulated.</p>
 
 @code {
+    /// <summary>Gets or sets the Adventures available for private memory capture.</summary>
+    [Parameter, EditorRequired]
+    public IReadOnlyList<CompanionAdventure> Adventures { get; set; } = [];
+
+    /// <summary>Gets or sets the Adventure whose private memories are active.</summary>
+    [Parameter, EditorRequired]
+    public CompanionAdventure SelectedAdventure { get; set; } = null!;
+
+    /// <summary>Gets or sets the callback that commits a different Adventure.</summary>
+    [Parameter]
+    public EventCallback<CompanionAdventure> SelectedAdventureChanged { get; set; }
+
     [Parameter]
     public EventCallback<string> OnFeedback { get; set; }
 

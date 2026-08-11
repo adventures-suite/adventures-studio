@@ -1,0 +1,95 @@
+@implements IDisposable
+@inject TransientBackNavigationService BackNavigation
+
+<div class="memory-adventure-selector" @onkeydown="HandleKeyDown">
+    <span id="memory-adventure-label" class="selector-label">Adventure</span>
+    <button @ref="_trigger"
+            class="memory-adventure-trigger"
+            type="button"
+            aria-labelledby="memory-adventure-label memory-adventure-value"
+            aria-haspopup="listbox"
+            aria-expanded="@_isOpen"
+            @onclick="ToggleAsync">
+        <span id="memory-adventure-value">@SelectedAdventure.Title</span>
+        <b aria-hidden="true">@(_isOpen ? "⌃" : "⌄")</b>
+    </button>
+    @if (_isOpen)
+    {
+        <button class="selector-scrim" type="button" tabindex="-1" aria-label="Close Adventure selector" @onclick="DismissAsync"></button>
+        <div class="memory-adventure-options" role="listbox" aria-labelledby="memory-adventure-label">
+            @foreach (var adventure in Adventures)
+            {
+                <button type="button"
+                        role="option"
+                        aria-selected="@(adventure.Id == SelectedAdventure.Id)"
+                        class="@(adventure.Id == SelectedAdventure.Id ? "selected" : null)"
+                        @onclick="() => SelectAsync(adventure)">
+                    <span><strong>@adventure.Title</strong><small>@adventure.TravelDates</small></span>
+                    <b aria-hidden="true">@(adventure.Id == SelectedAdventure.Id ? "✓" : "")</b>
+                </button>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private ElementReference _trigger;
+    private IDisposable? _backRegistration;
+    private bool _isOpen;
+
+    /// <summary>Gets or sets the Adventures available to the traveler.</summary>
+    [Parameter, EditorRequired]
+    public IReadOnlyList<CompanionAdventure> Adventures { get; set; } = [];
+
+    /// <summary>Gets or sets the Adventure whose memories are shown.</summary>
+    [Parameter, EditorRequired]
+    public CompanionAdventure SelectedAdventure { get; set; } = null!;
+
+    /// <summary>Gets or sets the callback that commits a selection.</summary>
+    [Parameter]
+    public EventCallback<CompanionAdventure> SelectedAdventureChanged { get; set; }
+
+    private async Task ToggleAsync()
+    {
+        if (_isOpen)
+        {
+            await DismissAsync();
+            return;
+        }
+
+        _isOpen = true;
+        _backRegistration = BackNavigation.Register(DismissAsync);
+    }
+
+    private async Task SelectAsync(CompanionAdventure adventure)
+    {
+        await SelectedAdventureChanged.InvokeAsync(adventure);
+        await DismissAsync();
+    }
+
+    private async Task DismissAsync()
+    {
+        if (!_isOpen)
+        {
+            return;
+        }
+
+        _isOpen = false;
+        _backRegistration?.Dispose();
+        _backRegistration = null;
+        await InvokeAsync(StateHasChanged);
+        await _trigger.FocusAsync();
+    }
+
+    private Task HandleKeyDown(KeyboardEventArgs args) => args.Key == "Escape" && _isOpen
+        ? DismissAsync()
+        : Task.CompletedTask;
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        _isOpen = false;
+        _backRegistration?.Dispose();
+        _backRegistration = null;
+    }
+}

@@ -2,6 +2,7 @@
 @implements IDisposable
 @inject CompanionContentService ContentService
 @inject PlaybookContentService PlaybookService
+@inject ICompanionAppearanceService Appearance
 
 @if (_adventures.Count == 0 || _adventure is null)
 {
@@ -12,7 +13,7 @@
 }
 else
 {
-    <div class="companion-shell">
+    <div class="companion-shell theme-@Appearance.EffectivePalette.ToString().ToLowerInvariant()" data-theme="@Appearance.EffectivePalette.ToString().ToLowerInvariant()">
         <header class="topbar">
             <div class="brand-lockup" aria-label="AdventuresSuite Companion">
                 <span class="suite-mark" aria-hidden="true">
@@ -21,6 +22,14 @@ else
                 <span><strong>AdventuresSuite</strong><small>Companion</small></span>
             </div>
             <div class="header-actions">
+                <label class="appearance-picker">
+                    <span class="visually-hidden">Appearance</span>
+                    <select aria-label="Appearance" value="@Appearance.Preference" @onchange="ChangeAppearance">
+                        <option value="System">System</option>
+                        <option value="Light">Light</option>
+                        <option value="Dark">Dark</option>
+                    </select>
+                </label>
                 <span class="creator-badge" role="img" aria-label="Presented by The Simonton Adventures">
                     <img src="brand/the-simonton-adventures/logo-horizontal.svg"
                          alt="" />
@@ -68,7 +77,10 @@ else
                             <ReadinessTab Adventure="_adventure" OnFeedback="ShowToast" />
                             break;
                         case CompanionTab.Memories:
-                            <MemoriesTab OnFeedback="ShowToast" />
+                            <MemoriesTab Adventures="_adventures"
+                                         SelectedAdventure="_adventure"
+                                         SelectedAdventureChanged="SelectMemoryAdventure"
+                                         OnFeedback="ShowToast" />
                             break;
                         case CompanionTab.Playbook:
                             @if (_playbook is not null)
@@ -115,6 +127,7 @@ else
     {
         _adventures = await ContentService.LoadAsync();
         _adventure = _adventures.FirstOrDefault();
+		Appearance.Changed += OnAppearanceChanged;
         _timer = new PeriodicTimer(TimeSpan.FromMinutes(1));
         _timerCancellation = new CancellationTokenSource();
         _ = RefreshCountdownAsync(_timerCancellation.Token);
@@ -132,6 +145,18 @@ else
         _adventureMenuOpen = false;
         _selectedTab = CompanionTab.Home;
     }
+
+    private void SelectMemoryAdventure(CompanionAdventure adventure) => _adventure = adventure;
+
+    private void ChangeAppearance(ChangeEventArgs args)
+    {
+        var preference = Enum.TryParse(args.Value?.ToString(), ignoreCase: true, out CompanionAppearancePreference parsed)
+            ? parsed
+            : CompanionAppearancePreference.System;
+        Appearance.SetPreference(preference);
+    }
+
+    private void OnAppearanceChanged(object? sender, EventArgs args) => _ = InvokeAsync(StateHasChanged);
 
     private async Task OpenPlaybook()
     {
@@ -173,6 +198,7 @@ else
 
     public void Dispose()
     {
+		Appearance.Changed -= OnAppearanceChanged;
         _timerCancellation?.Cancel();
         _timerCancellation?.Dispose();
         _timer?.Dispose();

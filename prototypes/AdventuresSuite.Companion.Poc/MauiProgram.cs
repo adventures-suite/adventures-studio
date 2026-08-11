@@ -17,6 +17,11 @@ public static class MauiProgram
 		builder.Services.AddMauiBlazorWebView();
 		builder.Services.AddSingleton<Services.CompanionContentService>();
 		builder.Services.AddSingleton<Services.PlaybookContentService>();
+		builder.Services.AddSingleton<Services.IAppearancePreferenceStore, Services.MauiAppearancePreferenceStore>();
+		builder.Services.AddSingleton<Services.ISystemAppearanceSource, Services.MauiSystemAppearanceSource>();
+		builder.Services.AddSingleton<Services.ICompanionAppearanceService, Services.CompanionAppearanceService>();
+		builder.Services.AddSingleton<Services.TransientBackNavigationService>();
+		builder.Services.AddSingleton<MainPage>();
 
 #if DEBUG
 		builder.Services.AddBlazorWebViewDeveloperTools();
