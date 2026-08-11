@@ -57,7 +57,7 @@ test('deployer action sets preserve authority separation', () => {
   const assignment = JSON.parse(readFileSync('infrastructure/container-apps-migrations/roles/rbac-assignment-deployer.role.json'));
   const federation = JSON.parse(readFileSync('infrastructure/container-apps-migrations/roles/identity-federation-deployer.role.json'));
   const infraActions = infrastructure.properties.permissions.flatMap(value => value.actions);
-  const rbacActions = [...roleDefinition.permissions, ...assignment.permissions].flatMap(value => value.actions);
+  const rbacActions = [...roleDefinition.properties.permissions, ...assignment.permissions].flatMap(value => value.actions);
   assert.ok(infraActions.some(value => value.endsWith('/write')));
   assert.ok(infraActions.every(value => !value.startsWith('Microsoft.Authorization/')));
   assert.ok(infraActions.every(value => !value.startsWith('Microsoft.ManagedIdentity/')));
@@ -65,6 +65,19 @@ test('deployer action sets preserve authority separation', () => {
   assert.ok(federation.permissions.flatMap(value => value.actions).filter(value => value.endsWith('/write')).every(value => value === 'Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentityCredentials/write'));
   assert.ok(rbacActions.filter(value => value.endsWith('/write')).every(value => value.startsWith('Microsoft.Authorization/') || value === 'Microsoft.Resources/deployments/write'));
   assert.ok(rbacActions.every(value => !value.startsWith('Microsoft.Network/') && !value.startsWith('Microsoft.App/jobs/write') && !value.startsWith('Microsoft.ContainerRegistry/registries/write')));
+  assert.equal(roleDefinition.name, '78b75ed3-4333-4e87-a79c-d39bad7aaab3');
+  assert.equal(roleDefinition.properties.roleName, 'AdventuresSuite Migration RBAC Role Definition Deployer');
+  assert.deepEqual(roleDefinition.properties.permissions[0], {
+    actions: [
+      'Microsoft.Resources/deployments/read',
+      'Microsoft.Resources/deployments/write',
+      'Microsoft.Resources/deployments/operationStatuses/read',
+      'Microsoft.Authorization/roleDefinitions/read',
+      'Microsoft.Authorization/roleDefinitions/write',
+    ],
+    notActions: [], dataActions: [], notDataActions: [],
+  });
+  assert.deepEqual(roleDefinition.properties.assignableScopes, ['/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev']);
   assert.equal(infrastructure.name, '4bfa5b8d-8e4a-4fc8-9f2b-6115f07cad54');
   assert.equal(infrastructure.properties.roleName, 'AdventuresSuite Migration Infrastructure Deployer');
   assert.deepEqual(infrastructure.properties.assignableScopes, ['/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev']);
@@ -83,6 +96,13 @@ test('old combined templates are absent and deployment order is documented', () 
   const positions = ['foundation-resources.bicep', 'identity-access.bicep', 'foundation-access.bicep', 'job-resource.bicep', 'job-access.bicep'].map(name => readme.indexOf(name));
   assert.ok(positions.every((value, index) => index === 0 || value > positions[index - 1]), 'deployment order must be explicit');
   assert.throws(() => readFileSync('infrastructure/container-apps-migrations/job-access.dev.bicepparam'));
+});
+
+test('bootstrap template creates exactly one fixed role definition and no assignment', () => {
+  const template = readFileSync('infrastructure/container-apps-migrations/bootstrap-role-definition.bicep', 'utf8');
+  assert.match(template, /loadJsonContent\('\.\/roles\/rbac-role-definition-deployer\.role\.json'\)/);
+  assert.equal((template.match(/Microsoft\.Authorization\/roleDefinitions@/g) ?? []).length, 1);
+  assert.doesNotMatch(template, /roleAssignments|Microsoft\.(Network|App\/|ContainerRegistry|OperationalInsights|ManagedIdentity)/);
 });
 
 test('third-party GitHub Actions are pinned to full commit SHAs', () => {

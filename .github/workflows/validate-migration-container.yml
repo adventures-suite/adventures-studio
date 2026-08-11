@@ -96,7 +96,7 @@ jobs:
 
       - name: Build Bicep template
         run: |
-          for template in deployer-role-definitions foundation-temporary-access foundation-resources identity-access foundation-access job-resource job-access; do
+          for template in bootstrap-role-definition deployer-role-definitions foundation-temporary-access foundation-resources identity-access foundation-access job-resource job-access; do
             az bicep build --file "infrastructure/container-apps-migrations/$template.bicep"
           done
 
