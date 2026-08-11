@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Reflection;
+using Microsoft.Extensions.Logging;
 
 namespace AdventuresSuite.Companion.Poc;
 
@@ -14,8 +15,29 @@ public static class MauiProgram
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
 			});
 
+		var metadata = typeof(MauiProgram).Assembly
+			.GetCustomAttributes<AssemblyMetadataAttribute>()
+			.ToDictionary(item => item.Key, item => item.Value, StringComparer.Ordinal);
+		var providerSettings = Services.CompanionProviderConfiguration.Resolve(
+			Environment.GetEnvironmentVariable("ADVENTURES_COMPANION_CONTENT_PROVIDER"),
+			Environment.GetEnvironmentVariable("ADVENTURES_COMPANION_API_BASE_ADDRESS"),
+			metadata.GetValueOrDefault("AdventuresCompanion.ContentProvider"),
+			metadata.GetValueOrDefault("AdventuresCompanion.ApiBaseAddress"));
+
 		builder.Services.AddMauiBlazorWebView();
-		builder.Services.AddSingleton<Services.CompanionContentService>();
+		if (providerSettings.Provider == Models.CompanionContentProviderKind.Demo)
+		{
+			builder.Services.AddSingleton<Services.ICompanionContentProvider, Services.CompanionContentService>();
+		}
+		else
+		{
+			builder.Services.AddSingleton(new HttpClient { BaseAddress = providerSettings.ApiBaseAddress });
+			builder.Services.AddSingleton<AdventuresSuite.Companion.Client.ICompanionAdventureListTransport,
+				AdventuresSuite.Companion.Client.HttpCompanionAdventureListTransport>();
+			builder.Services.AddSingleton<AdventuresSuite.Companion.Client.ICompanionAdventureListService,
+				AdventuresSuite.Companion.Client.CompanionAdventureListService>();
+			builder.Services.AddSingleton<Services.ICompanionContentProvider, Services.ApiCompanionContentProvider>();
+		}
 		builder.Services.AddSingleton<Services.PlaybookContentService>();
 		builder.Services.AddSingleton<Services.IAppearancePreferenceStore, Services.MauiAppearancePreferenceStore>();
 		builder.Services.AddSingleton<Services.MauiSystemAppearanceSource>();

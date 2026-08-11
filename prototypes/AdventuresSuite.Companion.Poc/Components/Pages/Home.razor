@@ -1,15 +1,28 @@
 ﻿@page "/"
 @implements IDisposable
-@inject CompanionContentService ContentService
+@inject ICompanionContentProvider ContentProvider
 @inject PlaybookContentService PlaybookService
 @inject ICompanionAppearanceService Appearance
 
-@if (_adventures.Count == 0 || _adventure is null)
+@if (_state is null)
 {
     <div class="loading-state" role="status">
         <div class="brand-mark">S</div>
         <p>Preparing your Adventure…</p>
     </div>
+}
+else if (_state != AdventuresSuite.Companion.Client.CompanionAdventureListState.Success || _adventure is null)
+{
+    <section class="loading-state companion-load-state" role="@(_state == AdventuresSuite.Companion.Client.CompanionAdventureListState.Empty ? "status" : "alert")">
+        <div class="brand-mark">S</div>
+        <h1>@StateHeading</h1>
+        <p>@StateMessage</p>
+        @if (!string.IsNullOrWhiteSpace(_supportId))
+        {
+            <small>Support ID: @_supportId</small>
+        }
+        <button type="button" @onclick="LoadAsync">Try again</button>
+    </section>
 }
 else
 {
@@ -64,11 +77,18 @@ else
                     @switch (_selectedTab)
                     {
                         case CompanionTab.Home:
-                            <HomeTab Adventure="_adventure"
-                                     OnOpenJourney="() => SelectTab(CompanionTab.Itinerary)"
-                                     OnOpenReadiness="() => SelectTab(CompanionTab.Readiness)"
-                                     OnOpenPlaybook="OpenPlaybook"
-                                     OnFeedback="ShowToast" />
+                            @if (_hasDetailedContent)
+                            {
+                                <HomeTab Adventure="_adventure"
+                                         OnOpenJourney="() => SelectTab(CompanionTab.Itinerary)"
+                                         OnOpenReadiness="() => SelectTab(CompanionTab.Readiness)"
+                                         OnOpenPlaybook="OpenPlaybook"
+                                         OnFeedback="ShowToast" />
+                            }
+                            else
+                            {
+                                <AdventureListTab Adventure="_adventure" />
+                            }
                             break;
                         case CompanionTab.Itinerary:
                             <JourneyTab Adventure="_adventure" />
@@ -99,12 +119,15 @@ else
             </ErrorContent>
         </ErrorBoundary>
 
-        <nav class="tabbar" aria-label="Companion navigation">
-            @TabButton(CompanionTab.Home, "⌂", "Home")
-            @TabButton(CompanionTab.Itinerary, "≡", "Journey")
-            @TabButton(CompanionTab.Readiness, "✓", "Ready")
-            @TabButton(CompanionTab.Memories, "◇", "Memories")
-        </nav>
+        @if (_hasDetailedContent)
+        {
+            <nav class="tabbar" aria-label="Companion navigation">
+                @TabButton(CompanionTab.Home, "⌂", "Home")
+                @TabButton(CompanionTab.Itinerary, "≡", "Journey")
+                @TabButton(CompanionTab.Readiness, "✓", "Ready")
+                @TabButton(CompanionTab.Memories, "◇", "Memories")
+            </nav>
+        }
 
         @if (_toast is not null)
         {
@@ -122,16 +145,48 @@ else
     private string? _toast;
     private PeriodicTimer? _timer;
     private CancellationTokenSource? _timerCancellation;
+    private AdventuresSuite.Companion.Client.CompanionAdventureListState? _state;
+    private bool _hasDetailedContent;
+    private string? _errorTitle;
+    private string? _supportId;
 
     protected override async Task OnInitializedAsync()
     {
-        _adventures = await ContentService.LoadAsync();
-        _adventure = _adventures.FirstOrDefault();
 		Appearance.Changed += OnAppearanceChanged;
+        await LoadAsync();
         _timer = new PeriodicTimer(TimeSpan.FromMinutes(1));
         _timerCancellation = new CancellationTokenSource();
         _ = RefreshCountdownAsync(_timerCancellation.Token);
     }
+
+    private async Task LoadAsync()
+    {
+        _state = null;
+        _adventure = null;
+        var result = await ContentProvider.LoadAsync();
+        _state = result.State;
+        _adventures = result.Adventures;
+        _adventure = _adventures.FirstOrDefault(adventure => adventure.IsCurrent) ?? _adventures.FirstOrDefault();
+        _hasDetailedContent = result.HasDetailedContent;
+        _errorTitle = result.ErrorTitle;
+        _supportId = result.SupportId;
+    }
+
+    private string StateHeading => _state switch
+    {
+        AdventuresSuite.Companion.Client.CompanionAdventureListState.Empty => "No Adventures yet",
+        AdventuresSuite.Companion.Client.CompanionAdventureListState.Unavailable => "Companion is unavailable",
+        AdventuresSuite.Companion.Client.CompanionAdventureListState.Unauthorized => "Sign-in is required",
+        _ => _errorTitle ?? "Adventure list unavailable"
+    };
+
+    private string StateMessage => _state switch
+    {
+        AdventuresSuite.Companion.Client.CompanionAdventureListState.Empty => "Your authorized Adventures will appear here.",
+        AdventuresSuite.Companion.Client.CompanionAdventureListState.Unavailable => "Check your connection and try again.",
+        AdventuresSuite.Companion.Client.CompanionAdventureListState.Unauthorized => "This session cannot access Companion Adventures.",
+        _ => "Try again later or provide the support ID if you contact support."
+    };
 
     private RenderFragment TabButton(CompanionTab tab, string icon, string label) => @<button class="@(_selectedTab == tab ? "active" : null)" @onclick="() => _selectedTab = tab"><span>@icon</span><small>@label</small></button>;
 
