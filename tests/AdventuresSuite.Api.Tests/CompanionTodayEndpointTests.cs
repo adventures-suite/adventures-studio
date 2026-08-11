@@ -231,7 +231,7 @@ public sealed class CompanionTodayMappingTests
         foreach (var source in invalid)
         {
             Assert.False(CompanionDtoMapper.TryMapToday(
-                source, "adv_demo", Now, "support_demo", out var result));
+                source, "creator_demo", "trav_demo", "adv_demo", Now, "support_demo", out var result));
             Assert.Null(result);
         }
     }
@@ -246,8 +246,46 @@ public sealed class CompanionTodayMappingTests
         var source = Projection() with { TodayItems = items };
 
         Assert.False(CompanionDtoMapper.TryMapToday(
-            source, "adv_demo", Now, "support_demo", out var result));
+            source, "creator_demo", "trav_demo", "adv_demo", Now, "support_demo", out var result));
         Assert.Null(result);
+    }
+
+    /// <summary>Ensures validators bind opaque projection versions to every authorization boundary.</summary>
+    [Fact]
+    public void ProjectionVersionIsBoundToAuthorizationAndInformationPolicyScope()
+    {
+        var source = Projection();
+        Assert.True(CompanionDtoMapper.TryMapToday(
+            source, "creator_demo", "trav_demo", "adv_demo", Now, "support_demo", out var baseline));
+        Assert.True(CompanionDtoMapper.TryMapToday(
+            source, "creator_other", "trav_demo", "adv_demo", Now, "support_demo", out var otherCreator));
+        Assert.True(CompanionDtoMapper.TryMapToday(
+            source with { Adventure = source.Adventure with { TravelerId = "trav_other" } },
+            "creator_demo", "trav_other", "adv_demo", Now, "support_demo", out var otherTraveler));
+        Assert.True(CompanionDtoMapper.TryMapToday(
+            source with { Adventure = source.Adventure with { AdventureId = "adv_other" } },
+            "creator_demo", "trav_demo", "adv_other", Now, "support_demo", out var otherAdventure));
+        Assert.True(CompanionDtoMapper.TryMapToday(
+            source with { InformationProfileVersion = "info_demo_02" },
+            "creator_demo", "trav_demo", "adv_demo", Now, "support_demo", out var otherPolicy));
+
+        var versions = new[]
+        {
+            baseline!.ProjectionVersion,
+            otherCreator!.ProjectionVersion,
+            otherTraveler!.ProjectionVersion,
+            otherAdventure!.ProjectionVersion,
+            otherPolicy!.ProjectionVersion
+        };
+        Assert.Equal(versions.Length, versions.Distinct(StringComparer.Ordinal).Count());
+        Assert.All(versions, version => Assert.Matches("^pv_today_[0-9a-f]{64}$", version));
+        Assert.All(versions, version =>
+        {
+            Assert.DoesNotContain("creator", version, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("trav", version, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("adv", version, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("info", version, StringComparison.OrdinalIgnoreCase);
+        });
     }
 
     private static CompanionTodayProjection Projection() => new(

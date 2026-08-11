@@ -141,7 +141,8 @@ public sealed class DeterministicCompanionProjectionService(
                 membershipVersion: access.MembershipVersion),
             cancellationToken);
         if (!decision.IsAllowed
-            || !CompanionDtoMapper.TryMapToday(source, adventureId, now, supportId, out var dto))
+            || !CompanionDtoMapper.TryMapToday(
+                source, access.CreatorId.Value, access.TravelerId, adventureId, now, supportId, out var dto))
         {
             return await Unavailable<CompanionTodayDto>();
         }

@@ -1,4 +1,5 @@
 using AdventuresSuite.Companion.Contracts;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace AdventuresSuite.Companion.Application;
@@ -51,15 +52,19 @@ internal static class CompanionDtoMapper
 
     internal static bool TryMapToday(
         CompanionTodayProjection source,
+        string creatorId,
+        string travelerId,
         string requestedAdventureId,
         DateTimeOffset now,
         string supportId,
         out CompanionTodayDto? result)
     {
         result = null;
-        if (!IsValidIdentity(requestedAdventureId)
+        if (!IsValidIdentity(creatorId)
+            || !IsValidIdentity(travelerId)
+            || !IsValidIdentity(requestedAdventureId)
             || !string.Equals(source.Adventure.AdventureId, requestedAdventureId, StringComparison.Ordinal)
-            || !IsValidIdentity(source.Adventure.TravelerId)
+            || !string.Equals(source.Adventure.TravelerId, travelerId, StringComparison.Ordinal)
             || !Enum.IsDefined(source.Adventure.Lifecycle)
             || source.Adventure.EndDate < source.Adventure.StartDate
             || !IsIanaTimeZone(source.Adventure.PrimaryTimeZone)
@@ -83,7 +88,7 @@ internal static class CompanionDtoMapper
             return false;
         }
 
-        var projectionVersion = $"pv_today_{source.Adventure.PlanVersion}_{source.Adventure.ParticipationVersion}_{source.LocalDate:yyyyMMdd}";
+        var projectionVersion = CreateTodayProjectionVersion(source, creatorId, travelerId);
         result = new CompanionTodayDto
         {
             SchemaVersion = "1.0",
@@ -100,6 +105,33 @@ internal static class CompanionDtoMapper
             Notice = source.Notice
         };
         return true;
+    }
+
+    private static string CreateTodayProjectionVersion(
+        CompanionTodayProjection source,
+        string creatorId,
+        string travelerId)
+    {
+        var values = new[]
+        {
+            creatorId,
+            travelerId,
+            source.Adventure.AdventureId,
+            source.InformationProfileVersion,
+            source.Adventure.PlanVersion.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            source.Adventure.ParticipationVersion.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            source.Adventure.UpdatedAtUtc.ToString("O", System.Globalization.CultureInfo.InvariantCulture),
+            source.LocalDate.ToString("O", System.Globalization.CultureInfo.InvariantCulture)
+        };
+        var scope = new StringBuilder();
+        foreach (var value in values)
+        {
+            scope.Append(value.Length.ToString(System.Globalization.CultureInfo.InvariantCulture))
+                .Append(':')
+                .Append(value);
+        }
+
+        return $"pv_today_{Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(scope.ToString()))).ToLowerInvariant()}";
     }
 
     internal static CompanionItineraryDto MapItinerary(

@@ -100,7 +100,8 @@ public sealed class AuthoritativeCompanionProjectionService(
             adventureId,
             cancellationToken);
         if (value is null
-            || !CompanionDtoMapper.TryMapToday(value, adventureId, now, supportId, out var dto))
+            || !CompanionDtoMapper.TryMapToday(
+                value, access.CreatorId.Value, access.TravelerId, adventureId, now, supportId, out var dto))
         {
             return Unavailable<CompanionTodayDto>();
         }
