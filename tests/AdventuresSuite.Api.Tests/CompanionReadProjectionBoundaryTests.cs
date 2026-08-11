@@ -20,6 +20,7 @@ public sealed class CompanionReadProjectionBoundaryTests
         Assert.All(
             typeof(ICompanionAdventureSummaryQuery).GetMethods()
                 .Concat(typeof(ICompanionAdventureDetailQuery).GetMethods())
+                .Concat(typeof(ICompanionTodayQuery).GetMethods())
                 .SelectMany(method => method.GetParameters().Select(parameter => parameter.ParameterType)
                     .Append(method.ReturnType)),
             type => Assert.DoesNotContain("Contracts", type.FullName ?? string.Empty, StringComparison.Ordinal));

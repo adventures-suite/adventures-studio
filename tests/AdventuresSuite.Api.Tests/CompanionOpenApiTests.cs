@@ -10,7 +10,7 @@ public sealed class CompanionOpenApiTests(CompanionApiFactory factory)
 {
     private readonly HttpClient _client = factory.CreateClient();
 
-    /// <summary>Ensures OpenAPI 3.1 contains only the first fully documented read operation.</summary>
+    /// <summary>Ensures OpenAPI 3.1 contains every implemented, fully documented read operation.</summary>
     [Fact]
     public async Task OpenApiContainsCompleteV1OperationMetadata()
     {
@@ -24,7 +24,12 @@ public sealed class CompanionOpenApiTests(CompanionApiFactory factory)
 
         var paths = document.RootElement.GetProperty("paths");
         Assert.Equal(
-            new[] { "/v1/companion/adventures", "/v1/companion/adventures/{adventureId}" },
+            new[]
+            {
+                "/v1/companion/adventures",
+                "/v1/companion/adventures/{adventureId}",
+                "/v1/companion/adventures/{adventureId}/today"
+            },
             paths.EnumerateObject().Select(value => value.Name).Order(StringComparer.Ordinal));
         var operation = paths.GetProperty("/v1/companion/adventures").GetProperty("get");
         Assert.Equal("ListCompanionAdventures", operation.GetProperty("operationId").GetString());
@@ -52,6 +57,20 @@ public sealed class CompanionOpenApiTests(CompanionApiFactory factory)
         Assert.Equal("path", detailParameter.GetProperty("in").GetString());
         Assert.True(detailParameter.GetProperty("required").GetBoolean());
         Assert.False(string.IsNullOrWhiteSpace(detailParameter.GetProperty("description").GetString()));
+
+        var today = paths.GetProperty("/v1/companion/adventures/{adventureId}/today").GetProperty("get");
+        Assert.Equal("GetCompanionToday", today.GetProperty("operationId").GetString());
+        Assert.False(string.IsNullOrWhiteSpace(today.GetProperty("summary").GetString()));
+        Assert.Contains("does not establish a booking", today.GetProperty("description").GetString(),
+            StringComparison.Ordinal);
+        var todayResponses = today.GetProperty("responses");
+        foreach (var status in new[] { "200", "304", "400", "401", "403", "404", "500" })
+            Assert.True(todayResponses.TryGetProperty(status, out _), $"Missing Today response {status}.");
+        var todayParameter = Assert.Single(today.GetProperty("parameters").EnumerateArray());
+        Assert.Equal("adventureId", todayParameter.GetProperty("name").GetString());
+        Assert.Equal("path", todayParameter.GetProperty("in").GetString());
+        Assert.True(todayParameter.GetProperty("required").GetBoolean());
+        Assert.False(string.IsNullOrWhiteSpace(todayParameter.GetProperty("description").GetString()));
     }
 
     /// <summary>Ensures Scalar consumes the generated contract in Test.</summary>
@@ -102,6 +121,8 @@ public sealed class CompanionProductionGateTests(ProductionCompanionApiFactory f
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         var detail = await _client.GetAsync("/v1/companion/adventures/adv_demo_italy_2026");
         Assert.Equal(HttpStatusCode.Unauthorized, detail.StatusCode);
+        var today = await _client.GetAsync("/v1/companion/adventures/adv_demo_italy_2026/today");
+        Assert.Equal(HttpStatusCode.Unauthorized, today.StatusCode);
     }
 
     /// <summary>Ensures a production attempt to select deterministic identities and fixtures fails startup.</summary>

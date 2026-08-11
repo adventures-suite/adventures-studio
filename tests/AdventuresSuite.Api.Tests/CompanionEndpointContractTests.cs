@@ -12,6 +12,7 @@ public sealed class CompanionEndpointContractTests(CompanionApiFactory factory)
 {
     private const string Route = "/v1/companion/adventures";
     private const string DetailRoute = "/v1/companion/adventures/adv_demo_italy_2026";
+    private const string TodayRoute = "/v1/companion/adventures/adv_demo_italy_2026/today";
     private readonly HttpClient _client = factory.CreateClient();
 
     /// <summary>Ensures only the JSON collection slice is active and media delivery remains separate.</summary>
@@ -27,6 +28,7 @@ public sealed class CompanionEndpointContractTests(CompanionApiFactory factory)
         Assert.InRange(bytes.Length, 1, CompanionContractLimits.MaximumJsonResponseBytes);
 
         Assert.Equal(HttpStatusCode.OK, (await _client.GetAsync(DetailRoute)).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await _client.GetAsync(TodayRoute)).StatusCode);
         using var media = await _client.GetAsync("/v1/companion/resources/res_demo/content");
         Assert.Equal(HttpStatusCode.NotFound, media.StatusCode);
         Assert.Empty(await media.Content.ReadAsByteArrayAsync());
@@ -200,6 +202,7 @@ public sealed class CompanionEndpointContractTests(CompanionApiFactory factory)
     [Theory]
     [InlineData(Route, "companion.adventures.list", CompanionTelemetry.ListAdventuresOperation)]
     [InlineData(DetailRoute, "companion.adventures.get", CompanionTelemetry.GetAdventureOperation)]
+    [InlineData(TodayRoute, "companion.adventures.today", CompanionTelemetry.GetTodayOperation)]
     public async Task OperationalSignalsExcludeIdentityAndResourceDimensions(
         string route, string activityName, string operation)
     {
@@ -208,7 +211,11 @@ public sealed class CompanionEndpointContractTests(CompanionApiFactory factory)
         {
             ShouldListenTo = source => source.Name == CompanionTelemetry.ActivitySourceName,
             Sample = static (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllDataAndRecorded,
-            ActivityStopped = activity => stopped = activity
+            ActivityStopped = activity =>
+            {
+                if (activity.DisplayName == activityName)
+                    stopped = activity;
+            }
         };
         ActivitySource.AddActivityListener(activityListener);
 
@@ -229,9 +236,12 @@ public sealed class CompanionEndpointContractTests(CompanionApiFactory factory)
         Assert.NotNull(stopped);
         Assert.Equal(activityName, stopped.DisplayName);
         Assert.Equal(operation, stopped.GetTagItem("operation"));
-        Assert.NotEmpty(measurements);
+        var operationMeasurements = measurements.Where(value => value.Tags.Any(tag =>
+            tag.Key == "operation" && string.Equals(tag.Value?.ToString(), operation, StringComparison.Ordinal)))
+            .ToArray();
+        Assert.NotEmpty(operationMeasurements);
         var signalTags = stopped.Tags.Select(tag => tag.Key)
-            .Concat(measurements.SelectMany(value => value.Tags.Select(tag => tag.Key)))
+            .Concat(operationMeasurements.SelectMany(value => value.Tags.Select(tag => tag.Key)))
             .ToArray();
         Assert.Contains("operation", signalTags);
         Assert.Contains("outcome", signalTags);
