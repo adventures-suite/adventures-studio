@@ -19,5 +19,10 @@
     <Compile Include="../../prototypes/AdventuresSuite.Companion.Poc/Services/CompanionAppearance.cs" Link="Presentation/CompanionAppearance.cs" />
     <Compile Include="../../prototypes/AdventuresSuite.Companion.Poc/Services/TransientBackNavigationService.cs" Link="Presentation/TransientBackNavigationService.cs" />
     <Compile Include="../../prototypes/AdventuresSuite.Companion.Poc/Services/TransientSelectorState.cs" Link="Presentation/TransientSelectorState.cs" />
+    <Compile Include="../../prototypes/AdventuresSuite.Companion.Poc/Models/CompanionAdventure.cs" Link="Presentation/CompanionAdventure.cs" />
+    <Compile Include="../../prototypes/AdventuresSuite.Companion.Poc/Services/CompanionContentProviders.cs" Link="Presentation/CompanionContentProviders.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/AdventuresSuite.Companion.Client/AdventuresSuite.Companion.Client.csproj" />
   </ItemGroup>
 </Project>

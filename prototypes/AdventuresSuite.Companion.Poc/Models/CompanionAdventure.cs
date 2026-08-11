@@ -9,8 +9,8 @@ public sealed record CompanionAdventure(
     string Subtitle,
     string Status,
     string TravelDates,
-    string HeroImagePath,
-    string HeroAlternativeText,
+    string? HeroImagePath,
+    string? HeroAlternativeText,
     DateOnly StartDate,
     DateOnly EndDate,
     IReadOnlyList<CompanionSegment> Segments)
@@ -32,3 +32,13 @@ public sealed record CompanionSegment(
     string ArrivalDate,
     string TimeZone,
     IReadOnlyList<string> Waypoints);
+
+/// <summary>Identifies the explicitly configured Companion content provider.</summary>
+public enum CompanionContentProviderKind
+{
+    /// <summary>Uses bundled fictional editorial JSON for the presentation demo.</summary>
+    Demo,
+
+    /// <summary>Uses the typed read-only Companion Adventure-list API client.</summary>
+    Api
+}

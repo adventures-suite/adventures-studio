@@ -9,7 +9,7 @@ namespace AdventuresSuite.Companion.Poc.Services;
 /// projection. Production mobile data will come from an authorized API and
 /// encrypted offline store rather than bundled editorial files.
 /// </summary>
-public sealed class CompanionContentService
+public sealed class CompanionContentService : ICompanionContentProvider
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -19,7 +19,7 @@ public sealed class CompanionContentService
     /// <summary>
     /// Loads the bundled Current Adventure and two Planned Adventures.
     /// </summary>
-    public async Task<IReadOnlyList<CompanionAdventure>> LoadAsync()
+    public async Task<CompanionContentResult> LoadAsync(CancellationToken cancellationToken = default)
     {
         await using var resourceStream = await FileSystem.OpenAppPackageFileAsync("Data/resources.json");
         var catalog = await JsonSerializer.DeserializeAsync<ResourceCatalogDocument>(resourceStream, JsonOptions)
@@ -32,10 +32,10 @@ public sealed class CompanionContentService
             await LoadAdventureAsync("3", catalog)
         };
 
-        return adventures
+        return CompanionContentResult.Success(adventures
             .OrderBy(adventure => adventure.IsCurrent ? 0 : 1)
             .ThenBy(adventure => adventure.StartDate)
-            .ToArray();
+            .ToArray(), hasDetailedContent: true);
     }
 
     private static async Task<CompanionAdventure> LoadAdventureAsync(string id, ResourceCatalogDocument catalog)

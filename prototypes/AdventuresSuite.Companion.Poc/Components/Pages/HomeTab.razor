@@ -1,7 +1,10 @@
 @using Microsoft.AspNetCore.Components
 
 <article class="hero-card">
-    <img class="hero-photo" src="@Adventure.HeroImagePath" alt="@Adventure.HeroAlternativeText" />
+    @if (!string.IsNullOrWhiteSpace(Adventure.HeroImagePath))
+    {
+        <img class="hero-photo" src="@Adventure.HeroImagePath" alt="@Adventure.HeroAlternativeText" />
+    }
     <div class="hero-shade"></div>
     <div class="hero-texture"></div>
     <div class="hero-content">
@@ -32,6 +35,8 @@
     </div>
 </article>
 
+@if (Adventure.Segments.Count > 0)
+{
 <section class="section-block today-block">
     <div class="section-heading">
         <div><span class="eyebrow">@(Adventure.IsCurrent ? "Today" : "First up")</span><h2>@TodayHeading</h2></div>
@@ -47,6 +52,7 @@
         </div>
     </article>
 </section>
+}
 
 <section class="adventure-tools" aria-label="Adventure tools">
     <button @onclick='() => FeedbackAsync("Calendar preview opened — no device write was performed.")'>

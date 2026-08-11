@@ -98,4 +98,8 @@
         <None Include="README.md" />
     </ItemGroup>
 
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\AdventuresSuite.Companion.Client\AdventuresSuite.Companion.Client.csproj" />
+    </ItemGroup>
+
 </Project>

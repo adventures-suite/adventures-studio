@@ -8,6 +8,12 @@ The POC uses the selected compass-pin concept as the shared AdventuresSuite
 master mark, with `Companion` as the product descriptor. Simonton Adventures is
 shown separately as the Creator presenting the selected Adventure.
 
+The content provider must be selected explicitly. Set
+`ADVENTURES_COMPANION_CONTENT_PROVIDER=Demo` to use the bundled fictional JSON,
+or set it to `Api` together with an absolute HTTPS
+`ADVENTURES_COMPANION_API_BASE_ADDRESS`. API failures remain visible API states;
+the application never falls back to bundled JSON.
+
 ## What it demonstrates
 
 - mobile-first navigation and visual direction;

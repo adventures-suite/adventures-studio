@@ -1,0 +1,19 @@
+@using Microsoft.AspNetCore.Components
+
+<div class="page-heading">
+    <span class="eyebrow">Authorized Adventures</span>
+    <h1>@Adventure.Title</h1>
+    <p>@Adventure.Subtitle</p>
+</div>
+
+<article class="list-summary-card">
+    <span class="adventure-state @(Adventure.IsCurrent ? "current" : "planned")">@Adventure.Status</span>
+    <h2>@Adventure.TravelDates</h2>
+    <p>The Adventure list is connected. Itinerary and other detail reads are intentionally deferred.</p>
+</article>
+
+@code {
+    /// <summary>Gets or sets the selected list-only Adventure.</summary>
+    [Parameter, EditorRequired]
+    public CompanionAdventure Adventure { get; set; } = null!;
+}
