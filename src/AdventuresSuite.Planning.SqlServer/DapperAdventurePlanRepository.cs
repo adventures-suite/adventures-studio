@@ -11,6 +11,39 @@ internal sealed class DapperAdventurePlanRepository(
     SqlConnection connection,
     SqlTransaction transaction) : IAdventurePlanRepository
 {
+    public async Task<IReadOnlyList<AdventurePlanDashboardItem>> ListDashboardAsync(
+        CreatorId creatorId,
+        CancellationToken cancellationToken = default)
+    {
+        RequireScope(creatorId);
+        const string sql = """
+            SELECT ap.AdventurePlanId, ap.Title, ap.WorkingDescription,
+                   ap.LifecycleStage, ap.PlanningStatus, ap.StartDate, ap.EndDate,
+                   (SELECT COUNT_BIG(*) FROM planning.DestinationVisits AS dv
+                     WHERE dv.CreatorId=ap.CreatorId AND dv.AdventurePlanId=ap.AdventurePlanId) AS DestinationCount,
+                   (SELECT COUNT_BIG(*) FROM planning.PlanningTasks AS pt
+                     WHERE pt.CreatorId=ap.CreatorId AND pt.AdventurePlanId=ap.AdventurePlanId
+                       AND pt.IsCompleted=0) AS OpenTaskCount
+              FROM planning.AdventurePlans AS ap
+             WHERE ap.CreatorId=@CreatorId AND ap.PlanningStatus<>'Archived'
+             ORDER BY ap.StartDate, ap.AdventurePlanId;
+            """;
+        var rows = await connection.QueryAsync<DashboardRow>(Command(
+            sql, new { CreatorId = creatorId.Value }, cancellationToken));
+        return rows.Select(row => new AdventurePlanDashboardItem
+        {
+            Id = new AdventurePlanId(row.AdventurePlanId),
+            Title = row.Title,
+            WorkingDescription = row.WorkingDescription,
+            LifecycleStage = Enum.Parse<AdventureLifecycleStage>(row.LifecycleStage),
+            Status = Enum.Parse<PlanningStatus>(row.PlanningStatus),
+            Dates = new PlanningDateRange(
+                DateOnly.FromDateTime(row.StartDate), DateOnly.FromDateTime(row.EndDate)),
+            DestinationCount = checked((int)row.DestinationCount),
+            OpenTaskCount = checked((int)row.OpenTaskCount)
+        }).ToArray();
+    }
+
     public async Task<AdventurePlan?> GetAsync(
         CreatorId creatorId,
         AdventurePlanId planId,
@@ -310,6 +343,16 @@ internal sealed class DapperAdventurePlanRepository(
     private sealed record TransportationRow(string TransportationSegmentId, string Mode, string Origin, string Destination, DateTime DepartureDate, TimeSpan? DepartureTimeLocal, string DepartureTimeZone, DateTime ArrivalDate, TimeSpan? ArrivalTimeLocal, string ArrivalTimeZone, string Status);
     private sealed record AccommodationRow(string AccommodationId, string Name, DateTime StartDate, DateTime EndDate, string TimeZone, string Status);
     private sealed record ReservationRow(string ReservationId, string Subject, string? ConfirmationReference, string Status);
+    private sealed record DashboardRow(
+        string AdventurePlanId,
+        string Title,
+        string? WorkingDescription,
+        string LifecycleStage,
+        string PlanningStatus,
+        DateTime StartDate,
+        DateTime EndDate,
+        long DestinationCount,
+        long OpenTaskCount);
     private sealed record NoteRow(string PlanningNoteId, string NoteText);
     private sealed record TaskRow(string PlanningTaskId, string Description, DateTime? DueDate, bool IsCompleted);
     private sealed record BudgetRow(string BudgetItemId, string Description, decimal Amount, string CurrencyCode);

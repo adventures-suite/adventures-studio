@@ -1,9 +1,13 @@
 using System.Reflection;
 using AdventuresSuite.Identity.ExternalId;
+using AdventuresSuite.Authorization.SqlServer;
+using AdventuresSuite.Planning.SqlServer;
 using TheSimontonAdventures.Web.Components;
 using TheSimontonAdventures.Web.Authorization;
 using TheSimontonAdventures.Web.Creators;
 using TheSimontonAdventures.Web.Resources;
+using TheSimontonAdventures.Web.Planning;
+using TheSimontonAdventures.Web.Planning.Persistence;
 using TheSimontonAdventures.Web.Services;
 using TheSimontonAdventures.Web.Validation;
 
@@ -36,6 +40,26 @@ builder.Services.AddScoped<ITrustedRequestHostContextAccessor>(services =>
 // configuration is present. Missing or partial external-provider state fails
 // startup instead of falling back to public-only or development identity.
 builder.AddAdventuresSuiteAuthentication();
+var authenticationMode = builder.Configuration["Authentication:Mode"];
+if (string.Equals(authenticationMode, nameof(AuthenticationMode.ExternalProvider), StringComparison.OrdinalIgnoreCase))
+{
+    var planningConnectionString = builder.Configuration["Authentication:SqlConnectionString"];
+    if (string.IsNullOrWhiteSpace(planningConnectionString))
+    {
+        throw new InvalidOperationException(
+            "The Planner workspace requires the approved authentication SQL connection string.");
+    }
+
+    builder.Services.AddSingleton<IPlanningTransactionFactory>(
+        new SqlPlanningTransactionFactory(planningConnectionString));
+    builder.Services.AddSingleton<ICreatorMembershipTransactionFactory>(
+        new SqlCreatorMembershipTransactionFactory(planningConnectionString));
+    builder.Services.AddSingleton<ICreatorMembershipProvider, TransactionalCreatorMembershipProvider>();
+    builder.Services.AddSingleton<IAuthorizationResourceFactsProvider, PlanningAuthorizationResourceFactsProvider>();
+    builder.Services.AddSingleton<IAuthorizationPolicyEvaluator, AuthorizationPolicyEvaluator>();
+    builder.Services.AddSingleton(TimeProvider.System);
+    builder.Services.AddScoped<IPlannerWorkspaceQueryService, PlannerWorkspaceQueryService>();
+}
 
 // Register the existing JSON-backed travel-content implementation.
 //

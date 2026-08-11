@@ -46,6 +46,11 @@ public sealed class PlanningRepositoryIntegrationTests
                 var loaded = await transaction.AdventurePlans.GetAsync(alpha, original.Id);
                 AssertPlanGraph(original, loaded!);
                 Assert.Single(await transaction.AdventurePlans.ListAsync(alpha));
+                var dashboard = Assert.Single(
+                    await transaction.AdventurePlans.ListDashboardAsync(alpha));
+                Assert.Equal(original.Id, dashboard.Id);
+                Assert.Equal(1, dashboard.DestinationCount);
+                Assert.Equal(1, dashboard.OpenTaskCount);
                 await transaction.CommitAsync();
             }
 
@@ -90,6 +95,7 @@ public sealed class PlanningRepositoryIntegrationTests
             await using (var transaction = await factory.BeginAsync(alpha))
             {
                 Assert.Empty(await transaction.AdventurePlans.ListAsync(alpha));
+                Assert.Empty(await transaction.AdventurePlans.ListDashboardAsync(alpha));
                 Assert.Equal(archived.Id, Assert.Single(
                     await transaction.AdventurePlans.ListArchivedAsync(alpha)).Id);
                 Assert.Equal(PlanningStatus.Archived,

@@ -1,16 +1,78 @@
 @using AdventuresSuite.Identity.ExternalId
+@using AdventuresSuite.Identity
+@using TheSimontonAdventures.Web.Planning
+@using TheSimontonAdventures.Web.Planning.Persistence
+@using TheSimontonAdventures.Web.Creators
 @inject IHttpContextAccessor HttpContextAccessor
 
 <main class="workspace-root">
-    <h1>AdventuresSuite</h1>
+    <header class="workspace-header">
+        <div>
+            <p class="workspace-eyebrow">AdventuresSuite</p>
+            <h1>Planner workspace</h1>
+        </div>
+        @if (IsAuthenticated)
+        {
+            <form method="post" action="@ExternalIdBrowserEndpoints.SignOutPath">
+                <AntiforgeryToken />
+                <button class="workspace-signout" type="submit">Sign out</button>
+            </form>
+        }
+    </header>
     @if (IsAuthenticated)
     {
-        <p>You are signed in to the private workspace.</p>
-        <p>Creator access will remain unavailable until membership is implemented.</p>
-        <form method="post" action="@ExternalIdBrowserEndpoints.SignOutPath">
-            <AntiforgeryToken />
-            <button type="submit">Sign out</button>
-        </form>
+        <p class="workspace-private">You are signed in to the private workspace. Authorization is checked before plan data is read.</p>
+        @if (LoadState == WorkspaceLoadState.Loading)
+        {
+            <p role="status">Loading your Adventure Plans…</p>
+        }
+        else if (LoadState == WorkspaceLoadState.Unavailable)
+        {
+            <section class="workspace-message" aria-labelledby="workspace-unavailable">
+                <h2 id="workspace-unavailable">Workspace unavailable</h2>
+                <p>Your account does not currently have access to this Planner workspace.</p>
+            </section>
+        }
+        else if (Plans.Count == 0)
+        {
+            <section class="workspace-message" aria-labelledby="workspace-empty">
+                <h2 id="workspace-empty">No active plans</h2>
+                <p>There are no active Adventure Plans in this private workspace yet.</p>
+            </section>
+        }
+        else
+        {
+            <section aria-labelledby="active-plans">
+                <div class="workspace-section-heading">
+                    <div>
+                        <p class="workspace-eyebrow">Adventure dashboard</p>
+                        <h2 id="active-plans">Active plans</h2>
+                    </div>
+                    <span>@Plans.Count @(Plans.Count == 1 ? "plan" : "plans")</span>
+                </div>
+                <div class="plan-grid">
+                    @foreach (var plan in Plans)
+                    {
+                        <article class="plan-card">
+                            <div class="plan-card-meta">
+                                <span>@FormatStatus(plan.Status)</span>
+                                <span>@plan.LifecycleStage</span>
+                            </div>
+                            <h3>@plan.Title</h3>
+                            @if (!string.IsNullOrWhiteSpace(plan.WorkingDescription))
+                            {
+                                <p>@plan.WorkingDescription</p>
+                            }
+                            <dl>
+                                <div><dt>Dates</dt><dd>@FormatDates(plan)</dd></div>
+                                <div><dt>Destinations</dt><dd>@plan.DestinationCount</dd></div>
+                                <div><dt>Open tasks</dt><dd>@plan.OpenTaskCount</dd></div>
+                            </dl>
+                        </article>
+                    }
+                </div>
+            </section>
+        }
     }
     else
     {
@@ -21,6 +83,52 @@
 </main>
 
 @code {
+    private IReadOnlyList<AdventurePlanDashboardItem> Plans { get; set; } = [];
+    private WorkspaceLoadState LoadState { get; set; } = WorkspaceLoadState.Loading;
+
     private bool IsAuthenticated =>
         HttpContextAccessor.HttpContext?.User.Identity?.IsAuthenticated is true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var context = HttpContextAccessor.HttpContext;
+        if (context?.User.Identity?.IsAuthenticated is not true)
+        {
+            return;
+        }
+
+        var userValue = context.User.FindFirst(ApplicationUserClaims.UserId)?.Value;
+        var creatorValue = context.RequestServices.GetService<IConfiguration>()?["Workspace:CreatorId"];
+        var query = context.RequestServices.GetService<IPlannerWorkspaceQueryService>();
+        if (query is null || string.IsNullOrWhiteSpace(userValue) || string.IsNullOrWhiteSpace(creatorValue))
+        {
+            LoadState = WorkspaceLoadState.Unavailable;
+            return;
+        }
+
+        try
+        {
+            var result = await query.ListAsync(
+                new UserId(userValue),
+                new CreatorId(creatorValue),
+                context.RequestAborted);
+            Plans = result.Plans;
+            LoadState = result.IsAllowed ? WorkspaceLoadState.Ready : WorkspaceLoadState.Unavailable;
+        }
+        catch (ArgumentException)
+        {
+            LoadState = WorkspaceLoadState.Unavailable;
+        }
+    }
+
+    private static string FormatDates(AdventurePlanDashboardItem plan) =>
+        $"{plan.Dates.Start:MMM d, yyyy} – {plan.Dates.End:MMM d, yyyy}";
+
+    private static string FormatStatus(PlanningStatus status) => status switch
+    {
+        PlanningStatus.InProgress => "In progress",
+        _ => status.ToString()
+    };
+
+    private enum WorkspaceLoadState { Loading, Ready, Unavailable }
 }

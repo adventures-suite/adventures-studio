@@ -11,6 +11,7 @@
     <Project Path="src/AdventuresSuite.Identity.ExternalId/AdventuresSuite.Identity.ExternalId.csproj" />
     <Project Path="src/AdventuresSuite.Identity.SqlServer/AdventuresSuite.Identity.SqlServer.csproj" />
     <Project Path="src/AdventuresSuite.Planning.SqlServer/AdventuresSuite.Planning.SqlServer.csproj" />
+    <Project Path="src/AdventuresSuite.Planning/AdventuresSuite.Planning.csproj" />
     <Project Path="src/TheSimontonAdventures.Web/TheSimontonAdventures.Web.csproj" />
   </Folder>
   <Folder Name="/tests/">
