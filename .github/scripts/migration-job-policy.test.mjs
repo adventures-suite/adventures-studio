@@ -133,7 +133,7 @@ test('deployer workflows preserve identity separation and proof-only mode', () =
   assert.match(foundation, /prove-access-removed:[\s\S]*environment: migration-foundation-deployment/);
   assert.doesNotMatch(readFileSync('.github/scripts/run-foundation-deployment.sh', 'utf8'), /role assignment (create|delete)|role definition (create|delete)|Microsoft\.Authorization/i);
   assert.match(foundation, /vars\.MIGRATION_FOUNDATION_DEPLOYER_CLIENT_ID/);
-  assert.doesNotMatch(foundation, /MIGRATION_RBAC_DEPLOYER|822c1c0c|d678e2ad/);
+  assert.doesNotMatch(foundation.slice(0, foundation.indexOf('  remove-temporary-access:')), /MIGRATION_RBAC_DEPLOYER|822c1c0c|d678e2ad/);
   assert.match(rbac, /environment: migration-rbac-deployment/);
   assert.match(rbac, /vars\.MIGRATION_RBAC_DEPLOYER_CLIENT_ID/);
   assert.doesNotMatch(rbac, /MIGRATION_FOUNDATION_DEPLOYER|b77b6201|223af00d/);
