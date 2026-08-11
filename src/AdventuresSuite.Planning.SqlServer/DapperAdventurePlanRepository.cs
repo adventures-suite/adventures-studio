@@ -11,6 +11,28 @@ internal sealed class DapperAdventurePlanRepository(
     SqlConnection connection,
     SqlTransaction transaction) : IAdventurePlanRepository
 {
+    public async Task<AdventurePlanAuthorizationFacts?> GetAuthorizationFactsAsync(
+        CreatorId creatorId,
+        AdventurePlanId planId,
+        CancellationToken cancellationToken = default)
+    {
+        RequireScope(creatorId);
+        var row = await connection.QuerySingleOrDefaultAsync<AuthorizationFactsRow>(Command("""
+            SELECT CreatorId, AdventurePlanId,
+                   CAST(CASE WHEN PlanningStatus='Archived' THEN 1 ELSE 0 END AS bit) AS IsArchived,
+                   Version
+              FROM planning.AdventurePlans
+             WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId;
+            """, new { CreatorId = creatorId.Value, PlanId = planId.Value }, cancellationToken));
+        return row is null ? null : new AdventurePlanAuthorizationFacts
+        {
+            CreatorId = new CreatorId(row.CreatorId),
+            PlanId = new AdventurePlanId(row.AdventurePlanId),
+            IsArchived = row.IsArchived,
+            Version = row.Version
+        };
+    }
+
     public async Task<IReadOnlyList<AdventurePlanDashboardItem>> ListDashboardAsync(
         CreatorId creatorId,
         CancellationToken cancellationToken = default)
@@ -37,6 +59,83 @@ internal sealed class DapperAdventurePlanRepository(
             Version = row.Version,
             IsArchived = row.IsArchived
         }).ToArray();
+    }
+
+    public async Task<AdventurePlanDetail?> GetDetailAsync(
+        CreatorId creatorId,
+        AdventurePlanId planId,
+        CancellationToken cancellationToken = default)
+    {
+        RequireScope(creatorId);
+        const string sql = """
+            SELECT AdventurePlanId,Title,WorkingDescription,LifecycleStage,PlanningStatus,
+                   StartDate,EndDate,Version,
+                   (SELECT COUNT(*) FROM planning.Travelers AS travelers
+                     WHERE travelers.CreatorId=@CreatorId AND travelers.AdventurePlanId=@PlanId) AS TravelerCount
+              FROM planning.AdventurePlans
+             WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId;
+            SELECT DestinationVisitId,Name,StartDate,EndDate,TimeZone,Sequence
+              FROM planning.DestinationVisits
+             WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY Sequence;
+            SELECT ItineraryDayId,DestinationVisitId,LocalDate,TimeZone,Title
+              FROM planning.ItineraryDays
+             WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY LocalDate,ItineraryDayId;
+            SELECT PlannedActivityId,ItineraryDayId,Title,StartsAtLocal,EndsAtLocal,Status
+              FROM planning.PlannedActivities
+             WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY ItineraryDayId,StartsAtLocal,PlannedActivityId;
+            SELECT TransportationSegmentId,Mode,Origin,Destination,DepartureDate,DepartureTimeLocal,
+                   DepartureTimeZone,ArrivalDate,ArrivalTimeLocal,ArrivalTimeZone,Status
+              FROM planning.TransportationSegments
+             WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY DepartureDate,DepartureTimeLocal,TransportationSegmentId;
+            SELECT AccommodationId,Name,StartDate,EndDate,TimeZone,Status
+              FROM planning.Accommodations
+             WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY StartDate,AccommodationId;
+            """;
+        using var results = await connection.QueryMultipleAsync(Command(
+            sql, new { CreatorId = creatorId.Value, PlanId = planId.Value }, cancellationToken));
+        var root = await results.ReadSingleOrDefaultAsync<DetailRow>();
+        var visits = (await results.ReadAsync<DetailVisitRow>()).ToArray();
+        var days = (await results.ReadAsync<DayRow>()).ToArray();
+        var activities = (await results.ReadAsync<ActivityRow>()).ToArray();
+        var transportation = (await results.ReadAsync<TransportationRow>()).ToArray();
+        var accommodations = (await results.ReadAsync<AccommodationRow>()).ToArray();
+        if (root is null)
+        {
+            return null;
+        }
+
+        return new AdventurePlanDetail
+        {
+            Id = new(root.AdventurePlanId),
+            Title = root.Title,
+            WorkingDescription = root.WorkingDescription,
+            LifecycleStage = Enum.Parse<AdventureLifecycleStage>(root.LifecycleStage),
+            Status = Enum.Parse<PlanningStatus>(root.PlanningStatus),
+            Dates = Range(root.StartDate, root.EndDate),
+            Version = root.Version,
+            TravelerCount = root.TravelerCount,
+            Destinations = visits.Select(row => new DestinationVisitDetail(
+                new(row.DestinationVisitId), row.Name, Range(row.StartDate, row.EndDate),
+                new(row.TimeZone), row.Sequence)).ToArray(),
+            Days = days.Select(row => new ItineraryDayDetail(
+                new(row.ItineraryDayId),
+                row.DestinationVisitId is null ? null : new(row.DestinationVisitId),
+                DateOnly.FromDateTime(row.LocalDate), new(row.TimeZone), row.Title,
+                activities.Where(activity => activity.ItineraryDayId == row.ItineraryDayId)
+                    .Select(activity => new ActivityDetail(
+                        new(activity.PlannedActivityId), activity.Title,
+                        ToTimeOnly(activity.StartsAtLocal), ToTimeOnly(activity.EndsAtLocal),
+                        Enum.Parse<PlanItemStatus>(activity.Status))).ToArray())).ToArray(),
+            Transportation = transportation.Select(row => new TransportationDetail(
+                new(row.TransportationSegmentId), row.Mode, row.Origin, row.Destination,
+                DateOnly.FromDateTime(row.DepartureDate), ToTimeOnly(row.DepartureTimeLocal),
+                new(row.DepartureTimeZone), DateOnly.FromDateTime(row.ArrivalDate),
+                ToTimeOnly(row.ArrivalTimeLocal), new(row.ArrivalTimeZone),
+                Enum.Parse<PlanItemStatus>(row.Status))).ToArray(),
+            Accommodations = accommodations.Select(row => new AccommodationDetail(
+                new(row.AccommodationId), row.Name, Range(row.StartDate, row.EndDate),
+                new(row.TimeZone), Enum.Parse<PlanItemStatus>(row.Status))).ToArray()
+        };
     }
 
     public async Task<AdventurePlan?> GetAsync(
@@ -244,6 +343,12 @@ internal sealed class DapperAdventurePlanRepository(
         plan.Audit.UpdatedAtUtc
     };
 
+    private static PlanningDateRange Range(DateTime start, DateTime end) =>
+        new(DateOnly.FromDateTime(start), DateOnly.FromDateTime(end));
+
+    private static TimeOnly? ToTimeOnly(TimeSpan? value) =>
+        value is null ? null : TimeOnly.FromTimeSpan(value.Value);
+
     private static AdventurePlan Map(PlanRow root, TravelerRow[] travelerRows, PreferenceRow[] preferenceRows,
         VisitRow[] visitRows, DayRow[] dayRows, ActivityRow[] activityRows, TransportationRow[] transportationRows,
         AccommodationRow[] accommodationRows, ReservationRow[] reservationRows, NoteRow[] noteRows,
@@ -347,6 +452,28 @@ internal sealed class DapperAdventurePlanRepository(
         DateTime EndDate,
         long Version,
         bool IsArchived);
+    private sealed record AuthorizationFactsRow(
+        string CreatorId,
+        string AdventurePlanId,
+        bool IsArchived,
+        long Version);
+    private sealed record DetailRow(
+        string AdventurePlanId,
+        string Title,
+        string? WorkingDescription,
+        string LifecycleStage,
+        string PlanningStatus,
+        DateTime StartDate,
+        DateTime EndDate,
+        long Version,
+        int TravelerCount);
+    private sealed record DetailVisitRow(
+        string DestinationVisitId,
+        string Name,
+        DateTime StartDate,
+        DateTime EndDate,
+        string TimeZone,
+        int Sequence);
     private sealed record NoteRow(string PlanningNoteId, string NoteText);
     private sealed record TaskRow(string PlanningTaskId, string Description, DateTime? DueDate, bool IsCompleted);
     private sealed record BudgetRow(string BudgetItemId, string Description, decimal Amount, string CurrencyCode);

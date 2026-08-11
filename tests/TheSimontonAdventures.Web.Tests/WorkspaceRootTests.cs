@@ -73,6 +73,40 @@ public sealed class WorkspaceRootTests
         Assert.Equal(new CreatorId("creator_alpha_01"), query.LastCreatorId);
     }
 
+    /// <summary>An authorized instance route renders allowlisted details without sensitive values.</summary>
+    [Fact]
+    public async Task AddressedPlanRoute_RendersReadOnlyDetailWithoutSensitiveValues()
+    {
+        var query = new StubPlannerWorkspaceQueryService(
+            PlannerWorkspaceResult.Denied(),
+            PlannerPlanDetailResult.Allowed(new AdventurePlanDetail
+            {
+                Id = new("plan_spain_2027"),
+                Title = "Spain and Atlantic",
+                WorkingDescription = "Private working plan",
+                LifecycleStage = AdventureLifecycleStage.Plan,
+                Status = PlanningStatus.Planned,
+                Dates = new(new(2027, 10, 25), new(2027, 11, 15)),
+                Version = 7,
+                TravelerCount = 2,
+                Destinations = [new(new("visit_madrid"), "Madrid",
+                    new(new(2027, 10, 26), new(2027, 10, 29)), new("Europe/Madrid"), 1)]
+            }));
+        var html = await RenderAsync(ApplicationPrincipal(),
+            "/workspace/creators/creator_alpha_01/plans/plan_spain_2027",
+            services =>
+            {
+                services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>();
+                services.AddSingleton<IPlannerWorkspaceQueryService>(query);
+            });
+
+        Assert.Contains("Spain and Atlantic", html);
+        Assert.Contains("Madrid", html);
+        Assert.Contains("Sensitive reservation references", html);
+        Assert.DoesNotContain("confirmation", html, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(new AdventurePlanId("plan_spain_2027"), query.LastPlanId);
+    }
+
     /// <summary>Denied Creator routes return a generic state without protected plan content.</summary>
     [Fact]
     public async Task AddressedCreatorRoute_DeniedAccess_DoesNotRevealPlans()
@@ -161,11 +195,14 @@ public sealed class WorkspaceRootTests
         return html;
     }
 
-    private sealed class StubPlannerWorkspaceQueryService(PlannerWorkspaceResult result)
+    private sealed class StubPlannerWorkspaceQueryService(
+        PlannerWorkspaceResult result,
+        PlannerPlanDetailResult? detailResult = null)
         : IPlannerWorkspaceQueryService
     {
         public int CallCount { get; private set; }
         public CreatorId LastCreatorId { get; private set; }
+        public AdventurePlanId LastPlanId { get; private set; }
 
         public Task<PlannerWorkspaceResult> ListAsync(
             AdventuresSuite.Identity.ActorIdentity actor,
@@ -176,6 +213,18 @@ public sealed class WorkspaceRootTests
             LastCreatorId = creatorId;
             return Task.FromResult(result);
         }
+
+        public Task<PlannerPlanDetailResult> GetAsync(
+            AdventuresSuite.Identity.ActorIdentity actor,
+            CreatorId creatorId,
+            AdventurePlanId planId,
+            CancellationToken cancellationToken = default)
+        {
+            CallCount++;
+            LastCreatorId = creatorId;
+            LastPlanId = planId;
+            return Task.FromResult(detailResult ?? PlannerPlanDetailResult.Denied());
+        }
     }
 
     private sealed class ThrowingPlannerWorkspaceQueryService : IPlannerWorkspaceQueryService
@@ -183,6 +232,13 @@ public sealed class WorkspaceRootTests
         public Task<PlannerWorkspaceResult> ListAsync(
             AdventuresSuite.Identity.ActorIdentity actor,
             CreatorId creatorId,
+            CancellationToken cancellationToken = default) =>
+            throw new InvalidOperationException("database detail");
+
+        public Task<PlannerPlanDetailResult> GetAsync(
+            AdventuresSuite.Identity.ActorIdentity actor,
+            CreatorId creatorId,
+            AdventurePlanId planId,
             CancellationToken cancellationToken = default) =>
             throw new InvalidOperationException("database detail");
     }

@@ -120,6 +120,55 @@ public sealed class PlannerWorkspaceQueryServiceTests
         Assert.Equal(0, transactions.BeginCount);
     }
 
+    /// <summary>Denied instance access cannot read the allowlisted detail projection.</summary>
+    [Fact]
+    public async Task GetAsync_DeniedInstanceAuthorization_DoesNotReadPlanning()
+    {
+        var transactions = new StubPlanningTransactionFactory();
+        var service = new PlannerWorkspaceQueryService(
+            new StubMembershipProvider(Membership()),
+            new StubAuthorizationEvaluator(AuthorizationDecision.Deny(
+                AuthorizationDenialReason.ResourceScopeMismatch)),
+            transactions);
+
+        var result = await service.GetAsync(Actor, Creator, new("plan_spain_2027"));
+
+        Assert.False(result.IsAllowed);
+        Assert.Null(result.Plan);
+        Assert.Equal(0, transactions.BeginCount);
+    }
+
+    /// <summary>Allowed instance access uses the explicit Creator and plan identities.</summary>
+    [Fact]
+    public async Task GetAsync_AllowedInstanceAuthorization_ReadsAllowlistedDetail()
+    {
+        var detail = Detail();
+        var transactions = new StubPlanningTransactionFactory(detail);
+        var authorization = new RecordingAllowedAuthorizationEvaluator();
+        var service = new PlannerWorkspaceQueryService(
+            new StubMembershipProvider(Membership()), authorization, transactions);
+
+        var result = await service.GetAsync(Actor, Creator, detail.Id);
+
+        Assert.True(result.IsAllowed);
+        Assert.Same(detail, result.Plan);
+        Assert.Equal(AuthorizationResourceScopeType.ResourceInstance,
+            authorization.LastRequest!.Resource.ScopeType);
+        Assert.Equal(detail.Id.Value, authorization.LastRequest.Resource.ResourceId);
+        Assert.Equal(Creator, transactions.LastCreatorId);
+    }
+
+    private static AdventurePlanDetail Detail() => new()
+    {
+        Id = new("plan_spain_2027"),
+        Title = "Spain and Atlantic",
+        LifecycleStage = AdventureLifecycleStage.Plan,
+        Status = PlanningStatus.Planned,
+        Dates = new(new(2027, 10, 25), new(2027, 11, 15)),
+        Version = 7,
+        TravelerCount = 2
+    };
+
     private static CreatorMembershipSnapshot Membership(
         CreatorMembershipStatus status = CreatorMembershipStatus.Active,
         long version = 3) => new(
@@ -157,6 +206,18 @@ public sealed class PlannerWorkspaceQueryServiceTests
             CallCount++;
             return Task.FromResult(AuthorizationDecision.Deny(
                 AuthorizationDenialReason.MembershipRequired));
+        }
+    }
+
+    private sealed class RecordingAllowedAuthorizationEvaluator : IAuthorizationPolicyEvaluator
+    {
+        public AuthorizationRequest? LastRequest { get; private set; }
+
+        public Task<AuthorizationDecision> AuthorizeAsync(
+            AuthorizationRequest request, CancellationToken cancellationToken = default)
+        {
+            LastRequest = request;
+            return Task.FromResult(AuthorizationDecision.Allow());
         }
     }
 
@@ -199,7 +260,7 @@ public sealed class PlannerWorkspaceQueryServiceTests
         public override DateTimeOffset GetUtcNow() => utcNow;
     }
 
-    private sealed class StubPlanningTransactionFactory : IPlanningTransactionFactory
+    private sealed class StubPlanningTransactionFactory(AdventurePlanDetail? detail = null) : IPlanningTransactionFactory
     {
         public int BeginCount { get; private set; }
         public CreatorId LastCreatorId { get; private set; }
@@ -209,21 +270,23 @@ public sealed class PlannerWorkspaceQueryServiceTests
         {
             BeginCount++;
             LastCreatorId = creatorId;
-            return Task.FromResult<IPlanningTransaction>(new StubPlanningTransaction(creatorId));
+            return Task.FromResult<IPlanningTransaction>(new StubPlanningTransaction(creatorId, detail));
         }
     }
 
-    private sealed class StubPlanningTransaction(CreatorId creatorId) : IPlanningTransaction
+    private sealed class StubPlanningTransaction(CreatorId creatorId, AdventurePlanDetail? detail) : IPlanningTransaction
     {
         public CreatorId CreatorId { get; } = creatorId;
-        public IAdventurePlanRepository AdventurePlans { get; } = new EmptyAdventurePlanRepository();
+        public IAdventurePlanRepository AdventurePlans { get; } = new EmptyAdventurePlanRepository(detail);
         public Task CommitAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
 
-    private sealed class EmptyAdventurePlanRepository : IAdventurePlanRepository
+    private sealed class EmptyAdventurePlanRepository(AdventurePlanDetail? detail) : IAdventurePlanRepository
     {
+        public Task<AdventurePlanAuthorizationFacts?> GetAuthorizationFactsAsync(CreatorId creatorId, AdventurePlanId planId, CancellationToken cancellationToken = default) => Task.FromResult<AdventurePlanAuthorizationFacts?>(null);
         public Task<IReadOnlyList<AdventurePlanDashboardItem>> ListDashboardAsync(CreatorId creatorId, CancellationToken cancellationToken = default) => Task.FromResult<IReadOnlyList<AdventurePlanDashboardItem>>([]);
+        public Task<AdventurePlanDetail?> GetDetailAsync(CreatorId creatorId, AdventurePlanId planId, CancellationToken cancellationToken = default) => Task.FromResult(detail);
         public Task<AdventurePlan?> GetAsync(CreatorId creatorId, AdventurePlanId planId, CancellationToken cancellationToken = default) => Task.FromResult<AdventurePlan?>(null);
         public Task<IReadOnlyList<AdventurePlan>> ListAsync(CreatorId creatorId, CancellationToken cancellationToken = default) => Task.FromResult<IReadOnlyList<AdventurePlan>>([]);
         public Task<IReadOnlyList<AdventurePlan>> ListArchivedAsync(CreatorId creatorId, CancellationToken cancellationToken = default) => Task.FromResult<IReadOnlyList<AdventurePlan>>([]);
