@@ -121,6 +121,39 @@ test('deployer federation workflows are isolated proof-only controls', () => {
   assert.doesNotMatch(`${foundation}\n${rbac}`, /environment: (database-development|migration-publisher|migration-starter)|DATABASE_IMAGE_PUBLISHER_CLIENT_ID|DATABASE_JOB_STARTER_CLIENT_ID/);
 });
 
+test('deployer federation workflows parse semantically and keep runner context out of job env', () => {
+  const paths = [
+    '.github/workflows/provision-migration-foundation-resources.yml',
+    '.github/workflows/provision-migration-rbac-access.yml',
+  ];
+  const validator = String.raw`
+    require 'yaml'
+    ARGV.each do |path|
+      workflow = YAML.safe_load(File.read(path), aliases: true)
+      raise "workflow root must be a mapping" unless workflow.is_a?(Hash)
+      jobs = workflow['jobs']
+      raise "jobs must be a non-empty mapping" unless jobs.is_a?(Hash) && !jobs.empty?
+      jobs.each do |job_name, job|
+        raise "job must be a mapping: #{job_name}" unless job.is_a?(Hash)
+        raise "job steps must be a non-empty array: #{job_name}" unless job['steps'].is_a?(Array) && !job['steps'].empty?
+        environment = job['env'] || {}
+        raise "job env must be a mapping: #{job_name}" unless environment.is_a?(Hash)
+        environment.each do |name, value|
+          raise "runner context is forbidden in job env: #{job_name}.#{name}" if value.to_s.include?('\${{ runner.')
+        end
+      end
+    end
+  `;
+  const parsed = spawnSync('ruby', ['-e', validator, ...paths], { encoding: 'utf8' });
+  assert.equal(parsed.status, 0, parsed.stderr || parsed.stdout);
+  for (const path of paths) {
+    const workflow = readFileSync(path, 'utf8');
+    assert.doesNotMatch(workflow, /^    env:\n(?:^      .*\n)*^      [A-Z0-9_]+:\s*\$\{\{\s*runner\./m);
+    assert.match(workflow, /evidence_path="\$RUNNER_TEMP\/migration-federation-proof\.state"/);
+    assert.match(workflow, /printf 'PROOF_STATE_FILE=%s\\n' "\$evidence_path" >> "\$GITHUB_ENV"/);
+  }
+});
+
 test('federation proof source guards reject non-main, source mismatch, and malformed SHAs', () => {
   const allowed = (ref, workflowSha, releaseSha) => ref === 'refs/heads/main' && /^[0-9a-f]{40}$/.test(releaseSha) && workflowSha === releaseSha;
   const sha = 'a'.repeat(40);

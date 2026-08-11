@@ -28,7 +28,6 @@ jobs:
       APPROVED_TENANT_ID: ${{ vars.WORKFORCE_TENANT_ID }}
       TARGET_RESOURCE_GROUP: ${{ vars.MIGRATION_RESOURCE_GROUP }}
       PROOF_ENVIRONMENT: migration-rbac-deployment
-      PROOF_STATE_FILE: ${{ runner.temp }}/migration-federation-proof.state
     steps:
       - name: Validate approval inputs and configured identity
         id: inputs
@@ -39,7 +38,9 @@ jobs:
           WORKFLOW_REF: ${{ github.ref }}
           WORKFLOW_SHA: ${{ github.sha }}
         run: |
-          printf 'stage=input_validation\n' > "$PROOF_STATE_FILE"
+          evidence_path="$RUNNER_TEMP/migration-federation-proof.state"
+          printf 'PROOF_STATE_FILE=%s\n' "$evidence_path" >> "$GITHUB_ENV"
+          printf 'stage=input_validation\n' > "$evidence_path"
           [[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]]
           test "$WORKFLOW_REF" = 'refs/heads/main'
           test "$WORKFLOW_SHA" = "$RELEASE_SHA"
