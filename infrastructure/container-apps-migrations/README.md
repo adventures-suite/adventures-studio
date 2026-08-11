@@ -21,24 +21,28 @@ Provisioning then has five least-privilege template
 boundaries and one intervening publication boundary. Every step requires its
 own approval and verification; no workflow may combine them:
 
-1. The temporarily authorized RBAC bootstrap identity deploys
+1. An approved Owner deploys `bootstrap-role-definition.bicep` to create only
+   the fixed-UUID RBAC role-definition-deployer role, verifies zero assignments,
+   and stops. Under a separate approval, the Owner temporarily assigns that role
+   only to the RBAC bootstrap identity.
+2. The temporarily authorized RBAC bootstrap identity deploys
    `deployer-role-definitions.bicep` only, then separately deploys
    `foundation-temporary-access.bicep` to create the exact two assignments.
-2. The temporary infrastructure deployer deploys
+3. The temporary infrastructure deployer deploys
    `foundation-resources.bicep` only; the four operational identities are
    validated `existing` resources.
-3. The RBAC boundary removes both assignments after success or failure, and a
+4. The RBAC boundary removes both assignments after success or failure, and a
    fresh foundation proof must again receive `AuthorizationFailed`.
-4. With federated-credential write assigned only on the exact publisher and
+5. With federated-credential write assigned only on the exact publisher and
    starter identity resources, it deploys `identity-access.bicep` only and then
    loses that identity-specific authority.
-5. The temporary RBAC deployer deploys `foundation-access.bicep` only.
-6. The GitHub publisher publishes the reviewed full-SHA image and resolves and
+6. The temporary RBAC deployer deploys `foundation-access.bicep` only.
+7. The GitHub publisher publishes the reviewed full-SHA image and resolves and
    verifies its registry-authoritative digest.
-7. The temporary infrastructure deployer deploys digest-bound
+8. The temporary infrastructure deployer deploys digest-bound
    `job-resource.bicep` only.
-8. The temporary RBAC deployer deploys `job-access.bicep` only.
-9. Only afterward may the GitHub starter run a separately approved SQL-free
+9. The temporary RBAC deployer deploys `job-access.bicep` only.
+10. Only afterward may the GitHub starter run a separately approved SQL-free
    execution-channel proof.
 
 Resource templates contain no `Microsoft.Authorization` resources. Access
@@ -63,7 +67,11 @@ subscription-scoped approval limited to provider read plus
 `Microsoft.ContainerRegistry/register/action`.
 
 The RBAC deployer has no ordinary resource write. Its role-definition authority
-is resource-group scoped. Role-assignment authority is granted separately at
+is resource-group scoped. The role-definition-deployer role has fixed UUID
+`78b75ed3-4333-4e87-a79c-d39bad7aaab3`; it is created alone by
+`bootstrap-role-definition.bicep`, initially has zero assignments, and may be
+assigned to the RBAC bootstrap identity only under a separate bounded approval.
+Role-assignment authority is granted separately at
 the exact ACR, workspace, or Job and conditioned to the reviewed principal and
 role-definition pair. The reviewed action catalogs are under `roles/`.
 Its assignment catalog includes only the minimum resource-group deployment

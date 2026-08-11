@@ -8,6 +8,7 @@
 | --- | --- | --- | --- |
 | Owner bootstrap | Approved Owner | Six UAMIs, all with no initial roles — **complete 2026-08-11** | Federated credentials, roles, other resources |
 | Deployer federation | Separately approved Owner | One reviewed OIDC credential on each deployer identity — **complete 2026-08-11** | Roles, deployment, publisher/starter federation |
+| Bootstrap-role definition | Approved Owner | One fixed-UUID definition from `bootstrap-role-definition.bicep`, assigned to nobody | Assignments, ordinary resources, SQL |
 | Deployer role bootstrap | Temporarily authorized RBAC bootstrap identity | Two fixed-UUID custom definitions from `deployer-role-definitions.bicep` | Assignments, ordinary resources, SQL |
 | Foundation temporary access | Temporarily authorized RBAC bootstrap identity | Two fixed-ID assignments from `foundation-temporary-access.bicep` | Self-access, other roles/principals/scopes, resources, SQL |
 | `foundation-resources.bicep` | Temporary infrastructure deployer | Subnet, workspace, ACR, environment; reference four existing operational identities | Identity creation/mutation, RBAC, Job, SQL |
@@ -52,7 +53,14 @@ immediately afterward. Provider registration, if needed, is a distinct temporary
 only provider read and the two exact register actions at subscription scope.
 
 The RBAC deployer has no ordinary resource write. Role-definition authority is
-resource-group scoped. Assignment authority is granted separately at each exact
+resource-group scoped. Its bootstrap role has fixed UUID
+`78b75ed3-4333-4e87-a79c-d39bad7aaab3`, the exact five-action catalog in
+`roles/rbac-role-definition-deployer.role.json`, empty `NotActions`,
+`DataActions`, and `NotDataActions`, and only the exact development resource
+group as its assignable scope. An Owner creates that definition alone through
+`bootstrap-role-definition.bicep` and verifies it has zero assignments before a
+separate approval may temporarily assign it to the RBAC bootstrap identity.
+Assignment authority is granted separately at each exact
 target. Its assignment role includes only deployment read, write, and operation
 status read at resource-group scope so it can submit and observe the access-only
 templates; role-assignment writes remain scoped and conditioned at each target:
@@ -98,20 +106,27 @@ Bicep compilation is insufficient and a missing action is a stop condition.
    were created and both protected workflows conclusively proved authentication
    plus zero ARM access. The FICs remain as durable secretless authentication;
    both deployers retain zero roles and zero attachments.
-3. **Bootstrap definitions, then temporarily authorize the infrastructure
-   deployer.** Use separate approvals for the fixed role-definition template,
+3. **Create the bootstrap role definition alone.** An approved Owner deploys
+   checksum-bound `bootstrap-role-definition.bicep`; what-if and deployment must
+   contain exactly one role-definition creation. Read back the fixed UUID,
+   action and empty exclusion sets, exact assignable scope, and prove zero
+   assignments. Stop with the definition assigned to nobody.
+4. **Temporarily authorize role-definition creation, then the infrastructure
+   deployer.** Under a new exact-SHA approval, an Owner assigns the bootstrap
+   role only to the RBAC bootstrap principal for no more than 30 minutes. Use
+   separate approvals for the fixed two-role-definition template,
    the exact two-assignment template, and the named foundation resource
    deployment. Record assignment and
    deadline, verify plan and post-state, remove access, refresh credentials, and
    prove loss of write access. Provider registration requires a separate packet.
-4. **Remove foundation authority unconditionally.** After resource deployment
+5. **Remove foundation authority unconditionally.** After resource deployment
    success or failure, remove both deterministic assignments, prove no residue,
    and run a fresh foundation proof that must again return `AuthorizationFailed`.
-5. **Temporarily authorize the RBAC deployer.** Approve one named access-template
+6. **Temporarily authorize the RBAC deployer.** Approve one named access-template
    deployment with resolved exact scopes, principals, roles, conditions, and a
    bounded window. Verify assignments and absence of broader roles, remove
    authority, refresh credentials, and prove loss of access.
-6. **Deploy and clean up each boundary in sequence.** Separately approve and
+7. **Deploy and clean up each boundary in sequence.** Separately approve and
    verify foundation resources, identity access, foundation access, publication,
    Job resource, and Job access. Retain source SHA, template checksum, deployment ID, inputs,
    outputs, UTC timing, post-state, and cleanup. Stop on drift, excess authority,
