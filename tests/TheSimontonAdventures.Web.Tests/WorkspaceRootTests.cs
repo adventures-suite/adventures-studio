@@ -103,7 +103,8 @@ public sealed class WorkspaceRootTests
         Assert.Contains("Spain and Atlantic", html);
         Assert.Contains("Madrid", html);
         Assert.Contains("Sensitive reservation references", html);
-        Assert.DoesNotContain("confirmation", html, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("RESERVATION-SECRET-123", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Traveler Private Name", html, StringComparison.Ordinal);
         Assert.Equal(new AdventurePlanId("plan_spain_2027"), query.LastPlanId);
     }
 

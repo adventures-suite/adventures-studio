@@ -149,7 +149,7 @@ public sealed class PlannerWorkspaceQueryService(
             creatorId, cancellationToken);
         var plan = await transaction.AdventurePlans.GetDetailAsync(
             creatorId, planId, cancellationToken);
-        return plan is null
+        return plan is null || plan.Id != planId
             ? PlannerPlanDetailResult.Denied()
             : PlannerPlanDetailResult.Allowed(plan);
     }

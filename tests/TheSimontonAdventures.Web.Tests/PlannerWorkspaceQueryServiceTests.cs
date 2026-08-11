@@ -158,6 +158,40 @@ public sealed class PlannerWorkspaceQueryServiceTests
         Assert.Equal(Creator, transactions.LastCreatorId);
     }
 
+    /// <summary>An absent instance membership cannot authorize or reach Planning persistence.</summary>
+    [Fact]
+    public async Task GetAsync_AbsentMembership_DoesNotAuthorizeOrRead()
+    {
+        var authorization = new RecordingAuthorizationEvaluator();
+        var transactions = new StubPlanningTransactionFactory();
+        var service = new PlannerWorkspaceQueryService(
+            new StubMembershipProvider(null), authorization, transactions);
+
+        var result = await service.GetAsync(Actor, Creator, new("plan_spain_2027"));
+
+        Assert.False(result.IsAllowed);
+        Assert.Null(result.Plan);
+        Assert.Equal(0, authorization.CallCount);
+        Assert.Equal(0, transactions.BeginCount);
+    }
+
+    /// <summary>A mismatched persistence projection fails closed after instance authorization.</summary>
+    [Fact]
+    public async Task GetAsync_MismatchedPlanProjection_IsDenied()
+    {
+        var mismatched = Detail() with { Id = new("plan_other_2027") };
+        var transactions = new StubPlanningTransactionFactory(mismatched);
+        var service = new PlannerWorkspaceQueryService(
+            new StubMembershipProvider(Membership()),
+            new StubAuthorizationEvaluator(AuthorizationDecision.Allow()),
+            transactions);
+
+        var result = await service.GetAsync(Actor, Creator, new("plan_spain_2027"));
+
+        Assert.False(result.IsAllowed);
+        Assert.Null(result.Plan);
+    }
+
     private static AdventurePlanDetail Detail() => new()
     {
         Id = new("plan_spain_2027"),
