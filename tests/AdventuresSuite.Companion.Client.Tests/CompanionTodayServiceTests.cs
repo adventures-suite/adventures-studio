@@ -41,14 +41,22 @@ public sealed class CompanionTodayServiceTests
             [
                 Item("all_day", CompanionTimeStatus.AllDay, null, null),
                 Item("tbc", CompanionTimeStatus.ToBeConfirmed, null, null),
-                Item("timed", CompanionTimeStatus.Scheduled, new TimeOnly(8, 0), new TimeOnly(9, 0))
+                Item("timed", CompanionTimeStatus.Scheduled, new TimeOnly(8, 0), new TimeOnly(9, 0)) with
+                {
+                    OperationalStatus = CompanionOperationalStatus.Changed,
+                    RequiresAcknowledgment = true,
+                    ActionLabel = "Review change"
+                },
+                Item("cancelled", CompanionTimeStatus.Cancelled, null, null)
             ]
         };
 
         var result = await new CompanionTodayService(new StubTransport(Response(source))).LoadAsync("adv:demo");
 
         Assert.Equal(CompanionTodayResultState.Success, result.State);
-        Assert.Equal(new[] { "all_day", "tbc", "timed" }, result.Today!.TodayItems.Select(value => value.ItemId));
+        Assert.Equal(
+            new[] { "all_day", "tbc", "timed", "cancelled" },
+            result.Today!.TodayItems.Select(value => value.ItemId));
     }
 
     /// <summary>Ensures duplicate identities and inconsistent Today/Next dates fail closed.</summary>
