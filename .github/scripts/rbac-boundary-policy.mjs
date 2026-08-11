@@ -12,15 +12,46 @@ function load(path) {
   if (Buffer.byteLength(text) > 512 * 1024) fail('oversized_evidence');
   try { return JSON.parse(text); } catch { fail('malformed_evidence'); }
 }
-function exactChanges(document, expectedIds, allowedOperations) {
-  const changes = document?.properties?.changes;
+function selectChanges(document) {
+  if (!document || typeof document !== 'object' || Array.isArray(document)) fail('malformed_what_if');
+  const hasRootChanges = Object.hasOwn(document, 'changes');
+  const properties = document.properties;
+  const hasNestedChanges = properties !== null && typeof properties === 'object' && !Array.isArray(properties)
+    && Object.hasOwn(properties, 'changes');
+  if (hasRootChanges === hasNestedChanges) fail('malformed_what_if');
+  const changes = hasRootChanges ? document.changes : properties.changes;
   if (!Array.isArray(changes)) fail('malformed_what_if');
+  return changes;
+}
+function validateIgnoredResourceId(value) {
+  if (typeof value !== 'string' || value.includes('?') || value.includes('#') || value.includes('\\')) fail('malformed_what_if');
+  const segments = value.split('/');
+  const scopeSegments = scope.split('/');
+  if (segments[0] !== '' || segments.slice(1).some(segment => segment.length === 0)) fail('malformed_what_if');
+  if (segments.length < scopeSegments.length + 4 || segments.length % 2 !== scopeSegments.length % 2) fail('malformed_what_if');
+  for (let index = 0; index < scopeSegments.length; index += 1) {
+    if (segments[index].toLowerCase() !== scopeSegments[index].toLowerCase()) fail('malformed_what_if');
+  }
+  if (segments[scopeSegments.length].toLowerCase() !== 'providers') fail('malformed_what_if');
+  const resourceSegments = segments.slice(scopeSegments.length + 1);
+  if (!/^[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)+$/.test(resourceSegments[0]) || (resourceSegments.length - 1) % 2 !== 0) fail('malformed_what_if');
+  for (let index = 1; index < resourceSegments.length; index += 1) {
+    const segment = resourceSegments[index];
+    let decoded;
+    try { decoded = decodeURIComponent(segment); } catch { fail('malformed_what_if'); }
+    if (!segment || decoded === '.' || decoded === '..' || /[/?#\\\u0000-\u001f]/.test(decoded)) fail('malformed_what_if');
+    if (index % 2 === 1 && !/^[A-Za-z][A-Za-z0-9.-]*$/.test(decoded)) fail('malformed_what_if');
+  }
+  return true;
+}
+function exactChanges(document, expectedIds, allowedOperations) {
+  const changes = selectChanges(document);
   const expected = new Set(expectedIds.map(value => value.toLowerCase()));
   const observed = new Set();
   for (const change of changes) {
     const id = String(change.resourceId ?? '').toLowerCase();
     if (change.changeType === 'Ignore') {
-      if (!id.startsWith(`${scope.toLowerCase()}/providers/`)) fail('malformed_what_if');
+      validateIgnoredResourceId(change.resourceId);
       continue;
     }
     if (!expected.has(id) || observed.has(id)) fail('unexpected_rbac_resource');

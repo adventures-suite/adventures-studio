@@ -623,6 +623,60 @@ test('RBAC boundary what-if and workflows prevent substitution, self-management,
   assert.doesNotMatch(`${foundationWorkflow}\n${rbacWorkflow}\n${rbacRunner}`, /Owner|Contributor|AZURE_CLIENT_SECRET|client-secret|set -x/i);
 });
 
+test('RBAC boundary accepts the live-shaped root what-if envelope and one legacy envelope only', () => {
+  const live = JSON.parse(readFileSync('.github/scripts/fixtures/rbac-bootstrap-what-if-root.json', 'utf8'));
+  assert.deepEqual(validateRbacWhatIf('bootstrap', live), { classification: 'bootstrap_what_if_approved', resourceCount: 2 });
+  assert.deepEqual(validateRbacWhatIf('bootstrap', { properties: { changes: live.changes } }), { classification: 'bootstrap_what_if_approved', resourceCount: 2 });
+  for (const malformed of [
+    {},
+    { changes: null },
+    { properties: { changes: {} } },
+    { changes: live.changes, properties: { changes: live.changes } },
+    { changes: live.changes, properties: { changes: [] } },
+  ]) {
+    assert.throws(() => validateRbacWhatIf('bootstrap', malformed), /malformed_what_if/);
+  }
+});
+
+test('RBAC boundary requires complete ignored ARM resource IDs under the exact approved scope', () => {
+  const live = JSON.parse(readFileSync('.github/scripts/fixtures/rbac-bootstrap-what-if-root.json', 'utf8'));
+  const validIgnoredIds = [
+    '/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.Sql/servers/adventures-suite-dev-sql',
+    '/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/RG-ADVENTURES-SUITE-DEV/providers/Microsoft.Network/privateDnsZones/privatelink.database.windows.net/virtualNetworkLinks/link-adventures-suite-dev-sql',
+    '/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/microsoft.insights/actiongroups/Application Insights Smart Detection',
+  ];
+  for (const resourceId of validIgnoredIds) {
+    const document = structuredClone(live);
+    document.changes[2].resourceId = resourceId;
+    assert.equal(validateRbacWhatIf('bootstrap', document).resourceCount, 2);
+  }
+  const invalidIgnoredIds = [
+    '/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/',
+    '/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.Sql/servers',
+    '/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.Sql/servers/name/extraType',
+    '/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/invalid namespace/servers/name',
+    '/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/Microsoft./servers/name',
+    '/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providersX/Microsoft.Sql/servers/name',
+    '/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.Sql/invalid type/name',
+    '/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.Sql//name',
+    '/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.Sql/servers/..',
+    '/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.Sql/servers/%2e%2e',
+    '/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.Sql/servers/name',
+    '/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-prod/providers/Microsoft.Sql/servers/name',
+    '/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev-lookalike/providers/Microsoft.Sql/servers/name',
+    '/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.Sql/servers/name?api-version=1',
+    '/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.Sql/servers/name#fragment',
+  ];
+  for (const resourceId of invalidIgnoredIds) {
+    const document = structuredClone(live);
+    document.changes[2].resourceId = resourceId;
+    assert.throws(() => validateRbacWhatIf('bootstrap', document), /malformed_what_if/);
+  }
+  const wrongCase = structuredClone(live);
+  wrongCase.changes[2].changeType = 'ignore';
+  assert.throws(() => validateRbacWhatIf('bootstrap', wrongCase), /unexpected_rbac_resource/);
+});
+
 test('foundation deployment mode is exact-approval bound and never emits raw evidence', () => {
   const workflow = readFileSync('.github/workflows/provision-migration-foundation-resources.yml', 'utf8');
   const runner = readFileSync('.github/scripts/run-foundation-deployment.sh', 'utf8');
