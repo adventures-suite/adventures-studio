@@ -94,7 +94,7 @@ internal sealed class SqlAdventurePlanCreateIdempotencyStore(
                     ResultingVersion: null);
             }
 
-            if (!existing.PlanExists
+            if (existing.PlanExists != 1
                 || existing.PlanVersion != existing.ResultingVersion
                 || existing.ResultingVersion != 1
                 || existing.AuditCount != 1)
@@ -135,7 +135,7 @@ internal sealed class SqlAdventurePlanCreateIdempotencyStore(
         byte[] RequestFingerprint,
         string AdventurePlanId,
         long ResultingVersion,
-        bool PlanExists,
+        int PlanExists,
         long? PlanVersion,
         long AuditCount);
 }
