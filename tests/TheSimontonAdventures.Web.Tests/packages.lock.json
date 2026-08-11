@@ -907,6 +907,15 @@
           "AdventuresSuite.Identity": "[1.0.0, )"
         }
       },
+      "adventuressuite.authorization.sqlserver": {
+        "type": "Project",
+        "dependencies": {
+          "AdventuresSuite.Authorization": "[1.0.0, )",
+          "AdventuresSuite.Identity": "[1.0.0, )",
+          "Dapper": "[2.1.79, )",
+          "Microsoft.Data.SqlClient": "[7.0.2, )"
+        }
+      },
       "adventuressuite.companion.application": {
         "type": "Project",
         "dependencies": {
@@ -960,13 +969,30 @@
           "Microsoft.Data.SqlClient.Extensions.Azure": "[7.0.2, )"
         }
       },
+      "adventuressuite.planning": {
+        "type": "Project",
+        "dependencies": {
+          "AdventuresSuite.Authorization": "[1.0.0, )"
+        }
+      },
+      "adventuressuite.planning.sqlserver": {
+        "type": "Project",
+        "dependencies": {
+          "AdventuresSuite.Planning": "[1.0.0, )",
+          "Dapper": "[2.1.79, )",
+          "Microsoft.Data.SqlClient": "[7.0.2, )"
+        }
+      },
       "thesimontonadventures.web": {
         "type": "Project",
         "dependencies": {
           "AdventuresSuite.Authorization": "[1.0.0, )",
+          "AdventuresSuite.Authorization.SqlServer": "[1.0.0, )",
           "AdventuresSuite.Identity": "[1.0.0, )",
           "AdventuresSuite.Identity.ExternalId": "[1.0.0, )",
           "AdventuresSuite.Identity.SqlServer": "[1.0.0, )",
+          "AdventuresSuite.Planning": "[1.0.0, )",
+          "AdventuresSuite.Planning.SqlServer": "[1.0.0, )",
           "Azure.Extensions.AspNetCore.DataProtection.Blobs": "[1.5.3, )",
           "Azure.Extensions.AspNetCore.DataProtection.Keys": "[1.6.3, )",
           "Azure.Identity": "[1.21.0, )",
