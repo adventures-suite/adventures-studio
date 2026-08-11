@@ -1,5 +1,6 @@
 using AdventuresSuite.Companion.Client;
 using AdventuresSuite.Companion.Contracts;
+using AdventuresSuite.Companion.Poc.Models;
 using AdventuresSuite.Companion.Poc.Services;
 
 namespace AdventuresSuite.Companion.Poc.Tests;
@@ -27,23 +28,64 @@ public sealed class CompanionContentProviderTests
         Assert.Null(adventure.HeroImagePath);
     }
 
-    [Theory]
-    [InlineData(CompanionAdventureListState.Empty)]
-    [InlineData(CompanionAdventureListState.Unavailable)]
-    [InlineData(CompanionAdventureListState.Unauthorized)]
-    [InlineData(CompanionAdventureListState.Error)]
-    public async Task ApiOutcomesRemainDistinctWithoutDemoFallback(CompanionAdventureListState state)
+    [Fact]
+    public async Task ApiOutcomesRemainDistinctWithoutDemoFallback()
     {
-        var clientResult = new CompanionAdventureListResult(
-            state, [], ErrorTitle: "Safe error", SupportId: "support_demo");
+        var states = new[]
+        {
+            CompanionAdventureListState.Empty,
+            CompanionAdventureListState.Unavailable,
+            CompanionAdventureListState.Unauthorized,
+            CompanionAdventureListState.Error
+        };
 
-        var result = await new ApiCompanionContentProvider(new StubClient(clientResult)).LoadAsync();
+        foreach (var state in states)
+        {
+            var clientResult = new CompanionAdventureListResult(
+                state, [], ErrorTitle: "Safe error", SupportId: "support_demo");
+            var result = await new ApiCompanionContentProvider(new StubClient(clientResult)).LoadAsync();
 
-        Assert.Equal(state, result.State);
-        Assert.Empty(result.Adventures);
-        Assert.False(result.HasDetailedContent);
-        Assert.Equal("Safe error", result.ErrorTitle);
-        Assert.Equal("support_demo", result.SupportId);
+            Assert.Equal(state, result.State);
+            Assert.Empty(result.Adventures);
+            Assert.False(result.HasDetailedContent);
+            Assert.Equal("Safe error", result.ErrorTitle);
+            Assert.Equal("support_demo", result.SupportId);
+        }
+    }
+
+    [Fact]
+    public void PackagedDemoMustBeSelectedExplicitly()
+    {
+        var settings = CompanionProviderConfiguration.Resolve(null, null, "Demo", null);
+
+        Assert.Equal(CompanionContentProviderKind.Demo, settings.Provider);
+        Assert.Null(settings.ApiBaseAddress);
+        Assert.Throws<InvalidOperationException>(() =>
+            CompanionProviderConfiguration.Resolve(null, null, null, null));
+    }
+
+    [Fact]
+    public void PackagedApiRequiresNonCredentialedHttpsOrigin()
+    {
+        var settings = CompanionProviderConfiguration.Resolve(
+            null, null, "Api", "https://api.example.invalid/");
+
+        Assert.Equal(CompanionContentProviderKind.Api, settings.Provider);
+        Assert.Equal("https://api.example.invalid/", settings.ApiBaseAddress?.AbsoluteUri);
+        Assert.Throws<InvalidOperationException>(() =>
+            CompanionProviderConfiguration.Resolve(null, null, "Api", "http://api.example.invalid/"));
+        Assert.Throws<InvalidOperationException>(() =>
+            CompanionProviderConfiguration.Resolve(null, null, "Api", "https://user:password@api.example.invalid/"));
+    }
+
+    [Fact]
+    public void LocalConfigurationExplicitlyOverridesPackagedConfiguration()
+    {
+        var settings = CompanionProviderConfiguration.Resolve(
+            "Api", "https://local.example.invalid/", "Demo", null);
+
+        Assert.Equal(CompanionContentProviderKind.Api, settings.Provider);
+        Assert.Equal("https://local.example.invalid/", settings.ApiBaseAddress?.AbsoluteUri);
     }
 
     [Fact]

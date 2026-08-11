@@ -102,4 +102,10 @@
         <ProjectReference Include="..\..\src\AdventuresSuite.Companion.Client\AdventuresSuite.Companion.Client.csproj" />
     </ItemGroup>
 
+    <!-- Non-secret values supplied with -p: at package time for installed apps. -->
+    <ItemGroup>
+        <AssemblyMetadata Include="AdventuresCompanion.ContentProvider" Value="$(CompanionContentProvider)" />
+        <AssemblyMetadata Include="AdventuresCompanion.ApiBaseAddress" Value="$(CompanionApiBaseAddress)" />
+    </ItemGroup>
+
 </Project>

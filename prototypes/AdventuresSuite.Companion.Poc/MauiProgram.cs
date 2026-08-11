@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Reflection;
+using Microsoft.Extensions.Logging;
 
 namespace AdventuresSuite.Companion.Poc;
 
@@ -14,28 +15,23 @@ public static class MauiProgram
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
 			});
 
-		var providerName = Environment.GetEnvironmentVariable("ADVENTURES_COMPANION_CONTENT_PROVIDER");
-		if (!Enum.TryParse<Models.CompanionContentProviderKind>(providerName, ignoreCase: true, out var providerKind))
-		{
-			throw new InvalidOperationException(
-				"ADVENTURES_COMPANION_CONTENT_PROVIDER must explicitly select Demo or Api.");
-		}
+		var metadata = typeof(MauiProgram).Assembly
+			.GetCustomAttributes<AssemblyMetadataAttribute>()
+			.ToDictionary(item => item.Key, item => item.Value, StringComparer.Ordinal);
+		var providerSettings = Services.CompanionProviderConfiguration.Resolve(
+			Environment.GetEnvironmentVariable("ADVENTURES_COMPANION_CONTENT_PROVIDER"),
+			Environment.GetEnvironmentVariable("ADVENTURES_COMPANION_API_BASE_ADDRESS"),
+			metadata.GetValueOrDefault("AdventuresCompanion.ContentProvider"),
+			metadata.GetValueOrDefault("AdventuresCompanion.ApiBaseAddress"));
 
 		builder.Services.AddMauiBlazorWebView();
-		if (providerKind == Models.CompanionContentProviderKind.Demo)
+		if (providerSettings.Provider == Models.CompanionContentProviderKind.Demo)
 		{
 			builder.Services.AddSingleton<Services.ICompanionContentProvider, Services.CompanionContentService>();
 		}
 		else
 		{
-			var baseAddressValue = Environment.GetEnvironmentVariable("ADVENTURES_COMPANION_API_BASE_ADDRESS");
-			if (!Uri.TryCreate(baseAddressValue, UriKind.Absolute, out var baseAddress) || baseAddress.Scheme != Uri.UriSchemeHttps)
-			{
-				throw new InvalidOperationException(
-					"ADVENTURES_COMPANION_API_BASE_ADDRESS must be an absolute HTTPS URI when Api is selected.");
-			}
-
-			builder.Services.AddSingleton(new HttpClient { BaseAddress = baseAddress });
+			builder.Services.AddSingleton(new HttpClient { BaseAddress = providerSettings.ApiBaseAddress });
 			builder.Services.AddSingleton<AdventuresSuite.Companion.Client.ICompanionAdventureListTransport,
 				AdventuresSuite.Companion.Client.HttpCompanionAdventureListTransport>();
 			builder.Services.AddSingleton<AdventuresSuite.Companion.Client.ICompanionAdventureListService,
