@@ -2,7 +2,7 @@
 
 **Status:** Approved Future Incremental Delivery
 
-**Last Updated:** August 9, 2026
+**Last Updated:** August 10, 2026
 
 ## Objective
 
@@ -113,8 +113,40 @@ projects. Add navigation, design tokens, accessibility foundations, environment
 separation, secure configuration, deep-link policy, and deterministic device
 fakes.
 
+Implement an injected appearance-preference service with `System`, `Light`, and
+`Dark` choices. Default to System, persist only explicit user preference, react
+to live OS appearance changes while System is active, and expose one effective
+Light/Dark palette to shared and native presentation adapters. Resolve and
+apply the effective palette before the first interactive frame. Do not encode
+appearance in API DTOs, server profiles, authentication storage, or sync state.
+
+Define shared semantic tokens for surfaces, text, borders, accents, focus,
+status, scrims, elevation, maps, and interactive states. Require all pages,
+navigation, dialogs, cards, controls, loading/error/empty states, native chrome,
+maps, and overlays to consume those roles. Literal palette colors are confined
+to the reviewed token definitions and platform bootstrap resources.
+
+Required automated and device acceptance tests prove:
+
+- a first launch uses System and matches both initial OS palettes;
+- a live OS Light/Dark change updates every visible shared and native surface
+  while System is selected;
+- explicit Light and Dark choices survive termination and relaunch and do not
+  follow later OS changes;
+- returning to System immediately adopts the current OS palette and resumes
+  live observation;
+- cold start, warm start, resume, navigation, dialog opening, and theme change
+  show no wrong-theme flash or mixed native/Blazor palette;
+- every enumerated surface and component state uses semantic tokens, including
+  maps, overlays, focus, selected, disabled, loading, error, and empty states;
+- applicable WCAG contrast thresholds pass for text, meaningful graphics,
+  controls, and focus indicators in both effective palettes; and
+- missing, corrupt, or unsupported stored preferences fail safely to System.
+
 Exit gate: supported iOS and Android builds pass; shared components remain
-host-independent; production cannot activate development or test adapters.
+host-independent; production cannot activate development or test adapters; and
+the appearance, startup-flash, semantic-token, contrast, persistence, and live
+OS-change tests above pass on supported platform versions.
 
 ## M3: Mobile Authentication and Device Registration
 
@@ -179,9 +211,39 @@ Add protected camera/library staging, rights and accessibility metadata,
 short-lived direct Blob upload authorization, resumable upload, Resource Engine
 registration, optional breadcrumb association, and EXIF-location review.
 
+Implement the Memories Adventure selector as an accessible shared component
+with an explicit transient-overlay state. It closes after an Adventure is
+selected, when the selector is activated again, on outside pointer activation,
+on Escape where keyboards are supported, and on the applicable platform Back
+action. All paths use the same idempotent dismissal operation, set the exposed
+expanded state to false, remove overlay hit testing and event/Back handlers,
+and restore focus to the selector when appropriate. Selection is committed
+before dismissal; every other dismissal preserves the prior selection and any
+in-progress memory input. Outside activation must not also activate the covered
+page control.
+
+Required component, integration, accessibility, and device tests prove:
+
+- each dismissal input closes an open dropdown and selector reactivation
+  toggles it closed;
+- selection changes exactly once and the dropdown then closes;
+- outside, Escape, and Back dismissal do not change the selection or navigate;
+- Escape and Back retain their normal behavior while the dropdown is closed;
+- the selector exposes its accessible label, value, expanded state, options,
+  selected option, and deterministic focus order;
+- focus returns to the selector after dismissal when the platform has a focus
+  concept, including keyboard and screen-reader operation;
+- rapid repeated dismissal, page navigation, component disposal, rotation,
+  app background/resume, and appearance changes leave no overlay, stale event
+  subscription, duplicate Back handler, or blocked page hit target; and
+- the selector and its scrim, focus, hover/pressed, selected, disabled, loading,
+  error, and empty states pass in System, Light, and Dark appearance modes.
+
 Exit gate: unauthorized upload, expired authorization, malicious media,
 interrupted upload, duplicate registration, storage isolation, EXIF privacy,
-quota, and deletion tests pass.
+quota, and deletion tests pass; all Memories selector dismissal, accessibility,
+focus-restoration, cleanup, and appearance tests above also pass on supported
+iOS and Android versions and keyboard-capable targets.
 
 ## M7: Notifications and Travel Readiness
 
