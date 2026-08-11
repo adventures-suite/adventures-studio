@@ -15,7 +15,9 @@ public sealed class CompanionAdventureDetailServiceTests
         using var handler = new StubHttpHandler(request =>
         {
             Assert.Equal(HttpMethod.Get, request.Method);
-            Assert.Equal("https://api.example.invalid/v1/companion/adventures/adv_demo", request.RequestUri?.AbsoluteUri);
+            Assert.Equal(
+                "v1/companion/adventures/adv%3Ademo",
+                request.RequestUri?.GetComponents(UriComponents.Path, UriFormat.UriEscaped));
             Assert.Empty(request.Headers.Authorization?.Parameter ?? string.Empty);
             var response = JsonResponse(expected);
             response.Headers.ETag = new EntityTagHeaderValue("\"pv_detail\"");
@@ -24,7 +26,7 @@ public sealed class CompanionAdventureDetailServiceTests
         });
         using var client = new HttpClient(handler) { BaseAddress = new Uri("https://api.example.invalid/") };
 
-        var result = await new HttpCompanionAdventureDetailTransport(client).GetAsync("adv_demo");
+        var result = await new HttpCompanionAdventureDetailTransport(client).GetAsync("adv:demo");
 
         Assert.Equal(expected.AdventureId, result.Adventure.AdventureId);
         Assert.Equal(expected.ProjectionVersion, result.Adventure.ProjectionVersion);
@@ -110,6 +112,23 @@ public sealed class CompanionAdventureDetailServiceTests
             Assert.DoesNotContain(payload, result.ErrorTitle);
             Assert.Equal("support_detail", result.SupportId);
         }
+
+        using var oversizedHandler = new StubHttpHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(
+                new string('x', CompanionContractLimits.MaximumJsonResponseBytes + 1),
+                Encoding.UTF8,
+                "application/json")
+        });
+        using var oversizedClient = new HttpClient(oversizedHandler)
+        {
+            BaseAddress = new Uri("https://api.example.invalid/")
+        };
+
+        var oversizedResult = await new CompanionAdventureDetailService(
+            new HttpCompanionAdventureDetailTransport(oversizedClient)).LoadAsync("adv_demo");
+
+        Assert.Equal(CompanionAdventureDetailState.MalformedOrUnsupported, oversizedResult.State);
     }
 
     [Fact]
@@ -120,7 +139,10 @@ public sealed class CompanionAdventureDetailServiceTests
         {
             valid with { PrimaryTimeZone = "Not/AZone" },
             valid with { CapabilityLinks = new Dictionary<string, string> { ["today"] = "https://evil.example/steal" } },
+            valid with { CapabilityLinks = new Dictionary<string, string> { ["today"] = "/v1/companion/%2e%2e/private" } },
+            valid with { EndDate = new DateOnly(2026, 8, 9) },
             valid with { Destinations = [Destination(2), Destination(1) with { DestinationVisitId = "dest_two" }] },
+            valid with { Destinations = [Destination(1) with { EndDate = new DateOnly(2026, 8, 9) }] },
             valid with { Destinations = [null!] },
             valid with
             {
@@ -144,6 +166,22 @@ public sealed class CompanionAdventureDetailServiceTests
             Assert.Equal(CompanionAdventureDetailState.MalformedOrUnsupported, result.State);
             Assert.Null(result.Adventure);
             Assert.Equal("support_detail", result.SupportId);
+        }
+
+        var unsafeMetadata = new[]
+        {
+            new CompanionAdventureDetailTransportResponse(valid, "\"bad\r\nInjected\"", "support_detail"),
+            new CompanionAdventureDetailTransportResponse(valid, "\"pv_detail\"", "support\r\nInjected"),
+            new CompanionAdventureDetailTransportResponse(valid, "\"pv_detail\"", "different_support")
+        };
+
+        foreach (var response in unsafeMetadata)
+        {
+            var result = await new CompanionAdventureDetailService(new CountingTransport(response))
+                .LoadAsync("adv_demo");
+
+            Assert.Equal(CompanionAdventureDetailState.MalformedOrUnsupported, result.State);
+            Assert.Null(result.Adventure);
         }
     }
 
