@@ -42,9 +42,25 @@ All six are in tenant `d7add2bb-ac03-49a8-9377-d0bf6a012f2f`, resource group
 `rg-adventures-suite-dev`, and region `westus2`. Creation evidence proved unique
 principal/client IDs, zero direct or inherited Azure roles, zero federated
 credentials, zero password/certificate credentials, and zero Azure-resource
-attachments. Identity creation is complete. Deployer OIDC federation is a
-separate gate; publisher and starter federation remain prohibited until their
-later reviewed boundary.
+attachments. Identity creation is complete. Deployer OIDC federation completed
+and was proven on 2026-08-11 at protected-main SHA
+`fe4fe542909343540d207609b7b5a181922420ae`; publisher and starter federation
+remain prohibited until their later reviewed boundary.
+
+The foundation proof was GitHub Actions run `31495613312`, approval
+`fedproof-fe4fe542-foundation-01`; the RBAC proof was run `31495747556`, approval
+`fedproof-fe4fe542-rbac-01`. Each emitted one bounded envelope with
+`stage=complete`, `classification=complete`, and `exitCode=0`. Each authenticated
+as its exact reviewed principal and received the required structured ARM denial
+for both probes: HTTP 403 with JSON `error.code=AuthorizationFailed`.
+
+Post-operation readback proved both exact immutable-subject FICs, zero direct or
+inherited roles, zero Azure-resource attachments, no pending Environment
+deployment, and absent publisher/starter federation. The operation-window Azure
+activity record contained only the two approved successful FIC writes. It
+contained no role, resource, deployment, network, or SQL mutation. Retain the
+FICs; temporary Azure authority requires a new exact-SHA approval, immediate
+removal afterward, and fresh-session loss-of-access verification.
 
 ### Existing application identities
 
