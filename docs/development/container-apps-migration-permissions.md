@@ -1,13 +1,13 @@
 # Container Apps Migration Deployment Permissions
 
-**Status:** six identities created; no Azure authority or federation granted
+**Status:** six identities created; deployer federation proven; deployers retain zero Azure authority
 
 ## Responsibility matrix
 
 | Boundary | Actor | May create | Explicit exclusions |
 | --- | --- | --- | --- |
 | Owner bootstrap | Approved Owner | Six UAMIs, all with no initial roles — **complete 2026-08-11** | Federated credentials, roles, other resources |
-| Deployer federation | Separately approved Owner | One reviewed OIDC credential on each deployer identity | Roles, deployment, publisher/starter federation |
+| Deployer federation | Separately approved Owner | One reviewed OIDC credential on each deployer identity — **complete 2026-08-11** | Roles, deployment, publisher/starter federation |
 | `foundation-resources.bicep` | Temporary infrastructure deployer | Subnet, workspace, ACR, environment; reference four existing operational identities | Identity creation/mutation, RBAC, Job, SQL |
 | `identity-access.bicep` | Infrastructure deployer with exact-identity temporary grants | Publisher and starter OIDC credentials only | Other identities/resources, RBAC, SQL |
 | `foundation-access.bicep` | Temporary RBAC deployer | Two ACR assignments, starter custom role, dedicated-workspace reader assignment | Ordinary resources, Job, SQL |
@@ -25,10 +25,11 @@ hardcoded or found by display name.
 The six Owner-created identities are the infrastructure deployer, RBAC deployer,
 migration, pull, publisher, and starter identities. All six must initially have
 zero role assignments. Creation completed on 2026-08-11 and verified zero roles,
-federation, credentials, and attachments. The next separate gate may create only
-the reviewed OIDC credentials on the two deployer identities; credentials for
-publisher and starter remain absent until `identity-access.bicep`. Foundation
-resource deployment does not create or mutate any identity.
+credentials, and attachments. The two reviewed deployer OIDC credentials were
+then created and proven through their protected workflows while both identities
+remained at zero roles and zero attachments. Credentials for publisher and
+starter remain absent until `identity-access.bicep`. Foundation resource
+deployment does not create or mutate any identity.
 
 ## Deployer permissions
 
@@ -85,8 +86,10 @@ Bicep compilation is insufficient and a missing action is a stop condition.
    evidence records the exact resource, principal,
    client, and tenant IDs and proves absence of federation, secrets, roles, and
    attachments.
-2. **Federate the two deployers — NOT APPROVED.** Use the separate packet below.
-   This creates no role and performs no deployment.
+2. **Federate the two deployers — COMPLETE.** The exact immutable-subject FICs
+   were created and both protected workflows conclusively proved authentication
+   plus zero ARM access. The FICs remain as durable secretless authentication;
+   both deployers retain zero roles and zero attachments.
 3. **Temporarily authorize the infrastructure deployer.** Approve one named
    resource-template deployment in a bounded window. Record assignment and
    deadline, verify plan and post-state, remove access, refresh credentials, and
@@ -181,11 +184,10 @@ unapproved variables. Record the configuring GitHub administrator and UTC
 window. Stop without repair on drift or inconclusive configuration evidence.
 This packet authorizes no Azure or Entra operation and no workflow dispatch.
 
-## Prepared Entra deployer federation approval packet
+## Entra deployer federation control and completion evidence
 
-**Status: draft; not approved and not executed.** This packet may be considered
-only after the GitHub configuration above is independently read back and matches
-exactly. It creates no Azure role and performs no Bicep deployment.
+**Status: complete 2026-08-11.** The approved operation created only the two
+credentials below, granted no Azure role, and performed no Bicep deployment.
 
 Common values:
 
@@ -198,7 +200,8 @@ Common values:
 - Subscription: `5ace9cdd-06d1-47d9-8214-1e7c756d076a`
 - Tenant: `d7add2bb-ac03-49a8-9377-d0bf6a012f2f`
 - Resource group: `rg-adventures-suite-dev`
-- Required workflow release SHA: `<EXACT_CURRENT_MAIN_SHA>`
+- Executed workflow release SHA:
+  `fe4fe542909343540d207609b7b5a181922420ae`
 
 Read-only GitHub OIDC evidence recorded on 2026-08-11 showed
 `use_default=true`, `use_immutable_subject=false`, no custom
@@ -211,36 +214,29 @@ namespace reuse and GitHub does not permit removing them from an immutable
 subject. Approval and Entra trust records must use the effective subject
 verbatim; the legacy name-only form is prohibited.
 
-Immediately before execution, the approval record must resolve
-`<EXACT_CURRENT_MAIN_SHA>` to the then-current full lowercase 40-character SHA
-of protected `main`. The approved SHA, workflow `release_sha` input, and
-`github.sha` must match that resolved value exactly. Any new commit on `main`
-invalidates the approval and requires a new read-only review and explicit
-approval for the new SHA.
+Immediately before execution, the approval record resolved protected `main` to
+the full SHA above. The approved SHA, workflow `release_sha` input, and
+`github.sha` matched exactly. This binding remains mandatory for any future
+workflow dispatch; a new commit on `main` requires a new read-only review and
+explicit approval for the new SHA.
 
 | Purpose | Identity resource ID | Principal ID | Client ID | Credential | Subject | Workflow |
 | --- | --- | --- | --- | --- | --- | --- |
 | Foundation/Job resources | `/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-adventures-suite-migration-foundation-deployer-dev` | `b77b6201-ad26-4f77-8f88-6d0d43f7dbb8` | `223af00d-69e5-4302-9ac5-6b338f3ea2e5` | `github-migration-foundation-deployment` | `repo:ssimonton007@55812276/adventures-studio@1317655952:environment:migration-foundation-deployment` | `.github/workflows/provision-migration-foundation-resources.yml` |
 | Access resources | `/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-adventures-suite-migration-rbac-bootstrap-dev` | `822c1c0c-39e1-400f-b9fc-9532a11bae5d` | `d678e2ad-ada2-4cde-bb79-44630acf1cc8` | `github-migration-rbac-deployment` | `repo:ssimonton007@55812276/adventures-studio@1317655952:environment:migration-rbac-deployment` | `.github/workflows/provision-migration-rbac-access.yml` |
 
-Before creation, record approving operator and executing Azure identity;
-resolve and record `<EXACT_CURRENT_MAIN_SHA>` immediately before execution, and
-verify the exact main SHA and GitHub configuration, identity IDs, zero roles at
-every scope, zero credentials/secrets, zero attachments, and absence of both
-proposed credentials. Verify publisher and starter federation remains absent.
-
-Create only the two exact federated credentials and read them back to compare
-name, issuer, single audience, and subject. Re-prove zero roles. Dispatch each
-proof workflow separately with release SHA `<EXACT_CURRENT_MAIN_SHA>`, a unique
-approval ID, and recorded sole-maintainer approval. At dispatch,
-`github.sha`, `release_sha`, and the SHA in the approval record must be exactly
-equal; a changed `main` stops and invalidates the operation. Both explicit ARM
-probes must return exact
-`AuthorizationFailed`; every other result fails closed. Retain bounded evidence,
-then remove the two credentials immediately if the approved window or purpose
-ends and verify loss of authentication using a separate fresh token and fresh
-session technical check. This technical independence does not assert that a
-second human reviewer participated.
+Preflight recorded the approving operator and executing identities and proved
+the exact GitHub configuration, identity IDs, zero roles at every scope, zero
+user-managed credentials, zero attachments, and initial absence of both FICs.
+Publisher and starter federation remained absent. Exact readback then proved
+the two rows above. Foundation run `31495613312` with approval
+`fedproof-fe4fe542-foundation-01` succeeded before RBAC run `31495747556` with
+approval `fedproof-fe4fe542-rbac-01` was dispatched. Each run used the executed
+SHA above and produced one `complete` envelope with exit code zero. Both explicit
+ARM probes returned structured `AuthorizationFailed`; every other result would
+have failed closed. The FICs are retained because both proofs succeeded. Fresh
+readback proved zero roles, zero attachments, no pending Environment deployment,
+and no mutation beyond the two FIC writes.
 
 The proof authenticates with `allow-no-subscriptions: true`; it must not depend
 on `az account show` or subscription discovery to establish tenant identity.
