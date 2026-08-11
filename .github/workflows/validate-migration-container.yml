@@ -73,7 +73,7 @@ jobs:
           grep -q 'parallelism: 1' infrastructure/container-apps-migrations/job-resource.bicep
           grep -q 'replicaCompletionCount: 1' infrastructure/container-apps-migrations/job-resource.bicep
           grep -q 'timeout --signal=TERM --kill-after=30s 900s' src/AdventuresSuite.DatabaseMigrator/container-entrypoint.sh
-          grep -q '@${imageDigest}' infrastructure/container-apps-migrations/job-resource.bicep
+          grep -q '@${validatedImageDigest}' infrastructure/container-apps-migrations/job-resource.bicep
           ! grep -q "{ name: 'ADVENTURESSUITE_MIGRATION_OPERATION_ID'" infrastructure/container-apps-migrations/job-resource.bicep
           ! grep -q "{ name: 'ADVENTURESSUITE_ARTIFACT_SHA256'" infrastructure/container-apps-migrations/job-resource.bicep
           grep -A4 "resource starterAssignment" infrastructure/container-apps-migrations/job-access.bicep | grep -q 'scope: job'
