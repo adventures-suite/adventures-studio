@@ -76,11 +76,11 @@ jobs:
           grep -q '@${validatedImageDigest}' infrastructure/container-apps-migrations/job-resource.bicep
           ! grep -q "{ name: 'ADVENTURESSUITE_MIGRATION_OPERATION_ID'" infrastructure/container-apps-migrations/job-resource.bicep
           ! grep -q "{ name: 'ADVENTURESSUITE_ARTIFACT_SHA256'" infrastructure/container-apps-migrations/job-resource.bicep
-          ! rg -q 'federatedIdentityCredentials' infrastructure/container-apps-migrations/foundation-resources.bicep
-          test "$(rg -c 'resource .*userAssignedIdentities@.* existing =' infrastructure/container-apps-migrations/foundation-resources.bicep)" -eq 4
-          ! rg -q 'Microsoft.ManagedIdentity/' infrastructure/container-apps-migrations/roles/infrastructure-deployer.role.json
+          ! grep -q 'federatedIdentityCredentials' infrastructure/container-apps-migrations/foundation-resources.bicep
+          test "$(grep -c 'resource .*userAssignedIdentities@.* existing =' infrastructure/container-apps-migrations/foundation-resources.bicep)" -eq 4
+          ! grep -q 'Microsoft.ManagedIdentity/' infrastructure/container-apps-migrations/roles/infrastructure-deployer.role.json
           grep -A4 "resource starterAssignment" infrastructure/container-apps-migrations/job-access.bicep | grep -q 'scope: job'
-          ! rg -q 'configurator|configure-dormant-job|DATABASE_JOB_CONFIGURATOR' \
+          ! grep -Eq 'configurator|configure-dormant-job|DATABASE_JOB_CONFIGURATOR' \
             infrastructure/container-apps-migrations/*.bicep .github/workflows/database-migration-job.yml
           ! grep -Eiq 'ingress:|external: true|latest' infrastructure/container-apps-migrations/*.bicep
 
