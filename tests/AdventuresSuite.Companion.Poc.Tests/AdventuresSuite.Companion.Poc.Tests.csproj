@@ -21,6 +21,7 @@
     <Compile Include="../../prototypes/AdventuresSuite.Companion.Poc/Services/TransientSelectorState.cs" Link="Presentation/TransientSelectorState.cs" />
     <Compile Include="../../prototypes/AdventuresSuite.Companion.Poc/Models/CompanionAdventure.cs" Link="Presentation/CompanionAdventure.cs" />
     <Compile Include="../../prototypes/AdventuresSuite.Companion.Poc/Services/CompanionContentProviders.cs" Link="Presentation/CompanionContentProviders.cs" />
+    <Compile Include="../../prototypes/AdventuresSuite.Companion.Poc/Services/CompanionAdventureDetailPresentation.cs" Link="Presentation/CompanionAdventureDetailPresentation.cs" />
     <Compile Include="../../prototypes/AdventuresSuite.Companion.Poc/Services/CompanionProviderConfiguration.cs" Link="Presentation/CompanionProviderConfiguration.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -258,6 +258,33 @@ button:focus-visible, select:focus-visible { outline: 3px solid var(--focus-ring
 .loading-state { min-height: 100vh; display: grid; place-content: center; justify-items: center; gap: 12px; color: var(--forest); }
 .loading-state p { font-size: 11px; }
 .companion-load-state { padding: 24px; text-align: center; }
+
+.detail-view { padding: 8px 0 24px; }
+.detail-back { min-height: 44px; margin: 0 0 14px; padding: 8px 4px; border: 0; background: transparent; color: var(--accent-primary); font-weight: 800; }
+.detail-heading { margin-bottom: 16px; }
+.detail-heading h1, .detail-state h1 { margin: 6px 0; color: var(--text-primary); font: 500 31px/1.08 Georgia, serif; }
+.detail-heading p, .detail-state p, .detail-description { color: var(--text-secondary); line-height: 1.55; }
+.detail-facts { display: grid; gap: 8px; margin: 0 0 18px; }
+.detail-facts span { padding: 12px 14px; border: 1px solid var(--border-subtle); border-radius: 14px; background: var(--surface-card); color: var(--text-secondary); font-size: 11px; }
+.detail-facts strong { display: block; margin-bottom: 4px; color: var(--text-primary); font-size: 9px; text-transform: uppercase; letter-spacing: .1em; }
+.detail-facts .stale { border-color: var(--status-warning); color: var(--status-warning); }
+.detail-summary, .detail-destinations, .capability-references { margin-top: 24px; }
+.detail-summary h2, .detail-destinations h2, .capability-references h2 { margin: 0 0 11px; color: var(--text-primary); font: 500 22px Georgia, serif; }
+.detail-summary { padding: 16px; border-radius: 18px; background: var(--surface-selected); }
+.detail-summary p { margin: 7px 0; color: var(--text-secondary); font-size: 11px; line-height: 1.5; }
+.detail-summary strong { color: var(--text-primary); }
+.detail-destination { padding: 16px; border: 1px solid var(--border-subtle); border-radius: 18px; background: var(--surface-card); }
+.detail-destination + .detail-destination { margin-top: 10px; }
+.detail-destination h3 { margin: 0 0 6px; color: var(--text-primary); font: 600 18px Georgia, serif; }
+.detail-destination > p { margin: 0; color: var(--text-secondary); font-size: 10px; }
+.resource-reference { margin-top: 13px; padding-top: 12px; display: grid; gap: 4px; border-top: 1px solid var(--border-subtle); color: var(--text-secondary); font-size: 10px; }
+.resource-reference strong { color: var(--text-primary); }
+.resource-reference small { margin-top: 4px; color: var(--status-warning); line-height: 1.4; }
+.capability-references { padding: 16px; border: 1px solid var(--border-subtle); border-radius: 18px; background: var(--surface-raised); }
+.capability-references ul { margin: 0; padding-left: 20px; color: var(--text-primary); }
+.capability-references p { margin: 10px 0 0; color: var(--text-secondary); font-size: 10px; }
+.detail-state { min-height: 50vh; display: grid; align-content: center; justify-items: start; }
+.detail-state.error { color: var(--status-error); }
 .companion-load-state h1 { margin: 0; font: 500 25px Georgia, serif; }
 .companion-load-state small { font: 9px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .companion-load-state button { padding: 10px 16px; border: 0; border-radius: 99px; background: var(--forest); color: white; font-size: 10px; font-weight: 800; }
