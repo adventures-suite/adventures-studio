@@ -1,4 +1,5 @@
 using TheSimontonAdventures.Web.Creators;
+using TheSimontonAdventures.Web.Authorization;
 
 namespace TheSimontonAdventures.Web.Planning.Persistence;
 
@@ -21,6 +22,12 @@ public interface IPlanningTransaction : IAsyncDisposable
 
     /// <summary>Gets Adventure Plan persistence operations participating in this transaction.</summary>
     IAdventurePlanRepository AdventurePlans { get; }
+
+    /// <summary>
+    /// Gets the collector for audit intent that must commit atomically with
+    /// Planning mutations in this transaction.
+    /// </summary>
+    IRequiredAuditIntentCollector RequiredAuditIntents { get; }
 
     /// <summary>Commits all validated changes atomically.</summary>
     Task CommitAsync(CancellationToken cancellationToken = default);

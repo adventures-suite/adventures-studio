@@ -1,6 +1,8 @@
 using AdventuresSuite.DatabaseMigrator;
+using AdventuresSuite.Identity;
 using AdventuresSuite.Planning.SqlServer;
 using Microsoft.Data.SqlClient;
+using TheSimontonAdventures.Web.Authorization;
 using TheSimontonAdventures.Web.Creators;
 using TheSimontonAdventures.Web.Planning;
 using TheSimontonAdventures.Web.Planning.Persistence;
@@ -30,16 +32,23 @@ public sealed class PlanningRepositoryIntegrationTests
             var alpha = new CreatorId("creator_alpha");
             var beta = new CreatorId("creator_beta");
             var original = CreatePlan(alpha, 1, "Spain and Atlantic");
+            var originalAuditId = new AuditEventId("audit_planning_create");
 
             await using (var transaction = await factory.BeginAsync(alpha))
             {
                 await transaction.AdventurePlans.AddAsync(alpha, original);
+                transaction.RequiredAuditIntents.AddRequired(Audit(
+                    alpha, original.Id, Permissions.AdventurePlanCreate, null, 1,
+                    originalAuditId));
                 await Assert.ThrowsAsync<ArgumentException>(() =>
                     transaction.AdventurePlans.GetAsync(beta, original.Id));
                 await Assert.ThrowsAsync<ArgumentException>(() =>
                     transaction.AdventurePlans.AddAsync(alpha, CreatePlan(beta, 1, "Wrong owner")));
                 await transaction.CommitAsync();
             }
+
+            await AssertSuccessfulAuditAsync(
+                databaseConnectionString, originalAuditId, alpha, original.Id);
 
             await using (var transaction = await factory.BeginAsync(alpha))
             {
@@ -74,7 +83,10 @@ public sealed class PlanningRepositoryIntegrationTests
                 Assert.Null(await transaction.AdventurePlans.GetAsync(beta, original.Id));
                 Assert.Null(await transaction.AdventurePlans.GetAuthorizationFactsAsync(beta, original.Id));
                 Assert.Null(await transaction.AdventurePlans.GetDetailAsync(beta, original.Id));
-                await transaction.AdventurePlans.AddAsync(beta, CreatePlan(beta, 1, "Independent plan"));
+                var independent = CreatePlan(beta, 1, "Independent plan");
+                await transaction.AdventurePlans.AddAsync(beta, independent);
+                transaction.RequiredAuditIntents.AddRequired(Audit(
+                    beta, independent.Id, Permissions.AdventurePlanCreate, null, 1));
                 await transaction.CommitAsync();
             }
 
@@ -82,6 +94,8 @@ public sealed class PlanningRepositoryIntegrationTests
             await using (var transaction = await factory.BeginAsync(alpha))
             {
                 await transaction.AdventurePlans.UpdateAsync(alpha, updated, 1);
+                transaction.RequiredAuditIntents.AddRequired(Audit(
+                    alpha, updated.Id, Permissions.AdventurePlanEdit, 1, 2));
                 await transaction.CommitAsync();
             }
 
@@ -106,6 +120,8 @@ public sealed class PlanningRepositoryIntegrationTests
             await using (var transaction = await factory.BeginAsync(alpha))
             {
                 await transaction.AdventurePlans.UpdateAsync(alpha, archived, 2);
+                transaction.RequiredAuditIntents.AddRequired(Audit(
+                    alpha, archived.Id, Permissions.AdventurePlanArchive, 2, 3));
                 await transaction.CommitAsync();
             }
 
@@ -126,6 +142,8 @@ public sealed class PlanningRepositoryIntegrationTests
             await using (var transaction = await factory.BeginAsync(alpha))
             {
                 await transaction.AdventurePlans.UpdateAsync(alpha, restored, 3);
+                transaction.RequiredAuditIntents.AddRequired(Audit(
+                    alpha, restored.Id, Permissions.AdventurePlanRestore, 3, 4));
                 await transaction.CommitAsync();
             }
 
@@ -149,6 +167,77 @@ public sealed class PlanningRepositoryIntegrationTests
                 Assert.Null(await transaction.AdventurePlans.GetAsync(alpha, rollbackId));
                 await transaction.CommitAsync();
             }
+
+            var missingAuditId = new AdventurePlanId("plan_missing_audit");
+            await using (var transaction = await factory.BeginAsync(alpha))
+            {
+                await transaction.AdventurePlans.AddAsync(alpha,
+                    CreatePlan(alpha, 1, "Missing audit", missingAuditId));
+                await Assert.ThrowsAsync<InvalidOperationException>(() => transaction.CommitAsync());
+            }
+
+            await AssertPlanAndAuditAbsentAsync(
+                databaseConnectionString, alpha, missingAuditId, auditEventId: null);
+
+            var mismatchedAuditPlanId = new AdventurePlanId("plan_mismatched_audit");
+            await using (var transaction = await factory.BeginAsync(alpha))
+            {
+                var mismatchedAuditPlan = CreatePlan(
+                    alpha, 1, "Mismatched audit", mismatchedAuditPlanId);
+                await transaction.AdventurePlans.AddAsync(alpha, mismatchedAuditPlan);
+                transaction.RequiredAuditIntents.AddRequired(Audit(
+                    alpha, mismatchedAuditPlanId, Permissions.AdventurePlanEdit, null, 1));
+                await Assert.ThrowsAsync<InvalidOperationException>(() => transaction.CommitAsync());
+            }
+
+            await AssertPlanAndAuditAbsentAsync(
+                databaseConnectionString, alpha, mismatchedAuditPlanId, auditEventId: null);
+
+            var duplicateAuditId = new AuditEventId("audit_duplicate_planning");
+            var duplicateAuditPlanId = new AdventurePlanId("plan_duplicate_audit");
+            await using (var transaction = await factory.BeginAsync(alpha))
+            {
+                var duplicateAuditPlan = CreatePlan(alpha, 1, "Audit seed", duplicateAuditPlanId);
+                await transaction.AdventurePlans.AddAsync(alpha, duplicateAuditPlan);
+                transaction.RequiredAuditIntents.AddRequired(Audit(
+                    alpha, duplicateAuditPlanId, Permissions.AdventurePlanCreate, null, 1,
+                    duplicateAuditId));
+                await transaction.CommitAsync();
+            }
+
+            var auditFailurePlanId = new AdventurePlanId("plan_audit_failure");
+            await using (var transaction = await factory.BeginAsync(alpha))
+            {
+                var auditFailurePlan = CreatePlan(alpha, 1, "Audit failure", auditFailurePlanId);
+                await transaction.AdventurePlans.AddAsync(alpha, auditFailurePlan);
+                transaction.RequiredAuditIntents.AddRequired(Audit(
+                    alpha, auditFailurePlanId, Permissions.AdventurePlanCreate, null, 1,
+                    duplicateAuditId));
+                await Assert.ThrowsAsync<SqlException>(() => transaction.CommitAsync());
+            }
+
+            await AssertPlanAndAuditAbsentAsync(
+                databaseConnectionString, alpha, auditFailurePlanId, auditEventId: null);
+
+            var planFailureAuditId = new AuditEventId("audit_plan_failure");
+            await using (var transaction = await factory.BeginAsync(alpha))
+            {
+                transaction.RequiredAuditIntents.AddRequired(Audit(
+                    alpha, original.Id, Permissions.AdventurePlanCreate, null, 1,
+                    planFailureAuditId));
+                await Assert.ThrowsAsync<SqlException>(() => transaction.AdventurePlans.AddAsync(
+                    alpha, CreatePlan(alpha, 1, "Duplicate plan")));
+            }
+
+            await AssertPlanAndAuditAbsentAsync(
+                databaseConnectionString, alpha, new AdventurePlanId("plan_absent_probe"),
+                planFailureAuditId);
+
+            await using (var transaction = await factory.BeginAsync(alpha))
+            {
+                Assert.Throws<ArgumentException>(() => transaction.RequiredAuditIntents.AddRequired(
+                    Audit(beta, original.Id, Permissions.AdventurePlanCreate, null, 1)));
+            }
         }
         finally
         {
@@ -160,6 +249,81 @@ public sealed class PlanningRepositoryIntegrationTests
                 END;
                 """);
         }
+    }
+
+    private static AuditEventIntent Audit(
+        CreatorId creatorId,
+        AdventurePlanId planId,
+        Permission permission,
+        long? previousVersion,
+        long resultingVersion,
+        AuditEventId? auditEventId = null) => new(
+            auditEventId ?? new AuditEventId($"audit_{Guid.NewGuid():N}"),
+            new ActorIdentity(ActorType.Human, "actor_planner", new UserId("user_planner")),
+            creatorId,
+            permission,
+            AuthorizationResourceScope.ForInstance(
+                creatorId, AuthorizationResourceTypes.AdventurePlan, planId.Value),
+            AuditOutcome.Succeeded,
+            AuditReasonCategory.Completed,
+            new DateTimeOffset(2026, 8, 11, 17, 0, 0, TimeSpan.Zero),
+            new CorrelationId($"correlation_{Guid.NewGuid():N}"),
+            previousVersion: previousVersion,
+            resultingVersion: resultingVersion);
+
+    private static async Task AssertPlanAndAuditAbsentAsync(
+        string connectionString,
+        CreatorId creatorId,
+        AdventurePlanId planId,
+        AuditEventId? auditEventId)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+        await using var command = new SqlCommand("""
+            SELECT
+              (SELECT COUNT(*) FROM planning.AdventurePlans
+               WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId),
+              (SELECT COUNT(*) FROM audit.AuditEvents
+               WHERE AuditEventId=@AuditEventId);
+            """, connection);
+        command.Parameters.AddWithValue("CreatorId", creatorId.Value);
+        command.Parameters.AddWithValue("PlanId", planId.Value);
+        command.Parameters.AddWithValue("AuditEventId", auditEventId?.Value ?? "audit_absent_probe");
+        await using var reader = await command.ExecuteReaderAsync();
+        Assert.True(await reader.ReadAsync());
+        Assert.Equal(0, reader.GetInt32(0));
+        Assert.Equal(0, reader.GetInt32(1));
+    }
+
+    private static async Task AssertSuccessfulAuditAsync(
+        string connectionString,
+        AuditEventId auditEventId,
+        CreatorId creatorId,
+        AdventurePlanId planId)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+        await using var command = new SqlCommand("""
+            SELECT CreatorId,ActorType,ActorUserId,Permission,ResourceType,ResourceId,
+                   Outcome,ReasonCategory,OccurredAtUtc,CorrelationId,PreviousVersion,ResultingVersion
+            FROM audit.AuditEvents
+            WHERE AuditEventId=@AuditEventId;
+            """, connection);
+        command.Parameters.AddWithValue("AuditEventId", auditEventId.Value);
+        await using var reader = await command.ExecuteReaderAsync();
+        Assert.True(await reader.ReadAsync());
+        Assert.Equal(creatorId.Value, reader.GetString(0));
+        Assert.Equal(nameof(ActorType.Human), reader.GetString(1));
+        Assert.Equal("user_planner", reader.GetString(2));
+        Assert.Equal(Permissions.AdventurePlanCreate.Value, reader.GetString(3));
+        Assert.Equal(AuthorizationResourceTypes.AdventurePlan.Value, reader.GetString(4));
+        Assert.Equal(planId.Value, reader.GetString(5));
+        Assert.Equal(nameof(AuditOutcome.Succeeded), reader.GetString(6));
+        Assert.Equal(nameof(AuditReasonCategory.Completed), reader.GetString(7));
+        Assert.Equal(TimeSpan.Zero, reader.GetFieldValue<DateTimeOffset>(8).Offset);
+        Assert.StartsWith("correlation_", reader.GetString(9), StringComparison.Ordinal);
+        Assert.True(reader.IsDBNull(10));
+        Assert.Equal(1, reader.GetInt64(11));
     }
 
     private static AdventurePlan CreatePlan(

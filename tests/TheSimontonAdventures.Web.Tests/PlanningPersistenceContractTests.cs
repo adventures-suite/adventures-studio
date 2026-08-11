@@ -1,4 +1,5 @@
 using System.Reflection;
+using TheSimontonAdventures.Web.Authorization;
 using TheSimontonAdventures.Web.Creators;
 using TheSimontonAdventures.Web.Planning;
 using TheSimontonAdventures.Web.Planning.Persistence;
@@ -34,6 +35,8 @@ public sealed class PlanningPersistenceContractTests
         Assert.Equal(typeof(CreatorId), operation.GetParameters()[0].ParameterType);
         Assert.Equal(typeof(CreatorId), typeof(IPlanningTransaction)
             .GetProperty(nameof(IPlanningTransaction.CreatorId))?.PropertyType);
+        Assert.Equal(typeof(IRequiredAuditIntentCollector), typeof(IPlanningTransaction)
+            .GetProperty(nameof(IPlanningTransaction.RequiredAuditIntents))?.PropertyType);
     }
 
     /// <summary>Ensures persistence contracts do not expose infrastructure types.</summary>
@@ -44,7 +47,8 @@ public sealed class PlanningPersistenceContractTests
         [
             typeof(IAdventurePlanRepository),
             typeof(IPlanningTransactionFactory),
-            typeof(IPlanningTransaction)
+            typeof(IPlanningTransaction),
+            typeof(IRequiredAuditIntentCollector)
         ];
 
         var exposedTypes = contracts
