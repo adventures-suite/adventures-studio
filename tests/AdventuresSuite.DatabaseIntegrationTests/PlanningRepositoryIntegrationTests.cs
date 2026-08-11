@@ -49,8 +49,8 @@ public sealed class PlanningRepositoryIntegrationTests
                 var dashboard = Assert.Single(
                     await transaction.AdventurePlans.ListDashboardAsync(alpha));
                 Assert.Equal(original.Id, dashboard.Id);
-                Assert.Equal(1, dashboard.DestinationCount);
-                Assert.Equal(1, dashboard.OpenTaskCount);
+                Assert.Equal(original.Audit.Version, dashboard.Version);
+                Assert.False(dashboard.IsArchived);
                 await transaction.CommitAsync();
             }
 

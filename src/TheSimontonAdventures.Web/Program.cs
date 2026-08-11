@@ -57,6 +57,7 @@ if (string.Equals(authenticationMode, nameof(AuthenticationMode.ExternalProvider
     builder.Services.AddSingleton<ICreatorMembershipProvider, TransactionalCreatorMembershipProvider>();
     builder.Services.AddSingleton<IAuthorizationResourceFactsProvider, PlanningAuthorizationResourceFactsProvider>();
     builder.Services.AddSingleton<IAuthorizationPolicyEvaluator, AuthorizationPolicyEvaluator>();
+    builder.Services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>();
     builder.Services.AddSingleton(TimeProvider.System);
     builder.Services.AddScoped<IPlannerWorkspaceQueryService, PlannerWorkspaceQueryService>();
 }

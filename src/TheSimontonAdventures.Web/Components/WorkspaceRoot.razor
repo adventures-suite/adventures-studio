@@ -33,6 +33,20 @@
                 <p>Your account does not currently have access to this Planner workspace.</p>
             </section>
         }
+        else if (LoadState == WorkspaceLoadState.Failure)
+        {
+            <section class="workspace-message" aria-labelledby="workspace-failure">
+                <h2 id="workspace-failure">Planner temporarily unavailable</h2>
+                <p>The private workspace could not be loaded. Please try again later.</p>
+            </section>
+        }
+        else if (LoadState == WorkspaceLoadState.Landing)
+        {
+            <section class="workspace-message" aria-labelledby="workspace-landing">
+                <h2 id="workspace-landing">Choose a Creator workspace</h2>
+                <p>Open an explicitly addressed Creator workspace to view its Adventure Plans.</p>
+            </section>
+        }
         else if (Plans.Count == 0)
         {
             <section class="workspace-message" aria-labelledby="workspace-empty">
@@ -59,14 +73,9 @@
                                 <span>@plan.LifecycleStage</span>
                             </div>
                             <h3>@plan.Title</h3>
-                            @if (!string.IsNullOrWhiteSpace(plan.WorkingDescription))
-                            {
-                                <p>@plan.WorkingDescription</p>
-                            }
                             <dl>
                                 <div><dt>Dates</dt><dd>@FormatDates(plan)</dd></div>
-                                <div><dt>Destinations</dt><dd>@plan.DestinationCount</dd></div>
-                                <div><dt>Open tasks</dt><dd>@plan.OpenTaskCount</dd></div>
+                                <div><dt>Plan version</dt><dd>@plan.Version</dd></div>
                             </dl>
                         </article>
                     }
@@ -84,7 +93,7 @@
 
 @code {
     private IReadOnlyList<AdventurePlanDashboardItem> Plans { get; set; } = [];
-    private WorkspaceLoadState LoadState { get; set; } = WorkspaceLoadState.Loading;
+    private WorkspaceLoadState LoadState { get; set; } = WorkspaceLoadState.Landing;
 
     private bool IsAuthenticated =>
         HttpContextAccessor.HttpContext?.User.Identity?.IsAuthenticated is true;
@@ -97,10 +106,17 @@
             return;
         }
 
-        var userValue = context.User.FindFirst(ApplicationUserClaims.UserId)?.Value;
-        var creatorValue = context.RequestServices.GetService<IConfiguration>()?["Workspace:CreatorId"];
+        if (!TryGetAddressedCreator(context.Request.Path, out var creatorId))
+        {
+            LoadState = WorkspaceLoadState.Landing;
+            return;
+        }
+
+        LoadState = WorkspaceLoadState.Loading;
+        var actorResolver = context.RequestServices.GetService<IWorkspaceActorResolver>();
         var query = context.RequestServices.GetService<IPlannerWorkspaceQueryService>();
-        if (query is null || string.IsNullOrWhiteSpace(userValue) || string.IsNullOrWhiteSpace(creatorValue))
+        var actor = actorResolver?.Resolve(context.User);
+        if (query is null || actor is null)
         {
             LoadState = WorkspaceLoadState.Unavailable;
             return;
@@ -109,15 +125,42 @@
         try
         {
             var result = await query.ListAsync(
-                new UserId(userValue),
-                new CreatorId(creatorValue),
+                actor,
+                creatorId,
                 context.RequestAborted);
             Plans = result.Plans;
             LoadState = result.IsAllowed ? WorkspaceLoadState.Ready : WorkspaceLoadState.Unavailable;
         }
+        catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            context.RequestServices.GetService<ILogger<WorkspaceRoot>>()?.LogError(
+                exception,
+                "Planner dashboard read failed before a safe response could be rendered.");
+            LoadState = WorkspaceLoadState.Failure;
+        }
+    }
+
+    private static bool TryGetAddressedCreator(PathString path, out CreatorId creatorId)
+    {
+        creatorId = default;
+        var segments = path.Value?.Split('/', StringSplitOptions.None);
+        if (segments is not ["", "workspace", "creators", var creatorValue, "plans"])
+        {
+            return false;
+        }
+
+        try
+        {
+            creatorId = new CreatorId(creatorValue);
+            return true;
+        }
         catch (ArgumentException)
         {
-            LoadState = WorkspaceLoadState.Unavailable;
+            return false;
         }
     }
 
@@ -130,5 +173,5 @@
         _ => status.ToString()
     };
 
-    private enum WorkspaceLoadState { Loading, Ready, Unavailable }
+    private enum WorkspaceLoadState { Landing, Loading, Ready, Unavailable, Failure }
 }

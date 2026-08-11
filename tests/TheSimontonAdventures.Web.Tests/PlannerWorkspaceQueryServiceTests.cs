@@ -11,6 +11,7 @@ public sealed class PlannerWorkspaceQueryServiceTests
 {
     private static readonly UserId User = new("user_planner_01");
     private static readonly CreatorId Creator = new("creator_alpha_01");
+    private static readonly ActorIdentity Actor = new(ActorType.Human, User.Value, User);
 
     /// <summary>Denied collection access returns no plans and never opens Planning persistence.</summary>
     [Fact]
@@ -23,7 +24,7 @@ public sealed class PlannerWorkspaceQueryServiceTests
                 AuthorizationDenialReason.PermissionRequired)),
             transactions);
 
-        var result = await service.ListAsync(User, Creator);
+        var result = await service.ListAsync(Actor, Creator);
 
         Assert.False(result.IsAllowed);
         Assert.Empty(result.Plans);
@@ -40,7 +41,7 @@ public sealed class PlannerWorkspaceQueryServiceTests
             new StubAuthorizationEvaluator(AuthorizationDecision.Allow()),
             transactions);
 
-        var result = await service.ListAsync(User, Creator);
+        var result = await service.ListAsync(Actor, Creator);
 
         Assert.True(result.IsAllowed);
         Assert.Empty(result.Plans);
@@ -48,10 +49,87 @@ public sealed class PlannerWorkspaceQueryServiceTests
         Assert.Equal(Creator, transactions.LastCreatorId);
     }
 
-    private static CreatorMembershipSnapshot Membership() => new(
+    /// <summary>An absent membership denies without evaluating or reading Planning state.</summary>
+    [Fact]
+    public async Task ListAsync_AbsentMembership_DoesNotAuthorizeOrRead()
+    {
+        var authorization = new RecordingAuthorizationEvaluator();
+        var transactions = new StubPlanningTransactionFactory();
+        var service = new PlannerWorkspaceQueryService(
+            new StubMembershipProvider(null), authorization, transactions);
+
+        var result = await service.ListAsync(Actor, Creator);
+
+        Assert.False(result.IsAllowed);
+        Assert.Equal(0, authorization.CallCount);
+        Assert.Equal(0, transactions.BeginCount);
+    }
+
+    /// <summary>A forged Creator identity is used only as an authorization scope and never broadens reads.</summary>
+    [Fact]
+    public async Task ListAsync_ForgedCreatorId_CannotReadAuthorizedCreatorPlans()
+    {
+        var forged = new CreatorId("creator_forged_01");
+        var membershipProvider = new RecordingMembershipProvider();
+        var transactions = new StubPlanningTransactionFactory();
+        var service = new PlannerWorkspaceQueryService(
+            membershipProvider,
+            new StubAuthorizationEvaluator(AuthorizationDecision.Allow()),
+            transactions);
+
+        var result = await service.ListAsync(Actor, forged);
+
+        Assert.False(result.IsAllowed);
+        Assert.Equal(forged, membershipProvider.LastCreatorId);
+        Assert.Equal(0, transactions.BeginCount);
+    }
+
+    /// <summary>Revoked membership is re-evaluated below the UI and cannot reach Planning.</summary>
+    [Fact]
+    public async Task ListAsync_RevokedMembership_DoesNotReadPlanning()
+    {
+        var membership = Membership(CreatorMembershipStatus.Revoked);
+        var provider = new StubMembershipProvider(membership);
+        var transactions = new StubPlanningTransactionFactory();
+        var service = new PlannerWorkspaceQueryService(
+            provider,
+            Policy(provider),
+            transactions);
+
+        var result = await service.ListAsync(Actor, Creator);
+
+        Assert.False(result.IsAllowed);
+        Assert.Equal(0, transactions.BeginCount);
+    }
+
+    /// <summary>A membership version change between context load and policy evaluation fails closed.</summary>
+    [Fact]
+    public async Task ListAsync_StaleMembershipVersion_DoesNotReadPlanning()
+    {
+        var provider = new SequencedMembershipProvider(
+            Membership(version: 3), Membership(version: 4));
+        var transactions = new StubPlanningTransactionFactory();
+        var service = new PlannerWorkspaceQueryService(
+            provider,
+            Policy(provider),
+            transactions);
+
+        var result = await service.ListAsync(Actor, Creator);
+
+        Assert.False(result.IsAllowed);
+        Assert.Equal(0, transactions.BeginCount);
+    }
+
+    private static CreatorMembershipSnapshot Membership(
+        CreatorMembershipStatus status = CreatorMembershipStatus.Active,
+        long version = 3) => new(
         new CreatorMembershipId("membership_planner_01"), User, Creator,
-        CreatorMembershipStatus.Active, [CreatorRole.Viewer], [], 3,
+        status, [CreatorRole.Viewer], [], version,
         new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
+
+    private static AuthorizationPolicyEvaluator Policy(ICreatorMembershipProvider provider) =>
+        new(provider, new UnusedResourceFactsProvider(),
+            new FixedTimeProvider(new DateTimeOffset(2026, 8, 11, 12, 0, 0, TimeSpan.Zero)));
 
     private sealed class StubMembershipProvider(CreatorMembershipSnapshot? membership)
         : ICreatorMembershipProvider
@@ -67,6 +145,58 @@ public sealed class PlannerWorkspaceQueryServiceTests
         public Task<AuthorizationDecision> AuthorizeAsync(
             AuthorizationRequest request, CancellationToken cancellationToken = default) =>
             Task.FromResult(decision);
+    }
+
+    private sealed class RecordingAuthorizationEvaluator : IAuthorizationPolicyEvaluator
+    {
+        public int CallCount { get; private set; }
+
+        public Task<AuthorizationDecision> AuthorizeAsync(
+            AuthorizationRequest request, CancellationToken cancellationToken = default)
+        {
+            CallCount++;
+            return Task.FromResult(AuthorizationDecision.Deny(
+                AuthorizationDenialReason.MembershipRequired));
+        }
+    }
+
+    private sealed class RecordingMembershipProvider : ICreatorMembershipProvider
+    {
+        public CreatorId LastCreatorId { get; private set; }
+
+        public Task<CreatorMembershipSnapshot?> GetMembershipAsync(
+            UserId userId, CreatorId creatorId, CancellationToken cancellationToken = default)
+        {
+            LastCreatorId = creatorId;
+            return Task.FromResult<CreatorMembershipSnapshot?>(null);
+        }
+    }
+
+    private sealed class SequencedMembershipProvider(params CreatorMembershipSnapshot[] memberships)
+        : ICreatorMembershipProvider
+    {
+        private int index;
+
+        public Task<CreatorMembershipSnapshot?> GetMembershipAsync(
+            UserId userId, CreatorId creatorId, CancellationToken cancellationToken = default)
+        {
+            var membership = memberships[Math.Min(index, memberships.Length - 1)];
+            index++;
+            return Task.FromResult<CreatorMembershipSnapshot?>(membership);
+        }
+    }
+
+    private sealed class UnusedResourceFactsProvider : IAuthorizationResourceFactsProvider
+    {
+        public Task<AuthorizationResourceFacts?> GetResourceFactsAsync(
+            AuthorizationResourceScope resource,
+            CancellationToken cancellationToken = default) =>
+            throw new InvalidOperationException("Collection authorization must not load instance facts.");
+    }
+
+    private sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => utcNow;
     }
 
     private sealed class StubPlanningTransactionFactory : IPlanningTransactionFactory

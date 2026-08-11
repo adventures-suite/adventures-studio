@@ -55,16 +55,14 @@ public sealed record AdventurePlanDashboardItem
     public required AdventurePlanId Id { get; init; }
     /// <summary>Gets the private working title.</summary>
     public required string Title { get; init; }
-    /// <summary>Gets the optional private working description.</summary>
-    public string? WorkingDescription { get; init; }
     /// <summary>Gets the lifecycle stage independently of publication.</summary>
     public required AdventureLifecycleStage LifecycleStage { get; init; }
     /// <summary>Gets the private planning status.</summary>
     public required PlanningStatus Status { get; init; }
     /// <summary>Gets the local-calendar planning range.</summary>
     public required PlanningDateRange Dates { get; init; }
-    /// <summary>Gets the number of planned destination visits.</summary>
-    public required int DestinationCount { get; init; }
-    /// <summary>Gets the number of incomplete planning tasks.</summary>
-    public required int OpenTaskCount { get; init; }
+    /// <summary>Gets the authoritative optimistic-concurrency version.</summary>
+    public required long Version { get; init; }
+    /// <summary>Gets whether the plan is recoverably archived.</summary>
+    public required bool IsArchived { get; init; }
 }

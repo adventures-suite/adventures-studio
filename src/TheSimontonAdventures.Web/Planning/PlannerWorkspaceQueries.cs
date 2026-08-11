@@ -33,7 +33,7 @@ public interface IPlannerWorkspaceQueryService
 {
     /// <summary>Lists active plans only after Creator-scoped membership authorization succeeds.</summary>
     Task<PlannerWorkspaceResult> ListAsync(
-        UserId userId,
+        ActorIdentity actor,
         CreatorId creatorId,
         CancellationToken cancellationToken = default);
 }
@@ -46,23 +46,22 @@ public sealed class PlannerWorkspaceQueryService(
 {
     /// <inheritdoc />
     public async Task<PlannerWorkspaceResult> ListAsync(
-        UserId userId,
+        ActorIdentity actor,
         CreatorId creatorId,
         CancellationToken cancellationToken = default)
     {
-        if (userId == default || creatorId == default)
+        if (actor is null || !actor.IsHuman || !actor.UserId.HasValue || creatorId == default)
         {
             return PlannerWorkspaceResult.Denied();
         }
 
         var membership = await membershipProvider.GetMembershipAsync(
-            userId, creatorId, cancellationToken);
+            actor.UserId.Value, creatorId, cancellationToken);
         if (membership is null)
         {
             return PlannerWorkspaceResult.Denied();
         }
 
-        var actor = new ActorIdentity(ActorType.Human, userId.Value, userId);
         var decision = await authorizationPolicyEvaluator.AuthorizeAsync(
             new AuthorizationRequest(
                 actor,
