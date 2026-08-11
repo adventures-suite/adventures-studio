@@ -1,4 +1,5 @@
 using AdventuresSuite.Companion.Contracts;
+using System.Text;
 
 namespace AdventuresSuite.Companion.Application;
 
@@ -48,28 +49,57 @@ internal static class CompanionDtoMapper
             InformationProfileVersion = "info_demo_01"
         };
 
-    internal static CompanionTodayDto MapToday(
-        AdventureFixture source, DateTimeOffset now, string supportId)
+    internal static bool TryMapToday(
+        CompanionTodayProjection source,
+        string requestedAdventureId,
+        DateTimeOffset now,
+        string supportId,
+        out CompanionTodayDto? result)
     {
-        var items = source.Items.Where(value => value.Date == new DateOnly(2026, 8, 10))
-            .OrderBy(value => value.Sequence).Select(MapScheduleItem).ToArray();
-        var next = source.Items.Where(value => value.Date > new DateOnly(2026, 8, 10))
-            .OrderBy(value => value.Date).ThenBy(value => value.Sequence).FirstOrDefault();
-        return new CompanionTodayDto
+        result = null;
+        if (!IsValidIdentity(requestedAdventureId)
+            || !string.Equals(source.Adventure.AdventureId, requestedAdventureId, StringComparison.Ordinal)
+            || !IsValidIdentity(source.Adventure.TravelerId)
+            || !Enum.IsDefined(source.Adventure.Lifecycle)
+            || source.Adventure.EndDate < source.Adventure.StartDate
+            || !IsIanaTimeZone(source.Adventure.PrimaryTimeZone)
+            || !IsIanaTimeZone(source.TimeZone)
+            || source.TimeZone != source.Adventure.PrimaryTimeZone
+            || source.Adventure.PlanVersion < 1
+            || source.Adventure.ParticipationVersion < 1
+            || source.Adventure.UpdatedAtUtc.Offset != TimeSpan.Zero
+            || now.Offset != TimeSpan.Zero
+            || !IsBounded(source.InformationProfileVersion, 64)
+            || !IsOptionalBounded(source.Notice, 300)
+            || !Enum.IsDefined(source.State)
+            || source.TodayItems is null
+            || source.TodayItems.Count > 250
+            || !TryGetLocalDate(now, source.TimeZone, out var evaluatedLocalDate)
+            || source.LocalDate != evaluatedLocalDate
+            || ExpectedTodayState(source) != source.State
+            || !TryMapScheduleItems(source.TodayItems, source.Adventure, source.LocalDate, out var items)
+            || !TryMapNextItem(source.NextItem, source.Adventure, source.LocalDate, source.TodayItems, out var nextItem))
+        {
+            return false;
+        }
+
+        var projectionVersion = $"pv_today_{source.Adventure.PlanVersion}_{source.Adventure.ParticipationVersion}_{source.LocalDate:yyyyMMdd}";
+        result = new CompanionTodayDto
         {
             SchemaVersion = "1.0",
-            ProjectionVersion = "pv_today_italy_01",
+            ProjectionVersion = projectionVersion,
             GeneratedAtUtc = now,
             FreshUntilUtc = now.AddMinutes(5),
             SupportId = supportId,
-            AdventureId = source.Id,
-            LocalDate = new(2026, 8, 10),
+            AdventureId = source.Adventure.AdventureId,
+            LocalDate = source.LocalDate,
             TimeZone = source.TimeZone,
-            State = CompanionTodayState.Active,
-            TodayItems = items,
-            NextItem = next is null ? null : MapScheduleItem(next),
-            Notice = "Times are shown in the Adventure's local time zone."
+            State = MapTodayState(source.State),
+            TodayItems = items!,
+            NextItem = nextItem,
+            Notice = source.Notice
         };
+        return true;
     }
 
     internal static CompanionItineraryDto MapItinerary(
@@ -213,6 +243,201 @@ internal static class CompanionDtoMapper
             ActionLabel = source.RequiresAcknowledgment ? "Review change" : null,
             ActionPath = null
         };
+
+    private static bool TryMapScheduleItems(
+        IReadOnlyList<CompanionScheduleItemProjection> sources,
+        CompanionAdventureSummaryProjection adventure,
+        DateOnly localDate,
+        out IReadOnlyList<CompanionScheduleItemDto>? result)
+    {
+        result = null;
+        var identities = new HashSet<string>(StringComparer.Ordinal);
+        var items = new List<CompanionScheduleItemDto>(sources.Count);
+        var previousSequence = 0;
+        foreach (var source in sources)
+        {
+            if (source is null
+                || source.LocalDate != localDate
+                || source.Sequence <= previousSequence
+                || !identities.Add(source.ItemId)
+                || !TryMapScheduleItem(source, adventure, out var item))
+            {
+                return false;
+            }
+
+            previousSequence = source.Sequence;
+            items.Add(item!);
+        }
+
+        result = items;
+        return true;
+    }
+
+    private static bool TryMapNextItem(
+        CompanionScheduleItemProjection? source,
+        CompanionAdventureSummaryProjection adventure,
+        DateOnly localDate,
+        IReadOnlyList<CompanionScheduleItemProjection> todayItems,
+        out CompanionScheduleItemDto? result)
+    {
+        result = null;
+        if (source is null)
+        {
+            return true;
+        }
+
+        if (source.LocalDate < localDate
+            || todayItems.Any(value => string.Equals(value.ItemId, source.ItemId, StringComparison.Ordinal)))
+        {
+            return false;
+        }
+
+        return TryMapScheduleItem(source, adventure, out result);
+    }
+
+    private static bool TryMapScheduleItem(
+        CompanionScheduleItemProjection source,
+        CompanionAdventureSummaryProjection adventure,
+        out CompanionScheduleItemDto? result)
+    {
+        result = null;
+        if (!IsValidIdentity(source.ItemId)
+            || !IsBounded(source.ItemType, 64)
+            || !IsBounded(source.Title, 200)
+            || !IsOptionalBounded(source.Summary, 2000)
+            || source.LocalDate < adventure.StartDate
+            || source.LocalDate > adventure.EndDate
+            || !IsIanaTimeZone(source.TimeZone)
+            || !Enum.IsDefined(source.TimeState)
+            || !Enum.IsDefined(source.OperationalState)
+            || !IsOptionalBounded(source.PlaceSummary, 300)
+            || !IsOptionalBounded(source.TransportationSummary, 300)
+            || source.Sequence < 1
+            || !HasConsistentTime(source)
+            || source.OperationalState == CompanionScheduleOperationalState.Changed && !source.RequiresAcknowledgment
+            || source.TimeState == CompanionScheduleTimeState.ToBeConfirmed
+                && source.OperationalState is CompanionScheduleOperationalState.Reserved
+                    or CompanionScheduleOperationalState.Confirmed
+                    or CompanionScheduleOperationalState.Completed)
+        {
+            return false;
+        }
+
+        result = new CompanionScheduleItemDto
+        {
+            ItemId = source.ItemId,
+            ItemType = source.ItemType,
+            Title = source.Title,
+            Summary = source.Summary,
+            LocalDate = source.LocalDate,
+            StartLocalTime = source.StartLocalTime,
+            EndLocalTime = source.EndLocalTime,
+            TimeZone = source.TimeZone,
+            TimeStatus = MapTimeState(source.TimeState),
+            OperationalStatus = MapOperationalState(source.OperationalState),
+            PlaceSummary = source.PlaceSummary,
+            TransportationSummary = source.TransportationSummary,
+            Resources = [],
+            RequiresAcknowledgment = source.RequiresAcknowledgment,
+            ActionLabel = source.RequiresAcknowledgment ? "Review change" : null,
+            ActionPath = null
+        };
+        return true;
+    }
+
+    private static bool HasConsistentTime(CompanionScheduleItemProjection source) => source.TimeState switch
+    {
+        CompanionScheduleTimeState.Scheduled => source.StartLocalTime is not null
+            && (source.EndLocalTime is null || source.EndLocalTime >= source.StartLocalTime),
+        CompanionScheduleTimeState.AllDay or CompanionScheduleTimeState.ToBeConfirmed =>
+            source.StartLocalTime is null && source.EndLocalTime is null,
+        CompanionScheduleTimeState.Cancelled =>
+            source.StartLocalTime is null && source.EndLocalTime is null
+            && source.OperationalState == CompanionScheduleOperationalState.Cancelled,
+        _ => false
+    } && (source.OperationalState != CompanionScheduleOperationalState.Cancelled
+        || source.TimeState == CompanionScheduleTimeState.Cancelled);
+
+    private static CompanionTodayProjectionState ExpectedTodayState(CompanionTodayProjection source) =>
+        source.LocalDate < source.Adventure.StartDate
+            ? CompanionTodayProjectionState.BeforeAdventure
+            : source.LocalDate > source.Adventure.EndDate
+                ? CompanionTodayProjectionState.AfterAdventure
+                : source.TodayItems.Count == 0
+                    ? CompanionTodayProjectionState.NoScheduledItems
+                    : CompanionTodayProjectionState.Active;
+
+    private static CompanionTodayState MapTodayState(CompanionTodayProjectionState state) => state switch
+    {
+        CompanionTodayProjectionState.BeforeAdventure => CompanionTodayState.BeforeAdventure,
+        CompanionTodayProjectionState.Active => CompanionTodayState.Active,
+        CompanionTodayProjectionState.AfterAdventure => CompanionTodayState.AfterAdventure,
+        CompanionTodayProjectionState.NoScheduledItems => CompanionTodayState.NoScheduledItems,
+        _ => throw new ArgumentOutOfRangeException(nameof(state))
+    };
+
+    private static CompanionTimeStatus MapTimeState(CompanionScheduleTimeState state) => state switch
+    {
+        CompanionScheduleTimeState.Scheduled => CompanionTimeStatus.Scheduled,
+        CompanionScheduleTimeState.AllDay => CompanionTimeStatus.AllDay,
+        CompanionScheduleTimeState.ToBeConfirmed => CompanionTimeStatus.ToBeConfirmed,
+        CompanionScheduleTimeState.Cancelled => CompanionTimeStatus.Cancelled,
+        _ => throw new ArgumentOutOfRangeException(nameof(state))
+    };
+
+    private static CompanionOperationalStatus MapOperationalState(CompanionScheduleOperationalState state) => state switch
+    {
+        CompanionScheduleOperationalState.Proposed => CompanionOperationalStatus.Proposed,
+        CompanionScheduleOperationalState.Reserved => CompanionOperationalStatus.Reserved,
+        CompanionScheduleOperationalState.Confirmed => CompanionOperationalStatus.Confirmed,
+        CompanionScheduleOperationalState.Changed => CompanionOperationalStatus.Changed,
+        CompanionScheduleOperationalState.Cancelled => CompanionOperationalStatus.Cancelled,
+        CompanionScheduleOperationalState.Completed => CompanionOperationalStatus.Completed,
+        _ => throw new ArgumentOutOfRangeException(nameof(state))
+    };
+
+    private static bool TryGetLocalDate(DateTimeOffset utc, string timeZone, out DateOnly result)
+    {
+        result = default;
+        try
+        {
+            var local = TimeZoneInfo.ConvertTime(utc, TimeZoneInfo.FindSystemTimeZoneById(timeZone));
+            result = DateOnly.FromDateTime(local.DateTime);
+            return true;
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            return false;
+        }
+        catch (InvalidTimeZoneException)
+        {
+            return false;
+        }
+    }
+
+    private static bool IsIanaTimeZone(string? value)
+    {
+        if (!IsBounded(value, 100)
+            || !value!.Contains('/')
+            || value.Contains('\\'))
+        {
+            return false;
+        }
+
+        return TryGetLocalDate(DateTimeOffset.UnixEpoch, value, out _);
+    }
+
+    private static bool IsValidIdentity(string? value) =>
+        value is { Length: >= 1 and <= 128 }
+        && char.IsAsciiLetterOrDigit(value[0])
+        && value.All(character => char.IsAsciiLetterOrDigit(character)
+            || character is '.' or '_' or ':' or '-');
+
+    private static bool IsBounded(string? value, int maximumRunes) =>
+        !string.IsNullOrWhiteSpace(value) && value.EnumerateRunes().Count() <= maximumRunes;
+
+    private static bool IsOptionalBounded(string? value, int maximumRunes) =>
+        value is null || value.EnumerateRunes().Count() <= maximumRunes;
 
     private static CompanionResourceSummaryDto MapHeroResource() =>
         new()

@@ -8,6 +8,7 @@ namespace AdventuresSuite.Companion.Application;
 public sealed class AuthoritativeCompanionProjectionService(
     ICompanionAdventureSummaryQuery summaries,
     ICompanionAdventureDetailQuery details,
+    ICompanionTodayQuery today,
     TimeProvider timeProvider) : ICompanionProjectionService
 {
     /// <inheritdoc />
@@ -76,6 +77,35 @@ public sealed class AuthoritativeCompanionProjectionService(
             InformationProfileVersion = projectionVersion
         };
         return new(dto, projectionVersion);
+    }
+
+    /// <inheritdoc />
+    public async Task<CompanionQueryResult<CompanionTodayDto>> GetTodayAsync(
+        CompanionAccessContext access,
+        string adventureId,
+        string supportId,
+        CancellationToken cancellationToken)
+    {
+        if (!CanQuery(access))
+            return Unavailable<CompanionTodayDto>();
+
+        var now = timeProvider.GetUtcNow();
+        var value = await today.GetAsync(
+            new CompanionTodayReadScope(
+                access.CreatorId,
+                access.Actor.UserId!.Value,
+                access.TravelerId,
+                access.MembershipVersion,
+                now),
+            adventureId,
+            cancellationToken);
+        if (value is null
+            || !CompanionDtoMapper.TryMapToday(value, adventureId, now, supportId, out var dto))
+        {
+            return Unavailable<CompanionTodayDto>();
+        }
+
+        return new(dto, dto!.ProjectionVersion);
     }
 
     private static bool CanQuery(CompanionAccessContext access) =>

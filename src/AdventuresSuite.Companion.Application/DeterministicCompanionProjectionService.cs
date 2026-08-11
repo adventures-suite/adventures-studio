@@ -8,7 +8,8 @@ namespace AdventuresSuite.Companion.Application;
 /// <summary>Provides a fixed fictional Companion dataset for contract development and tests only.</summary>
 public sealed class DeterministicCompanionProjectionService(
     TimeProvider timeProvider,
-    IAuthorizationPolicyEvaluator authorization) : ICompanionProjectionService
+    IAuthorizationPolicyEvaluator authorization,
+    ICompanionTodayQuery today) : ICompanionProjectionService
 {
     /// <summary>Gets the only fictional user identity authorized by the fixture.</summary>
     public const string DemoUserId = "usr_demo_traveler";
@@ -101,11 +102,185 @@ public sealed class DeterministicCompanionProjectionService(
         return await Available(CompanionDtoMapper.MapAdventure(source, timeProvider.GetUtcNow(), supportId));
     }
 
+    /// <inheritdoc />
+    public async Task<CompanionQueryResult<CompanionTodayDto>> GetTodayAsync(
+        CompanionAccessContext access,
+        string adventureId,
+        string supportId,
+        CancellationToken cancellationToken)
+    {
+        if (access.IsRevoked
+            || !access.Actor.UserId.HasValue
+            || access.MembershipVersion < 1
+            || !access.Scopes.Contains(RequiredScope))
+        {
+            return await Unavailable<CompanionTodayDto>();
+        }
+
+        var now = timeProvider.GetUtcNow();
+        var source = await today.GetAsync(
+            new CompanionTodayReadScope(
+                access.CreatorId,
+                access.Actor.UserId.Value,
+                access.TravelerId,
+                access.MembershipVersion,
+                now),
+            adventureId,
+            cancellationToken);
+        if (source is null)
+            return await Unavailable<CompanionTodayDto>();
+
+        var decision = await authorization.AuthorizeAsync(
+            new AuthorizationRequest(
+                access.Actor,
+                Permissions.AdventurePlanView,
+                AuthorizationResourceScope.ForInstance(
+                    access.CreatorId,
+                    AuthorizationResourceTypes.AdventurePlan,
+                    source.Adventure.AdventureId),
+                membershipVersion: access.MembershipVersion),
+            cancellationToken);
+        if (!decision.IsAllowed
+            || !CompanionDtoMapper.TryMapToday(source, adventureId, now, supportId, out var dto))
+        {
+            return await Unavailable<CompanionTodayDto>();
+        }
+
+        return await Available(dto!);
+    }
+
     private static Task<CompanionQueryResult<T>> Available<T>(T value) where T : CompanionProjectionDto =>
         Task.FromResult(new CompanionQueryResult<T>(value, value.ProjectionVersion));
 
     private static Task<CompanionQueryResult<T>> Unavailable<T>() where T : CompanionProjectionDto =>
         Task.FromResult(new CompanionQueryResult<T>(null, null));
+}
+
+/// <summary>Provides deterministic fictional Today data only for the explicitly enabled Test host.</summary>
+public sealed class DeterministicCompanionTodayQuery : ICompanionTodayQuery
+{
+    /// <inheritdoc />
+    public Task<CompanionTodayProjection?> GetAsync(
+        CompanionTodayReadScope scope,
+        string adventureId,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (scope.UserId != new UserId(DeterministicCompanionProjectionService.DemoUserId)
+            || scope.MembershipVersion != DeterministicCompanionAuthorizationFacts.MembershipVersion)
+        {
+            return Task.FromResult<CompanionTodayProjection?>(null);
+        }
+
+        var source = AdventureFixtures.All.FirstOrDefault(value =>
+            string.Equals(value.Id, adventureId, StringComparison.Ordinal)
+            && string.Equals(value.CreatorId, scope.CreatorId.Value, StringComparison.Ordinal)
+            && string.Equals(value.TravelerId, scope.TravelerId, StringComparison.Ordinal));
+        if (source is null)
+            return Task.FromResult<CompanionTodayProjection?>(null);
+
+        if (!TryGetLocalDate(scope.EvaluatedAtUtc, source.TimeZone, out var localDate))
+            return Task.FromResult<CompanionTodayProjection?>(null);
+
+        var todayItems = source.Items
+            .Where(value => value.Date == localDate)
+            .OrderBy(value => value.Sequence)
+            .Select(MapScheduleItem)
+            .ToArray();
+        var next = source.Items
+            .Where(value => value.Date > localDate)
+            .OrderBy(value => value.Date)
+            .ThenBy(value => value.Sequence)
+            .FirstOrDefault();
+        var state = localDate < source.StartDate
+            ? CompanionTodayProjectionState.BeforeAdventure
+            : localDate > source.EndDate
+                ? CompanionTodayProjectionState.AfterAdventure
+                : todayItems.Length == 0
+                    ? CompanionTodayProjectionState.NoScheduledItems
+                    : CompanionTodayProjectionState.Active;
+        var adventure = new CompanionAdventureSummaryProjection(
+            source.Id,
+            source.TravelerId,
+            source.Title,
+            MapLifecycle(source.Status),
+            source.StartDate,
+            source.EndDate,
+            source.TimeZone,
+            PlanVersion: 7,
+            ParticipationVersion: 3,
+            UpdatedAtUtc: new DateTimeOffset(2026, 8, 9, 18, 0, 0, TimeSpan.Zero));
+        CompanionTodayProjection? result = new(
+            adventure,
+            "info_demo_01",
+            localDate,
+            source.TimeZone,
+            state,
+            todayItems,
+            next is null ? null : MapScheduleItem(next),
+            "Times are shown in the Adventure's local time zone.");
+        return Task.FromResult<CompanionTodayProjection?>(result);
+    }
+
+    private static CompanionScheduleItemProjection MapScheduleItem(ScheduleFixture source) => new(
+        source.Id,
+        source.Type,
+        source.Title,
+        source.Summary,
+        source.Date,
+        source.StartTime,
+        source.EndTime,
+        source.TimeZone,
+        source.TimeStatus switch
+        {
+            CompanionTimeStatus.Scheduled => CompanionScheduleTimeState.Scheduled,
+            CompanionTimeStatus.AllDay => CompanionScheduleTimeState.AllDay,
+            CompanionTimeStatus.ToBeConfirmed => CompanionScheduleTimeState.ToBeConfirmed,
+            CompanionTimeStatus.Cancelled => CompanionScheduleTimeState.Cancelled,
+            _ => throw new ArgumentOutOfRangeException(nameof(source))
+        },
+        source.OperationalStatus switch
+        {
+            CompanionOperationalStatus.Proposed => CompanionScheduleOperationalState.Proposed,
+            CompanionOperationalStatus.Reserved => CompanionScheduleOperationalState.Reserved,
+            CompanionOperationalStatus.Confirmed => CompanionScheduleOperationalState.Confirmed,
+            CompanionOperationalStatus.Changed => CompanionScheduleOperationalState.Changed,
+            CompanionOperationalStatus.Cancelled => CompanionScheduleOperationalState.Cancelled,
+            CompanionOperationalStatus.Completed => CompanionScheduleOperationalState.Completed,
+            _ => throw new ArgumentOutOfRangeException(nameof(source))
+        },
+        source.Place,
+        source.Transportation,
+        source.Sequence,
+        source.RequiresAcknowledgment);
+
+    private static CompanionAdventureLifecycle MapLifecycle(CompanionAdventureStatus status) => status switch
+    {
+        CompanionAdventureStatus.Planned => CompanionAdventureLifecycle.Planned,
+        CompanionAdventureStatus.Committed => CompanionAdventureLifecycle.Committed,
+        CompanionAdventureStatus.InProgress => CompanionAdventureLifecycle.InProgress,
+        CompanionAdventureStatus.Completed => CompanionAdventureLifecycle.Completed,
+        _ => throw new ArgumentOutOfRangeException(nameof(status))
+    };
+
+    private static bool TryGetLocalDate(DateTimeOffset utc, string timeZone, out DateOnly result)
+    {
+        result = default;
+        try
+        {
+            result = DateOnly.FromDateTime(
+                TimeZoneInfo.ConvertTime(utc, TimeZoneInfo.FindSystemTimeZoneById(timeZone)).DateTime);
+            return true;
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            return false;
+        }
+        catch (InvalidTimeZoneException)
+        {
+            return false;
+        }
+    }
 }
 
 /// <summary>Provides fixed membership facts for the deterministic Test-only vertical slice.</summary>
@@ -191,7 +366,8 @@ internal static class AdventureFixtures
             ],
             [
                 new("item_demo_rome_walk", "activity", "Historic Rome walk", "A fictional orientation walk.", new(2026, 8, 10), new(9, 0), new(11, 0), "Europe/Rome", CompanionTimeStatus.Scheduled, CompanionOperationalStatus.Changed, "Central Rome", null, 1, true),
-                new("item_demo_rail", "transportation", "Rail to Florence", "A fictional intercity rail segment.", new(2026, 8, 12), new(10, 30), new(12, 5), "Europe/Rome", CompanionTimeStatus.Scheduled, CompanionOperationalStatus.Confirmed, "Roma Termini", "Reserved rail", 2, false),
+                new("item_demo_rome_day", "activity", "Rome orientation day", "A fictional all-day orientation.", new(2026, 8, 10), null, null, "Europe/Rome", CompanionTimeStatus.AllDay, CompanionOperationalStatus.Confirmed, "Rome", null, 2, false),
+                new("item_demo_rail", "transportation", "Rail to Florence", "A fictional intercity rail segment.", new(2026, 8, 12), new(10, 30), new(12, 5), "Europe/Rome", CompanionTimeStatus.Scheduled, CompanionOperationalStatus.Confirmed, "Roma Termini", "Rail segment", 2, false),
                 new("item_demo_florence_day", "activity", "Florence exploration", null, new(2026, 8, 13), null, null, "Europe/Rome", CompanionTimeStatus.AllDay, CompanionOperationalStatus.Confirmed, "Florence", null, 3, false)
             ]),
         new(
