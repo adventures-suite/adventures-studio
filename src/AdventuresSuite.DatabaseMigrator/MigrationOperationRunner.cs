@@ -67,7 +67,10 @@ internal static partial class MigrationOperationRunner
         IReadOnlyList<string> selectedScripts = [];
         try
         {
-            selectedScripts = DatabaseMigratorRunner.MigrateWithLockHeld(connectionString);
+            // This operational command remains pinned to its separately reviewed 0006 -> 0008 scope.
+            selectedScripts = DatabaseMigratorRunner.MigrateWithLockHeld(
+                connectionString,
+                maximumMigrationNumber: "0008");
         }
         catch (Exception exception)
         {

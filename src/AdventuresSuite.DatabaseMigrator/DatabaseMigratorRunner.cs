@@ -23,11 +23,13 @@ public static class DatabaseMigratorRunner
     }
 
     /// <summary>Applies pending migrations while an approved caller holds the migration lock.</summary>
-    internal static IReadOnlyList<string> MigrateWithLockHeld(string connectionString)
+    internal static IReadOnlyList<string> MigrateWithLockHeld(
+        string connectionString,
+        string? maximumMigrationNumber = null)
     {
         var assembly = typeof(MigrationCatalog).Assembly;
         _ = MigrationCatalog.GetOrderedResourceNames(assembly);
-        var upgrader = BuildUpgradeEngine(connectionString, assembly);
+        var upgrader = BuildUpgradeEngine(connectionString, assembly, maximumMigrationNumber);
         var pendingScripts = upgrader.GetScriptsToExecute()
             .Select(script => script.Name)
             .ToArray();
@@ -76,12 +78,18 @@ public static class DatabaseMigratorRunner
 
     private static DbUp.Engine.UpgradeEngine BuildUpgradeEngine(
         string connectionString,
-        Assembly assembly) =>
+        Assembly assembly,
+        string? maximumMigrationNumber) =>
         DeployChanges.To
             .SqlDatabase(connectionString)
             .WithScriptsEmbeddedInAssembly(
                 assembly,
-                resourceName => MigrationCatalog.IsMigrationResource(assembly, resourceName))
+                resourceName => MigrationCatalog.IsMigrationResource(assembly, resourceName)
+                    && (maximumMigrationNumber is null
+                        || string.CompareOrdinal(
+                            resourceName[(resourceName.LastIndexOf(".Database.Migrations.", StringComparison.Ordinal)
+                                + ".Database.Migrations.".Length)..][..4],
+                            maximumMigrationNumber) <= 0))
             .JournalToSqlTable("dbo", "AdventuresSuiteSchemaVersions")
             .WithTransactionPerScript()
             .LogToConsole()

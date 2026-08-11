@@ -54,6 +54,7 @@ internal sealed class SqlPlanningTransaction : IPlanningTransaction
     private readonly SqlTransaction transaction;
     private bool completed;
     private readonly PlanningMutationAuditTracker auditTracker;
+    private readonly AdventurePlanCreateIdempotencyTracker idempotencyTracker;
 
     public SqlPlanningTransaction(
         CreatorId creatorId,
@@ -64,13 +65,18 @@ internal sealed class SqlPlanningTransaction : IPlanningTransaction
         this.connection = connection;
         this.transaction = transaction;
         auditTracker = new PlanningMutationAuditTracker(creatorId);
+        idempotencyTracker = new AdventurePlanCreateIdempotencyTracker();
         AdventurePlans = new DapperAdventurePlanRepository(
             creatorId, connection, transaction, auditTracker);
+        AdventurePlanCreateIdempotency = new SqlAdventurePlanCreateIdempotencyStore(
+            creatorId, connection, transaction, idempotencyTracker);
     }
 
     public CreatorId CreatorId { get; }
 
     public IAdventurePlanRepository AdventurePlans { get; }
+
+    public IAdventurePlanCreateIdempotencyStore AdventurePlanCreateIdempotency { get; }
 
     public IRequiredAuditIntentCollector RequiredAuditIntents => auditTracker;
 
@@ -78,6 +84,7 @@ internal sealed class SqlPlanningTransaction : IPlanningTransaction
     {
         ObjectDisposedException.ThrowIf(completed, this);
         var auditEvents = auditTracker.ValidateForCommit();
+        idempotencyTracker.ValidateForCommit(auditTracker);
         foreach (var auditEvent in auditEvents)
         {
             await connection.ExecuteAsync(new CommandDefinition("""
@@ -219,8 +226,46 @@ internal sealed class PlanningMutationAuditTracker(CreatorId creatorId)
             && auditEvent.ResultingVersion == mutation.ResultingVersion;
     }
 
+    public bool HasExactlyOneAuditedCreate(AdventurePlanId planId, long resultingVersion) =>
+        mutations.Count(mutation => mutation.PlanId == planId
+            && mutation.PreviousVersion is null
+            && mutation.ResultingVersion == resultingVersion) == 1
+        && auditEvents.Count(auditEvent =>
+            auditEvent.Permission == Permissions.AdventurePlanCreate
+            && auditEvent.Resource.ResourceId == planId.Value
+            && auditEvent.PreviousVersion is null
+            && auditEvent.ResultingVersion == resultingVersion) == 1;
+
     private sealed record PlanningMutation(
         AdventurePlanId PlanId,
         long? PreviousVersion,
         long ResultingVersion);
+}
+
+internal sealed class AdventurePlanCreateIdempotencyTracker
+{
+    private readonly List<(AdventurePlanId PlanId, long ResultingVersion)> reservations = [];
+
+    public void Record(AdventurePlanId planId, long resultingVersion) =>
+        reservations.Add((planId, resultingVersion));
+
+    public void ValidateForCommit(PlanningMutationAuditTracker auditTracker)
+    {
+        foreach (var reservation in reservations)
+        {
+            if (!auditTracker.HasExactlyOneAuditedCreate(
+                    reservation.PlanId,
+                    reservation.ResultingVersion))
+            {
+                throw new InvalidOperationException(
+                    "A new idempotency reservation must match exactly one created and audited Adventure Plan.");
+            }
+        }
+
+        if (reservations.Select(item => item.PlanId).Distinct().Count() != reservations.Count)
+        {
+            throw new InvalidOperationException(
+                "An Adventure Plan creation cannot satisfy multiple idempotency reservations.");
+        }
+    }
 }
