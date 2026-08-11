@@ -113,8 +113,8 @@ test('deployer federation workflows are isolated proof-only controls', () => {
   assert.match(proofRunner, /az account get-access-token/);
   assert.match(proofRunner, /az cloud show[\s\S]*?--query endpoints\.activeDirectoryResourceId/);
   assert.doesNotMatch(proofRunner, /management\.core\.windows\.net|graph\.microsoft\.com|storage\.azure\.com/);
-  assert.match(proofRunner, /az rest --method get/);
-  assert.match(proofRunner, /require-arm-authorization-denial\.sh/);
+  assert.doesNotMatch(proofRunner, /az rest/);
+  assert.equal((proofRunner.match(/require-arm-authorization-denial\.sh/g) ?? []).length, 2);
   assert.doesNotMatch(proofRunner, /az account show/);
   assert.match(foundation, /environment: migration-foundation-deployment/);
   assert.match(foundation, /vars\.MIGRATION_FOUNDATION_DEPLOYER_CLIENT_ID/);
@@ -168,28 +168,60 @@ test('federation proof source guards reject non-main, source mismatch, and malfo
   assert.equal(allowed('refs/heads/main', 'abc', 'abc'), false);
 });
 
-test('ARM denial classifier rejects inconclusive and non-authorization results', () => {
+test('ARM denial classifier uses bounded structured HTTP evidence and fails closed', () => {
   const directory = mkdtempSync(join(tmpdir(), 'migration-arm-denial-'));
-  const errorFile = join(directory, 'arm.err');
+  const fakeBin = join(directory, 'bin');
+  const fakeCurl = join(fakeBin, 'curl');
+  const authorizationConfig = join(directory, 'authorization.conf');
   const script = '.github/scripts/require-arm-authorization-denial.sh';
-  const classify = (message, exitCode = '1') => {
-    writeFileSync(errorFile, message);
-    const result = spawnSync('bash', [script, errorFile, exitCode], { encoding: 'utf8' });
+  const fake = `#!/usr/bin/env bash
+set -euo pipefail
+output=''
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --output) output="$2"; shift 2 ;;
+    --write-out) shift 2 ;;
+    *) shift ;;
+  esac
+done
+if [ "\${FAKE_CURL_EXIT-0}" = '63' ]; then
+  head -c 65537 /dev/zero >"$output"
+  exit 63
+fi
+printf '%s' "\${FAKE_RESPONSE_BODY-}" >"$output"
+printf '%s' "\${FAKE_HTTP_STATUS-403}"
+printf '%s' "\${FAKE_TRANSPORT_ERROR-}" >&2
+exit "\${FAKE_CURL_EXIT-0}"
+`;
+  const classify = (status, body, curlExit = '0', transportError = '') => {
+    const prefix = join(directory, `evidence-${Math.random().toString(16).slice(2)}`);
+    const result = spawnSync('bash', [script, authorizationConfig, 'GET', 'https://management.azure.com/example?api-version=1', '', prefix], {
+      encoding: 'utf8',
+      env: { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, FAKE_HTTP_STATUS: status, FAKE_RESPONSE_BODY: body, FAKE_CURL_EXIT: curlExit, FAKE_TRANSPORT_ERROR: transportError },
+    });
     return { status: result.status, classification: result.stdout.trim(), stderr: result.stderr };
   };
   try {
-    assert.deepEqual(classify('ERROR: (AuthorizationFailed) The client does not have authorization.\n'), { status: 0, classification: 'authorization_failed', stderr: '' });
-    assert.equal(classify('ERROR: (SubscriptionNotFound) Subscription was not found.\nAuthorizationFailed\n').classification, 'subscription_resolution_failed');
-    assert.equal(classify('ERROR: (InvalidAuthenticationToken) Authentication failed.\n').classification, 'authentication_failed');
-    assert.equal(classify('ERROR: (ResourceNotFound) HTTP 404.\n').classification, 'resource_not_found');
-    assert.equal(classify('ERROR: (TooManyRequests) HTTP 429.\n').classification, 'throttled');
-    assert.equal(classify('ERROR: connection timed out while resolving host.\n').classification, 'network_failed');
-    assert.equal(classify('not-json and not an ARM error\n').classification, 'malformed_or_ambiguous');
-    assert.equal(classify('ERROR: (AuthorizationFailed) This would be an unexpected HTTP success.\n', '0').classification, 'unexpected_success');
-    for (const message of ['Bearer abc.def.ghi', 'access_token=secret', 'Authorization: token']) {
-      const result = classify(message);
-      assert.equal(result.classification, 'malformed_or_ambiguous');
-      assert.doesNotMatch(result.classification, /abc|secret|token/i);
+    spawnSync('mkdir', ['-p', fakeBin]);
+    writeFileSync(fakeCurl, fake);
+    chmodSync(fakeCurl, 0o700);
+    writeFileSync(authorizationConfig, 'header = "Authorization: Bearer secret-never-print"\n', { mode: 0o600 });
+    assert.deepEqual(classify('403', '{"error":{"code":"AuthorizationFailed"}}'), { status: 0, classification: 'authorization_failed', stderr: '' });
+    for (const [status, body, expected] of [
+      ['200', '{}', 'unexpected_success'], ['302', '{}', 'redirect'], ['401', '{}', 'authentication_failed'],
+      ['404', '{}', 'resource_not_found'], ['408', '{}', 'request_timeout'], ['409', '{}', 'conflict'],
+      ['429', '{}', 'throttled'], ['500', '{}', 'server_error'], ['503', '{}', 'server_error'],
+      ['400', '{}', 'unexpected_http_status'], ['403', 'not-json', 'malformed_json'],
+      ['403', '{}', 'missing_error_code'], ['403', '{"error":{}}', 'missing_error_code'],
+      ['403', '{"error":{"code":"InvalidAuthenticationToken"}}', 'unexpected_error_code'],
+      ['403', 'ERROR: (AuthorizationFailed) Azure CLI human output', 'malformed_json'],
+    ]) assert.equal(classify(status, body).classification, expected);
+    assert.equal(classify('403', '', '6', 'could not resolve secret host').classification, 'network_failed');
+    assert.equal(classify('403', '', '28', 'timeout with secret').classification, 'transport_timeout');
+    assert.equal(classify('403', '', '63').classification, 'oversized_response');
+    assert.equal(classify('not-status', '{}').classification, 'malformed_or_ambiguous');
+    for (const result of [classify('403', 'Bearer abc.def.ghi'), classify('403', '', '7', 'access_token=secret')]) {
+      assert.doesNotMatch(`${result.classification}\n${result.stderr}`, /abc|secret|token|Bearer/i);
     }
   } finally {
     rmSync(directory, { recursive: true, force: true });
@@ -205,8 +237,10 @@ test('federation proof evidence is stage-bounded, exactly-once, and subscription
   assert.doesNotMatch(runner, /az account show/);
   assert.match(runner, /claims\.get\('tid'\)/);
   assert.match(runner, /trap cleanup EXIT/);
+  assert.match(runner, /set \+x/);
   assert.match(runner, /umask 077/);
-  assert.match(runner, /rm -f "\$token_response" "\$token_error" "\$audience_response" "\$read_error" "\$write_error"/);
+  assert.match(runner, /"\$authorization_config" "\$request_body"/);
+  assert.match(runner, /"\$\{read_prefix\}\.body" "\$\{read_prefix\}\.status" "\$\{read_prefix\}\.transport\.err"/);
   for (const claim of ['tid', 'oid', 'client_id', 'aud']) assert.match(runner, new RegExp(`claim_mismatch_${claim}`));
   for (const workflow of workflows) {
     assert.equal((workflow.match(/print\(json\.dumps\(envelope/g) ?? []).length, 1);
@@ -223,6 +257,7 @@ test('federation proof acquires an ARM token for the explicit tenant without sub
   const directory = mkdtempSync(join(tmpdir(), 'migration-federation-runner-'));
   const fakeBin = join(directory, 'bin');
   const fakeAz = join(fakeBin, 'az');
+  const fakeCurl = join(fakeBin, 'curl');
   const stateFile = join(directory, 'proof.state');
   const prefix = join(directory, 'proof');
   const expectedTenant = 'd7add2bb-ac03-49a8-9377-d0bf6a012f2f';
@@ -267,15 +302,25 @@ fi
 if [ "\${1-} \${2-}" = 'account show' ]; then
   exit 88
 fi
-if [ "\${1-}" = 'rest' ]; then
-  if [ "\${FAKE_ARM_SUCCESS-}" = '1' ]; then
-    printf '{}\n'
-    exit 0
-  fi
-  printf 'ERROR: (AuthorizationFailed) The client does not have authorization.\n' >&2
-  exit 1
-fi
 exit 89
+`;
+  const curl = `#!/usr/bin/env bash
+set -euo pipefail
+output=''
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --output) output="$2"; shift 2 ;;
+    --write-out) shift 2 ;;
+    *) shift ;;
+  esac
+done
+if [ "\${FAKE_ARM_SUCCESS-}" = '1' ]; then
+  printf '{}' >"$output"
+  printf '200'
+else
+  printf '{"error":{"code":"AuthorizationFailed"}}' >"$output"
+  printf '403'
+fi
 `;
   const run = (overrides = {}, remove = []) => {
     const environment = {
@@ -300,7 +345,9 @@ exit 89
   try {
     spawnSync('mkdir', ['-p', fakeBin]);
     writeFileSync(fakeAz, fake);
+    writeFileSync(fakeCurl, curl);
     chmodSync(fakeAz, 0o700);
+    chmodSync(fakeCurl, 0o700);
 
     const success = run();
     assert.equal(success.result.status, 0);
@@ -358,7 +405,10 @@ exit 89
     assert.deepEqual({ stage: unexpectedSuccess.state.stage, classification: unexpectedSuccess.state.classification }, { stage: 'resource_read_denial_classification', classification: 'unexpected_success' });
     for (const value of [success, trailingSlash, tokenWithoutTrailingSlash, missingTenant, incorrectTenant, acquisitionFailure, malformed, wrongTenant, wrongObject, wrongClient, ...audienceFailures, cloudDisagreement, unexpectedSuccess]) {
       assert.doesNotMatch(`${value.result.stdout}\n${value.result.stderr}`, /accessToken|Bearer|eyJ|signature/);
-      for (const suffix of ['-token.json', '-token.err', '-audience.txt', '-read.err', '-write.err']) assert.throws(() => readFileSync(`${prefix}${suffix}`));
+      for (const suffix of [
+        '-token.json', '-token.err', '-audience.txt', '-authorization.conf', '-request.json',
+        '-read.body', '-read.status', '-read.transport.err', '-write.body', '-write.status', '-write.transport.err',
+      ]) assert.throws(() => readFileSync(`${prefix}${suffix}`));
     }
   } finally {
     rmSync(directory, { recursive: true, force: true });

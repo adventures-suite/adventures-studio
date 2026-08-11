@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+set +x
 umask 077
 
 if [ "$#" -ne 3 ]; then
@@ -11,11 +12,13 @@ error_prefix="$2"
 state_file="$3"
 stage='arm_token_acquisition'
 classification='operation_failed'
-read_error="${error_prefix}-read.err"
-write_error="${error_prefix}-write.err"
 token_response="${error_prefix}-token.json"
 token_error="${error_prefix}-token.err"
 audience_response="${error_prefix}-audience.txt"
+authorization_config="${error_prefix}-authorization.conf"
+request_body="${error_prefix}-request.json"
+read_prefix="${error_prefix}-read"
+write_prefix="${error_prefix}-write"
 
 write_state() {
   printf 'stage=%s\nclassification=%s\nexit_code=%s\n' \
@@ -24,8 +27,12 @@ write_state() {
 
 cleanup() {
   original_exit="$?"
-  unset ARM_TOKEN_RESPONSE_FILE EXPECTED_ARM_AUDIENCE_FILE
-  rm -f "$token_response" "$token_error" "$audience_response" "$read_error" "$write_error"
+  unset ARM_TOKEN_RESPONSE_FILE EXPECTED_ARM_AUDIENCE_FILE ARM_AUTHORIZATION_CONFIG_FILE
+  rm -f \
+    "$token_response" "$token_error" "$audience_response" \
+    "$authorization_config" "$request_body" \
+    "${read_prefix}.body" "${read_prefix}.status" "${read_prefix}.transport.err" \
+    "${write_prefix}.body" "${write_prefix}.status" "${write_prefix}.transport.err"
   if [ "$original_exit" -ne 0 ]; then
     write_state "$original_exit"
   fi
@@ -52,7 +59,8 @@ if ! az account get-access-token \
 fi
 ARM_TOKEN_RESPONSE_FILE="$token_response"
 EXPECTED_ARM_AUDIENCE_FILE="$audience_response"
-export ARM_TOKEN_RESPONSE_FILE EXPECTED_ARM_AUDIENCE_FILE
+ARM_AUTHORIZATION_CONFIG_FILE="$authorization_config"
+export ARM_TOKEN_RESPONSE_FILE EXPECTED_ARM_AUDIENCE_FILE ARM_AUTHORIZATION_CONFIG_FILE
 
 stage='arm_token_claim_validation'
 set +e
@@ -60,6 +68,7 @@ python3 - <<'PY'
 import base64
 import json
 import os
+import re
 
 try:
     response = json.loads(open(os.environ['ARM_TOKEN_RESPONSE_FILE'], encoding='utf-8').read())
@@ -90,10 +99,15 @@ def normalize_audience(value):
 
 if normalize_audience(claims.get('aud')) != normalize_audience(expected_audience):
     raise SystemExit(44)
+if not re.fullmatch(r'[A-Za-z0-9._-]+', token):
+    raise SystemExit(45)
+with open(os.environ['ARM_AUTHORIZATION_CONFIG_FILE'], 'x', encoding='utf-8') as config:
+    config.write(f'header = "Authorization: Bearer {token}"\n')
+    config.write('header = "Accept: application/json"\n')
 PY
 claim_exit="$?"
 set -e
-unset ARM_TOKEN_RESPONSE_FILE EXPECTED_ARM_AUDIENCE_FILE
+unset ARM_TOKEN_RESPONSE_FILE EXPECTED_ARM_AUDIENCE_FILE ARM_AUTHORIZATION_CONFIG_FILE
 case "$claim_exit" in
   0) ;;
   41) classification='claim_mismatch_tid'; exit 1 ;;
@@ -105,35 +119,33 @@ esac
 
 stage='resource_read_probe'
 set +e
-az rest --method get \
-  --url "https://management.azure.com/subscriptions/$APPROVED_SUBSCRIPTION_ID/resourceGroups/$TARGET_RESOURCE_GROUP?api-version=2024-03-01" \
-  --only-show-errors >/dev/null 2>"$read_error"
-read_exit="$?"
-set -e
-
-stage='resource_read_denial_classification'
-set +e
-classification="$(.github/scripts/require-arm-authorization-denial.sh "$read_error" "$read_exit")"
+classification="$(.github/scripts/require-arm-authorization-denial.sh \
+  "$authorization_config" \
+  GET \
+  "https://management.azure.com/subscriptions/$APPROVED_SUBSCRIPTION_ID/resourceGroups/$TARGET_RESOURCE_GROUP?api-version=2024-03-01" \
+  '' \
+  "$read_prefix")"
 classification_exit="$?"
 set -e
+stage='resource_read_denial_classification'
 if [ "$classification_exit" -ne 0 ]; then
   exit 1
 fi
 
+printf '%s\n' \
+  '{"properties":{"mode":"Incremental","template":{"$schema":"https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#","contentVersion":"1.0.0.0","resources":[]}}}' \
+  >"$request_body"
 stage='deployment_validation_probe'
 set +e
-az rest --method post \
-  --url "https://management.azure.com/subscriptions/$APPROVED_SUBSCRIPTION_ID/resourceGroups/$TARGET_RESOURCE_GROUP/providers/Microsoft.Resources/deployments/federation-proof/validate?api-version=2022-09-01" \
-  --body '{"properties":{"mode":"Incremental","template":{"$schema":"https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#","contentVersion":"1.0.0.0","resources":[]}}}' \
-  --only-show-errors >/dev/null 2>"$write_error"
-write_exit="$?"
-set -e
-
-stage='deployment_validation_denial_classification'
-set +e
-classification="$(.github/scripts/require-arm-authorization-denial.sh "$write_error" "$write_exit")"
+classification="$(.github/scripts/require-arm-authorization-denial.sh \
+  "$authorization_config" \
+  POST \
+  "https://management.azure.com/subscriptions/$APPROVED_SUBSCRIPTION_ID/resourceGroups/$TARGET_RESOURCE_GROUP/providers/Microsoft.Resources/deployments/federation-proof/validate?api-version=2022-09-01" \
+  "$request_body" \
+  "$write_prefix")"
 classification_exit="$?"
 set -e
+stage='deployment_validation_denial_classification'
 if [ "$classification_exit" -ne 0 ]; then
   exit 1
 fi

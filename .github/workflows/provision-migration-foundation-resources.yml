@@ -156,6 +156,16 @@ jobs:
                       'resource_not_found',
                       'throttled',
                       'network_failed',
+                      'request_timeout',
+                      'conflict',
+                      'server_error',
+                      'malformed_json',
+                      'missing_error_code',
+                      'transport_timeout',
+                      'redirect',
+                      'oversized_response',
+                      'unexpected_http_status',
+                      'unexpected_error_code',
                       'malformed_or_ambiguous',
                   }
                   candidate_exit = int(state.get('exit_code', '1'))
