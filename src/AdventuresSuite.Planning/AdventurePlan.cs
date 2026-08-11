@@ -120,6 +120,35 @@ public sealed class AdventurePlan
     /// <summary>Gets private packing items.</summary>
     public IReadOnlyList<PackingItem> PackingItems { get; }
 
+    /// <summary>
+    /// Creates the next validated aggregate version with only overview fields changed.
+    /// All lifecycle state and child records are preserved.
+    /// </summary>
+    public AdventurePlan WithOverview(
+        string title,
+        string? workingDescription,
+        PlanningDateRange dates,
+        DateTimeOffset updatedAtUtc) => new(
+        Id,
+        CreatorId,
+        title,
+        workingDescription,
+        LifecycleStage,
+        Status,
+        dates,
+        new PlanAudit(checked(Audit.Version + 1), Audit.CreatedAtUtc, updatedAtUtc),
+        Travelers,
+        DestinationVisits,
+        ItineraryDays,
+        Activities,
+        Transportation,
+        Accommodations,
+        Reservations,
+        Notes,
+        Tasks,
+        BudgetItems,
+        PackingItems);
+
     private void Validate()
     {
         ValidateUnique(Travelers, item => item.Id, "traveler");

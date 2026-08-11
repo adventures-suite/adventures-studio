@@ -90,27 +90,85 @@ public sealed class PlanningRepositoryIntegrationTests
                 await transaction.CommitAsync();
             }
 
-            var updated = CreatePlan(alpha, 2, "Updated Spain and Atlantic");
+            var updated = original.WithOverview(
+                "Updated Spain and Atlantic",
+                original.WorkingDescription,
+                original.Dates,
+                original.Audit.UpdatedAtUtc.AddMinutes(1));
+            var overviewAuditId = new AuditEventId("audit_planning_overview_edit");
+            await ExecuteAsync(databaseConnectionString, """
+                CREATE TRIGGER planning.RejectOverviewChildWrites
+                ON planning.DestinationVisits
+                AFTER INSERT, UPDATE, DELETE
+                AS THROW 51000, 'Overview edits must not write child rows.', 1;
+                """);
             await using (var transaction = await factory.BeginAsync(alpha))
             {
-                await transaction.AdventurePlans.UpdateAsync(alpha, updated, 1);
+                await transaction.AdventurePlans.UpdateOverviewAsync(alpha, updated, 1);
                 transaction.RequiredAuditIntents.AddRequired(Audit(
-                    alpha, updated.Id, Permissions.AdventurePlanEdit, 1, 2));
+                    alpha, updated.Id, Permissions.AdventurePlanEdit, 1, 2,
+                    overviewAuditId));
                 await transaction.CommitAsync();
             }
+            await ExecuteAsync(databaseConnectionString,
+                "DROP TRIGGER planning.RejectOverviewChildWrites;");
+            await AssertSuccessfulAuditAsync(
+                databaseConnectionString, overviewAuditId, alpha, original.Id,
+                Permissions.AdventurePlanEdit, previousVersion: 1, resultingVersion: 2);
 
             await using (var transaction = await factory.BeginAsync(alpha))
             {
-                var stale = CreatePlan(alpha, 2, "Stale write");
+                var stale = original.WithOverview(
+                    "Stale write",
+                    original.WorkingDescription,
+                    original.Dates,
+                    original.Audit.UpdatedAtUtc.AddMinutes(1));
                 await Assert.ThrowsAsync<PlanningConcurrencyException>(() =>
-                    transaction.AdventurePlans.UpdateAsync(alpha, stale, 1));
+                    transaction.AdventurePlans.UpdateOverviewAsync(alpha, stale, 1));
             }
 
             await using (var transaction = await factory.BeginAsync(alpha))
             {
                 var loaded = await transaction.AdventurePlans.GetAsync(alpha, original.Id);
-                Assert.Equal("Updated Spain and Atlantic", loaded!.Title);
-                Assert.Equal(2, loaded.Audit.Version);
+                AssertPlanGraph(updated, loaded!);
+                await transaction.CommitAsync();
+            }
+
+            var missingEditAudit = updated.WithOverview(
+                "Missing edit audit",
+                updated.WorkingDescription,
+                updated.Dates,
+                updated.Audit.UpdatedAtUtc.AddMinutes(1));
+            await using (var transaction = await factory.BeginAsync(alpha))
+            {
+                await transaction.AdventurePlans.UpdateOverviewAsync(alpha, missingEditAudit, 2);
+                await Assert.ThrowsAsync<InvalidOperationException>(() => transaction.CommitAsync());
+            }
+            await using (var transaction = await factory.BeginAsync(alpha))
+            {
+                var loaded = await transaction.AdventurePlans.GetAsync(alpha, original.Id);
+                AssertPlanGraph(updated, loaded!);
+                await transaction.CommitAsync();
+            }
+
+            var failedAuditOverview = updated.WithOverview(
+                "Duplicate audit edit",
+                updated.WorkingDescription,
+                updated.Dates,
+                updated.Audit.UpdatedAtUtc.AddMinutes(1));
+            await using (var transaction = await factory.BeginAsync(alpha))
+            {
+                await transaction.AdventurePlans.UpdateOverviewAsync(
+                    alpha, failedAuditOverview, 2);
+                transaction.RequiredAuditIntents.AddRequired(Audit(
+                    alpha, failedAuditOverview.Id, Permissions.AdventurePlanEdit, 2, 3,
+                    originalAuditId));
+                await Assert.ThrowsAsync<SqlException>(() => transaction.CommitAsync());
+            }
+            await using (var transaction = await factory.BeginAsync(alpha))
+            {
+                var loaded = await transaction.AdventurePlans.GetAsync(alpha, original.Id);
+                AssertPlanGraph(updated, loaded!);
                 await transaction.CommitAsync();
             }
 
@@ -299,7 +357,10 @@ public sealed class PlanningRepositoryIntegrationTests
         string connectionString,
         AuditEventId auditEventId,
         CreatorId creatorId,
-        AdventurePlanId planId)
+        AdventurePlanId planId,
+        Permission? permission = null,
+        long? previousVersion = null,
+        long resultingVersion = 1)
     {
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
@@ -315,15 +376,22 @@ public sealed class PlanningRepositoryIntegrationTests
         Assert.Equal(creatorId.Value, reader.GetString(0));
         Assert.Equal(nameof(ActorType.Human), reader.GetString(1));
         Assert.Equal("user_planner", reader.GetString(2));
-        Assert.Equal(Permissions.AdventurePlanCreate.Value, reader.GetString(3));
+        Assert.Equal((permission ?? Permissions.AdventurePlanCreate).Value, reader.GetString(3));
         Assert.Equal(AuthorizationResourceTypes.AdventurePlan.Value, reader.GetString(4));
         Assert.Equal(planId.Value, reader.GetString(5));
         Assert.Equal(nameof(AuditOutcome.Succeeded), reader.GetString(6));
         Assert.Equal(nameof(AuditReasonCategory.Completed), reader.GetString(7));
         Assert.Equal(TimeSpan.Zero, reader.GetFieldValue<DateTimeOffset>(8).Offset);
         Assert.StartsWith("correlation_", reader.GetString(9), StringComparison.Ordinal);
-        Assert.True(reader.IsDBNull(10));
-        Assert.Equal(1, reader.GetInt64(11));
+        if (previousVersion.HasValue)
+        {
+            Assert.Equal(previousVersion.Value, reader.GetInt64(10));
+        }
+        else
+        {
+            Assert.True(reader.IsDBNull(10));
+        }
+        Assert.Equal(resultingVersion, reader.GetInt64(11));
     }
 
     private static AdventurePlan CreatePlan(

@@ -277,6 +277,49 @@ internal sealed class DapperAdventurePlanRepository(
         }
     }
 
+    public async Task UpdateOverviewAsync(
+        CreatorId creatorId,
+        AdventurePlan plan,
+        long expectedVersion,
+        CancellationToken cancellationToken = default)
+    {
+        RequirePlanScope(creatorId, plan);
+        if (expectedVersion < 1 || plan.Audit.Version != expectedVersion + 1)
+        {
+            throw new ArgumentException(
+                "An overview update must advance the expected version by exactly one.",
+                nameof(expectedVersion));
+        }
+
+        try
+        {
+            var updated = await connection.ExecuteAsync(Command(UpdateOverviewSql,
+                new
+                {
+                    CreatorId = creatorId.Value,
+                    PlanId = plan.Id.Value,
+                    plan.Title,
+                    plan.WorkingDescription,
+                    StartDate = plan.Dates.Start.ToDateTime(TimeOnly.MinValue),
+                    EndDate = plan.Dates.End.ToDateTime(TimeOnly.MinValue),
+                    Version = plan.Audit.Version,
+                    plan.Audit.UpdatedAtUtc,
+                    ExpectedVersion = expectedVersion
+                }, cancellationToken));
+            if (updated == 0)
+            {
+                throw new PlanningConcurrencyException(plan.Id, expectedVersion);
+            }
+
+            auditTracker.RecordMutation(plan.Id, expectedVersion, plan.Audit.Version);
+        }
+        catch
+        {
+            auditTracker.RecordFailure();
+            throw;
+        }
+    }
+
     private async Task InsertChildrenAsync(AdventurePlan plan, CancellationToken cancellationToken)
     {
         var owner = new { CreatorId = plan.CreatorId.Value, PlanId = plan.Id.Value };
@@ -437,6 +480,13 @@ internal sealed class DapperAdventurePlanRepository(
         UPDATE planning.AdventurePlans SET Title=@Title,WorkingDescription=@WorkingDescription,LifecycleStage=@LifecycleStage,
           PlanningStatus=@PlanningStatus,StartDate=@StartDate,EndDate=@EndDate,Version=@Version,UpdatedAtUtc=@UpdatedAtUtc
         WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId AND Version=@ExpectedVersion;
+        """;
+    private const string UpdateOverviewSql = """
+        UPDATE planning.AdventurePlans
+           SET Title=@Title,WorkingDescription=@WorkingDescription,
+               StartDate=@StartDate,EndDate=@EndDate,
+               Version=@Version,UpdatedAtUtc=@UpdatedAtUtc
+         WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId AND Version=@ExpectedVersion;
         """;
     private const string DeleteChildrenSql = """
         DELETE planning.TravelerPreferences WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId;

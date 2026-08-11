@@ -146,7 +146,72 @@ public sealed class WorkspaceRootTests
         Assert.Contains("Sensitive reservation references", html);
         Assert.DoesNotContain("RESERVATION-SECRET-123", html, StringComparison.Ordinal);
         Assert.DoesNotContain("Traveler Private Name", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("/overview", html, StringComparison.Ordinal);
         Assert.Equal(new AdventurePlanId("plan_spain_2027"), query.LastPlanId);
+    }
+
+    /// <summary>The detail route renders only the reviewed overview-edit fields and expected version.</summary>
+    [Fact]
+    public async Task AddressedPlanRoute_RendersMinimalOverviewEditForm()
+    {
+        var query = new StubPlannerWorkspaceQueryService(
+            PlannerWorkspaceResult.Denied(),
+            PlannerPlanDetailResult.Allowed(new AdventurePlanDetail
+            {
+                Id = new("plan_spain_2027"),
+                Title = "Spain and Atlantic",
+                WorkingDescription = "Private working plan",
+                LifecycleStage = AdventureLifecycleStage.Plan,
+                Status = PlanningStatus.Draft,
+                Dates = new(new(2027, 10, 25), new(2027, 11, 15)),
+                Version = 7,
+                TravelerCount = 0
+            }, canEdit: true));
+        var html = await RenderAsync(ApplicationPrincipal(),
+            "/workspace/creators/creator_alpha_01/plans/plan_spain_2027",
+            services =>
+            {
+                services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>();
+                services.AddSingleton<IPlannerWorkspaceQueryService>(query);
+            });
+
+        Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/overview\"", html);
+        Assert.Contains("name=\"expectedVersion\" value=\"7\"", html);
+        Assert.Contains("name=\"title\" value=\"Spain and Atlantic\"", html);
+        Assert.Contains("name=\"description\"", html);
+        Assert.Contains("name=\"startDate\" value=\"2027-10-25\"", html);
+        Assert.Contains("name=\"endDate\" value=\"2027-11-15\"", html);
+        Assert.DoesNotContain("name=\"status\"", html);
+        Assert.DoesNotContain("name=\"lifecycle", html);
+    }
+
+    /// <summary>Overview status messages use only allowlisted state and never reflect private input.</summary>
+    [Fact]
+    public async Task AddressedPlanRoute_EditFailure_DoesNotReflectSubmittedContent()
+    {
+        const string secret = "PRIVATE-OVERVIEW-TITLE";
+        var query = new StubPlannerWorkspaceQueryService(
+            PlannerWorkspaceResult.Denied(),
+            PlannerPlanDetailResult.Allowed(new AdventurePlanDetail
+            {
+                Id = new("plan_spain_2027"),
+                Title = "Current title",
+                LifecycleStage = AdventureLifecycleStage.Plan,
+                Status = PlanningStatus.Draft,
+                Dates = new(new(2027, 10, 25), new(2027, 11, 15)),
+                Version = 7,
+                TravelerCount = 0
+            }, canEdit: true));
+        var html = await RenderAsync(ApplicationPrincipal(),
+            $"/workspace/creators/creator_alpha_01/plans/plan_spain_2027?edit=failure&title={secret}",
+            services =>
+            {
+                services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>();
+                services.AddSingleton<IPlannerWorkspaceQueryService>(query);
+            });
+
+        Assert.Contains("The plan overview could not be updated. Please try again.", html);
+        Assert.DoesNotContain(secret, html);
     }
 
     /// <summary>Denied Creator routes return a generic state without protected plan content.</summary>

@@ -67,6 +67,41 @@
                     </dl>
                 </header>
 
+                @if (EditStatusMessage is not null)
+                {
+                    <p class="plan-create-status" role="status">@EditStatusMessage</p>
+                }
+                @if (PlanCanEdit)
+                {
+                    <section class="plan-create" aria-labelledby="edit-plan-overview">
+                        <p class="workspace-eyebrow">Plan overview</p>
+                        <h3 id="edit-plan-overview">Edit overview</h3>
+                        <form method="post" action="@EditPlanPath">
+                            <AntiforgeryToken />
+                            <input type="hidden" name="expectedVersion" value="@Plan.Version" />
+                            <label>
+                                Title
+                                <input name="title" value="@Plan.Title" required maxlength="200" autocomplete="off" />
+                            </label>
+                            <label>
+                                Description <span>(optional)</span>
+                                <textarea name="description" maxlength="2000" rows="3">@Plan.WorkingDescription</textarea>
+                            </label>
+                            <div class="plan-create-dates">
+                                <label>
+                                    Start date
+                                    <input type="date" name="startDate" value="@Plan.Dates.Start.ToString("yyyy-MM-dd")" required />
+                                </label>
+                                <label>
+                                    End date
+                                    <input type="date" name="endDate" value="@Plan.Dates.End.ToString("yyyy-MM-dd")" required />
+                                </label>
+                            </div>
+                            <button type="submit">Save overview</button>
+                        </form>
+                    </section>
+                }
+
                 <section aria-labelledby="plan-route">
                     <h3 id="plan-route">Destinations and route</h3>
                     @if (Plan.Destinations.Count == 0)
@@ -237,6 +272,7 @@
 @code {
     private IReadOnlyList<AdventurePlanDashboardItem> Plans { get; set; } = [];
     private AdventurePlanDetail? Plan { get; set; }
+    private bool PlanCanEdit { get; set; }
     private CreatorId AddressedCreatorId { get; set; }
     private WorkspaceLoadState LoadState { get; set; } = WorkspaceLoadState.Landing;
     private string CreateIdempotencyKey { get; } = $"request_{Guid.NewGuid():N}";
@@ -275,6 +311,7 @@
             {
                 var result = await query.GetAsync(actor, creatorId, planId.Value, context.RequestAborted);
                 Plan = result.Plan;
+                PlanCanEdit = result.CanEdit;
                 LoadState = result.IsAllowed ? WorkspaceLoadState.Ready : WorkspaceLoadState.Unavailable;
             }
             else
@@ -332,6 +369,7 @@
 
     private string PlanListPath => $"/workspace/creators/{AddressedCreatorId.Value}/plans";
     private string CreatePlanPath => $"{PlanListPath}/create";
+    private string EditPlanPath => $"{PlanListPath}/{Plan!.Id.Value}/overview";
     private string PlanPath(AdventurePlanId planId) => $"{PlanListPath}/{planId.Value}";
     private string? CreateStatusMessage =>
         HttpContextAccessor.HttpContext?.Request.Query["create"].ToString() switch
@@ -340,6 +378,18 @@
             "conflict" => "This request no longer matches its original submission. Start a new request.",
             "validation" => "Review the plan details and try again.",
             "failure" => "The plan could not be created. Please try again.",
+            _ => null
+        };
+    private string? EditStatusMessage =>
+        HttpContextAccessor.HttpContext?.Request.Query["edit"].ToString() switch
+        {
+            "updated" => "The plan overview was updated.",
+            "unchanged" => "The plan overview was already current.",
+            "denied" => "The plan overview could not be updated.",
+            "conflict" => "This plan changed. Review the current values and try again.",
+            "validation" => "Review the overview fields and try again.",
+            "date-blocked" => "Plan dates cannot change while dated itinerary records exist.",
+            "failure" => "The plan overview could not be updated. Please try again.",
             _ => null
         };
     private static string FormatDates(AdventurePlanDashboardItem plan) => FormatDates(plan.Dates);

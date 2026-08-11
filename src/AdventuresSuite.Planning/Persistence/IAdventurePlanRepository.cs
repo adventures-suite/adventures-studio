@@ -58,6 +58,19 @@ public interface IAdventurePlanRepository
         AdventurePlan plan,
         long expectedVersion,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Updates only overview columns when the persisted version matches, without
+    /// replacing or rewriting any child records.
+    /// </summary>
+    /// <exception cref="PlanningConcurrencyException">
+    /// The persisted plan has changed since <paramref name="expectedVersion"/>.
+    /// </exception>
+    Task UpdateOverviewAsync(
+        CreatorId creatorId,
+        AdventurePlan plan,
+        long expectedVersion,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>Contains only the authoritative facts needed to authorize one plan.</summary>
