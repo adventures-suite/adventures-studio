@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+umask 077
 
 if [ "$#" -ne 3 ]; then
   exit 2
@@ -12,6 +13,8 @@ stage='arm_token_acquisition'
 classification='operation_failed'
 read_error="${error_prefix}-read.err"
 write_error="${error_prefix}-write.err"
+token_response="${error_prefix}-token.json"
+token_error="${error_prefix}-token.err"
 
 write_state() {
   printf 'stage=%s\nclassification=%s\nexit_code=%s\n' \
@@ -20,9 +23,9 @@ write_state() {
 
 cleanup() {
   original_exit="$?"
-  unset ARM_PROOF_TOKEN
-  rm -f "$read_error" "$write_error"
-  if [ "$original_exit" -ne 0 ] && [ ! -s "$state_file" ]; then
+  unset ARM_TOKEN_RESPONSE_FILE
+  rm -f "$token_response" "$token_error" "$read_error" "$write_error"
+  if [ "$original_exit" -ne 0 ]; then
     write_state "$original_exit"
   fi
   exit "$original_exit"
@@ -34,10 +37,14 @@ case "$environment_name" in
   *) exit 2 ;;
 esac
 
-ARM_PROOF_TOKEN="$(az account get-access-token \
-  --resource https://management.azure.com/ \
-  --query accessToken -o tsv)"
-export ARM_PROOF_TOKEN
+if ! az account get-access-token \
+  --tenant "$APPROVED_TENANT_ID" \
+  --resource-type arm \
+  --output json >"$token_response" 2>"$token_error"; then
+  exit 1
+fi
+ARM_TOKEN_RESPONSE_FILE="$token_response"
+export ARM_TOKEN_RESPONSE_FILE
 
 stage='arm_token_claim_validation'
 set +e
@@ -46,7 +53,13 @@ import base64
 import json
 import os
 
-token = os.environ['ARM_PROOF_TOKEN']
+try:
+    response = json.loads(open(os.environ['ARM_TOKEN_RESPONSE_FILE'], encoding='utf-8').read())
+    token = response['accessToken']
+except Exception:
+    raise SystemExit(45)
+if not isinstance(token, str):
+    raise SystemExit(45)
 parts = token.split('.')
 if len(parts) != 3:
     raise SystemExit(45)
@@ -66,7 +79,7 @@ if claims.get('aud') not in ('https://management.azure.com', 'https://management
 PY
 claim_exit="$?"
 set -e
-unset ARM_PROOF_TOKEN
+unset ARM_TOKEN_RESPONSE_FILE
 case "$claim_exit" in
   0) ;;
   41) classification='claim_mismatch_tid'; exit 1 ;;
