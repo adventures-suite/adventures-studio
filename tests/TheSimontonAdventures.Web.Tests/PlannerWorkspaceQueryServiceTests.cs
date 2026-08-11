@@ -312,8 +312,15 @@ public sealed class PlannerWorkspaceQueryServiceTests
     {
         public CreatorId CreatorId { get; } = creatorId;
         public IAdventurePlanRepository AdventurePlans { get; } = new EmptyAdventurePlanRepository(detail);
+        public IRequiredAuditIntentCollector RequiredAuditIntents { get; } = new UnusedAuditIntentCollector();
         public Task CommitAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+    }
+
+    private sealed class UnusedAuditIntentCollector : IRequiredAuditIntentCollector
+    {
+        public void AddRequired(AuditEventIntent auditEvent) =>
+            throw new InvalidOperationException("Read-only queries cannot collect mutation audit intent.");
     }
 
     private sealed class EmptyAdventurePlanRepository(AdventurePlanDetail? detail) : IAdventurePlanRepository

@@ -9,7 +9,8 @@ namespace AdventuresSuite.Planning.SqlServer;
 internal sealed class DapperAdventurePlanRepository(
     CreatorId transactionCreatorId,
     SqlConnection connection,
-    SqlTransaction transaction) : IAdventurePlanRepository
+    SqlTransaction transaction,
+    PlanningMutationAuditTracker auditTracker) : IAdventurePlanRepository
 {
     public async Task<AdventurePlanAuthorizationFacts?> GetAuthorizationFactsAsync(
         CreatorId creatorId,
@@ -218,8 +219,17 @@ internal sealed class DapperAdventurePlanRepository(
         CancellationToken cancellationToken = default)
     {
         RequirePlanScope(creatorId, plan);
-        await connection.ExecuteAsync(Command(InsertPlanSql, RootParameters(plan), cancellationToken));
-        await InsertChildrenAsync(plan, cancellationToken);
+        try
+        {
+            await connection.ExecuteAsync(Command(InsertPlanSql, RootParameters(plan), cancellationToken));
+            await InsertChildrenAsync(plan, cancellationToken);
+            auditTracker.RecordMutation(plan.Id, previousVersion: null, plan.Audit.Version);
+        }
+        catch
+        {
+            auditTracker.RecordFailure();
+            throw;
+        }
     }
 
     public async Task UpdateAsync(
@@ -234,28 +244,37 @@ internal sealed class DapperAdventurePlanRepository(
             throw new ArgumentException("An update must advance the expected version by exactly one.", nameof(expectedVersion));
         }
 
-        var updated = await connection.ExecuteAsync(Command(UpdatePlanSql,
-            new
-            {
-                CreatorId = creatorId.Value,
-                PlanId = plan.Id.Value,
-                plan.Title,
-                plan.WorkingDescription,
-                LifecycleStage = plan.LifecycleStage.ToString(),
-                PlanningStatus = plan.Status.ToString(),
-                StartDate = plan.Dates.Start.ToDateTime(TimeOnly.MinValue),
-                EndDate = plan.Dates.End.ToDateTime(TimeOnly.MinValue),
-                Version = plan.Audit.Version,
-                plan.Audit.UpdatedAtUtc,
-                ExpectedVersion = expectedVersion
-            }, cancellationToken));
-        if (updated == 0)
+        try
         {
-            throw new PlanningConcurrencyException(plan.Id, expectedVersion);
-        }
+            var updated = await connection.ExecuteAsync(Command(UpdatePlanSql,
+                new
+                {
+                    CreatorId = creatorId.Value,
+                    PlanId = plan.Id.Value,
+                    plan.Title,
+                    plan.WorkingDescription,
+                    LifecycleStage = plan.LifecycleStage.ToString(),
+                    PlanningStatus = plan.Status.ToString(),
+                    StartDate = plan.Dates.Start.ToDateTime(TimeOnly.MinValue),
+                    EndDate = plan.Dates.End.ToDateTime(TimeOnly.MinValue),
+                    Version = plan.Audit.Version,
+                    plan.Audit.UpdatedAtUtc,
+                    ExpectedVersion = expectedVersion
+                }, cancellationToken));
+            if (updated == 0)
+            {
+                throw new PlanningConcurrencyException(plan.Id, expectedVersion);
+            }
 
-        await DeleteChildrenAsync(plan, cancellationToken);
-        await InsertChildrenAsync(plan, cancellationToken);
+            await DeleteChildrenAsync(plan, cancellationToken);
+            await InsertChildrenAsync(plan, cancellationToken);
+            auditTracker.RecordMutation(plan.Id, expectedVersion, plan.Audit.Version);
+        }
+        catch
+        {
+            auditTracker.RecordFailure();
+            throw;
+        }
     }
 
     private async Task InsertChildrenAsync(AdventurePlan plan, CancellationToken cancellationToken)
