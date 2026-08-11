@@ -4,7 +4,7 @@
 
 **Status:** Approved Direction
 
-**Last Updated:** August 9, 2026
+**Last Updated:** August 10, 2026
 
 ## Purpose
 
@@ -27,6 +27,48 @@ provider-neutral interfaces.
 Initial targets are iOS and Android. The architecture does not require every
 web component to be reused, and mobile projects do not reference the Blazor Web
 App host.
+
+## Presentation State and Appearance
+
+Mobile presentation state remains local to the Companion shell and shared
+host-independent components. It does not enter Companion API DTOs, Planning
+state, synchronization cursors, or server authorization decisions.
+
+An injected appearance service owns two distinct values:
+
+- the traveler's preference: `System`, `Light`, or `Dark`; and
+- the currently effective palette: `Light` or `Dark`.
+
+`System` is the default. The service observes live iOS and Android appearance
+changes and updates the effective palette while System remains selected.
+Explicit Light and Dark preferences persist in ordinary platform preferences,
+not credential storage, and ignore subsequent system appearance changes until
+System is selected again. Platform adapters apply the effective palette to
+native window, status/navigation bar, splash and other chrome surfaces; the
+shared shell applies it to Blazor content before the first interactive frame.
+Startup must use a platform-appropriate pre-render or bootstrap value so a
+saved or effective dark palette is not preceded by a visible light frame.
+
+A single versioned semantic-token vocabulary supplies surface, text, border,
+accent, focus, status, scrim, elevation, map, and interactive-state roles for
+both palettes. Components consume semantic roles rather than literal colors.
+Pages, navigation, dialogs, cards, controls, loading/error/empty states, native
+chrome, maps, and overlays switch as one coherent presentation. Automated token
+checks and rendered accessibility tests enforce applicable WCAG contrast for
+normal and large text, meaningful graphics, controls, focus indicators, and
+selected/disabled states. Images and maps use a tokenized scrim, outline, or
+other tested treatment where their content cannot guarantee contrast.
+
+Transient popovers, dropdowns, and overlays use one explicit open/closed state
+owned by their component. The Memories Adventure selector closes after a
+selection, selector reactivation, outside pointer activation, Escape, or the
+applicable platform Back action. Dismissal is idempotent and atomically removes
+the visual layer, hit-test surface, event subscriptions, and Back registration;
+sets the accessibility expanded state to false; and restores focus to the
+selector when appropriate. Back and Escape are handled only while open, and
+outside activation dismisses without activating an obscured control in the
+same gesture. Component disposal and page navigation perform the same cleanup
+so no invisible overlay can block later interaction.
 
 ## Initial Capabilities
 
@@ -324,6 +366,10 @@ Planning sequence. Prerequisites include:
 
 Detailed increments are defined in
 `docs/development/adventures-companion-implementation-plan.md`.
+
+The appearance service, semantic-token contract, transient-overlay behavior,
+and their platform adapters are presentation dependencies of the MAUI shell.
+They require no Companion API contract or server persistence change.
 
 ## References
 

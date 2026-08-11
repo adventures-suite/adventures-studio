@@ -2,7 +2,7 @@
 
 **Status:** Approved Direction
 
-**Last Updated:** August 9, 2026
+**Last Updated:** August 10, 2026
 
 ## Product Promise
 
@@ -74,6 +74,49 @@ whether any route becomes part of an Adventure publication.
 - Calendar access is optional, traveler-controlled, and useful without
   provider-specific account connection.
 
+## Memories Adventure Selector
+
+The Memories page includes an Adventure selector for choosing the trip whose
+private memories are being viewed or captured. When its dropdown is open, the
+traveler can dismiss it by:
+
+- tapping or clicking outside the dropdown;
+- choosing an Adventure;
+- activating the selector again;
+- pressing Escape on a keyboard-capable platform; or
+- invoking the applicable platform Back action.
+
+Every dismissal path closes the same selector state, removes its overlay and
+event handlers, updates the exposed expanded/collapsed accessibility state, and
+returns focus to the selector when focus restoration is applicable. Selecting
+an Adventure first applies that choice and then closes the dropdown. Dismissal
+must not navigate away, change the selected Adventure, discard memory input, or
+leave an invisible surface that intercepts page interaction.
+
+The selector remains keyboard and screen-reader operable. Its label, current
+selection, expanded state, options, and focus order are programmatically
+available, and Back or Escape is consumed only while the dropdown is open.
+
+## Appearance
+
+AdventuresCompanion supports three appearance choices: `System`, `Light`, and
+`Dark`. `System` is the default and follows operating-system appearance changes
+while the app is running. An explicit Light or Dark choice overrides the system
+appearance and persists across launches until the traveler changes it.
+
+All Companion presentation uses shared semantic design tokens rather than
+page-specific light or dark colors. The same active palette covers pages,
+navigation, dialogs, cards, controls, loading/error/empty states, native chrome,
+maps, and overlays. Text, icons, focus indicators, selected and disabled states,
+map controls, and content placed over imagery meet applicable accessible
+contrast requirements in both palettes.
+
+The saved choice and effective startup palette are resolved before the first
+interactive frame wherever the platform permits. Launch, resume, navigation,
+and live System-theme changes must not briefly render the wrong palette or
+leave native and Blazor surfaces in different themes. Appearance changes do not
+alter private data, authorization, synchronization, or Companion API contracts.
+
 ## Relationship to the Platform
 
 Companion reads approved Planning Engine state. It does not infer a booking,
@@ -118,3 +161,7 @@ remains useful when native push is delayed, disabled, duplicated, or lost.
   public content.
 - Captured memories can later enter the Creator's preservation workflow without
   duplicate entry.
+- The Memories Adventure selector closes through every supported dismissal path,
+  restores accessible state and focus, and never leaves a page-blocking overlay.
+- System, Light, and Dark modes render consistently across shared and native
+  surfaces without startup theme flash and meet accessible contrast criteria.
