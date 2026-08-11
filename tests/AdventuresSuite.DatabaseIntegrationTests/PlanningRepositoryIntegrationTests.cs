@@ -51,12 +51,29 @@ public sealed class PlanningRepositoryIntegrationTests
                 Assert.Equal(original.Id, dashboard.Id);
                 Assert.Equal(original.Audit.Version, dashboard.Version);
                 Assert.False(dashboard.IsArchived);
+                var facts = await transaction.AdventurePlans.GetAuthorizationFactsAsync(
+                    alpha, original.Id);
+                Assert.NotNull(facts);
+                Assert.Equal(alpha, facts.CreatorId);
+                Assert.Equal(original.Id, facts.PlanId);
+                Assert.Equal(original.Audit.Version, facts.Version);
+                Assert.False(facts.IsArchived);
+                var detail = await transaction.AdventurePlans.GetDetailAsync(alpha, original.Id);
+                Assert.NotNull(detail);
+                Assert.Equal("Private working plan", detail.WorkingDescription);
+                Assert.Equal(1, detail.TravelerCount);
+                Assert.Equal("Madrid", Assert.Single(detail.Destinations).Name);
+                Assert.Equal("Prado", Assert.Single(Assert.Single(detail.Days).Activities).Title);
+                Assert.Equal("Flight", Assert.Single(detail.Transportation).Mode);
+                Assert.Equal("Madrid hotel", Assert.Single(detail.Accommodations).Name);
                 await transaction.CommitAsync();
             }
 
             await using (var transaction = await factory.BeginAsync(beta))
             {
                 Assert.Null(await transaction.AdventurePlans.GetAsync(beta, original.Id));
+                Assert.Null(await transaction.AdventurePlans.GetAuthorizationFactsAsync(beta, original.Id));
+                Assert.Null(await transaction.AdventurePlans.GetDetailAsync(beta, original.Id));
                 await transaction.AdventurePlans.AddAsync(beta, CreatePlan(beta, 1, "Independent plan"));
                 await transaction.CommitAsync();
             }

@@ -48,15 +48,15 @@ public sealed class PlanningAuthorizationResourceFactsProvider(
 
         await using var transaction = await transactionFactory.BeginAsync(
             resource.CreatorId, cancellationToken);
-        var plan = await transaction.AdventurePlans.GetAsync(
+        var plan = await transaction.AdventurePlans.GetAuthorizationFactsAsync(
             resource.CreatorId, planId, cancellationToken);
         return plan is null
             ? null
             : new AuthorizationResourceFacts(
                 plan.CreatorId,
                 AuthorizationResourceTypes.AdventurePlan,
-                plan.Id.Value,
-                plan.Status == PlanningStatus.Archived,
-                plan.Audit.Version);
+                plan.PlanId.Value,
+                plan.IsArchived,
+                plan.Version);
     }
 }
