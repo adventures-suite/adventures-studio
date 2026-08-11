@@ -14,7 +14,7 @@ public sealed class DatabaseMigrationTests
     {
         var migrations = MigrationCatalog.GetOrderedResourceNames(MigratorAssembly);
 
-        Assert.Equal(8, migrations.Count);
+        Assert.Equal(9, migrations.Count);
         Assert.EndsWith("0001_create_planning_schema.sql", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("0002_create_adventure_plans.sql", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("0003_create_planning_children.sql", migrations[2], StringComparison.Ordinal);
@@ -23,7 +23,28 @@ public sealed class DatabaseMigrationTests
         Assert.EndsWith("0006_create_creator_memberships.sql", migrations[5], StringComparison.Ordinal);
         Assert.EndsWith("0007_create_traveler_participations.sql", migrations[6], StringComparison.Ordinal);
         Assert.EndsWith("0008_create_companion_read_role.sql", migrations[7], StringComparison.Ordinal);
+        Assert.EndsWith("0009_create_adventure_plan_create_results.sql", migrations[8], StringComparison.Ordinal);
         Assert.Equal(migrations.Count, migrations.Distinct(StringComparer.Ordinal).Count());
+    }
+
+    /// <summary>Ensures Planning creation idempotency is scoped, minimal, and append-only at runtime.</summary>
+    [Fact]
+    public void AdventurePlanCreateResults_DeclareAtomicScopeAndLeastPrivilege()
+    {
+        var migration = ReadMigration("0009_create_adventure_plan_create_results.sql");
+
+        Assert.Contains(
+            "PRIMARY KEY (CreatorId, Operation, IdempotencyKey)",
+            migration,
+            StringComparison.Ordinal);
+        Assert.Contains("COLLATE Latin1_General_100_BIN2", migration, StringComparison.Ordinal);
+        Assert.Contains("Operation = 'AdventurePlan.Create.v1'", migration, StringComparison.Ordinal);
+        Assert.Contains("RequestFingerprint binary(32)", migration, StringComparison.Ordinal);
+        Assert.Contains("ResultingVersion = 1", migration, StringComparison.Ordinal);
+        Assert.Contains("GRANT SELECT, INSERT ON OBJECT::planning.AdventurePlanCreateResults", migration, StringComparison.Ordinal);
+        Assert.Contains("DENY UPDATE, DELETE ON OBJECT::planning.AdventurePlanCreateResults", migration, StringComparison.Ordinal);
+        Assert.DoesNotContain("Title", migration, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Description", migration, StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>Ensures DbUp's embedded-resource filter selects only migrations.</summary>
