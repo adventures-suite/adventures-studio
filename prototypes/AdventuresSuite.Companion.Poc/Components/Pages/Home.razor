@@ -94,6 +94,9 @@ else
                                              OnOpenJourney="() => SelectTab(CompanionTab.Itinerary)"
                                              OnOpenReadiness="() => SelectTab(CompanionTab.Readiness)"
                                              OnOpenPlaybook="OpenPlaybook"
+                                             OnOpenDetail="OpenDetailAsync"
+                                             RestoreDetailFocus="_restoreDetailFocus"
+                                             DetailFocusRestored="DetailFocusRestored"
                                              OnFeedback="ShowToast" />
                                 }
                                 else

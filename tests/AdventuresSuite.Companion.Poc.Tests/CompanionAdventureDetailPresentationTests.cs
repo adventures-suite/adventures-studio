@@ -14,16 +14,21 @@ public sealed class CompanionAdventureDetailPresentationTests
             "1", "Bundled Fiction", "Editorial POC", "Current", "Jan 1 – Jan 2, 2027",
             null, null, new DateOnly(2027, 1, 1), new DateOnly(2027, 1, 2),
             [new("Phoenix", "Rome", "Flight", "Fictional route", "January 2, 2027", "Europe/Rome", [])]);
-        var provider = new DemoCompanionAdventureDetailProvider(
-            new StubContentProvider(CompanionContentResult.Success([demoAdventure], hasDetailedContent: true)));
+        var plannedAdventure = demoAdventure with { Id = "2", Title = "Bundled Planned", Status = "Planned" };
+        var content = new StubContentProvider(
+            CompanionContentResult.Success([demoAdventure, plannedAdventure], hasDetailedContent: true));
+        var provider = new DemoCompanionAdventureDetailProvider(content);
 
         var found = await provider.LoadAsync("1");
+        var planned = await provider.LoadAsync("2");
         var missing = await provider.LoadAsync("adv_api_only");
 
         Assert.Equal("Bundled Fiction", found.Adventure?.Title);
+        Assert.Equal("Bundled Planned", planned.Adventure?.Title);
         Assert.Equal("Rome", Assert.Single(found.Adventure!.Destinations).Name);
         Assert.Equal(CompanionAdventureDetailState.NotFound, missing.State);
         Assert.Null(missing.Adventure);
+        Assert.Equal(3, content.RequestCount);
     }
 
     [Fact]
@@ -223,8 +228,13 @@ public sealed class CompanionAdventureDetailPresentationTests
 
     private sealed class StubContentProvider(CompanionContentResult result) : ICompanionContentProvider
     {
-        public Task<CompanionContentResult> LoadAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult(result);
+        public int RequestCount { get; private set; }
+
+        public Task<CompanionContentResult> LoadAsync(CancellationToken cancellationToken = default)
+        {
+            RequestCount++;
+            return Task.FromResult(result);
+        }
     }
 
     private sealed class SequencedProvider : ICompanionAdventureDetailProvider
