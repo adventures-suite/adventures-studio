@@ -36,42 +36,32 @@ public sealed class AdventurePlanCreateIdempotencyIntegrationTests
             var beta = new CreatorId("creator_beta");
             var key = new PlanningIdempotencyKey("browser-submit-00000001");
             var fingerprint = Fingerprint("same-request");
+            var actor = new ActorIdentity(
+                ActorType.Human, "user_planner", new UserId("user_planner"));
+            var service = CreateService(factory, alpha);
+            var command = new ManualAdventurePlanCreateCommand(
+                actor, alpha, key, "Concurrent plan", null,
+                new DateOnly(2027, 1, 1), new DateOnly(2027, 1, 2));
 
-            var first = CreateAsync(
-                factory, alpha, key, fingerprint, new AdventurePlanId("plan_concurrent_a"));
-            var second = CreateAsync(
-                factory, alpha, key, fingerprint, new AdventurePlanId("plan_concurrent_b"));
+            var first = service.CreateAsync(command);
+            var second = service.CreateAsync(command);
             var outcomes = await Task.WhenAll(first, second);
 
             Assert.Contains(outcomes, result =>
-                result.Outcome == AdventurePlanCreateIdempotencyOutcome.Reserved);
+                result.Outcome == ManualAdventurePlanCreateOutcome.Created);
             Assert.Contains(outcomes, result =>
-                result.Outcome == AdventurePlanCreateIdempotencyOutcome.Replay);
+                result.Outcome == ManualAdventurePlanCreateOutcome.Replayed);
             Assert.Single(outcomes.Select(result => result.AdventurePlanId).Distinct());
             await AssertCountsAsync(connectionString, alpha, key, plans: 1, audits: 1, results: 1);
 
-            await using (var transaction = await factory.BeginAsync(alpha))
-            {
-                var replay = await transaction.AdventurePlanCreateIdempotency.ReserveAsync(
-                    alpha,
-                    Reservation(key, fingerprint, new AdventurePlanId("plan_lost_response_retry")));
-                Assert.Equal(AdventurePlanCreateIdempotencyOutcome.Replay, replay.Outcome);
-                Assert.Equal(outcomes[0].AdventurePlanId, replay.AdventurePlanId);
-                await transaction.CommitAsync();
-            }
+            var replay = await service.CreateAsync(command);
+            Assert.Equal(ManualAdventurePlanCreateOutcome.Replayed, replay.Outcome);
+            Assert.Equal(outcomes[0].AdventurePlanId, replay.AdventurePlanId);
             await AssertCountsAsync(connectionString, alpha, key, plans: 1, audits: 1, results: 1);
 
-            await using (var transaction = await factory.BeginAsync(alpha))
-            {
-                var conflict = await transaction.AdventurePlanCreateIdempotency.ReserveAsync(
-                    alpha,
-                    Reservation(key, Fingerprint("changed-request"),
-                        new AdventurePlanId("plan_changed_fingerprint")));
-                Assert.Equal(AdventurePlanCreateIdempotencyOutcome.Conflict, conflict.Outcome);
-                Assert.Null(conflict.AdventurePlanId);
-                Assert.Null(conflict.ResultingVersion);
-                await transaction.CommitAsync();
-            }
+            var conflict = await service.CreateAsync(command with { Title = "Changed request" });
+            Assert.Equal(ManualAdventurePlanCreateOutcome.Conflict, conflict.Outcome);
+            Assert.Null(conflict.AdventurePlanId);
             await AssertCountsAsync(connectionString, alpha, key, plans: 1, audits: 1, results: 1);
 
             var betaResult = await CreateAsync(
@@ -124,6 +114,15 @@ public sealed class AdventurePlanCreateIdempotencyIntegrationTests
         await transaction.CommitAsync();
         return result;
     }
+
+    private static ManualAdventurePlanCreateService CreateService(
+        SqlPlanningTransactionFactory factory,
+        CreatorId creatorId) => new(
+        new FixedMembershipProvider(creatorId),
+        new AllowedAuthorizationEvaluator(),
+        factory,
+        new GuidPlanningCreationIdentityGenerator(),
+        new FixedTimeProvider());
 
     private static async Task AssertCommitValidationRollsBackAsync(
         SqlPlanningTransactionFactory factory,
@@ -353,5 +352,38 @@ public sealed class AdventurePlanCreateIdempotencyIntegrationTests
             InitialCatalog = databaseName
         };
         return builder.ConnectionString;
+    }
+
+    private sealed class FixedMembershipProvider(CreatorId creatorId)
+        : ICreatorMembershipProvider
+    {
+        public Task<CreatorMembershipSnapshot?> GetMembershipAsync(
+            UserId userId,
+            CreatorId requestedCreatorId,
+            CancellationToken cancellationToken = default) => Task.FromResult(
+                requestedCreatorId == creatorId
+                    ? new CreatorMembershipSnapshot(
+                        new CreatorMembershipId("membership_planner"),
+                        userId,
+                        creatorId,
+                        CreatorMembershipStatus.Active,
+                        [CreatorRole.Owner],
+                        [],
+                        1,
+                        Now)
+                    : null);
+    }
+
+    private sealed class AllowedAuthorizationEvaluator : IAuthorizationPolicyEvaluator
+    {
+        public Task<AuthorizationDecision> AuthorizeAsync(
+            AuthorizationRequest request,
+            CancellationToken cancellationToken = default) => Task.FromResult(
+                AuthorizationDecision.Allow(AuthorizationAuditRequirement.RequiredMutation));
+    }
+
+    private sealed class FixedTimeProvider : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => Now;
     }
 }

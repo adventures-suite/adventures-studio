@@ -8,6 +8,16 @@
 .workspace-signout, .workspace-root > a { background: transparent; border: 1px solid #52705f; border-radius: 999px; color: #294b38; display: inline-block; padding: .6rem 1rem; text-decoration: none; }
 .workspace-message { background: #f7f5ef; border-radius: .75rem; padding: 2rem; }
 .workspace-message h2 { margin-bottom: .5rem; }
+.plan-create { background: #f7f5ef; border-radius: .75rem; margin-bottom: 2rem; padding: 1.5rem; }
+.plan-create > p:not(.workspace-eyebrow) { color: #546158; }
+.plan-create form { display: grid; gap: 1rem; margin-top: 1.25rem; max-width: 42rem; }
+.plan-create label { display: grid; font-weight: 700; gap: .35rem; }
+.plan-create label span { color: #65746b; font-size: .85rem; font-weight: 400; }
+.plan-create input, .plan-create textarea { border: 1px solid #aebbb3; border-radius: .4rem; font: inherit; padding: .65rem; }
+.plan-create textarea { resize: vertical; }
+.plan-create-dates { display: grid; gap: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.plan-create button { background: #294b38; border: 0; border-radius: 999px; color: #fff; cursor: pointer; font: inherit; font-weight: 700; justify-self: start; padding: .7rem 1.1rem; }
+.plan-create-status { border-left: 3px solid #8a5b24; padding: .6rem .8rem; }
 .workspace-section-heading { margin-bottom: 1.25rem; }
 .workspace-section-heading > span { color: #52705f; }
 .plan-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); }
@@ -40,4 +50,4 @@
 .day-list small { color: #52705f; font-weight: 700; margin-left: .5rem; text-transform: uppercase; }
 .detail-columns { display: grid; gap: 1.5rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (max-width: 48rem) { .plan-detail-header, .detail-columns { grid-template-columns: 1fr; } }
-@media (max-width: 36rem) { .workspace-header { align-items: flex-start; } .workspace-root { padding-top: 1.5rem; } }
+@media (max-width: 36rem) { .workspace-header { align-items: flex-start; } .workspace-root { padding-top: 1.5rem; } .plan-create-dates { grid-template-columns: 1fr; } }
