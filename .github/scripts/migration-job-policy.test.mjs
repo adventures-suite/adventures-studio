@@ -87,6 +87,7 @@ test('third-party GitHub Actions are pinned to full commit SHAs', () => {
 test('deployer federation workflows are isolated proof-only controls', () => {
   const foundation = readFileSync('.github/workflows/provision-migration-foundation-resources.yml', 'utf8');
   const rbac = readFileSync('.github/workflows/provision-migration-rbac-access.yml', 'utf8');
+  const proofRunner = readFileSync('.github/scripts/run-deployer-federation-proof.sh', 'utf8');
   for (const workflow of [foundation, rbac]) {
     assert.match(workflow, /^on:\n  workflow_dispatch:/m);
     assert.doesNotMatch(workflow, /^\s+(push|pull_request|schedule):/m);
@@ -96,14 +97,21 @@ test('deployer federation workflows are isolated proof-only controls', () => {
     assert.match(workflow, /test "\$WORKFLOW_REF" = 'refs\/heads\/main'/);
     assert.match(workflow, /test "\$WORKFLOW_SHA" = "\$RELEASE_SHA"/);
     assert.match(workflow, /\[\[ "\$RELEASE_SHA" =~ \^\[0-9a-f\]\{40\}\$ \]\]/);
-    assert.match(workflow, /az rest --method get/);
     assert.doesNotMatch(workflow, /az group show/);
-    assert.match(workflow, /require-arm-authorization-denial\.sh/);
+    assert.doesNotMatch(workflow, /az account show/);
     assert.doesNotMatch(workflow, /client-secret|AZURE_CLIENT_SECRET|password|certificate/i);
     assert.doesNotMatch(workflow, /az deployment (group|sub|mg|tenant) create|az role (assignment|definition) (create|update)|az (resource|group|identity) (create|update)|bicep/i);
-    assert.match(workflow, /deploymentAttempted\":false/);
-    assert.match(workflow, /azureMutationAttempted\":false/);
+    assert.equal((workflow.match(/'eventName': 'migration-deployer-federation-proof'/g) ?? []).length, 1);
+    assert.match(workflow, /if: always\(\)/);
+    for (const stage of ['input_validation', 'checkout_integrity', 'oidc_authentication', 'arm_token_acquisition', 'arm_token_claim_validation', 'resource_read_probe', 'resource_read_denial_classification', 'deployment_validation_probe', 'deployment_validation_denial_classification', 'complete']) {
+      assert.match(workflow, new RegExp(stage));
+    }
+    assert.doesNotMatch(workflow, /print\(.*ARM_PROOF_TOKEN|print\(.*claims|cat .*\.err|env\s*$|set -x/mi);
   }
+  assert.match(proofRunner, /az account get-access-token/);
+  assert.match(proofRunner, /az rest --method get/);
+  assert.match(proofRunner, /require-arm-authorization-denial\.sh/);
+  assert.doesNotMatch(proofRunner, /az account show/);
   assert.match(foundation, /environment: migration-foundation-deployment/);
   assert.match(foundation, /vars\.MIGRATION_FOUNDATION_DEPLOYER_CLIENT_ID/);
   assert.doesNotMatch(foundation, /MIGRATION_RBAC_DEPLOYER|822c1c0c|d678e2ad/);
@@ -129,16 +137,103 @@ test('ARM denial classifier rejects inconclusive and non-authorization results',
   const script = '.github/scripts/require-arm-authorization-denial.sh';
   const classify = (message, exitCode = '1') => {
     writeFileSync(errorFile, message);
-    return spawnSync('bash', [script, errorFile, exitCode], { encoding: 'utf8' }).status;
+    const result = spawnSync('bash', [script, errorFile, exitCode], { encoding: 'utf8' });
+    return { status: result.status, classification: result.stdout.trim(), stderr: result.stderr };
   };
   try {
-    assert.equal(classify('ERROR: (AuthorizationFailed) The client does not have authorization.\n'), 0);
-    assert.notEqual(classify('ERROR: (SubscriptionNotFound) Subscription was not found.\nAuthorizationFailed\n'), 0);
-    assert.notEqual(classify('ERROR: (InvalidAuthenticationToken) Authentication failed.\n'), 0);
-    assert.notEqual(classify('ERROR: (ResourceNotFound) HTTP 404.\n'), 0);
-    assert.notEqual(classify('ERROR: (TooManyRequests) HTTP 429.\n'), 0);
-    assert.notEqual(classify('not-json and not an ARM error\n'), 0);
-    assert.notEqual(classify('ERROR: (AuthorizationFailed) This would be an unexpected HTTP success.\n', '0'), 0);
+    assert.deepEqual(classify('ERROR: (AuthorizationFailed) The client does not have authorization.\n'), { status: 0, classification: 'authorization_failed', stderr: '' });
+    assert.equal(classify('ERROR: (SubscriptionNotFound) Subscription was not found.\nAuthorizationFailed\n').classification, 'subscription_resolution_failed');
+    assert.equal(classify('ERROR: (InvalidAuthenticationToken) Authentication failed.\n').classification, 'authentication_failed');
+    assert.equal(classify('ERROR: (ResourceNotFound) HTTP 404.\n').classification, 'resource_not_found');
+    assert.equal(classify('ERROR: (TooManyRequests) HTTP 429.\n').classification, 'throttled');
+    assert.equal(classify('ERROR: connection timed out while resolving host.\n').classification, 'network_failed');
+    assert.equal(classify('not-json and not an ARM error\n').classification, 'malformed_or_ambiguous');
+    assert.equal(classify('ERROR: (AuthorizationFailed) This would be an unexpected HTTP success.\n', '0').classification, 'unexpected_success');
+    for (const message of ['Bearer abc.def.ghi', 'access_token=secret', 'Authorization: token']) {
+      const result = classify(message);
+      assert.equal(result.classification, 'malformed_or_ambiguous');
+      assert.doesNotMatch(result.classification, /abc|secret|token/i);
+    }
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('federation proof evidence is stage-bounded, exactly-once, and subscription-context independent', () => {
+  const runner = readFileSync('.github/scripts/run-deployer-federation-proof.sh', 'utf8');
+  const workflows = [
+    readFileSync('.github/workflows/provision-migration-foundation-resources.yml', 'utf8'),
+    readFileSync('.github/workflows/provision-migration-rbac-access.yml', 'utf8'),
+  ];
+  assert.doesNotMatch(runner, /az account show/);
+  assert.match(runner, /claims\.get\('tid'\)/);
+  assert.match(runner, /trap cleanup EXIT/);
+  assert.match(runner, /rm -f "\$read_error" "\$write_error"/);
+  for (const claim of ['tid', 'oid', 'client_id', 'aud']) assert.match(runner, new RegExp(`claim_mismatch_${claim}`));
+  for (const workflow of workflows) {
+    assert.equal((workflow.match(/print\(json\.dumps\(envelope/g) ?? []).length, 1);
+    assert.equal((workflow.match(/migration-deployer-federation-proof/g) ?? []).length, 1);
+    for (const failure of ['input_validation_failed', 'checkout_integrity_failed', 'oidc_authentication_failed', 'operation_failed', 'malformed_or_ambiguous']) {
+      assert.match(workflow, new RegExp(failure));
+    }
+    assert.match(workflow, /if not re\.fullmatch/);
+    assert.doesNotMatch(workflow, /observed.*claim|raw.*error|request.*header/i);
+  }
+});
+
+test('federation proof reporter emits exactly one sanitized envelope for every stage', () => {
+  const workflow = readFileSync('.github/workflows/provision-migration-foundation-resources.yml', 'utf8');
+  const start = workflow.indexOf("          python3 - <<'PY'\n") + "          python3 - <<'PY'\n".length;
+  const end = workflow.indexOf('\n          PY', start);
+  assert.ok(start > 0 && end > start);
+  const reporter = workflow.slice(start, end).split('\n').map(line => line.replace(/^          /, '')).join('\n');
+  const directory = mkdtempSync(join(tmpdir(), 'migration-federation-envelope-'));
+  const stateFile = join(directory, 'proof.state');
+  const baseEnvironment = {
+    ...process.env,
+    RELEASE_SHA: 'a'.repeat(40),
+    APPROVAL_ID: 'approval-0001',
+    PROOF_ENVIRONMENT: 'migration-foundation-deployment',
+    PROOF_STATE_FILE: stateFile,
+    INPUT_OUTCOME: 'success',
+    CHECKOUT_OUTCOME: 'success',
+    INTEGRITY_OUTCOME: 'success',
+    OIDC_OUTCOME: 'success',
+    PROOF_OUTCOME: 'success',
+  };
+  const report = (overrides = {}, state) => {
+    if (state) writeFileSync(stateFile, `stage=${state.stage}\nclassification=${state.classification}\nexit_code=${state.exitCode}\n`);
+    else writeFileSync(stateFile, '');
+    const result = spawnSync('python3', ['-c', reporter], { encoding: 'utf8', env: { ...baseEnvironment, ...overrides } });
+    const lines = result.stdout.trim().split('\n').filter(Boolean);
+    assert.equal(lines.length, 1);
+    return { result, envelope: JSON.parse(lines[0]) };
+  };
+  try {
+    assert.deepEqual(report().envelope, {
+      eventName: 'migration-deployer-federation-proof',
+      approvalId: 'approval-0001',
+      releaseSha: 'a'.repeat(40),
+      environment: 'migration-foundation-deployment',
+      stage: 'complete',
+      classification: 'complete',
+      exitCode: 0,
+    });
+    assert.equal(report({ INPUT_OUTCOME: 'failure' }).envelope.stage, 'input_validation');
+    assert.equal(report({ CHECKOUT_OUTCOME: 'failure' }).envelope.stage, 'checkout_integrity');
+    assert.equal(report({ INTEGRITY_OUTCOME: 'failure' }).envelope.stage, 'checkout_integrity');
+    assert.equal(report({ OIDC_OUTCOME: 'failure' }).envelope.stage, 'oidc_authentication');
+    for (const stage of ['arm_token_acquisition', 'arm_token_claim_validation', 'resource_read_probe', 'resource_read_denial_classification', 'deployment_validation_probe', 'deployment_validation_denial_classification']) {
+      const classification = stage.endsWith('denial_classification') ? 'subscription_resolution_failed' : 'operation_failed';
+      const value = report({ PROOF_OUTCOME: 'failure' }, { stage, classification, exitCode: 1 });
+      assert.equal(value.envelope.stage, stage);
+      assert.equal(value.envelope.classification, classification);
+      assert.equal(value.result.status, 1);
+    }
+    const redacted = report({ INPUT_OUTCOME: 'failure', APPROVAL_ID: 'token=value', RELEASE_SHA: 'Bearer abc.def.ghi' });
+    assert.equal(redacted.envelope.approvalId, '<invalid>');
+    assert.equal(redacted.envelope.releaseSha, '<invalid>');
+    assert.doesNotMatch(redacted.result.stdout, /token=value|Bearer|abc\.def/i);
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }

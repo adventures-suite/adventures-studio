@@ -1,24 +1,33 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [ "$#" -ne 2 ]; then
-  exit 2
+classification='malformed_or_ambiguous'
+
+if [ "$#" -eq 2 ] && [[ "$2" =~ ^[0-9]+$ ]]; then
+  error_file="$1"
+  command_exit="$2"
+
+  if [ "$command_exit" -eq 0 ]; then
+    classification='unexpected_success'
+  elif [ -f "$error_file" ] && [ -s "$error_file" ] &&
+    [ "$(wc -c < "$error_file")" -le 8192 ]; then
+    first_line="$(sed -n '/[^[:space:]]/p' "$error_file" | head -n 1)"
+    if [[ "$first_line" =~ ^ERROR:[[:space:]]+\(AuthorizationFailed\) ]] &&
+      ! grep -Eqi 'AuthenticationFailed|InvalidAuthenticationToken|SubscriptionNotFound|MissingSubscription|ResourceNotFound|BadRequest|TooManyRequests|throttl|timed out|timeout|connection|network|name resolution|malformed|Traceback' "$error_file"; then
+      classification='authorization_failed'
+    elif grep -Eqi 'AuthenticationFailed|InvalidAuthenticationToken' "$error_file"; then
+      classification='authentication_failed'
+    elif grep -Eqi 'SubscriptionNotFound|MissingSubscription' "$error_file"; then
+      classification='subscription_resolution_failed'
+    elif grep -Eqi 'ResourceNotFound' "$error_file"; then
+      classification='resource_not_found'
+    elif grep -Eqi 'TooManyRequests|throttl|HTTP[[:space:]]+429' "$error_file"; then
+      classification='throttled'
+    elif grep -Eqi 'timed out|timeout|connection|network|name resolution|could not resolve|unreachable' "$error_file"; then
+      classification='network_failed'
+    fi
+  fi
 fi
 
-error_file="$1"
-command_exit="$2"
-
-[[ "$command_exit" =~ ^[0-9]+$ ]]
-test "$command_exit" -ne 0
-test -f "$error_file"
-test -s "$error_file"
-test "$(wc -c < "$error_file")" -le 8192
-
-# Azure CLI renders an ARM 403 authorization response with this stable error
-# code. Accepting the code—not generic words such as "forbidden"—prevents DNS,
-# authentication, subscription resolution, throttling, and malformed responses
-# from being mistaken for the expected no-role state.
-first_line="$(sed -n '/[^[:space:]]/p' "$error_file" | head -n 1)"
-[[ "$first_line" =~ ^ERROR:[[:space:]]+\(AuthorizationFailed\) ]]
-test "$(grep -c 'AuthorizationFailed' "$error_file")" -ge 1
-! grep -Eqi 'AuthenticationFailed|InvalidAuthenticationToken|SubscriptionNotFound|MissingSubscription|ResourceNotFound|BadRequest|TooManyRequests|throttl|timed out|timeout|connection|network|name resolution|malformed|Traceback' "$error_file"
+printf '%s\n' "$classification"
+test "$classification" = 'authorization_failed'

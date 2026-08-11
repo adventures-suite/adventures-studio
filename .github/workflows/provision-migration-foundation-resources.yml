@@ -27,14 +27,19 @@ jobs:
       APPROVED_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       APPROVED_TENANT_ID: ${{ vars.WORKFORCE_TENANT_ID }}
       TARGET_RESOURCE_GROUP: ${{ vars.MIGRATION_RESOURCE_GROUP }}
+      PROOF_ENVIRONMENT: migration-foundation-deployment
+      PROOF_STATE_FILE: ${{ runner.temp }}/migration-federation-proof.state
     steps:
       - name: Validate approval inputs and configured identity
+        id: inputs
+        continue-on-error: true
         env:
           RELEASE_SHA: ${{ inputs.release_sha }}
           APPROVAL_ID: ${{ inputs.approval_id }}
           WORKFLOW_REF: ${{ github.ref }}
           WORKFLOW_SHA: ${{ github.sha }}
         run: |
+          printf 'stage=input_validation\n' > "$PROOF_STATE_FILE"
           [[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]]
           test "$WORKFLOW_REF" = 'refs/heads/main'
           test "$WORKFLOW_SHA" = "$RELEASE_SHA"
@@ -47,67 +52,135 @@ jobs:
           [[ "$AZURE_CLIENT_ID" = '223af00d-69e5-4302-9ac5-6b338f3ea2e5' ]]
           [[ "$EXPECTED_PRINCIPAL_ID" = 'b77b6201-ad26-4f77-8f88-6d0d43f7dbb8' ]]
 
+      - name: Mark checkout integrity stage
+        if: steps.inputs.outcome == 'success'
+        run: printf 'stage=checkout_integrity\n' > "$PROOF_STATE_FILE"
+
       - name: Checkout exact approved SHA
+        id: checkout
+        if: steps.inputs.outcome == 'success'
+        continue-on-error: true
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ inputs.release_sha }}
           persist-credentials: false
 
       - name: Prove checked-out commit
+        id: integrity
+        if: steps.checkout.outcome == 'success'
+        continue-on-error: true
         env:
           RELEASE_SHA: ${{ inputs.release_sha }}
         run: test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
 
+      - name: Mark OIDC authentication stage
+        if: steps.integrity.outcome == 'success'
+        run: printf 'stage=oidc_authentication\n' > "$PROOF_STATE_FILE"
+
       - name: Authenticate foundation deployer with Azure OIDC
+        id: oidc
+        if: steps.integrity.outcome == 'success'
+        continue-on-error: true
         uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac # v2
         with:
           client-id: ${{ vars.MIGRATION_FOUNDATION_DEPLOYER_CLIENT_ID }}
           tenant-id: ${{ vars.WORKFORCE_TENANT_ID }}
           allow-no-subscriptions: true
 
-      - name: Verify token identity and prove zero Azure access
+      - name: Verify ARM token identity and prove zero Azure access
+        id: proof
+        if: steps.oidc.outcome == 'success'
+        continue-on-error: true
+        run: .github/scripts/run-deployer-federation-proof.sh "$PROOF_ENVIRONMENT" "${RUNNER_TEMP}/foundation" "$PROOF_STATE_FILE"
+
+      - name: Emit exactly one sanitized proof envelope
+        if: always()
         env:
           RELEASE_SHA: ${{ inputs.release_sha }}
           APPROVAL_ID: ${{ inputs.approval_id }}
+          INPUT_OUTCOME: ${{ steps.inputs.outcome }}
+          CHECKOUT_OUTCOME: ${{ steps.checkout.outcome }}
+          INTEGRITY_OUTCOME: ${{ steps.integrity.outcome }}
+          OIDC_OUTCOME: ${{ steps.oidc.outcome }}
+          PROOF_OUTCOME: ${{ steps.proof.outcome }}
         run: |
-          set -euo pipefail
-          trap 'unset ARM_PROOF_TOKEN; rm -f /tmp/foundation-read.err /tmp/foundation-write.err' EXIT
-          account_tenant="$(az account show --query tenantId -o tsv)"
-          test "$account_tenant" = "$APPROVED_TENANT_ID"
-
-          ARM_PROOF_TOKEN="$(az account get-access-token --resource https://management.azure.com/ --query accessToken -o tsv)"
-          export ARM_PROOF_TOKEN
           python3 - <<'PY'
-          import base64, json, os
-          token = os.environ['ARM_PROOF_TOKEN']
-          payload = token.split('.')[1]
-          payload += '=' * (-len(payload) % 4)
-          claims = json.loads(base64.urlsafe_b64decode(payload))
-          expected = {
-              'tid': os.environ['APPROVED_TENANT_ID'],
-              'oid': os.environ['EXPECTED_PRINCIPAL_ID'],
-          }
-          for claim, value in expected.items():
-              if claims.get(claim) != value:
-                  raise SystemExit(f'identity-claim-mismatch:{claim}')
-          if claims.get('appid', claims.get('azp')) != os.environ['AZURE_CLIENT_ID']:
-              raise SystemExit('identity-claim-mismatch:client-id')
-          if claims.get('aud') not in ('https://management.azure.com', 'https://management.azure.com/'):
-              raise SystemExit('identity-claim-mismatch:audience')
-          PY
-          unset ARM_PROOF_TOKEN
+          import json
+          import os
+          import re
 
-          set +e
-          az rest --method get \
-            --url "https://management.azure.com/subscriptions/$APPROVED_SUBSCRIPTION_ID/resourceGroups/$TARGET_RESOURCE_GROUP?api-version=2024-03-01" \
-            --only-show-errors >/dev/null 2>/tmp/foundation-read.err
-          read_exit=$?
-          az rest --method post \
-            --url "https://management.azure.com/subscriptions/$APPROVED_SUBSCRIPTION_ID/resourceGroups/$TARGET_RESOURCE_GROUP/providers/Microsoft.Resources/deployments/federation-proof/validate?api-version=2022-09-01" \
-            --body '{"properties":{"mode":"Incremental","template":{"$schema":"https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#","contentVersion":"1.0.0.0","resources":[]}}}' \
-            --only-show-errors >/dev/null 2>/tmp/foundation-write.err
-          write_exit=$?
-          set -e
-          .github/scripts/require-arm-authorization-denial.sh /tmp/foundation-read.err "$read_exit"
-          .github/scripts/require-arm-authorization-denial.sh /tmp/foundation-write.err "$write_exit"
-          printf '{"eventName":"migration-deployer-federation-proof","approvalId":"%s","releaseSha":"%s","environment":"migration-foundation-deployment","identityVerified":true,"readAccessDenied":true,"writeCapabilityDenied":true,"deploymentAttempted":false,"azureMutationAttempted":false}\n' "$APPROVAL_ID" "$RELEASE_SHA"
+          stage = 'complete'
+          classification = 'complete'
+          exit_code = 0
+          outcomes = {
+              'input_validation': os.environ.get('INPUT_OUTCOME'),
+              'checkout_integrity': os.environ.get('CHECKOUT_OUTCOME'),
+              'checkout_integrity_check': os.environ.get('INTEGRITY_OUTCOME'),
+              'oidc_authentication': os.environ.get('OIDC_OUTCOME'),
+              'proof': os.environ.get('PROOF_OUTCOME'),
+          }
+          if outcomes['input_validation'] != 'success':
+              stage, classification, exit_code = 'input_validation', 'input_validation_failed', 1
+          elif outcomes['checkout_integrity'] != 'success' or outcomes['checkout_integrity_check'] != 'success':
+              stage, classification, exit_code = 'checkout_integrity', 'checkout_integrity_failed', 1
+          elif outcomes['oidc_authentication'] != 'success':
+              stage, classification, exit_code = 'oidc_authentication', 'oidc_authentication_failed', 1
+          elif outcomes['proof'] != 'success':
+              stage, classification, exit_code = 'arm_token_acquisition', 'operation_failed', 1
+              try:
+                  state = dict(
+                      line.split('=', 1)
+                      for line in open(os.environ['PROOF_STATE_FILE'], encoding='utf-8').read().splitlines()
+                      if '=' in line
+                  )
+                  allowed_stages = {
+                      'arm_token_acquisition',
+                      'arm_token_claim_validation',
+                      'resource_read_probe',
+                      'resource_read_denial_classification',
+                      'deployment_validation_probe',
+                      'deployment_validation_denial_classification',
+                  }
+                  allowed_classifications = {
+                      'operation_failed',
+                      'claim_mismatch_tid',
+                      'claim_mismatch_oid',
+                      'claim_mismatch_client_id',
+                      'claim_mismatch_aud',
+                      'malformed_token',
+                      'authorization_failed',
+                      'unexpected_success',
+                      'authentication_failed',
+                      'subscription_resolution_failed',
+                      'resource_not_found',
+                      'throttled',
+                      'network_failed',
+                      'malformed_or_ambiguous',
+                  }
+                  candidate_exit = int(state.get('exit_code', '1'))
+                  if state.get('stage') in allowed_stages:
+                      stage = state['stage']
+                  if state.get('classification') in allowed_classifications:
+                      classification = state['classification']
+                  exit_code = candidate_exit if 1 <= candidate_exit <= 255 else 1
+              except Exception:
+                  stage, classification, exit_code = 'arm_token_acquisition', 'malformed_or_ambiguous', 1
+
+          approval_id = os.environ.get('APPROVAL_ID', '')
+          release_sha = os.environ.get('RELEASE_SHA', '')
+          if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{7,127}', approval_id):
+              approval_id = '<invalid>'
+          if not re.fullmatch(r'[0-9a-f]{40}', release_sha):
+              release_sha = '<invalid>'
+          envelope = {
+              'eventName': 'migration-deployer-federation-proof',
+              'approvalId': approval_id,
+              'releaseSha': release_sha,
+              'environment': os.environ['PROOF_ENVIRONMENT'],
+              'stage': stage,
+              'classification': classification,
+              'exitCode': exit_code,
+          }
+          print(json.dumps(envelope, separators=(',', ':')))
+          raise SystemExit(exit_code)
+          PY

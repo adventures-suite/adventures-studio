@@ -242,6 +242,18 @@ ends and verify loss of authentication using a separate fresh token and fresh
 session technical check. This technical independence does not assert that a
 second human reviewer participated.
 
+The proof authenticates with `allow-no-subscriptions: true`; it must not depend
+on `az account show` or subscription discovery to establish tenant identity.
+The acquired ARM token is the authority for this check: its `tid`, `oid`, client
+ID (`appid` or `azp`), and `aud` claims must match the reviewed tenant, principal,
+client, and ARM audience exactly. A claim mismatch reports only the bounded
+claim name, never the observed value. Each run emits exactly one sanitized
+success or failure envelope with its approval ID, release SHA, Environment,
+bounded stage, bounded classification, and numeric exit code. Raw tokens, token
+fragments, ARM errors, headers, Azure CLI debug output, and environment dumps
+are prohibited. Temporary token and error files are removed by an unconditional
+exit trap.
+
 Stop on any mismatch, unexpected access, role, attachment, publisher/starter
 federation, workflow-source drift, inconclusive denial, cleanup failure, or
 unrelated activity. Do not grant roles, deploy Bicep, publish images, access SQL,
