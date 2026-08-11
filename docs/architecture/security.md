@@ -34,6 +34,11 @@ template boundary. Role-assignment authority is scoped to the exact target and
 conditioned to the reviewed role/principal pair. The starter receives only
 exact-Job start/read access and built-in Log Analytics Reader on the dedicated
 migration workspace; it cannot read other workspaces.
+All six migration identities are Owner-created with zero initial role
+assignments. The resource-group infrastructure role contains no Managed Identity
+write. Operational identity reads are exact-resource grants, and publisher or
+starter federation writes are temporary exact-identity grants, preventing the
+deployer from attaching itself to another privileged identity in the group.
 The migration Job identity can connect only as its reviewed contained database
 principal and cannot publish/pull images through registry credentials. The pull
 identity can only pull from the migration repository. Mutable tags, automatic

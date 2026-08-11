@@ -6,7 +6,9 @@
 
 | Boundary | Actor | May create | Explicit exclusions |
 | --- | --- | --- | --- |
-| `foundation-resources.bicep` | Temporary infrastructure deployer | Subnet, workspace, ACR, environment, four identities, two federated credentials | RBAC, Job, SQL |
+| Owner bootstrap | Approved Owner | Six UAMIs, all with no initial roles | Federated credentials, roles, other resources |
+| `foundation-resources.bicep` | Temporary infrastructure deployer | Subnet, workspace, ACR, environment; reference four existing operational identities | Identity creation/mutation, RBAC, Job, SQL |
+| `identity-access.bicep` | Infrastructure deployer with exact-identity temporary grants | Publisher and starter OIDC credentials only | Other identities/resources, RBAC, SQL |
 | `foundation-access.bicep` | Temporary RBAC deployer | Two ACR assignments, starter custom role, dedicated-workspace reader assignment | Ordinary resources, Job, SQL |
 | Image publication | Publisher identity | Full-SHA image and registry digest evidence | IaC, Job start, SQL |
 | `job-resource.bicep` | Temporary infrastructure deployer | Exact digest-bound dormant Job | RBAC, execution, SQL |
@@ -19,17 +21,30 @@ Outputs may flow only to the next reviewed boundary. IDs must match subscription
 `rg-adventures-suite-dev`, exact type, and exact name. Generated IDs are never
 hardcoded or found by display name.
 
+The six Owner-created identities are the infrastructure deployer, RBAC deployer,
+migration, pull, publisher, and starter identities. All six must initially have
+zero role assignments. The Owner also creates only the reviewed OIDC credentials
+on the two deployer identities; credentials for publisher and starter remain
+absent until `identity-access.bicep`. Foundation resource deployment does not
+create or mutate any identity.
+
 ## Deployer permissions
 
 The infrastructure action catalog is source controlled under
 `infrastructure/container-apps-migrations/roles/`. Assignment is temporary at
 the development resource group and excludes role-definition and role-assignment
-writes. Provider registration, if needed, is a distinct temporary approval for
+writes. It also excludes every Managed Identity write. Operational identity
+read is granted separately only at each exact identity referenced by the named
+resource template. Federated-credential read/write is granted only at the exact
+publisher and starter identities for `identity-access.bicep` and is removed
+immediately afterward. Provider registration, if needed, is a distinct temporary approval for
 only provider read and the two exact register actions at subscription scope.
 
 The RBAC deployer has no ordinary resource write. Role-definition authority is
 resource-group scoped. Assignment authority is granted separately at each exact
-target:
+target. Its assignment role includes only deployment read, write, and operation
+status read at resource-group scope so it can submit and observe the access-only
+templates; role-assignment writes remain scoped and conditioned at each target:
 
 | Scope | Role | Principal |
 | --- | --- | --- |
@@ -51,13 +66,23 @@ exact execution's bounded completion envelope. It is read-only, reaches no
 other workspace, and has no direct cost. Ingestion and 30-day retention are
 already included in the cost estimate.
 
+The custom starter role uses only `Microsoft.App/jobs/read`,
+`Microsoft.App/jobs/start/action`, `Microsoft.App/jobs/execution/read`, and
+`Microsoft.App/jobs/executions/read`. A live read-only provider-operation query
+confirmed all four on 2026-08-10 in subscription
+`5ace9cdd-06d1-47d9-8214-1e7c756d076a`. Repeat immediately before role creation;
+Bicep compilation is insufficient and a missing action is a stop condition.
+
 ## Approval packets
 
-1. **Create deployer identities.** Create exact user-assigned identities
+1. **Create six unprivileged identities.** An approved Owner creates exact user-assigned identities
    `id-adventures-suite-migration-foundation-deployer-dev` and
-   `id-adventures-suite-migration-rbac-bootstrap-dev` and their reviewed
-   `database-development` OIDC credentials only. Grant no roles.
-   Verify tenant, IDs, issuer, subject, audience, and absence of secrets/access.
+   `id-adventures-suite-migration-rbac-bootstrap-dev`, plus the exact migration,
+   pull, publisher, and starter identities. Create only the reviewed
+   `database-development` OIDC credentials on the two deployer identities and
+   grant no roles. Verify tenant, resource/principal/client IDs, exact deployer
+   issuer/subject/audience, absence of publisher/starter credentials, absence of
+   secrets, and zero role assignments for all six.
 2. **Temporarily authorize the infrastructure deployer.** Approve one named
    resource-template deployment in a bounded window. Record assignment and
    deadline, verify plan and post-state, remove access, refresh credentials, and
@@ -67,8 +92,8 @@ already included in the cost estimate.
    bounded window. Verify assignments and absence of broader roles, remove
    authority, refresh credentials, and prove loss of access.
 4. **Deploy and clean up each boundary in sequence.** Separately approve and
-   verify foundation resources, foundation access, publication, Job resource,
-   and Job access. Retain source SHA, template checksum, deployment ID, inputs,
+   verify foundation resources, identity access, foundation access, publication,
+   Job resource, and Job access. Retain source SHA, template checksum, deployment ID, inputs,
    outputs, UTC timing, post-state, and cleanup. Stop on drift, excess authority,
    ambiguous output, cleanup failure, or combined steps.
 

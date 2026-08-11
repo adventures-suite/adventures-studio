@@ -15,9 +15,11 @@ digest. A protected `database-development` GitHub Environment gates every Azure
 mutation or Job start. Automatic workflows may build and validate but cannot
 start migrations.
 
-Provisioning uses four templates and five separately approved boundaries:
-infrastructure deploys foundation resources, RBAC deploys foundation access,
-GitHub publishes and resolves the image digest, infrastructure deploys the
+After an Owner creates all six identities with no roles, provisioning uses five
+templates and six separately approved boundaries: infrastructure deploys
+foundation resources referencing existing identities, exact-identity authority
+deploys publisher/starter federation, RBAC deploys foundation access, GitHub
+publishes and resolves the image digest, infrastructure deploys the
 digest-bound Job resource, and RBAC deploys exact-Job access. Resource templates
 cannot write authorization resources; access templates cannot create or modify
 ordinary resources. This removes both the registry/image cycle and the deployer

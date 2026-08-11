@@ -1,17 +1,17 @@
 targetScope = 'resourceGroup'
 
-@description('Exact reviewed repository permitted to federate with GitHub Actions.')
-param githubRepository string = 'ssimonton007/adventures-studio'
 @description('Existing development VNet name.')
 param virtualNetworkName string = 'vnet-adventures-suite-dev'
 @description('Dedicated delegated Container Apps infrastructure subnet.')
 param containerAppsSubnetPrefix string = '10.40.3.0/27'
+param migrationIdentityResourceId string
+param pullIdentityResourceId string
+param publisherIdentityResourceId string
+param starterIdentityResourceId string
 
-var validatedGithubRepository = githubRepository == 'ssimonton007/adventures-studio' ? githubRepository : fail('The GitHub repository is not approved.')
 var validatedVirtualNetworkName = virtualNetworkName == 'vnet-adventures-suite-dev' ? virtualNetworkName : fail('The virtual network is not approved.')
 var validatedSubnetPrefix = containerAppsSubnetPrefix == '10.40.3.0/27' ? containerAppsSubnetPrefix : fail('The migration subnet prefix is not approved.')
 var location = resourceGroup().location
-var environmentSubject = 'repo:${validatedGithubRepository}:environment:database-development'
 var commonTags = { environment: 'development', component: 'database-migrations', managedBy: 'bicep' }
 
 resource vnet 'Microsoft.Network/virtualNetworks@2024-05-01' existing = { name: validatedVirtualNetworkName }
@@ -38,36 +38,15 @@ resource registry 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
   sku: { name: 'Basic' }
   properties: { adminUserEnabled: false, publicNetworkAccess: 'Enabled' }
 }
-resource migrationIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
-  name: 'id-adventures-suite-migrate-job-dev'
-  location: location
-  tags: commonTags
-}
-resource pullIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
-  name: 'id-adventures-suite-migrate-pull-dev'
-  location: location
-  tags: commonTags
-}
-resource publisherIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
-  name: 'id-adventures-suite-migrate-publisher-dev'
-  location: location
-  tags: commonTags
-}
-resource starterIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
-  name: 'id-adventures-suite-migrate-starter-dev'
-  location: location
-  tags: commonTags
-}
-resource publisherFederation 'Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentityCredentials@2023-01-31' = {
-  parent: publisherIdentity
-  name: 'github-database-development'
-  properties: { issuer: 'https://token.actions.githubusercontent.com', subject: environmentSubject, audiences: ['api://AzureADTokenExchange'] }
-}
-resource starterFederation 'Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentityCredentials@2023-01-31' = {
-  parent: starterIdentity
-  name: 'github-database-development'
-  properties: { issuer: 'https://token.actions.githubusercontent.com', subject: environmentSubject, audiences: ['api://AzureADTokenExchange'] }
-}
+resource migrationIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = { name: 'id-adventures-suite-migrate-job-dev' }
+resource pullIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = { name: 'id-adventures-suite-migrate-pull-dev' }
+resource publisherIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = { name: 'id-adventures-suite-migrate-publisher-dev' }
+resource starterIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = { name: 'id-adventures-suite-migrate-starter-dev' }
+
+var validatedMigrationIdentityResourceId = toLower(migrationIdentityResourceId) == toLower(migrationIdentity.id) ? migrationIdentityResourceId : fail('The migration identity resource ID is not approved.')
+var validatedPullIdentityResourceId = toLower(pullIdentityResourceId) == toLower(pullIdentity.id) ? pullIdentityResourceId : fail('The pull identity resource ID is not approved.')
+var validatedPublisherIdentityResourceId = toLower(publisherIdentityResourceId) == toLower(publisherIdentity.id) ? publisherIdentityResourceId : fail('The publisher identity resource ID is not approved.')
+var validatedStarterIdentityResourceId = toLower(starterIdentityResourceId) == toLower(starterIdentity.id) ? starterIdentityResourceId : fail('The starter identity resource ID is not approved.')
 resource environment 'Microsoft.App/managedEnvironments@2025-01-01' = {
   name: 'cae-adventures-suite-migrations-dev'
   location: location
@@ -86,9 +65,9 @@ output registryResourceId string = registry.id
 output registryLoginServer string = registry.properties.loginServer
 output logWorkspaceResourceId string = logs.id
 output environmentResourceId string = environment.id
-output migrationIdentityResourceId string = migrationIdentity.id
+output migrationIdentityResourceId string = validatedMigrationIdentityResourceId
 output migrationIdentityPrincipalId string = migrationIdentity.properties.principalId
 output migrationIdentityClientId string = migrationIdentity.properties.clientId
-output pullIdentityResourceId string = pullIdentity.id
-output publisherIdentityResourceId string = publisherIdentity.id
-output starterIdentityResourceId string = starterIdentity.id
+output pullIdentityResourceId string = validatedPullIdentityResourceId
+output publisherIdentityResourceId string = validatedPublisherIdentityResourceId
+output starterIdentityResourceId string = validatedStarterIdentityResourceId

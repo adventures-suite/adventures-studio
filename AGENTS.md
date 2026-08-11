@@ -350,8 +350,10 @@
 - Keep image publication, Job configuration/start, registry pull, and SQL
   migration identities distinct. Never run database migration from web/API
   startup or reuse the retired App Service/Kudu/VM bridge for new operations.
-- Keep migration IaC in four non-combinable boundaries: foundation resources,
-  foundation access, Job resource, and Job access. Resource deployers receive
+- Keep migration IaC in five non-combinable boundaries: foundation resources,
+  publisher/starter identity access, foundation access, Job resource, and Job
+  access. Owner-created operational identities are referenced as existing.
+  Resource deployers receive
   no authorization writes; RBAC deployers receive no ordinary resource writes.
   Approve and verify each boundary separately in the documented order, passing
   only exact validated deployment-output resource IDs.

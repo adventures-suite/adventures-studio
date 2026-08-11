@@ -76,6 +76,9 @@ jobs:
           grep -q '@${validatedImageDigest}' infrastructure/container-apps-migrations/job-resource.bicep
           ! grep -q "{ name: 'ADVENTURESSUITE_MIGRATION_OPERATION_ID'" infrastructure/container-apps-migrations/job-resource.bicep
           ! grep -q "{ name: 'ADVENTURESSUITE_ARTIFACT_SHA256'" infrastructure/container-apps-migrations/job-resource.bicep
+          ! rg -q 'federatedIdentityCredentials' infrastructure/container-apps-migrations/foundation-resources.bicep
+          test "$(rg -c 'resource .*userAssignedIdentities@.* existing =' infrastructure/container-apps-migrations/foundation-resources.bicep)" -eq 4
+          ! rg -q 'Microsoft.ManagedIdentity/' infrastructure/container-apps-migrations/roles/infrastructure-deployer.role.json
           grep -A4 "resource starterAssignment" infrastructure/container-apps-migrations/job-access.bicep | grep -q 'scope: job'
           ! rg -q 'configurator|configure-dormant-job|DATABASE_JOB_CONFIGURATOR' \
             infrastructure/container-apps-migrations/*.bicep .github/workflows/database-migration-job.yml
@@ -83,7 +86,7 @@ jobs:
 
       - name: Build Bicep template
         run: |
-          for template in foundation-resources foundation-access job-resource job-access; do
+          for template in foundation-resources identity-access foundation-access job-resource job-access; do
             az bicep build --file "infrastructure/container-apps-migrations/$template.bicep"
           done
 
