@@ -73,6 +73,47 @@ public sealed class WorkspaceRootTests
         Assert.Equal(new CreatorId("creator_alpha_01"), query.LastCreatorId);
     }
 
+    /// <summary>An authorized collection route renders only the approved manual creation fields.</summary>
+    [Fact]
+    public async Task AddressedCreatorRoute_RendersAntiforgeryProtectedCreateForm()
+    {
+        var html = await RenderAsync(ApplicationPrincipal(),
+            "/workspace/creators/creator_alpha_01/plans",
+            services =>
+            {
+                services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>();
+                services.AddSingleton<IPlannerWorkspaceQueryService>(
+                    new StubPlannerWorkspaceQueryService(PlannerWorkspaceResult.Allowed([])));
+            });
+
+        Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/create\"", html);
+        Assert.Contains("name=\"idempotencyKey\"", html);
+        Assert.Contains("name=\"title\"", html);
+        Assert.Contains("name=\"description\"", html);
+        Assert.Contains("name=\"startDate\"", html);
+        Assert.Contains("name=\"endDate\"", html);
+        Assert.DoesNotContain("name=\"status\"", html);
+        Assert.DoesNotContain("name=\"lifecycle", html);
+    }
+
+    /// <summary>Creation failure states are allowlisted and never reflect query content.</summary>
+    [Fact]
+    public async Task AddressedCreatorRoute_CreateFailure_IsGenericAndDoesNotReflectInput()
+    {
+        const string secret = "PRIVATE-PLAN-TITLE";
+        var html = await RenderAsync(ApplicationPrincipal(),
+            $"/workspace/creators/creator_alpha_01/plans?create=failure&title={secret}",
+            services =>
+            {
+                services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>();
+                services.AddSingleton<IPlannerWorkspaceQueryService>(
+                    new StubPlannerWorkspaceQueryService(PlannerWorkspaceResult.Allowed([])));
+            });
+
+        Assert.Contains("The plan could not be created. Please try again.", html);
+        Assert.DoesNotContain(secret, html);
+    }
+
     /// <summary>An authorized instance route renders allowlisted details without sensitive values.</summary>
     [Fact]
     public async Task AddressedPlanRoute_RendersReadOnlyDetailWithoutSensitiveValues()
@@ -182,6 +223,12 @@ public sealed class WorkspaceRootTests
             User = user
         };
         context.Request.Path = path;
+        var queryIndex = path.IndexOf('?', StringComparison.Ordinal);
+        if (queryIndex >= 0)
+        {
+            context.Request.Path = path[..queryIndex];
+            context.Request.QueryString = new QueryString(path[queryIndex..]);
+        }
         provider.GetRequiredService<IHttpContextAccessor>().HttpContext = context;
 
         await using var renderer = new HtmlRenderer(

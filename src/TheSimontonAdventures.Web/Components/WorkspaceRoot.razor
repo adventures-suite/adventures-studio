@@ -153,16 +153,51 @@
                 <p class="workspace-private">Sensitive reservation references, private notes, budgets, packing lists, and traveler identities are not included in this view.</p>
             </article>
         }
-        else if (Plans.Count == 0)
-        {
-            <section class="workspace-message" aria-labelledby="workspace-empty">
-                <h2 id="workspace-empty">No active plans</h2>
-                <p>There are no active Adventure Plans in this private workspace yet.</p>
-            </section>
-        }
         else
         {
-            <section aria-labelledby="active-plans">
+            <section class="plan-create" aria-labelledby="create-plan">
+                <p class="workspace-eyebrow">Manual planning</p>
+                <h2 id="create-plan">Create an Adventure Plan</h2>
+                <p>Start a private draft with a title and inclusive travel dates.</p>
+                @if (CreateStatusMessage is not null)
+                {
+                    <p class="plan-create-status" role="status">@CreateStatusMessage</p>
+                }
+                <form method="post" action="@CreatePlanPath">
+                    <AntiforgeryToken />
+                    <input type="hidden" name="idempotencyKey" value="@CreateIdempotencyKey" />
+                    <label>
+                        Title
+                        <input name="title" required maxlength="200" autocomplete="off" />
+                    </label>
+                    <label>
+                        Description <span>(optional)</span>
+                        <textarea name="description" maxlength="2000" rows="3"></textarea>
+                    </label>
+                    <div class="plan-create-dates">
+                        <label>
+                            Start date
+                            <input type="date" name="startDate" required />
+                        </label>
+                        <label>
+                            End date
+                            <input type="date" name="endDate" required />
+                        </label>
+                    </div>
+                    <button type="submit">Create private plan</button>
+                </form>
+            </section>
+
+            @if (Plans.Count == 0)
+            {
+                <section class="workspace-message" aria-labelledby="workspace-empty">
+                    <h2 id="workspace-empty">No active plans</h2>
+                    <p>There are no active Adventure Plans in this private workspace yet.</p>
+                </section>
+            }
+            else
+            {
+                <section aria-labelledby="active-plans">
                 <div class="workspace-section-heading">
                     <div>
                         <p class="workspace-eyebrow">Adventure dashboard</p>
@@ -187,7 +222,8 @@
                         </article>
                     }
                 </div>
-            </section>
+                </section>
+            }
         }
     }
     else
@@ -203,6 +239,7 @@
     private AdventurePlanDetail? Plan { get; set; }
     private CreatorId AddressedCreatorId { get; set; }
     private WorkspaceLoadState LoadState { get; set; } = WorkspaceLoadState.Landing;
+    private string CreateIdempotencyKey { get; } = $"request_{Guid.NewGuid():N}";
 
     private bool IsAuthenticated =>
         HttpContextAccessor.HttpContext?.User.Identity?.IsAuthenticated is true;
@@ -294,7 +331,17 @@
     }
 
     private string PlanListPath => $"/workspace/creators/{AddressedCreatorId.Value}/plans";
+    private string CreatePlanPath => $"{PlanListPath}/create";
     private string PlanPath(AdventurePlanId planId) => $"{PlanListPath}/{planId.Value}";
+    private string? CreateStatusMessage =>
+        HttpContextAccessor.HttpContext?.Request.Query["create"].ToString() switch
+        {
+            "denied" => "The plan could not be created for this workspace.",
+            "conflict" => "This request no longer matches its original submission. Start a new request.",
+            "validation" => "Review the plan details and try again.",
+            "failure" => "The plan could not be created. Please try again.",
+            _ => null
+        };
     private static string FormatDates(AdventurePlanDashboardItem plan) => FormatDates(plan.Dates);
     private static string FormatDates(PlanningDateRange dates) =>
         $"{dates.Start:MMM d, yyyy} – {dates.End:MMM d, yyyy}";
