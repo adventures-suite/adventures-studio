@@ -15,6 +15,7 @@ read_error="${error_prefix}-read.err"
 write_error="${error_prefix}-write.err"
 token_response="${error_prefix}-token.json"
 token_error="${error_prefix}-token.err"
+audience_response="${error_prefix}-audience.txt"
 
 write_state() {
   printf 'stage=%s\nclassification=%s\nexit_code=%s\n' \
@@ -23,8 +24,8 @@ write_state() {
 
 cleanup() {
   original_exit="$?"
-  unset ARM_TOKEN_RESPONSE_FILE
-  rm -f "$token_response" "$token_error" "$read_error" "$write_error"
+  unset ARM_TOKEN_RESPONSE_FILE EXPECTED_ARM_AUDIENCE_FILE
+  rm -f "$token_response" "$token_error" "$audience_response" "$read_error" "$write_error"
   if [ "$original_exit" -ne 0 ]; then
     write_state "$original_exit"
   fi
@@ -37,6 +38,12 @@ case "$environment_name" in
   *) exit 2 ;;
 esac
 
+if ! az cloud show \
+  --query endpoints.activeDirectoryResourceId \
+  --output tsv >"$audience_response" 2>"$token_error"; then
+  exit 1
+fi
+
 if ! az account get-access-token \
   --tenant "$APPROVED_TENANT_ID" \
   --resource-type arm \
@@ -44,7 +51,8 @@ if ! az account get-access-token \
   exit 1
 fi
 ARM_TOKEN_RESPONSE_FILE="$token_response"
-export ARM_TOKEN_RESPONSE_FILE
+EXPECTED_ARM_AUDIENCE_FILE="$audience_response"
+export ARM_TOKEN_RESPONSE_FILE EXPECTED_ARM_AUDIENCE_FILE
 
 stage='arm_token_claim_validation'
 set +e
@@ -56,6 +64,7 @@ import os
 try:
     response = json.loads(open(os.environ['ARM_TOKEN_RESPONSE_FILE'], encoding='utf-8').read())
     token = response['accessToken']
+    expected_audience = open(os.environ['EXPECTED_ARM_AUDIENCE_FILE'], encoding='utf-8').read().strip()
 except Exception:
     raise SystemExit(45)
 if not isinstance(token, str):
@@ -74,12 +83,17 @@ if claims.get('oid') != os.environ['EXPECTED_PRINCIPAL_ID']:
     raise SystemExit(42)
 if claims.get('appid', claims.get('azp')) != os.environ['AZURE_CLIENT_ID']:
     raise SystemExit(43)
-if claims.get('aud') not in ('https://management.azure.com', 'https://management.azure.com/'):
+def normalize_audience(value):
+    if not isinstance(value, str) or not value or value.endswith('//'):
+        raise SystemExit(44)
+    return value[:-1] if value.endswith('/') else value
+
+if normalize_audience(claims.get('aud')) != normalize_audience(expected_audience):
     raise SystemExit(44)
 PY
 claim_exit="$?"
 set -e
-unset ARM_TOKEN_RESPONSE_FILE
+unset ARM_TOKEN_RESPONSE_FILE EXPECTED_ARM_AUDIENCE_FILE
 case "$claim_exit" in
   0) ;;
   41) classification='claim_mismatch_tid'; exit 1 ;;
