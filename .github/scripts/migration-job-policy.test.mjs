@@ -100,6 +100,8 @@ test('deployer federation workflows are isolated proof-only controls', () => {
     assert.doesNotMatch(workflow, /az group show/);
     assert.doesNotMatch(workflow, /az account show/);
     assert.doesNotMatch(workflow, /client-secret|AZURE_CLIENT_SECRET|password|certificate/i);
+    assert.match(workflow, /uses: azure\/login@[0-9a-f]{40}/);
+    assert.match(workflow, /tenant-id: \$\{\{ vars\.WORKFORCE_TENANT_ID \}\}/);
     assert.doesNotMatch(workflow, /az deployment (group|sub|mg|tenant) create|az role (assignment|definition) (create|update)|az (resource|group|identity) (create|update)|bicep/i);
     assert.equal((workflow.match(/'eventName': 'migration-deployer-federation-proof'/g) ?? []).length, 1);
     assert.match(workflow, /if: always\(\)/);
@@ -109,6 +111,8 @@ test('deployer federation workflows are isolated proof-only controls', () => {
     assert.doesNotMatch(workflow, /print\(.*ARM_PROOF_TOKEN|print\(.*claims|cat .*\.err|env\s*$|set -x/mi);
   }
   assert.match(proofRunner, /az account get-access-token/);
+  assert.match(proofRunner, /az cloud show[\s\S]*?--query endpoints\.activeDirectoryResourceId/);
+  assert.doesNotMatch(proofRunner, /management\.core\.windows\.net|graph\.microsoft\.com|storage\.azure\.com/);
   assert.match(proofRunner, /az rest --method get/);
   assert.match(proofRunner, /require-arm-authorization-denial\.sh/);
   assert.doesNotMatch(proofRunner, /az account show/);
@@ -202,7 +206,7 @@ test('federation proof evidence is stage-bounded, exactly-once, and subscription
   assert.match(runner, /claims\.get\('tid'\)/);
   assert.match(runner, /trap cleanup EXIT/);
   assert.match(runner, /umask 077/);
-  assert.match(runner, /rm -f "\$token_response" "\$token_error" "\$read_error" "\$write_error"/);
+  assert.match(runner, /rm -f "\$token_response" "\$token_error" "\$audience_response" "\$read_error" "\$write_error"/);
   for (const claim of ['tid', 'oid', 'client_id', 'aud']) assert.match(runner, new RegExp(`claim_mismatch_${claim}`));
   for (const workflow of workflows) {
     assert.equal((workflow.match(/print\(json\.dumps\(envelope/g) ?? []).length, 1);
@@ -228,9 +232,15 @@ test('federation proof acquires an ARM token for the explicit tenant without sub
     const encode = value => Buffer.from(JSON.stringify(value)).toString('base64url');
     return `${encode({ alg: 'none', typ: 'JWT' })}.${encode(claims)}.signature`;
   };
-  const validToken = jwt({ tid: expectedTenant, oid: expectedPrincipal, appid: expectedClient, aud: 'https://management.azure.com/' });
+  const publicCloudAudience = 'https://management.core.windows.net/';
+  const issuer = `https://sts.windows.net/${expectedTenant}/`;
+  const validToken = jwt({ tid: expectedTenant, oid: expectedPrincipal, appid: expectedClient, iss: issuer, aud: publicCloudAudience });
   const fake = `#!/usr/bin/env bash
 set -euo pipefail
+if [ "\${1-} \${2-}" = 'cloud show' ]; then
+  printf '%s\n' "$FAKE_CLOUD_ARM_AUDIENCE"
+  exit 0
+fi
 if [ "\${1-} \${2-}" = 'account get-access-token' ]; then
   [ "\${FAKE_TOKEN_MODE-}" != 'acquisition_failure' ] || exit 19
   tenant=''
@@ -277,6 +287,7 @@ exit 89
       AZURE_CLIENT_ID: expectedClient,
       APPROVED_SUBSCRIPTION_ID: '5ace9cdd-06d1-47d9-8214-1e7c756d076a',
       TARGET_RESOURCE_GROUP: 'rg-adventures-suite-dev',
+      FAKE_CLOUD_ARM_AUDIENCE: publicCloudAudience,
       FAKE_ARM_TOKEN: validToken,
       ...overrides,
     };
@@ -314,17 +325,40 @@ exit 89
     assert.notEqual(malformed.result.status, 0);
     assert.deepEqual({ stage: malformed.state.stage, classification: malformed.state.classification }, { stage: 'arm_token_claim_validation', classification: 'malformed_token' });
 
-    const wrongTenant = run({ FAKE_ARM_TOKEN: jwt({ tid: 'wrong', oid: expectedPrincipal, appid: expectedClient, aud: 'https://management.azure.com/' }) });
+    const trailingSlash = run({ FAKE_CLOUD_ARM_AUDIENCE: publicCloudAudience.slice(0, -1) });
+    assert.equal(trailingSlash.result.status, 0);
+    const tokenWithoutTrailingSlash = run({ FAKE_ARM_TOKEN: jwt({ tid: expectedTenant, oid: expectedPrincipal, appid: expectedClient, iss: issuer, aud: publicCloudAudience.slice(0, -1) }) });
+    assert.equal(tokenWithoutTrailingSlash.result.status, 0);
+
+    const wrongTenant = run({ FAKE_ARM_TOKEN: jwt({ tid: 'wrong', oid: expectedPrincipal, appid: expectedClient, iss: issuer, aud: publicCloudAudience }) });
     assert.equal(wrongTenant.state.classification, 'claim_mismatch_tid');
-    const wrongAudience = run({ FAKE_ARM_TOKEN: jwt({ tid: expectedTenant, oid: expectedPrincipal, appid: expectedClient, aud: 'https://graph.microsoft.com/' }) });
-    assert.equal(wrongAudience.state.classification, 'claim_mismatch_aud');
+    const wrongObject = run({ FAKE_ARM_TOKEN: jwt({ tid: expectedTenant, oid: 'wrong', appid: expectedClient, iss: issuer, aud: publicCloudAudience }) });
+    assert.equal(wrongObject.state.classification, 'claim_mismatch_oid');
+    const wrongClient = run({ FAKE_ARM_TOKEN: jwt({ tid: expectedTenant, oid: expectedPrincipal, appid: 'wrong', iss: issuer, aud: publicCloudAudience }) });
+    assert.equal(wrongClient.state.classification, 'claim_mismatch_client_id');
+
+    const rejectedAudiences = [
+      'https://graph.microsoft.com/',
+      'https://storage.azure.com/',
+      'api://custom-api',
+      '',
+      ['https://management.core.windows.net/'],
+      ['https://management.core.windows.net/', 'https://graph.microsoft.com/'],
+      42,
+      'https://management.core.windows.net//',
+      'https://attacker.example/https://management.core.windows.net/',
+    ];
+    const audienceFailures = rejectedAudiences.map(aud => run({ FAKE_ARM_TOKEN: jwt({ tid: expectedTenant, oid: expectedPrincipal, appid: expectedClient, iss: issuer, aud }) }));
+    for (const failure of audienceFailures) assert.equal(failure.state.classification, 'claim_mismatch_aud');
+    const cloudDisagreement = run({ FAKE_CLOUD_ARM_AUDIENCE: 'https://management.azure.example/', FAKE_ARM_TOKEN: validToken });
+    assert.equal(cloudDisagreement.state.classification, 'claim_mismatch_aud');
 
     const unexpectedSuccess = run({ FAKE_ARM_SUCCESS: '1' });
     assert.notEqual(unexpectedSuccess.result.status, 0);
     assert.deepEqual({ stage: unexpectedSuccess.state.stage, classification: unexpectedSuccess.state.classification }, { stage: 'resource_read_denial_classification', classification: 'unexpected_success' });
-    for (const value of [success, missingTenant, incorrectTenant, acquisitionFailure, malformed, wrongTenant, wrongAudience, unexpectedSuccess]) {
+    for (const value of [success, trailingSlash, tokenWithoutTrailingSlash, missingTenant, incorrectTenant, acquisitionFailure, malformed, wrongTenant, wrongObject, wrongClient, ...audienceFailures, cloudDisagreement, unexpectedSuccess]) {
       assert.doesNotMatch(`${value.result.stdout}\n${value.result.stderr}`, /accessToken|Bearer|eyJ|signature/);
-      for (const suffix of ['-token.json', '-token.err', '-read.err', '-write.err']) assert.throws(() => readFileSync(`${prefix}${suffix}`));
+      for (const suffix of ['-token.json', '-token.err', '-audience.txt', '-read.err', '-write.err']) assert.throws(() => readFileSync(`${prefix}${suffix}`));
     }
   } finally {
     rmSync(directory, { recursive: true, force: true });
