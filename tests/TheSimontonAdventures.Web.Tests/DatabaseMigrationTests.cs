@@ -14,7 +14,7 @@ public sealed class DatabaseMigrationTests
     {
         var migrations = MigrationCatalog.GetOrderedResourceNames(MigratorAssembly);
 
-        Assert.Equal(7, migrations.Count);
+        Assert.Equal(8, migrations.Count);
         Assert.EndsWith("0001_create_planning_schema.sql", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("0002_create_adventure_plans.sql", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("0003_create_planning_children.sql", migrations[2], StringComparison.Ordinal);
@@ -22,6 +22,7 @@ public sealed class DatabaseMigrationTests
         Assert.EndsWith("0005_bind_sessions_to_external_identities.sql", migrations[4], StringComparison.Ordinal);
         Assert.EndsWith("0006_create_creator_memberships.sql", migrations[5], StringComparison.Ordinal);
         Assert.EndsWith("0007_create_traveler_participations.sql", migrations[6], StringComparison.Ordinal);
+        Assert.EndsWith("0008_create_companion_read_role.sql", migrations[7], StringComparison.Ordinal);
         Assert.Equal(migrations.Count, migrations.Distinct(StringComparer.Ordinal).Count());
     }
 
@@ -113,6 +114,25 @@ public sealed class DatabaseMigrationTests
         Assert.Contains("REFERENCES auth.Users", migration, StringComparison.Ordinal);
         Assert.Contains("IX_TravelerParticipations_AuthorizedList", migration, StringComparison.Ordinal);
         Assert.DoesNotContain("GRANT SELECT", migration, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>Ensures the Companion role is object-scoped and read-only.</summary>
+    [Fact]
+    public void CompanionReadRole_UsesExplicitObjectsAndDeniesMutationAndDdl()
+    {
+        var migration = ReadMigration("0008_create_companion_read_role.sql");
+
+        Assert.Contains("CREATE ROLE AdventuresSuiteCompanionReadRuntime", migration, StringComparison.Ordinal);
+        Assert.Contains("GRANT SELECT ON OBJECT::planning.AdventurePlans", migration, StringComparison.Ordinal);
+        Assert.Contains("GRANT SELECT ON OBJECT::auth.CreatorMemberships", migration, StringComparison.Ordinal);
+        Assert.DoesNotContain("GRANT SELECT ON SCHEMA", migration, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("DENY INSERT, UPDATE, DELETE", migration, StringComparison.Ordinal);
+        Assert.Contains("DENY ALTER ON SCHEMA::planning", migration, StringComparison.Ordinal);
+        Assert.Contains("DENY ALTER ON SCHEMA::auth", migration, StringComparison.Ordinal);
+        Assert.DoesNotContain("DENY CONTROL ON SCHEMA", migration, StringComparison.Ordinal);
+        Assert.DoesNotContain("db_datareader", migration, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("db_datawriter", migration, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("db_ddladmin", migration, StringComparison.OrdinalIgnoreCase);
     }
 
     private static string ReadMigration(string fileName)

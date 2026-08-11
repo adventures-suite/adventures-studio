@@ -6,6 +6,15 @@ on:
       - main
 
   workflow_dispatch:
+    inputs:
+      projection_provider:
+        description: Authoritative projection provider; SQL requires completed bootstrap approval
+        required: true
+        type: choice
+        default: Closed
+        options:
+          - Closed
+          - Sql
 
 permissions:
   id-token: write
@@ -22,6 +31,7 @@ env:
   PACKAGE_DIR: ./artifacts/companion-api/package
   EVIDENCE_DIR: ./artifacts/companion-api/evidence
   PACKAGE_NAME: adventures-companion-api-${{ github.sha }}-${{ github.run_attempt }}.zip
+  PROJECTION_PROVIDER: ${{ github.event_name == 'workflow_dispatch' && inputs.projection_provider || 'Closed' }}
 
 jobs:
   build-and-deploy:
@@ -32,7 +42,7 @@ jobs:
 
     steps:
       - name: Checkout exact release SHA
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
@@ -55,7 +65,7 @@ jobs:
           fi
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
@@ -109,6 +119,7 @@ jobs:
           export ASPNETCORE_URLS=http://127.0.0.1:5077
           export Companion__DeterministicMode=true
           export Companion__ActivationMode=Disabled
+          export Companion__ProjectionProvider=Closed
           export Deployment__CommitSha="${{ github.sha }}"
           "${{ env.PUBLISH_DIR }}/AdventuresSuite.Api" >"${{ env.EVIDENCE_DIR }}/openapi-host.log" 2>&1 &
           api_pid=$!
@@ -151,7 +162,7 @@ jobs:
             > "${{ env.PACKAGE_DIR }}/${{ env.PACKAGE_NAME }}.sha256"
 
       - name: Retain immutable build evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: adventures-companion-api-${{ github.sha }}-${{ github.run_attempt }}
           path: |
@@ -162,7 +173,7 @@ jobs:
           retention-days: 14
 
       - name: Azure Login with dedicated API deployment identity
-        uses: azure/login@v2
+        uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac # v2
         with:
           client-id: ${{ vars.AZURE_COMPANION_API_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
@@ -179,6 +190,14 @@ jobs:
             echo "::error::The Azure Companion API must remain explicitly Disabled."
             exit 1
           fi
+          if [ "$PROJECTION_PROVIDER" != "Closed" ] && [ "$PROJECTION_PROVIDER" != "Sql" ]; then
+            echo "::error::The projection provider must be Closed or Sql."
+            exit 1
+          fi
+          if [ "${{ github.event_name }}" = "push" ] && [ "$PROJECTION_PROVIDER" != "Closed" ]; then
+            echo "::error::Automatic main deployments must keep the projection provider Closed."
+            exit 1
+          fi
           if [ "$API_ORIGIN" != "https://${{ vars.AZURE_COMPANION_API_WEBAPP_NAME }}.azurewebsites.net" ]; then
             echo "::error::The configured API origin is not the exact approved App Service origin."
             exit 1
@@ -188,6 +207,19 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          sql_settings=()
+          if [ "$PROJECTION_PROVIDER" = "Sql" ]; then
+            test -n "${{ vars.AZURE_COMPANION_API_SQL_SERVER }}"
+            test -n "${{ vars.AZURE_COMPANION_API_SQL_DATABASE }}"
+            test -n "${{ vars.AZURE_COMPANION_API_MANAGED_IDENTITY_CLIENT_ID }}"
+            sql_connection="Server=tcp:${{ vars.AZURE_COMPANION_API_SQL_SERVER }},1433;Database=${{ vars.AZURE_COMPANION_API_SQL_DATABASE }};Authentication=Active Directory Managed Identity;User ID=${{ vars.AZURE_COMPANION_API_MANAGED_IDENTITY_CLIENT_ID }};Encrypt=True;TrustServerCertificate=False;Connection Timeout=15"
+            sql_settings=(
+              "Companion__Sql__ConnectionString=$sql_connection"
+              "Companion__Sql__ApprovedServer=tcp:${{ vars.AZURE_COMPANION_API_SQL_SERVER }},1433"
+              "Companion__Sql__ApprovedDatabase=${{ vars.AZURE_COMPANION_API_SQL_DATABASE }}"
+              "Companion__Sql__ManagedIdentityClientId=${{ vars.AZURE_COMPANION_API_MANAGED_IDENTITY_CLIENT_ID }}"
+            )
+          fi
           az webapp config appsettings set \
             --resource-group "${{ vars.AZURE_COMPANION_API_RESOURCE_GROUP }}" \
             --name "${{ vars.AZURE_COMPANION_API_WEBAPP_NAME }}" \
@@ -195,12 +227,14 @@ jobs:
               ASPNETCORE_ENVIRONMENT=Production \
               Companion__ActivationMode=Disabled \
               Companion__DeterministicMode=false \
+              Companion__ProjectionProvider="$PROJECTION_PROVIDER" \
               Deployment__CommitSha="${{ github.sha }}" \
               Deployment__RunId="${{ github.run_id }}" \
               Deployment__RunAttempt="${{ github.run_attempt }}" \
               WEBSITE_HEALTHCHECK_MAXPINGFAILURES=3 \
               WEBSITES_CONTAINER_START_TIME_LIMIT=600 \
               WEBSITE_RUN_FROM_PACKAGE=1 \
+              "${sql_settings[@]}" \
             --output none
 
           az webapp config set \
@@ -303,13 +337,14 @@ jobs:
             echo "- Restarted: \`$APPLICATION_RESTARTED_AT\`"
             echo "- Liveness and readiness: exact SHA verified"
             echo "- Product activation: \`Disabled\`"
+            echo "- Projection provider: \`$PROJECTION_PROVIDER\`"
             echo "- Protected endpoint: fail-closed (401)"
             echo "- Production OpenAPI and Scalar: unavailable (404)"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Retain sanitized runtime evidence
         if: success()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: adventures-companion-api-runtime-${{ github.sha }}-${{ github.run_attempt }}
           path: |

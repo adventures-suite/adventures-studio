@@ -13,6 +13,12 @@ public static class CompanionApiConstants
     public const string DeterministicModeKey = "Companion:DeterministicMode";
     /// <summary>Gets the explicit product activation-mode configuration key.</summary>
     public const string ActivationModeKey = "Companion:ActivationMode";
+    /// <summary>Gets the explicit authoritative projection-provider key.</summary>
+    public const string ProjectionProviderKey = "Companion:ProjectionProvider";
+    /// <summary>Gets the closed provider value used before SQL activation gates pass.</summary>
+    public const string ClosedProjectionProvider = "Closed";
+    /// <summary>Gets the authoritative SQL provider value.</summary>
+    public const string SqlProjectionProvider = "Sql";
     /// <summary>Gets the deployment release-SHA configuration key.</summary>
     public const string ReleaseShaKey = "Deployment:CommitSha";
     /// <summary>Gets the only approved deployed activation mode.</summary>

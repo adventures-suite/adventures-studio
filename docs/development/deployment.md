@@ -101,6 +101,14 @@ rollback.
 
 ## Azure Separation
 
+Database migration deployment is independent from web/API deployment. It uses
+the protected `database-development` GitHub Environment, separate OIDC image
+publisher and exact-Job starter identities, an approval-gated infrastructure
+administrator deployment for every Job definition change, a full-SHA ACR tag,
+and an immutable image digest in the dormant Job definition. No push or
+pull-request trigger may start the Job. See
+`docs/architecture/database-migration-job.md`.
+
 Development and production use separate Azure Monitor/Application Insights
 destinations, retention settings, access controls, alerts, dashboards, and cost
 budgets. A deployment must not send one environment's telemetry to another.

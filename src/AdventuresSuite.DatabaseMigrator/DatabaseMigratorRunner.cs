@@ -8,8 +8,8 @@ namespace AdventuresSuite.DatabaseMigrator;
 public static class DatabaseMigratorRunner
 {
     /// <summary>
-    /// Applies pending migrations transactionally and returns the script names
-    /// selected before execution.
+    /// Applies pending migrations with one transaction per script and returns
+    /// the script names selected before execution.
     /// </summary>
     public static IReadOnlyList<string> Migrate(string connectionString)
     {
@@ -19,6 +19,12 @@ public static class DatabaseMigratorRunner
         }
 
         using var migrationLock = AcquireMigrationLock(connectionString);
+        return MigrateWithLockHeld(connectionString);
+    }
+
+    /// <summary>Applies pending migrations while an approved caller holds the migration lock.</summary>
+    internal static IReadOnlyList<string> MigrateWithLockHeld(string connectionString)
+    {
         var assembly = typeof(MigrationCatalog).Assembly;
         _ = MigrationCatalog.GetOrderedResourceNames(assembly);
         var upgrader = BuildUpgradeEngine(connectionString, assembly);

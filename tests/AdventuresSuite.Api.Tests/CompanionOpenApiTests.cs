@@ -130,4 +130,13 @@ public sealed class CompanionProductionGateTests(ProductionCompanionApiFactory f
         var error = Assert.Throws<InvalidOperationException>(() => invalidFactory.CreateClient());
         Assert.Contains("Deployment:CommitSha", error.ToString(), StringComparison.Ordinal);
     }
+
+    /// <summary>Ensures Production never infers an authoritative provider.</summary>
+    [Fact]
+    public void ProductionRequiresExplicitProjectionProvider()
+    {
+        using var invalidFactory = new MissingProjectionProviderCompanionApiFactory();
+        var error = Assert.Throws<InvalidOperationException>(() => invalidFactory.CreateClient());
+        Assert.Contains("Companion:ProjectionProvider", error.ToString(), StringComparison.Ordinal);
+    }
 }

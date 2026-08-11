@@ -25,6 +25,27 @@ continues to follow Creator host-resolution and publication policies.
 
 ## Trust Boundaries
 
+The database migration supply chain is a separate privileged trust boundary.
+GitHub build identity may publish images but cannot access SQL. There is no
+GitHub Job configurator; definition changes require an approved infrastructure
+deployment. Resource deployment authority is separated from Azure RBAC write
+authority, is temporary, and is removed and independently verified after each
+template boundary. Role-assignment authority is scoped to the exact target and
+conditioned to the reviewed role/principal pair. The starter receives only
+exact-Job start/read access and built-in Log Analytics Reader on the dedicated
+migration workspace; it cannot read other workspaces.
+All six migration identities are Owner-created with zero initial role
+assignments. The resource-group infrastructure role contains no Managed Identity
+write. Operational identity reads are exact-resource grants, and publisher or
+starter federation writes are temporary exact-identity grants, preventing the
+deployer from attaching itself to another privileged identity in the group.
+The migration Job identity can connect only as its reviewed contained database
+principal and cannot publish/pull images through registry credentials. The pull
+identity can only pull from the migration repository. Mutable tags, automatic
+retries, duplicate executions, identity confusion, public ingress, leaked
+tokens/configuration, and missing terminal evidence all fail closed. Full
+controls are defined in `database-migration-job.md`.
+
 ```text
 Browser or API client
     ↓ untrusted request

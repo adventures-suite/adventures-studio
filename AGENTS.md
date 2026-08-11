@@ -343,3 +343,17 @@
   deployment outputs; never hardcode them in application behavior.
 - Keep the migration app stopped by default and return it to stopped state after
   success or failure with retained artifact and journal evidence.
+- Treat the Azure Container Apps migration Job as the permanent migration
+  execution boundary. It is manual-only, digest-addressed, ingress-free,
+  single-replica, zero-retry, and protected by the `database-development`
+  GitHub Environment.
+- Keep image publication, Job configuration/start, registry pull, and SQL
+  migration identities distinct. Never run database migration from web/API
+  startup or reuse the retired App Service/Kudu/VM bridge for new operations.
+- Keep migration IaC in five non-combinable boundaries: foundation resources,
+  publisher/starter identity access, foundation access, Job resource, and Job
+  access. Owner-created operational identities are referenced as existing.
+  Resource deployers receive
+  no authorization writes; RBAC deployers receive no ordinary resource writes.
+  Approve and verify each boundary separately in the documented order, passing
+  only exact validated deployment-output resource IDs.

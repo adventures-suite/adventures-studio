@@ -86,6 +86,11 @@
           "System.Memory.Data": "10.0.3"
         }
       },
+      "Dapper": {
+        "type": "Transitive",
+        "resolved": "2.1.79",
+        "contentHash": "8YijbzgTfmqmQOnVNorYM6K++pxqnW3nJ4aC1sRHzxUA2CcuoJ9gsTem3kgBnPRMc38zZHl4Esb6hAezXIEEuw=="
+      },
       "dbup-core": {
         "type": "Transitive",
         "resolved": "6.1.1",
@@ -337,6 +342,34 @@
         "type": "Transitive",
         "resolved": "9.0.13",
         "contentHash": "t8S9IDpjJKsLpLkeBdW8cWtcPyYqrGu93Dej1RO6WwuL/lkFSqWlan3rMJfortqz1mRIh+sys2AFsSA6jWJ3Jg=="
+      },
+      "adventuressuite.authorization": {
+        "type": "Project",
+        "dependencies": {
+          "AdventuresSuite.Identity": "[1.0.0, )"
+        }
+      },
+      "adventuressuite.companion.application": {
+        "type": "Project",
+        "dependencies": {
+          "AdventuresSuite.Authorization": "[1.0.0, )",
+          "AdventuresSuite.Companion.Contracts": "[1.0.0, )",
+          "AdventuresSuite.Identity": "[1.0.0, )"
+        }
+      },
+      "adventuressuite.companion.contracts": {
+        "type": "Project"
+      },
+      "adventuressuite.companion.sqlserver": {
+        "type": "Project",
+        "dependencies": {
+          "AdventuresSuite.Companion.Application": "[1.0.0, )",
+          "Dapper": "[2.1.79, )",
+          "Microsoft.Data.SqlClient": "[7.0.2, )"
+        }
+      },
+      "adventuressuite.identity": {
+        "type": "Project"
       }
     }
   }

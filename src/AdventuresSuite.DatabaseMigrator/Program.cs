@@ -35,6 +35,33 @@ try
                 RequireEnvironment(migrationConnectionVariable));
             Console.WriteLine("Migration identity permission verification completed successfully.");
             break;
+        case ["--run-reviewed-operation"]:
+            return await MigrationOperationRunner.RunAsync(
+                RequireEnvironment(migrationConnectionVariable));
+        case ["--verify-execution-channel"]:
+            return await MigrationContainerModes.VerifyExecutionChannelAsync();
+        case ["--capture-migration-state"]:
+            return await MigrationContainerModes.CaptureMigrationStateAsync(
+                RequireEnvironment(migrationConnectionVariable));
+        case ["--verify-migration-state"]:
+            return await MigrationContainerModes.VerifyMigrationStateAsync(
+                RequireEnvironment(migrationConnectionVariable));
+        case ["--bind-companion-read-runtime"]:
+            await AzureDevelopmentBootstrapper.BindCompanionReadIdentityAsync(
+                RequireEnvironment(administratorConnectionVariable),
+                Environment.GetEnvironmentVariable("ADVENTURESSUITE_COMPANION_PRINCIPAL_ID"),
+                Environment.GetEnvironmentVariable("ADVENTURESSUITE_COMPANION_PRINCIPAL_CLIENT_ID"),
+                Environment.GetEnvironmentVariable("ADVENTURESSUITE_COMPANION_PRINCIPAL_NAME"));
+            Console.WriteLine("Companion read identity binding completed successfully.");
+            break;
+        case ["--verify-companion-read-permissions"]:
+            await AzureDevelopmentBootstrapper.VerifyCompanionReadPermissionsAsync(
+                RequireEnvironment(administratorConnectionVariable),
+                Environment.GetEnvironmentVariable("ADVENTURESSUITE_COMPANION_PRINCIPAL_ID"),
+                Environment.GetEnvironmentVariable("ADVENTURESSUITE_COMPANION_PRINCIPAL_CLIENT_ID"),
+                Environment.GetEnvironmentVariable("ADVENTURESSUITE_COMPANION_PRINCIPAL_NAME"));
+            Console.WriteLine("Companion read permission verification completed successfully.");
+            break;
         case ["--bootstrap-key-vault"]:
             await AzureDevelopmentBootstrapper.BootstrapKeyVaultAsync(
                 Environment.GetEnvironmentVariable("ADVENTURESSUITE_KEY_VAULT_URI"));

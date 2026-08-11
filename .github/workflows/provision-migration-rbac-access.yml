@@ -1,0 +1,113 @@
+name: Prove Migration RBAC Deployer Federation
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_sha:
+        description: Exact approved 40-character commit SHA
+        required: true
+        type: string
+      approval_id:
+        description: Sanitized identifier for the explicit federation-proof approval
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  verify-federation:
+    runs-on: ubuntu-24.04
+    environment: migration-rbac-deployment
+    timeout-minutes: 10
+    env:
+      AZURE_CLIENT_ID: ${{ vars.MIGRATION_RBAC_DEPLOYER_CLIENT_ID }}
+      EXPECTED_PRINCIPAL_ID: ${{ vars.MIGRATION_RBAC_DEPLOYER_PRINCIPAL_ID }}
+      APPROVED_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      APPROVED_TENANT_ID: ${{ vars.WORKFORCE_TENANT_ID }}
+      TARGET_RESOURCE_GROUP: ${{ vars.MIGRATION_RESOURCE_GROUP }}
+    steps:
+      - name: Validate approval inputs and configured identity
+        env:
+          RELEASE_SHA: ${{ inputs.release_sha }}
+          APPROVAL_ID: ${{ inputs.approval_id }}
+          WORKFLOW_REF: ${{ github.ref }}
+          WORKFLOW_SHA: ${{ github.sha }}
+        run: |
+          [[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          test "$WORKFLOW_REF" = 'refs/heads/main'
+          test "$WORKFLOW_SHA" = "$RELEASE_SHA"
+          [[ "$APPROVAL_ID" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{7,127}$ ]]
+          [[ "$AZURE_CLIENT_ID" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]]
+          [[ "$EXPECTED_PRINCIPAL_ID" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]]
+          [[ "$APPROVED_SUBSCRIPTION_ID" = '5ace9cdd-06d1-47d9-8214-1e7c756d076a' ]]
+          [[ "$APPROVED_TENANT_ID" = 'd7add2bb-ac03-49a8-9377-d0bf6a012f2f' ]]
+          [[ "$TARGET_RESOURCE_GROUP" = 'rg-adventures-suite-dev' ]]
+          [[ "$AZURE_CLIENT_ID" = 'd678e2ad-ada2-4cde-bb79-44630acf1cc8' ]]
+          [[ "$EXPECTED_PRINCIPAL_ID" = '822c1c0c-39e1-400f-b9fc-9532a11bae5d' ]]
+
+      - name: Checkout exact approved SHA
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.release_sha }}
+          persist-credentials: false
+
+      - name: Prove checked-out commit
+        env:
+          RELEASE_SHA: ${{ inputs.release_sha }}
+        run: test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+
+      - name: Authenticate RBAC deployer with Azure OIDC
+        uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac # v2
+        with:
+          client-id: ${{ vars.MIGRATION_RBAC_DEPLOYER_CLIENT_ID }}
+          tenant-id: ${{ vars.WORKFORCE_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      - name: Verify token identity and prove zero Azure access
+        env:
+          RELEASE_SHA: ${{ inputs.release_sha }}
+          APPROVAL_ID: ${{ inputs.approval_id }}
+        run: |
+          set -euo pipefail
+          trap 'unset ARM_PROOF_TOKEN; rm -f /tmp/rbac-read.err /tmp/rbac-write.err' EXIT
+          account_tenant="$(az account show --query tenantId -o tsv)"
+          test "$account_tenant" = "$APPROVED_TENANT_ID"
+
+          ARM_PROOF_TOKEN="$(az account get-access-token --resource https://management.azure.com/ --query accessToken -o tsv)"
+          export ARM_PROOF_TOKEN
+          python3 - <<'PY'
+          import base64, json, os
+          token = os.environ['ARM_PROOF_TOKEN']
+          payload = token.split('.')[1]
+          payload += '=' * (-len(payload) % 4)
+          claims = json.loads(base64.urlsafe_b64decode(payload))
+          expected = {
+              'tid': os.environ['APPROVED_TENANT_ID'],
+              'oid': os.environ['EXPECTED_PRINCIPAL_ID'],
+          }
+          for claim, value in expected.items():
+              if claims.get(claim) != value:
+                  raise SystemExit(f'identity-claim-mismatch:{claim}')
+          if claims.get('appid', claims.get('azp')) != os.environ['AZURE_CLIENT_ID']:
+              raise SystemExit('identity-claim-mismatch:client-id')
+          if claims.get('aud') not in ('https://management.azure.com', 'https://management.azure.com/'):
+              raise SystemExit('identity-claim-mismatch:audience')
+          PY
+          unset ARM_PROOF_TOKEN
+
+          set +e
+          az rest --method get \
+            --url "https://management.azure.com/subscriptions/$APPROVED_SUBSCRIPTION_ID/resourceGroups/$TARGET_RESOURCE_GROUP?api-version=2024-03-01" \
+            --only-show-errors >/dev/null 2>/tmp/rbac-read.err
+          read_exit=$?
+          az rest --method post \
+            --url "https://management.azure.com/subscriptions/$APPROVED_SUBSCRIPTION_ID/resourceGroups/$TARGET_RESOURCE_GROUP/providers/Microsoft.Resources/deployments/federation-proof/validate?api-version=2022-09-01" \
+            --body '{"properties":{"mode":"Incremental","template":{"$schema":"https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#","contentVersion":"1.0.0.0","resources":[]}}}' \
+            --only-show-errors >/dev/null 2>/tmp/rbac-write.err
+          write_exit=$?
+          set -e
+          .github/scripts/require-arm-authorization-denial.sh /tmp/rbac-read.err "$read_exit"
+          .github/scripts/require-arm-authorization-denial.sh /tmp/rbac-write.err "$write_exit"
+          printf '{"eventName":"migration-deployer-federation-proof","approvalId":"%s","releaseSha":"%s","environment":"migration-rbac-deployment","identityVerified":true,"readAccessDenied":true,"writeCapabilityDenied":true,"deploymentAttempted":false,"azureMutationAttempted":false}\n' "$APPROVAL_ID" "$RELEASE_SHA"

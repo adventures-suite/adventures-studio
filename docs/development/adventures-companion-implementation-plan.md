@@ -234,3 +234,9 @@ protected; publication and notification are transactional and reviewable.
 - location-based advertising or sale of location data;
 - AI control of consent, tracking, sharing, or publication; and
 - provider-specific mobile services in core contracts.
+# Immediate operational priority: permanent migration Job
+
+Before Companion SQL binding or activation, complete the source-controlled
+Container Apps migration runner defined in PR #18, validate its non-Azure image
+and IaC gates, then obtain separate approvals for provisioning, SQL-free channel
+proof, identity bootstrap, and reviewed migration—in that order.
