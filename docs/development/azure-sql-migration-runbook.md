@@ -2,7 +2,7 @@
 
 **Status:** Slice 5F Operational Runbook
 
-**Last Updated:** August 8, 2026
+**Last Updated:** August 10, 2026
 
 ## Scope
 
@@ -21,6 +21,32 @@ the web application DDL authority.
 Use the standard logical server hostname. Never configure `10.40.1.4` directly.
 
 ## Required Identities
+
+### Container Apps migration identities
+
+The development bootstrap operation completed from
+`2026-08-11T00:44:40Z` through `2026-08-11T00:46:50Z` for PR #18 SHA
+`3beb6bb1c84ecb011b2816b3ab6bf2da2e34024d`. These identifiers are operational
+metadata, not credentials:
+
+| User-assigned identity | Principal/object ID | Client ID |
+| --- | --- | --- |
+| `id-adventures-suite-migration-foundation-deployer-dev` | `b77b6201-ad26-4f77-8f88-6d0d43f7dbb8` | `223af00d-69e5-4302-9ac5-6b338f3ea2e5` |
+| `id-adventures-suite-migration-rbac-bootstrap-dev` | `822c1c0c-39e1-400f-b9fc-9532a11bae5d` | `d678e2ad-ada2-4cde-bb79-44630acf1cc8` |
+| `id-adventures-suite-migrate-job-dev` | `ffc9a4bd-67c4-44af-82dc-b7f663f8bea5` | `d0da8236-91dc-4454-8a3d-19d08a406e5d` |
+| `id-adventures-suite-migrate-pull-dev` | `0edcc370-888d-416a-bd7d-4566e6eecc7e` | `76e739bd-bbab-4cd3-a299-f30573f5c5d8` |
+| `id-adventures-suite-migrate-publisher-dev` | `b93a06e5-fea5-4fda-a04e-6982f34820b6` | `12bb5798-81b9-4f21-ad12-aaa9521a5a78` |
+| `id-adventures-suite-migrate-starter-dev` | `c0cb4841-95f4-4fa0-afd1-9b0b13aad740` | `f1b5a068-7467-4971-97fe-ae09b91f9a60` |
+
+All six are in tenant `d7add2bb-ac03-49a8-9377-d0bf6a012f2f`, resource group
+`rg-adventures-suite-dev`, and region `westus2`. Creation evidence proved unique
+principal/client IDs, zero direct or inherited Azure roles, zero federated
+credentials, zero password/certificate credentials, and zero Azure-resource
+attachments. Identity creation is complete. Deployer OIDC federation is a
+separate gate; publisher and starter federation remain prohibited until their
+later reviewed boundary.
+
+### Existing application identities
 
 - Application principal/object ID:
   `43f88b68-e853-4ece-9379-bd2079af8ec0`
@@ -58,10 +84,11 @@ administrator bootstrap because a system-assigned App Service identity cannot
 be transferred.
 
 Before that Job can exist, follow the separately approved sequence in
-`container-apps-migration-permissions.md`: foundation resources, foundation
-access, immutable image publication, digest-bound Job resource, and exact-Job
-access. Infrastructure and RBAC deployers are temporary and mutually separated;
-no approval or workflow may combine boundaries. None of those control-plane
+`container-apps-migration-permissions.md`: deployer federation, foundation
+resources, publisher/starter identity access, foundation access, immutable image
+publication, digest-bound Job resource, and exact-Job access. Infrastructure
+and RBAC deployers are temporary and mutually separated; no approval or
+workflow may combine boundaries. None of those control-plane
 steps authorizes SQL access.
 
 No bootstrap or migration begins until an approved execution environment can:

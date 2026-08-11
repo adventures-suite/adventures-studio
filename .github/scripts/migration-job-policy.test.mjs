@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { spawnSync } from 'node:child_process';
 import test from 'node:test';
 import { validateExecutionEvidence, validateJobDefinition, validateRoleAssignmentScope } from './migration-job-policy.mjs';
 
@@ -73,10 +76,70 @@ test('old combined templates are absent and deployment order is documented', () 
 });
 
 test('third-party GitHub Actions are pinned to full commit SHAs', () => {
-  for (const path of ['.github/workflows/database-migration-job.yml', '.github/workflows/deploy-companion-api-dev.yml', '.github/workflows/deploy-dev.yml', '.github/workflows/publish-companion-testflight.yml', '.github/workflows/validate-migration-container.yml', '.github/workflows/validate-pull-request.yml', '.github/workflows/validate-sql-migrations.yml']) {
+  for (const path of ['.github/workflows/database-migration-job.yml', '.github/workflows/deploy-companion-api-dev.yml', '.github/workflows/deploy-dev.yml', '.github/workflows/provision-migration-foundation-resources.yml', '.github/workflows/provision-migration-rbac-access.yml', '.github/workflows/publish-companion-testflight.yml', '.github/workflows/validate-migration-container.yml', '.github/workflows/validate-pull-request.yml', '.github/workflows/validate-sql-migrations.yml']) {
     const workflow = readFileSync(path, 'utf8');
     const uses = workflow.split('\n').map(line => line.match(/^\s*uses:\s*([^\s#]+)/)?.[1]).filter(Boolean);
     assert.ok(uses.length > 0);
     for (const action of uses.filter(value => !value.startsWith('./'))) assert.match(action, /@[0-9a-f]{40}$/, `${path}: ${action} is not pinned`);
+  }
+});
+
+test('deployer federation workflows are isolated proof-only controls', () => {
+  const foundation = readFileSync('.github/workflows/provision-migration-foundation-resources.yml', 'utf8');
+  const rbac = readFileSync('.github/workflows/provision-migration-rbac-access.yml', 'utf8');
+  for (const workflow of [foundation, rbac]) {
+    assert.match(workflow, /^on:\n  workflow_dispatch:/m);
+    assert.doesNotMatch(workflow, /^\s+(push|pull_request|schedule):/m);
+    assert.match(workflow, /^permissions:\n  contents: read\n  id-token: write\n/m);
+    assert.match(workflow, /WORKFLOW_REF: \$\{\{ github\.ref \}\}/);
+    assert.match(workflow, /WORKFLOW_SHA: \$\{\{ github\.sha \}\}/);
+    assert.match(workflow, /test "\$WORKFLOW_REF" = 'refs\/heads\/main'/);
+    assert.match(workflow, /test "\$WORKFLOW_SHA" = "\$RELEASE_SHA"/);
+    assert.match(workflow, /\[\[ "\$RELEASE_SHA" =~ \^\[0-9a-f\]\{40\}\$ \]\]/);
+    assert.match(workflow, /az rest --method get/);
+    assert.doesNotMatch(workflow, /az group show/);
+    assert.match(workflow, /require-arm-authorization-denial\.sh/);
+    assert.doesNotMatch(workflow, /client-secret|AZURE_CLIENT_SECRET|password|certificate/i);
+    assert.doesNotMatch(workflow, /az deployment (group|sub|mg|tenant) create|az role (assignment|definition) (create|update)|az (resource|group|identity) (create|update)|bicep/i);
+    assert.match(workflow, /deploymentAttempted\":false/);
+    assert.match(workflow, /azureMutationAttempted\":false/);
+  }
+  assert.match(foundation, /environment: migration-foundation-deployment/);
+  assert.match(foundation, /vars\.MIGRATION_FOUNDATION_DEPLOYER_CLIENT_ID/);
+  assert.doesNotMatch(foundation, /MIGRATION_RBAC_DEPLOYER|822c1c0c|d678e2ad/);
+  assert.match(rbac, /environment: migration-rbac-deployment/);
+  assert.match(rbac, /vars\.MIGRATION_RBAC_DEPLOYER_CLIENT_ID/);
+  assert.doesNotMatch(rbac, /MIGRATION_FOUNDATION_DEPLOYER|b77b6201|223af00d/);
+  assert.doesNotMatch(`${foundation}\n${rbac}`, /environment: (database-development|migration-publisher|migration-starter)|DATABASE_IMAGE_PUBLISHER_CLIENT_ID|DATABASE_JOB_STARTER_CLIENT_ID/);
+});
+
+test('federation proof source guards reject non-main, source mismatch, and malformed SHAs', () => {
+  const allowed = (ref, workflowSha, releaseSha) => ref === 'refs/heads/main' && /^[0-9a-f]{40}$/.test(releaseSha) && workflowSha === releaseSha;
+  const sha = 'a'.repeat(40);
+  assert.equal(allowed('refs/heads/main', sha, sha), true);
+  assert.equal(allowed('refs/heads/feature/test', sha, sha), false);
+  assert.equal(allowed('refs/heads/main', 'b'.repeat(40), sha), false);
+  assert.equal(allowed('refs/heads/main', sha.toUpperCase(), sha.toUpperCase()), false);
+  assert.equal(allowed('refs/heads/main', 'abc', 'abc'), false);
+});
+
+test('ARM denial classifier rejects inconclusive and non-authorization results', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'migration-arm-denial-'));
+  const errorFile = join(directory, 'arm.err');
+  const script = '.github/scripts/require-arm-authorization-denial.sh';
+  const classify = (message, exitCode = '1') => {
+    writeFileSync(errorFile, message);
+    return spawnSync('bash', [script, errorFile, exitCode], { encoding: 'utf8' }).status;
+  };
+  try {
+    assert.equal(classify('ERROR: (AuthorizationFailed) The client does not have authorization.\n'), 0);
+    assert.notEqual(classify('ERROR: (SubscriptionNotFound) Subscription was not found.\nAuthorizationFailed\n'), 0);
+    assert.notEqual(classify('ERROR: (InvalidAuthenticationToken) Authentication failed.\n'), 0);
+    assert.notEqual(classify('ERROR: (ResourceNotFound) HTTP 404.\n'), 0);
+    assert.notEqual(classify('ERROR: (TooManyRequests) HTTP 429.\n'), 0);
+    assert.notEqual(classify('not-json and not an ARM error\n'), 0);
+    assert.notEqual(classify('ERROR: (AuthorizationFailed) This would be an unexpected HTTP success.\n', '0'), 0);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
   }
 });

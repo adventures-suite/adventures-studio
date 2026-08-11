@@ -9,6 +9,8 @@ on:
       - tests/AdventuresSuite.DatabaseIntegrationTests/**
       - .github/workflows/validate-migration-container.yml
       - .github/workflows/database-migration-job.yml
+      - .github/workflows/provision-migration-foundation-resources.yml
+      - .github/workflows/provision-migration-rbac-access.yml
       - .github/scripts/**
   workflow_dispatch:
 

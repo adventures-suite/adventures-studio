@@ -4,9 +4,16 @@ This directory proposes the permanent development migration runner. It is not
 deployed by PR validation. Before any template deployment, an Owner separately
 creates six unprivileged user-assigned identities—both deployers plus migration,
 pull, publisher, and starter—and verifies that all six have no role assignments.
-The Owner may create the two reviewed deployer OIDC credentials so those
-otherwise-unprivileged identities can later receive temporary authority;
-publisher and starter credentials are not created during bootstrap.
+Identity creation completed on 2026-08-11 with zero roles, federation,
+credentials, or attachments. A separate approval may create the two reviewed
+deployer OIDC credentials so those otherwise-unprivileged identities can later
+receive temporary authority; publisher and starter credentials are not created
+during bootstrap.
+The proof-only workflows use distinct protected Environments:
+`migration-foundation-deployment` and `migration-rbac-deployment`. They can
+authenticate and prove identity/denial but contain no deployment or resource
+write path. The full protection and variable contract is documented in
+`docs/development/container-apps-migration-permissions.md`.
 Provisioning then has five least-privilege template
 boundaries and one intervening publication boundary. Every step requires its
 own approval and verification; no workflow may combine them:
@@ -52,8 +59,8 @@ plus role-assignment read/write; the latter remains exact-resource scoped and
 conditioned.
 The two proposed deployer identity names are
 `id-adventures-suite-migration-foundation-deployer-dev` and
-`id-adventures-suite-migration-rbac-bootstrap-dev`; creating them is a future
-separate approval and grants no access by itself.
+`id-adventures-suite-migration-rbac-bootstrap-dev`; their creation is complete
+and grants no access by itself. Deployer federation remains a separate gate.
 
 The starter receives built-in Log Analytics Reader
 (`73c42c96-874c-492b-b04d-ab87d138a893`) only on
