@@ -1,4 +1,4 @@
-using './foundation.bicep'
+using './foundation-resources.bicep'
 
 param githubRepository = 'ssimonton007/adventures-studio'
 param virtualNetworkName = 'vnet-adventures-suite-dev'

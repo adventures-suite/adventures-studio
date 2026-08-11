@@ -21,3 +21,8 @@ approval.
 Expected incremental development total: approximately **$5–$12/month**, plus
 taxes and any actual telemetry/network egress. Contract pricing may differ.
 Configure a low ingestion budget and cost alert before enabling the Job.
+
+The starter's built-in Log Analytics Reader assignment is access control only
+and adds no direct cost. It is scoped to the dedicated workspace. The table's
+Log Analytics estimate already covers ingestion and 30-day retention; no cost
+increase results from the four-template least-privilege split.

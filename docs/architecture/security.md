@@ -28,8 +28,12 @@ continues to follow Creator host-resolution and publication policies.
 The database migration supply chain is a separate privileged trust boundary.
 GitHub build identity may publish images but cannot access SQL. There is no
 GitHub Job configurator; definition changes require an approved infrastructure
-administrator deployment. The starter receives only exact-Job start/read access
-and query-only access to the dedicated migration logs workspace.
+deployment. Resource deployment authority is separated from Azure RBAC write
+authority, is temporary, and is removed and independently verified after each
+template boundary. Role-assignment authority is scoped to the exact target and
+conditioned to the reviewed role/principal pair. The starter receives only
+exact-Job start/read access and built-in Log Analytics Reader on the dedicated
+migration workspace; it cannot read other workspaces.
 The migration Job identity can connect only as its reviewed contained database
 principal and cannot publish/pull images through registry credentials. The pull
 identity can only pull from the migration repository. Mutable tags, automatic

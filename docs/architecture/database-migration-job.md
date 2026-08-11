@@ -15,11 +15,13 @@ digest. A protected `database-development` GitHub Environment gates every Azure
 mutation or Job start. Automatic workflows may build and validate but cannot
 start migrations.
 
-Provisioning is two-phase. The foundation creates networking, logging, ACR,
-identities, OIDC federated credentials, minimum roles, and the Container Apps
-environment. Only after the full-SHA image is pushed and its manifest digest is
-resolved from ACR may the second template deploy the digest-bound dormant Job.
-This removes the registry/image bootstrap cycle.
+Provisioning uses four templates and five separately approved boundaries:
+infrastructure deploys foundation resources, RBAC deploys foundation access,
+GitHub publishes and resolves the image digest, infrastructure deploys the
+digest-bound Job resource, and RBAC deploys exact-Job access. Resource templates
+cannot write authorization resources; access templates cannot create or modify
+ordinary resources. This removes both the registry/image cycle and the deployer
+authority bootstrap cycle.
 
 The container entrypoint allowlists four modes:
 
@@ -61,17 +63,21 @@ accepted or echoed as evidence.
 | --- | --- | --- | --- |
 | GitHub image publisher | Migration ACR repository | ACR push/read metadata through OIDC | Job start/update, SQL, role assignment |
 | GitHub Job starter/reader | Migration Job | Start one execution; read exact execution and logs | Job definition mutation, ACR push, SQL |
-| Infrastructure administrator | Reviewed foundation and Job templates | Approval-gated deployment of `foundation.bicep` and digest-bound `job.bicep` | Routine execution, SQL migration authority |
+| Temporary infrastructure deployer | Development resource group | Deploy `foundation-resources.bicep` or `job-resource.bicep` in separate approved windows | Authorization writes, routine execution, SQL |
+| Temporary RBAC deployer | Resource group for role definition; exact conditioned target for assignments | Deploy `foundation-access.bicep` or `job-access.bicep` separately | Ordinary resource writes, Job execution, SQL |
 | Migration user-assigned identity | `AdventuresSuiteDevelopment` contained principal | ARM token identity proof; reviewed migration DDL/journal access only | Azure control-plane role, ACR push, runtime DML, `db_owner` |
 | Registry pull identity | Migration ACR | Built-in `AcrPull` only | Push/delete, Job control, SQL |
 
-The foundation defines separate GitHub publisher and starter/reader identities,
-their environment-scoped OIDC credentials, and the starter role definition.
-The later Job deployment assigns the starter role at the exact Job resource
-scope. The starter receives a separate query-only grant on the dedicated Log
-Analytics workspace. No GitHub configurator identity or Job-mutation workflow
-exists. Initial Job creation and every later Job definition or digest update are
-separately approved infrastructure-administrator deployments of `job.bicep`.
+Foundation resources define separate GitHub publisher and starter/reader
+identities and their environment-scoped OIDC credentials. Foundation access
+defines the starter role and assigns built-in Log Analytics Reader only at the
+dedicated workspace so exact execution evidence can be retrieved. Job access
+assigns the starter role only at the exact Job. No GitHub configurator identity
+or Job-mutation workflow exists. Initial creation and every later definition or
+digest update are separately approved infrastructure deployments of
+`job-resource.bicep`. Exact permissions, conditions, output validation, order,
+and approval packets are in
+`../development/container-apps-migration-permissions.md`.
 
 ## Network and supply chain
 

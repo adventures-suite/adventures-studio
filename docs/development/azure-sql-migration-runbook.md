@@ -57,6 +57,13 @@ proof and reviewed migration. The new user-assigned identity requires a later
 administrator bootstrap because a system-assigned App Service identity cannot
 be transferred.
 
+Before that Job can exist, follow the separately approved sequence in
+`container-apps-migration-permissions.md`: foundation resources, foundation
+access, immutable image publication, digest-bound Job resource, and exact-Job
+access. Infrastructure and RBAC deployers are temporary and mutually separated;
+no approval or workflow may combine boundaries. None of those control-plane
+steps authorizes SQL access.
+
 No bootstrap or migration begins until an approved execution environment can:
 
 - resolve the SQL logical hostname to the VNet private endpoint;

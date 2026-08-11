@@ -67,25 +67,25 @@ jobs:
         run: |
           test "$(find database/migrations -name '*.sql' -printf '%f\n' | sort | tail -n 2 | tr '\n' ' ')" = \
             '0007_create_traveler_participations.sql 0008_create_companion_read_role.sql '
-          grep -q "triggerType: 'Manual'" infrastructure/container-apps-migrations/job.bicep
-          grep -q 'replicaRetryLimit: 0' infrastructure/container-apps-migrations/job.bicep
-          grep -q 'replicaTimeout: 900' infrastructure/container-apps-migrations/job.bicep
-          grep -q 'parallelism: 1' infrastructure/container-apps-migrations/job.bicep
-          grep -q 'replicaCompletionCount: 1' infrastructure/container-apps-migrations/job.bicep
+          grep -q "triggerType: 'Manual'" infrastructure/container-apps-migrations/job-resource.bicep
+          grep -q 'replicaRetryLimit: 0' infrastructure/container-apps-migrations/job-resource.bicep
+          grep -q 'replicaTimeout: 900' infrastructure/container-apps-migrations/job-resource.bicep
+          grep -q 'parallelism: 1' infrastructure/container-apps-migrations/job-resource.bicep
+          grep -q 'replicaCompletionCount: 1' infrastructure/container-apps-migrations/job-resource.bicep
           grep -q 'timeout --signal=TERM --kill-after=30s 900s' src/AdventuresSuite.DatabaseMigrator/container-entrypoint.sh
-          grep -q '@${imageDigest}' infrastructure/container-apps-migrations/job.bicep
-          ! grep -q "{ name: 'ADVENTURESSUITE_MIGRATION_OPERATION_ID'" infrastructure/container-apps-migrations/job.bicep
-          ! grep -q "{ name: 'ADVENTURESSUITE_ARTIFACT_SHA256'" infrastructure/container-apps-migrations/job.bicep
-          grep -A4 "resource starterAssignment" infrastructure/container-apps-migrations/job.bicep | grep -q 'scope: job'
-          ! grep -q "resource starterAssignment" infrastructure/container-apps-migrations/foundation.bicep
+          grep -q '@${imageDigest}' infrastructure/container-apps-migrations/job-resource.bicep
+          ! grep -q "{ name: 'ADVENTURESSUITE_MIGRATION_OPERATION_ID'" infrastructure/container-apps-migrations/job-resource.bicep
+          ! grep -q "{ name: 'ADVENTURESSUITE_ARTIFACT_SHA256'" infrastructure/container-apps-migrations/job-resource.bicep
+          grep -A4 "resource starterAssignment" infrastructure/container-apps-migrations/job-access.bicep | grep -q 'scope: job'
           ! rg -q 'configurator|configure-dormant-job|DATABASE_JOB_CONFIGURATOR' \
             infrastructure/container-apps-migrations/*.bicep .github/workflows/database-migration-job.yml
           ! grep -Eiq 'ingress:|external: true|latest' infrastructure/container-apps-migrations/*.bicep
 
       - name: Build Bicep template
         run: |
-          az bicep build --file infrastructure/container-apps-migrations/foundation.bicep
-          az bicep build --file infrastructure/container-apps-migrations/job.bicep
+          for template in foundation-resources foundation-access job-resource job-access; do
+            az bicep build --file "infrastructure/container-apps-migrations/$template.bicep"
+          done
 
       - name: Generate SBOM
         uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
