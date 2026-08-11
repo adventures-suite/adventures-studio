@@ -1,1 +1,42 @@
-{"roleName":"AdventuresSuite Migration Infrastructure Deployer","description":"Temporary deployment authority for reviewed migration resource templates; excludes Azure RBAC and Managed Identity writes.","assignableScopes":["/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev"],"permissions":[{"actions":["Microsoft.Resources/deployments/read","Microsoft.Resources/deployments/write","Microsoft.Resources/deployments/operationStatuses/read","Microsoft.Resources/subscriptions/resourceGroups/read","Microsoft.Resources/subscriptions/resourceGroups/resources/read","Microsoft.Network/virtualNetworks/read","Microsoft.Network/virtualNetworks/subnets/read","Microsoft.Network/virtualNetworks/subnets/write","Microsoft.Network/virtualNetworks/subnets/join/action","Microsoft.OperationalInsights/workspaces/read","Microsoft.OperationalInsights/workspaces/write","Microsoft.OperationalInsights/workspaces/listKeys/action","Microsoft.ContainerRegistry/registries/read","Microsoft.ContainerRegistry/registries/write","Microsoft.ContainerRegistry/registries/operationStatuses/read","Microsoft.App/managedEnvironments/read","Microsoft.App/managedEnvironments/write","Microsoft.App/jobs/read","Microsoft.App/jobs/write","Microsoft.App/locations/operationResults/read","Microsoft.App/locations/operationStatuses/read"],"notActions":[],"dataActions":[],"notDataActions":[]}]}
+{
+  "name": "4bfa5b8d-8e4a-4fc8-9f2b-6115f07cad54",
+  "properties": {
+    "roleName": "AdventuresSuite Migration Infrastructure Deployer",
+    "description": "Temporary deployment authority for reviewed migration resource templates; excludes Azure RBAC and Managed Identity writes.",
+    "type": "CustomRole",
+    "permissions": [
+      {
+        "actions": [
+          "Microsoft.Resources/deployments/read",
+          "Microsoft.Resources/deployments/write",
+          "Microsoft.Resources/deployments/validate/action",
+          "Microsoft.Resources/deployments/whatIf/action",
+          "Microsoft.Resources/deployments/operations/read",
+          "Microsoft.Resources/deployments/operationStatuses/read",
+          "Microsoft.Resources/subscriptions/resourceGroups/read",
+          "Microsoft.Resources/subscriptions/resourceGroups/resources/read",
+          "Microsoft.Network/virtualNetworks/read",
+          "Microsoft.Network/virtualNetworks/subnets/read",
+          "Microsoft.Network/virtualNetworks/subnets/write",
+          "Microsoft.Network/virtualNetworks/subnets/join/action",
+          "Microsoft.OperationalInsights/workspaces/read",
+          "Microsoft.OperationalInsights/workspaces/write",
+          "Microsoft.OperationalInsights/workspaces/listKeys/action",
+          "Microsoft.ContainerRegistry/registries/read",
+          "Microsoft.ContainerRegistry/registries/write",
+          "Microsoft.ContainerRegistry/registries/operationStatuses/read",
+          "Microsoft.App/managedEnvironments/read",
+          "Microsoft.App/managedEnvironments/write",
+          "Microsoft.App/locations/operationResults/read",
+          "Microsoft.App/locations/operationStatuses/read"
+        ],
+        "notActions": [],
+        "dataActions": [],
+        "notDataActions": []
+      }
+    ],
+    "assignableScopes": [
+      "/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev"
+    ]
+  }
+}

@@ -28,7 +28,12 @@ resource logs 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
   name: 'log-adventures-suite-migrations-dev'
   location: location
   tags: commonTags
-  properties: { retentionInDays: 30, features: { enableLogAccessUsingOnlyResourcePermissions: true } }
+  properties: {
+    retentionInDays: 30
+    features: { enableLogAccessUsingOnlyResourcePermissions: true }
+    publicNetworkAccessForIngestion: 'Disabled'
+    publicNetworkAccessForQuery: 'Disabled'
+  }
   sku: { name: 'PerGB2018' }
 }
 resource registry 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
@@ -36,7 +41,7 @@ resource registry 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
   location: location
   tags: commonTags
   sku: { name: 'Basic' }
-  properties: { adminUserEnabled: false, publicNetworkAccess: 'Enabled' }
+  properties: { adminUserEnabled: false, publicNetworkAccess: 'Disabled' }
 }
 resource migrationIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = { name: 'id-adventures-suite-migrate-job-dev' }
 resource pullIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = { name: 'id-adventures-suite-migrate-pull-dev' }
@@ -52,7 +57,7 @@ resource environment 'Microsoft.App/managedEnvironments@2025-01-01' = {
   location: location
   tags: commonTags
   properties: {
-    vnetConfiguration: { infrastructureSubnetId: subnet.id, internal: false }
+    vnetConfiguration: { infrastructureSubnetId: subnet.id, internal: true }
     workloadProfiles: [{ name: 'Consumption', workloadProfileType: 'Consumption' }]
     appLogsConfiguration: {
       destination: 'log-analytics'

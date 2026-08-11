@@ -1,8 +1,16 @@
-name: Prove Migration Foundation Deployer Federation
+name: Provision Migration Foundation Resources
 
 on:
   workflow_dispatch:
     inputs:
+      operation:
+        description: Explicit reviewed operation
+        required: true
+        default: proof
+        type: choice
+        options:
+          - proof
+          - deploy-foundation
       release_sha:
         description: Exact approved 40-character commit SHA
         required: true
@@ -10,6 +18,18 @@ on:
       approval_id:
         description: Sanitized identifier for the explicit federation-proof approval
         required: true
+        type: string
+      template_sha256:
+        description: Exact approved foundation-resources.bicep SHA-256; required only for deployment
+        required: false
+        type: string
+      parameters_sha256:
+        description: Exact approved foundation-resources.dev.bicepparam SHA-256; required only for deployment
+        required: false
+        type: string
+      cleanup_approval_id:
+        description: Separately approved RBAC cleanup identifier; required only for deployment
+        required: false
         type: string
 
 permissions:
@@ -20,7 +40,7 @@ jobs:
   verify-federation:
     runs-on: ubuntu-24.04
     environment: migration-foundation-deployment
-    timeout-minutes: 10
+    timeout-minutes: 30
     env:
       AZURE_CLIENT_ID: ${{ vars.MIGRATION_FOUNDATION_DEPLOYER_CLIENT_ID }}
       EXPECTED_PRINCIPAL_ID: ${{ vars.MIGRATION_FOUNDATION_DEPLOYER_PRINCIPAL_ID }}
@@ -35,6 +55,10 @@ jobs:
         env:
           RELEASE_SHA: ${{ inputs.release_sha }}
           APPROVAL_ID: ${{ inputs.approval_id }}
+          OPERATION: ${{ inputs.operation }}
+          TEMPLATE_SHA256: ${{ inputs.template_sha256 }}
+          PARAMETERS_SHA256: ${{ inputs.parameters_sha256 }}
+          CLEANUP_APPROVAL_ID: ${{ inputs.cleanup_approval_id }}
           WORKFLOW_REF: ${{ github.ref }}
           WORKFLOW_SHA: ${{ github.sha }}
         run: |
@@ -45,6 +69,17 @@ jobs:
           test "$WORKFLOW_REF" = 'refs/heads/main'
           test "$WORKFLOW_SHA" = "$RELEASE_SHA"
           [[ "$APPROVAL_ID" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{7,127}$ ]]
+          [[ "$OPERATION" = 'proof' || "$OPERATION" = 'deploy-foundation' ]]
+          if [[ "$OPERATION" = 'deploy-foundation' ]]; then
+            [[ "$APPROVAL_ID" == foundation-deploy-* ]]
+            [[ "$TEMPLATE_SHA256" =~ ^[0-9a-f]{64}$ ]]
+            [[ "$PARAMETERS_SHA256" =~ ^[0-9a-f]{64}$ ]]
+            [[ "$CLEANUP_APPROVAL_ID" == foundation-access-remove-* ]]
+          else
+            test -z "$TEMPLATE_SHA256"
+            test -z "$PARAMETERS_SHA256"
+            test -z "$CLEANUP_APPROVAL_ID"
+          fi
           [[ "$AZURE_CLIENT_ID" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]]
           [[ "$EXPECTED_PRINCIPAL_ID" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]]
           [[ "$APPROVED_SUBSCRIPTION_ID" = '5ace9cdd-06d1-47d9-8214-1e7c756d076a' ]]
@@ -90,9 +125,31 @@ jobs:
 
       - name: Verify ARM token identity and prove zero Azure access
         id: proof
-        if: steps.oidc.outcome == 'success'
+        if: steps.oidc.outcome == 'success' && inputs.operation == 'proof'
         continue-on-error: true
         run: .github/scripts/run-deployer-federation-proof.sh "$PROOF_ENVIRONMENT" "${RUNNER_TEMP}/foundation" "$PROOF_STATE_FILE"
+
+      - name: Verify deployment identity without probing SQL or mutating Azure
+        id: deployment_identity
+        if: steps.oidc.outcome == 'success' && inputs.operation == 'deploy-foundation'
+        continue-on-error: true
+        run: .github/scripts/run-deployer-federation-proof.sh "$PROOF_ENVIRONMENT" "${RUNNER_TEMP}/foundation" "$PROOF_STATE_FILE" identity-only
+
+      - name: Validate, preview, deploy, and observe exact foundation
+        id: deployment
+        if: steps.deployment_identity.outcome == 'success' && inputs.operation == 'deploy-foundation'
+        continue-on-error: true
+        env:
+          RELEASE_SHA: ${{ inputs.release_sha }}
+          APPROVAL_ID: ${{ inputs.approval_id }}
+          TEMPLATE_SHA256: ${{ inputs.template_sha256 }}
+          PARAMETERS_SHA256: ${{ inputs.parameters_sha256 }}
+        run: |
+          evidence_path="$RUNNER_TEMP/foundation-deployment-evidence.json"
+          printf 'FOUNDATION_EVIDENCE_FILE=%s\n' "$evidence_path" >> "$GITHUB_ENV"
+          .github/scripts/run-foundation-deployment.sh \
+            "$RELEASE_SHA" "$APPROVAL_ID" "$TEMPLATE_SHA256" "$PARAMETERS_SHA256" \
+            "$PROOF_STATE_FILE" "$evidence_path" "$RUNNER_TEMP/foundation-deployment"
 
       - name: Emit exactly one sanitized proof envelope
         if: always()
@@ -104,6 +161,9 @@ jobs:
           INTEGRITY_OUTCOME: ${{ steps.integrity.outcome }}
           OIDC_OUTCOME: ${{ steps.oidc.outcome }}
           PROOF_OUTCOME: ${{ steps.proof.outcome }}
+          OPERATION: ${{ inputs.operation }}
+          DEPLOYMENT_IDENTITY_OUTCOME: ${{ steps.deployment_identity.outcome }}
+          DEPLOYMENT_OUTCOME: ${{ steps.deployment.outcome }}
         run: |
           python3 - <<'PY'
           import json
@@ -126,7 +186,7 @@ jobs:
               stage, classification, exit_code = 'checkout_integrity', 'checkout_integrity_failed', 1
           elif outcomes['oidc_authentication'] != 'success':
               stage, classification, exit_code = 'oidc_authentication', 'oidc_authentication_failed', 1
-          elif outcomes['proof'] != 'success':
+          elif os.environ.get('OPERATION') == 'proof' and outcomes['proof'] != 'success':
               stage, classification, exit_code = 'arm_token_acquisition', 'operation_failed', 1
               try:
                   state = dict(
@@ -176,6 +236,33 @@ jobs:
                   exit_code = candidate_exit if 1 <= candidate_exit <= 255 else 1
               except Exception:
                   stage, classification, exit_code = 'arm_token_acquisition', 'malformed_or_ambiguous', 1
+          elif os.environ.get('OPERATION') == 'deploy-foundation' and os.environ.get('DEPLOYMENT_IDENTITY_OUTCOME') != 'success':
+              stage, classification, exit_code = 'arm_token_claim_validation', 'deployment_identity_failed', 1
+          elif os.environ.get('OPERATION') == 'deploy-foundation' and os.environ.get('DEPLOYMENT_OUTCOME') != 'success':
+              stage, classification, exit_code = 'deployment', 'deployment_failed', 1
+              try:
+                  state = dict(
+                      line.split('=', 1)
+                      for line in open(os.environ['PROOF_STATE_FILE'], encoding='utf-8').read().splitlines()
+                      if '=' in line
+                  )
+                  allowed_stages = {'artifact_validation', 'read_only_preflight', 'bicep_build', 'deployment_validation', 'what_if', 'deployment', 'deployment_readback'}
+                  allowed_classifications = {
+                      'operation_failed', 'what_if_approved', 'deployment_failed', 'oversized_evidence',
+                      'malformed_evidence', 'malformed_what_if', 'forbidden_what_if_content',
+                      'unexpected_what_if_resource', 'unexpected_what_if_type', 'unexpected_what_if_operation',
+                      'duplicate_what_if_resource', 'missing_what_if_resource', 'deployment_not_succeeded',
+                      'malformed_deployment_outputs', 'unexpected_deployment_outputs',
+                      'forbidden_deployment_output', 'deployment_output_identity_mismatch',
+                  }
+                  candidate_exit = int(state.get('exit_code', '1'))
+                  if state.get('stage') in allowed_stages:
+                      stage = state['stage']
+                  if state.get('classification') in allowed_classifications:
+                      classification = state['classification']
+                  exit_code = candidate_exit if 1 <= candidate_exit <= 255 else 1
+              except Exception:
+                  stage, classification, exit_code = 'deployment', 'malformed_evidence', 1
 
           approval_id = os.environ.get('APPROVAL_ID', '')
           release_sha = os.environ.get('RELEASE_SHA', '')
@@ -184,14 +271,169 @@ jobs:
           if not re.fullmatch(r'[0-9a-f]{40}', release_sha):
               release_sha = '<invalid>'
           envelope = {
-              'eventName': 'migration-deployer-federation-proof',
+              'eventName': 'migration-deployer-federation-proof' if os.environ.get('OPERATION') == 'proof' else 'migration-foundation-deployment',
               'approvalId': approval_id,
               'releaseSha': release_sha,
               'environment': os.environ['PROOF_ENVIRONMENT'],
               'stage': stage,
               'classification': classification,
               'exitCode': exit_code,
+              'cleanupRequired': os.environ.get('OPERATION') == 'deploy-foundation',
           }
+          if os.environ.get('OPERATION') == 'deploy-foundation' and exit_code == 0:
+              try:
+                  evidence = json.load(open(os.environ['FOUNDATION_EVIDENCE_FILE'], encoding='utf-8'))
+                  allowed = {'classification', 'provisioningState', 'registryResourceId', 'logWorkspaceResourceId', 'environmentResourceId'}
+                  if set(evidence) != allowed or evidence.get('classification') != 'deployment_complete':
+                      raise ValueError()
+                  envelope['outputs'] = evidence
+              except Exception:
+                  envelope['stage'] = 'deployment_readback'
+                  envelope['classification'] = 'malformed_evidence'
+                  envelope['exitCode'] = 1
+                  exit_code = 1
           print(json.dumps(envelope, separators=(',', ':')))
           raise SystemExit(exit_code)
           PY
+
+      - name: Remove temporary workflow evidence
+        if: always()
+        run: rm -f "${PROOF_STATE_FILE:-}" "${FOUNDATION_EVIDENCE_FILE:-}"
+
+  remove-temporary-access:
+    needs: verify-federation
+    if: always() && inputs.operation == 'deploy-foundation'
+    runs-on: ubuntu-24.04
+    environment: migration-rbac-deployment
+    timeout-minutes: 10
+    env:
+      AZURE_CLIENT_ID: ${{ vars.MIGRATION_RBAC_DEPLOYER_CLIENT_ID }}
+      EXPECTED_PRINCIPAL_ID: ${{ vars.MIGRATION_RBAC_DEPLOYER_PRINCIPAL_ID }}
+      APPROVED_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      APPROVED_TENANT_ID: ${{ vars.WORKFORCE_TENANT_ID }}
+      TARGET_RESOURCE_GROUP: ${{ vars.MIGRATION_RESOURCE_GROUP }}
+      PROOF_ENVIRONMENT: migration-rbac-deployment
+    steps:
+      - name: Validate separate cleanup approval and exact source
+        env:
+          RELEASE_SHA: ${{ inputs.release_sha }}
+          CLEANUP_APPROVAL_ID: ${{ inputs.cleanup_approval_id }}
+          WORKFLOW_REF: ${{ github.ref }}
+          WORKFLOW_SHA: ${{ github.sha }}
+        run: |
+          state_file="$RUNNER_TEMP/foundation-cleanup.state"
+          evidence_file="$RUNNER_TEMP/foundation-cleanup-evidence.json"
+          printf 'RBAC_STATE_FILE=%s\nRBAC_EVIDENCE_FILE=%s\n' "$state_file" "$evidence_file" >> "$GITHUB_ENV"
+          test "$WORKFLOW_REF" = 'refs/heads/main'
+          test "$WORKFLOW_SHA" = "$RELEASE_SHA"
+          [[ "$CLEANUP_APPROVAL_ID" == foundation-access-remove-* ]]
+          [[ "$AZURE_CLIENT_ID" = 'd678e2ad-ada2-4cde-bb79-44630acf1cc8' ]]
+          [[ "$EXPECTED_PRINCIPAL_ID" = '822c1c0c-39e1-400f-b9fc-9532a11bae5d' ]]
+
+      - name: Checkout exact approved SHA for cleanup
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.release_sha }}
+          persist-credentials: false
+
+      - name: Authenticate separately authorized RBAC cleanup identity
+        uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac # v2
+        with:
+          client-id: ${{ vars.MIGRATION_RBAC_DEPLOYER_CLIENT_ID }}
+          tenant-id: ${{ vars.WORKFORCE_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      - name: Validate RBAC cleanup identity claims
+        run: .github/scripts/run-deployer-federation-proof.sh "$PROOF_ENVIRONMENT" "$RUNNER_TEMP/foundation-cleanup" "$RBAC_STATE_FILE" identity-only
+
+      - name: Remove both exact temporary assignments and prove no residue
+        env:
+          CLEANUP_APPROVAL_ID: ${{ inputs.cleanup_approval_id }}
+        run: |
+          .github/scripts/run-rbac-boundary-operation.sh remove-foundation-access '' '' '' \
+            "$RBAC_STATE_FILE" "$RBAC_EVIDENCE_FILE" "$RUNNER_TEMP/foundation-cleanup-operation"
+
+      - name: Emit sanitized cleanup envelope
+        if: always()
+        env:
+          RELEASE_SHA: ${{ inputs.release_sha }}
+          APPROVAL_ID: ${{ inputs.cleanup_approval_id }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          state = {}
+          try:
+              state = dict(line.split('=', 1) for line in open(os.environ['RBAC_STATE_FILE'], encoding='utf-8').read().splitlines() if '=' in line)
+          except Exception:
+              pass
+          success = state.get('stage') == 'complete' and state.get('classification') == 'complete' and state.get('exit_code') == '0'
+          print(json.dumps({'eventName':'migration-foundation-access-cleanup','approvalId':os.environ.get('APPROVAL_ID'),'releaseSha':os.environ.get('RELEASE_SHA'),'stage':'complete' if success else 'cleanup','classification':'complete' if success else 'cleanup_failed','exitCode':0 if success else 1}, separators=(',', ':')))
+          raise SystemExit(0 if success else 1)
+          PY
+
+      - name: Remove temporary cleanup evidence
+        if: always()
+        run: rm -f "${RBAC_STATE_FILE:-}" "${RBAC_EVIDENCE_FILE:-}"
+
+  prove-access-removed:
+    needs: remove-temporary-access
+    if: always() && inputs.operation == 'deploy-foundation'
+    runs-on: ubuntu-24.04
+    environment: migration-foundation-deployment
+    timeout-minutes: 10
+    env:
+      AZURE_CLIENT_ID: ${{ vars.MIGRATION_FOUNDATION_DEPLOYER_CLIENT_ID }}
+      EXPECTED_PRINCIPAL_ID: ${{ vars.MIGRATION_FOUNDATION_DEPLOYER_PRINCIPAL_ID }}
+      APPROVED_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      APPROVED_TENANT_ID: ${{ vars.WORKFORCE_TENANT_ID }}
+      TARGET_RESOURCE_GROUP: ${{ vars.MIGRATION_RESOURCE_GROUP }}
+      PROOF_ENVIRONMENT: migration-foundation-deployment
+    steps:
+      - name: Validate exact fresh-session source
+        env:
+          RELEASE_SHA: ${{ inputs.release_sha }}
+          WORKFLOW_REF: ${{ github.ref }}
+          WORKFLOW_SHA: ${{ github.sha }}
+        run: |
+          proof_state="$RUNNER_TEMP/foundation-loss-of-access.state"
+          printf 'LOSS_PROOF_STATE=%s\n' "$proof_state" >> "$GITHUB_ENV"
+          test "$WORKFLOW_REF" = 'refs/heads/main'
+          test "$WORKFLOW_SHA" = "$RELEASE_SHA"
+
+      - name: Checkout exact approved SHA for fresh proof
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.release_sha }}
+          persist-credentials: false
+
+      - name: Obtain fresh foundation identity session
+        uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac # v2
+        with:
+          client-id: ${{ vars.MIGRATION_FOUNDATION_DEPLOYER_CLIENT_ID }}
+          tenant-id: ${{ vars.WORKFORCE_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      - name: Prove foundation access is denied again
+        run: .github/scripts/run-deployer-federation-proof.sh "$PROOF_ENVIRONMENT" "$RUNNER_TEMP/foundation-loss-of-access" "$LOSS_PROOF_STATE"
+
+      - name: Emit sanitized loss-of-access envelope
+        if: always()
+        env:
+          RELEASE_SHA: ${{ inputs.release_sha }}
+          APPROVAL_ID: ${{ inputs.cleanup_approval_id }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          state = {}
+          try:
+              state = dict(line.split('=', 1) for line in open(os.environ['LOSS_PROOF_STATE'], encoding='utf-8').read().splitlines() if '=' in line)
+          except Exception:
+              pass
+          success = state.get('stage') == 'complete' and state.get('classification') == 'complete' and state.get('exit_code') == '0'
+          print(json.dumps({'eventName':'migration-foundation-loss-of-access','approvalId':os.environ.get('APPROVAL_ID'),'releaseSha':os.environ.get('RELEASE_SHA'),'stage':'complete' if success else 'loss_of_access_verification','classification':'complete' if success else 'access_not_conclusively_removed','exitCode':0 if success else 1}, separators=(',', ':')))
+          raise SystemExit(0 if success else 1)
+          PY
+
+      - name: Remove temporary loss-of-access evidence
+        if: always()
+        run: rm -f "${LOSS_PROOF_STATE:-}"

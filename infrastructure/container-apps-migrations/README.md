@@ -9,28 +9,36 @@ credentials, or attachments. A separate approval may create the two reviewed
 deployer OIDC credentials so those otherwise-unprivileged identities can later
 receive temporary authority; publisher and starter credentials are not created
 during bootstrap.
-The proof-only workflows use distinct protected Environments:
+The workflows use distinct protected Environments:
 `migration-foundation-deployment` and `migration-rbac-deployment`. They can
-authenticate and prove identity/denial but contain no deployment or resource
-write path. The full protection and variable contract is documented in
+authenticate and prove identity/denial. Proof-only mode remains available. An
+explicit checksum-bound foundation mode deploys only the reviewed resource
+template, while a separate RBAC workflow handles role bootstrap, exact temporary
+assignment, or unconditional cleanup as distinct approved operations. The full
+protection and variable contract is documented in
 `docs/development/container-apps-migration-permissions.md`.
 Provisioning then has five least-privilege template
 boundaries and one intervening publication boundary. Every step requires its
 own approval and verification; no workflow may combine them:
 
-1. The temporary infrastructure deployer deploys
+1. The temporarily authorized RBAC bootstrap identity deploys
+   `deployer-role-definitions.bicep` only, then separately deploys
+   `foundation-temporary-access.bicep` to create the exact two assignments.
+2. The temporary infrastructure deployer deploys
    `foundation-resources.bicep` only; the four operational identities are
    validated `existing` resources.
-2. With federated-credential write assigned only on the exact publisher and
+3. The RBAC boundary removes both assignments after success or failure, and a
+   fresh foundation proof must again receive `AuthorizationFailed`.
+4. With federated-credential write assigned only on the exact publisher and
    starter identity resources, it deploys `identity-access.bicep` only and then
    loses that identity-specific authority.
-3. The temporary RBAC deployer deploys `foundation-access.bicep` only.
-4. The GitHub publisher publishes the reviewed full-SHA image and resolves and
+5. The temporary RBAC deployer deploys `foundation-access.bicep` only.
+6. The GitHub publisher publishes the reviewed full-SHA image and resolves and
    verifies its registry-authoritative digest.
-5. The temporary infrastructure deployer deploys digest-bound
+7. The temporary infrastructure deployer deploys digest-bound
    `job-resource.bicep` only.
-6. The temporary RBAC deployer deploys `job-access.bicep` only.
-7. Only afterward may the GitHub starter run a separately approved SQL-free
+8. The temporary RBAC deployer deploys `job-access.bicep` only.
+9. Only afterward may the GitHub starter run a separately approved SQL-free
    execution-channel proof.
 
 Resource templates contain no `Microsoft.Authorization` resources. Access
@@ -41,10 +49,15 @@ reviewed deployment outputs. Display-name lookup, hardcoded generated principal
 or client IDs, and unrelated deployment outputs are prohibited.
 
 The infrastructure deployer is temporary and resource-group scoped. Its exact
-catalog is `roles/infrastructure-deployer.role.json`; it has no authorization
-writes and no Managed Identity or federated-credential writes. Read access to
-operational identities is granted temporarily at only the exact identity
-resources required by a resource template. Provider registration, if required, needs a separate temporary
+catalog is `roles/infrastructure-deployer.role.json`; its fixed role UUID is
+`4bfa5b8d-8e4a-4fc8-9f2b-6115f07cad54`. The identity-reader UUID is
+`9df6bf68-4db7-4d38-b7f1-7bb26a541199`. Both definitions have the exact
+development resource group as their sole assignable scope, explicit actions,
+and no wildcards. The infrastructure role has no authorization
+writes and no Managed Identity or federated-credential writes. The separate
+identity reader contains only the user-assigned-identity read action; its exact
+development-resource-group assignment is temporary and removed with the
+infrastructure assignment. Provider registration, if required, needs a separate temporary
 subscription-scoped approval limited to provider read plus
 `Microsoft.App/register/action` and
 `Microsoft.ContainerRegistry/register/action`.
