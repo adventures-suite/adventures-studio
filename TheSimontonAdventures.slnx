@@ -3,6 +3,7 @@
     <Project Path="src/AdventuresSuite.Api/AdventuresSuite.Api.csproj" />
     <Project Path="src/AdventuresSuite.Authorization/AdventuresSuite.Authorization.csproj" />
     <Project Path="src/AdventuresSuite.Companion.Application/AdventuresSuite.Companion.Application.csproj" />
+    <Project Path="src/AdventuresSuite.Companion.Client/AdventuresSuite.Companion.Client.csproj" />
     <Project Path="src/AdventuresSuite.Companion.Contracts/AdventuresSuite.Companion.Contracts.csproj" />
     <Project Path="src/AdventuresSuite.Companion.SqlServer/AdventuresSuite.Companion.SqlServer.csproj" />
     <Project Path="src/AdventuresSuite.DatabaseMigrator/AdventuresSuite.DatabaseMigrator.csproj" />
@@ -18,6 +19,7 @@
     <Project Path="tests/AdventuresSuite.Api.Tests/AdventuresSuite.Api.Tests.csproj" />
     <Project Path="tests/AdventuresSuite.Authorization.Tests/AdventuresSuite.Authorization.Tests.csproj" />
     <Project Path="tests/AdventuresSuite.Companion.Contracts.Tests/AdventuresSuite.Companion.Contracts.Tests.csproj" />
+    <Project Path="tests/AdventuresSuite.Companion.Client.Tests/AdventuresSuite.Companion.Client.Tests.csproj" />
     <Project Path="tests/AdventuresSuite.Companion.Poc.Tests/AdventuresSuite.Companion.Poc.Tests.csproj" />
     <Project Path="tests/TheSimontonAdventures.Web.Tests/TheSimontonAdventures.Web.Tests.csproj" />
   </Folder>
