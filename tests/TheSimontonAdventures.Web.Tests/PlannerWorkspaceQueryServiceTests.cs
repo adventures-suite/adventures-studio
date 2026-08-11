@@ -312,9 +312,20 @@ public sealed class PlannerWorkspaceQueryServiceTests
     {
         public CreatorId CreatorId { get; } = creatorId;
         public IAdventurePlanRepository AdventurePlans { get; } = new EmptyAdventurePlanRepository(detail);
+        public IAdventurePlanCreateIdempotencyStore AdventurePlanCreateIdempotency { get; } =
+            new UnusedIdempotencyStore();
         public IRequiredAuditIntentCollector RequiredAuditIntents { get; } = new UnusedAuditIntentCollector();
         public Task CommitAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+    }
+
+    private sealed class UnusedIdempotencyStore : IAdventurePlanCreateIdempotencyStore
+    {
+        public Task<AdventurePlanCreateIdempotencyResult> ReserveAsync(
+            CreatorId creatorId,
+            AdventurePlanCreateReservation reservation,
+            CancellationToken cancellationToken = default) =>
+            throw new InvalidOperationException("Read-only queries cannot reserve idempotency results.");
     }
 
     private sealed class UnusedAuditIntentCollector : IRequiredAuditIntentCollector

@@ -9,6 +9,32 @@ namespace TheSimontonAdventures.Web.Tests;
 /// <summary>Verifies the provider-neutral and Creator-scoped persistence boundary.</summary>
 public sealed class PlanningPersistenceContractTests
 {
+    /// <summary>Ensures creation idempotency accepts only the reviewed minimal contract.</summary>
+    [Fact]
+    public void AdventurePlanCreateReservation_ValidatesAllowlistedVersionOneResult()
+    {
+        var now = new DateTimeOffset(2026, 8, 11, 17, 0, 0, TimeSpan.Zero);
+        var fingerprint = new PlanningRequestFingerprint(1, new byte[32]);
+        var reservation = new AdventurePlanCreateReservation(
+            PlanningIdempotencyOperations.AdventurePlanCreateV1,
+            new PlanningIdempotencyKey("opaque-key-1234567890"),
+            fingerprint,
+            new AdventurePlanId("plan_retry_safe"),
+            1,
+            now,
+            now.AddDays(30));
+
+        Assert.Equal(PlanningIdempotencyOperations.AdventurePlanCreateV1, reservation.Operation);
+        Assert.Equal(32, reservation.Fingerprint.ToArray().Length);
+        Assert.Throws<ArgumentException>(() => new AdventurePlanCreateReservation(
+            "AdventurePlan.Update.v1", reservation.IdempotencyKey, fingerprint,
+            reservation.AdventurePlanId, 1, now, now.AddDays(30)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new AdventurePlanCreateReservation(
+            reservation.Operation, reservation.IdempotencyKey, fingerprint,
+            reservation.AdventurePlanId, 2, now, now.AddDays(30)));
+        Assert.Throws<ArgumentException>(() => new PlanningRequestFingerprint(1, new byte[31]));
+    }
+
     /// <summary>Ensures every repository operation begins with explicit Creator identity.</summary>
     [Fact]
     public void AdventurePlanRepository_AllOperationsRequireCreatorIdFirst()
@@ -37,6 +63,8 @@ public sealed class PlanningPersistenceContractTests
             .GetProperty(nameof(IPlanningTransaction.CreatorId))?.PropertyType);
         Assert.Equal(typeof(IRequiredAuditIntentCollector), typeof(IPlanningTransaction)
             .GetProperty(nameof(IPlanningTransaction.RequiredAuditIntents))?.PropertyType);
+        Assert.Equal(typeof(IAdventurePlanCreateIdempotencyStore), typeof(IPlanningTransaction)
+            .GetProperty(nameof(IPlanningTransaction.AdventurePlanCreateIdempotency))?.PropertyType);
     }
 
     /// <summary>Ensures persistence contracts do not expose infrastructure types.</summary>
@@ -48,7 +76,8 @@ public sealed class PlanningPersistenceContractTests
             typeof(IAdventurePlanRepository),
             typeof(IPlanningTransactionFactory),
             typeof(IPlanningTransaction),
-            typeof(IRequiredAuditIntentCollector)
+            typeof(IRequiredAuditIntentCollector),
+            typeof(IAdventurePlanCreateIdempotencyStore)
         ];
 
         var exposedTypes = contracts
