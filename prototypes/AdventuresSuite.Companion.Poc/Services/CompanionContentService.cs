@@ -22,14 +22,15 @@ public sealed class CompanionContentService : ICompanionContentProvider
     public async Task<CompanionContentResult> LoadAsync(CancellationToken cancellationToken = default)
     {
         await using var resourceStream = await FileSystem.OpenAppPackageFileAsync("Data/resources.json");
-        var catalog = await JsonSerializer.DeserializeAsync<ResourceCatalogDocument>(resourceStream, JsonOptions)
+        var catalog = await JsonSerializer.DeserializeAsync<ResourceCatalogDocument>(
+            resourceStream, JsonOptions, cancellationToken)
             ?? throw new InvalidOperationException("The Companion Resource catalog is missing.");
 
         var adventures = new[]
         {
-            await LoadAdventureAsync("1", catalog),
-            await LoadAdventureAsync("2", catalog),
-            await LoadAdventureAsync("3", catalog)
+            await LoadAdventureAsync("1", catalog, cancellationToken),
+            await LoadAdventureAsync("2", catalog, cancellationToken),
+            await LoadAdventureAsync("3", catalog, cancellationToken)
         };
 
         return CompanionContentResult.Success(adventures
@@ -38,14 +39,17 @@ public sealed class CompanionContentService : ICompanionContentProvider
             .ToArray(), hasDetailedContent: true);
     }
 
-    private static async Task<CompanionAdventure> LoadAdventureAsync(string id, ResourceCatalogDocument catalog)
+    private static async Task<CompanionAdventure> LoadAdventureAsync(
+        string id,
+        ResourceCatalogDocument catalog,
+        CancellationToken cancellationToken)
     {
         await using var volumeStream = await FileSystem.OpenAppPackageFileAsync($"Data/volume-{id}.json");
         await using var journeyStream = await FileSystem.OpenAppPackageFileAsync($"Data/journey-{id}.json");
 
-        var volume = await JsonSerializer.DeserializeAsync<VolumeDocument>(volumeStream, JsonOptions)
+        var volume = await JsonSerializer.DeserializeAsync<VolumeDocument>(volumeStream, JsonOptions, cancellationToken)
             ?? throw new InvalidOperationException("The Companion volume data is missing.");
-        var journey = await JsonSerializer.DeserializeAsync<JourneyDocument>(journeyStream, JsonOptions)
+        var journey = await JsonSerializer.DeserializeAsync<JourneyDocument>(journeyStream, JsonOptions, cancellationToken)
             ?? throw new InvalidOperationException("The Companion journey data is missing.");
         var cover = catalog.Resources.SingleOrDefault(resource =>
             string.Equals(resource.Id, volume.CoverResourceId, StringComparison.Ordinal))
