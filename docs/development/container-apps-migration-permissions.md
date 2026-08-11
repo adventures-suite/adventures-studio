@@ -110,73 +110,124 @@ its custom role-definition ID does not exist until `foundation-access.bicep`
 completes. A bounded parameter file may be generated from that exact deployment
 output, checksum-reviewed for the separate approval, used once, and removed.
 
-## Prepared deployer OIDC federation approval packet
+## Development sole-maintainer governance exception
 
-**Status: draft for review; not approved and not executed.** This packet creates
-only two federated identity credential child resources. It grants no Azure role,
-performs no Bicep deployment, and does not create publisher or starter
-federation.
+**Accepted development risk:** AdventuresSuite is currently a personal GitHub
+repository whose only collaborator is owner `ssimonton007`. Independent GitHub
+Environment review is unavailable. Do not invite an untrusted person, create a
+second owner-controlled account, or describe sole-maintainer approval as
+independent review. Prevention of self-review is not currently enforceable and
+is not part of the development configuration below.
 
-Common immutable values:
+Development-only federation and infrastructure operations may proceed under an
+explicit approval from the sole maintainer. Every approval and operation must
+record the approving human operator and executing GitHub workload identity.
+Exact protected-main SHA binding, required GitHub Environment approval, no
+administrator bypass, narrow permissions, a short stated operational window,
+sanitized evidence retention, immediate privilege revocation, and independent
+loss-of-access verification remain mandatory. Any unexpected or inconclusive
+condition stops the operation.
+
+In this exception, "independent loss-of-access verification" means a separate
+technical check performed with a fresh token and fresh session after
+revocation. It does not imply or require a second human reviewer while the
+documented sole-maintainer exception remains in effect.
+
+This exception does not represent the target production posture. Production
+provisioning, production migration, customer-data operations, and general
+availability remain blocked until a real independent reviewer is established.
+Moving the repository into a GitHub organization with durable reviewer/team and
+branch-governance controls must be reassessed before alpha or beta operational
+scope expands.
+
+Workflow paths are reviewed policy controls, but an environment-based Entra
+subject does not encode a workflow filename. Actual controls are protected
+`main`, Environment approval, no administrator bypass, exact source-SHA checks
+inside each workflow, and branch protection preventing unauthorized workflow
+changes.
+
+## Prepared GitHub Environment configuration approval packet
+
+**Status: draft; not approved and not executed.** Repository review basis is PR
+#18 head `935dd6b7c1b52c51ecae1aaed9c2092310a366da`. Its historical regular-merge
+main SHA is `91e889b9b702d8d280a6a449688c4a427ed3c7de`; this historical value is not a
+permanent workflow release SHA and does not authorize an operation.
+
+Create exactly two GitHub Environments with protected `main` as the only allowed
+deployment branch, owner `ssimonton007` as the required development approver,
+and administrator bypass disabled. Because the approver is also the repository
+owner, self-review prevention must be disabled; this is the accepted
+development-only sole-maintainer risk above. Add no secrets.
+
+`migration-foundation-deployment` variables:
+
+- `MIGRATION_FOUNDATION_DEPLOYER_CLIENT_ID=223af00d-69e5-4302-9ac5-6b338f3ea2e5`
+- `MIGRATION_FOUNDATION_DEPLOYER_PRINCIPAL_ID=b77b6201-ad26-4f77-8f88-6d0d43f7dbb8`
+- `AZURE_SUBSCRIPTION_ID=5ace9cdd-06d1-47d9-8214-1e7c756d076a`
+- `WORKFORCE_TENANT_ID=d7add2bb-ac03-49a8-9377-d0bf6a012f2f`
+- `MIGRATION_RESOURCE_GROUP=rg-adventures-suite-dev`
+
+`migration-rbac-deployment` variables:
+
+- `MIGRATION_RBAC_DEPLOYER_CLIENT_ID=d678e2ad-ada2-4cde-bb79-44630acf1cc8`
+- `MIGRATION_RBAC_DEPLOYER_PRINCIPAL_ID=822c1c0c-39e1-400f-b9fc-9532a11bae5d`
+- `AZURE_SUBSCRIPTION_ID=5ace9cdd-06d1-47d9-8214-1e7c756d076a`
+- `WORKFORCE_TENANT_ID=d7add2bb-ac03-49a8-9377-d0bf6a012f2f`
+- `MIGRATION_RESOURCE_GROUP=rg-adventures-suite-dev`
+
+Verify exact names, variables, protected-main restriction, required approver,
+self-review setting, disabled administrator bypass, and absence of secrets or
+unapproved variables. Record the configuring GitHub administrator and UTC
+window. Stop without repair on drift or inconclusive configuration evidence.
+This packet authorizes no Azure or Entra operation and no workflow dispatch.
+
+## Prepared Entra deployer federation approval packet
+
+**Status: draft; not approved and not executed.** This packet may be considered
+only after the GitHub configuration above is independently read back and matches
+exactly. It creates no Azure role and performs no Bicep deployment.
+
+Common values:
 
 - Issuer: `https://token.actions.githubusercontent.com`
 - Audience: `api://AzureADTokenExchange`
 - Subscription: `5ace9cdd-06d1-47d9-8214-1e7c756d076a`
 - Tenant: `d7add2bb-ac03-49a8-9377-d0bf6a012f2f`
 - Resource group: `rg-adventures-suite-dev`
+- Required workflow release SHA: `<EXACT_CURRENT_MAIN_SHA>`
 
-| Purpose | Identity resource ID | Principal ID | Client ID | Proposed credential name | Exact subject | Permitted workflow path |
+Immediately before execution, the approval record must resolve
+`<EXACT_CURRENT_MAIN_SHA>` to the then-current full lowercase 40-character SHA
+of protected `main`. The approved SHA, workflow `release_sha` input, and
+`github.sha` must match that resolved value exactly. Any new commit on `main`
+invalidates the approval and requires a new read-only review and explicit
+approval for the new SHA.
+
+| Purpose | Identity resource ID | Principal ID | Client ID | Credential | Subject | Workflow |
 | --- | --- | --- | --- | --- | --- | --- |
-| Foundation/Job resource deployer | `/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-adventures-suite-migration-foundation-deployer-dev` | `b77b6201-ad26-4f77-8f88-6d0d43f7dbb8` | `223af00d-69e5-4302-9ac5-6b338f3ea2e5` | `github-migration-foundation-deployment` | `repo:ssimonton007/adventures-studio:environment:migration-foundation-deployment` | `.github/workflows/provision-migration-foundation-resources.yml` only |
-| Access-template deployer | `/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-adventures-suite-migration-rbac-bootstrap-dev` | `822c1c0c-39e1-400f-b9fc-9532a11bae5d` | `d678e2ad-ada2-4cde-bb79-44630acf1cc8` | `github-migration-rbac-deployment` | `repo:ssimonton007/adventures-studio:environment:migration-rbac-deployment` | `.github/workflows/provision-migration-rbac-access.yml` only |
+| Foundation/Job resources | `/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-adventures-suite-migration-foundation-deployer-dev` | `b77b6201-ad26-4f77-8f88-6d0d43f7dbb8` | `223af00d-69e5-4302-9ac5-6b338f3ea2e5` | `github-migration-foundation-deployment` | `repo:ssimonton007/adventures-studio:environment:migration-foundation-deployment` | `.github/workflows/provision-migration-foundation-resources.yml` |
+| Access resources | `/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-adventures-suite-migration-rbac-bootstrap-dev` | `822c1c0c-39e1-400f-b9fc-9532a11bae5d` | `d678e2ad-ada2-4cde-bb79-44630acf1cc8` | `github-migration-rbac-deployment` | `repo:ssimonton007/adventures-studio:environment:migration-rbac-deployment` | `.github/workflows/provision-migration-rbac-access.yml` |
 
-The workflow paths are reviewed repository controls, but an environment-based
-Entra subject does not encode a workflow filename. GitHub Environment protection
-is therefore mandatory and independently reviewed. Create two distinct
-Environments—`migration-foundation-deployment` and `migration-rbac-deployment`—
-with no shared deployer client-ID variable. Each requires at least one designated
-infrastructure/security reviewer, prevents self-review, allows only protected
-`main`, and has no administrator bypass. Any temporary allowance for PR #18's
-exact branch/ref requires separate time-bounded GitHub-administration approval
-and removal evidence.
+Before creation, record approving operator and executing Azure identity;
+resolve and record `<EXACT_CURRENT_MAIN_SHA>` immediately before execution, and
+verify the exact main SHA and GitHub configuration, identity IDs, zero roles at
+every scope, zero credentials/secrets, zero attachments, and absence of both
+proposed credentials. Verify publisher and starter federation remains absent.
 
-Both proof workflows fail before checkout or Azure login unless `github.ref` is
-exactly `refs/heads/main`, `github.sha` equals the required lowercase
-40-character `release_sha` input, and that input passes strict SHA syntax
-validation. The post-checkout `HEAD` comparison is an additional integrity
-invariant; it is not treated as proof of which workflow source GitHub executed.
+Create only the two exact federated credentials and read them back to compare
+name, issuer, single audience, and subject. Re-prove zero roles. Dispatch each
+proof workflow separately with release SHA `<EXACT_CURRENT_MAIN_SHA>`, a unique
+approval ID, and recorded sole-maintainer approval. At dispatch,
+`github.sha`, `release_sha`, and the SHA in the approval record must be exactly
+equal; a changed `main` stops and invalidates the operation. Both explicit ARM
+probes must return exact
+`AuthorizationFailed`; every other result fails closed. Retain bounded evidence,
+then remove the two credentials immediately if the approved window or purpose
+ends and verify loss of authentication using a separate fresh token and fresh
+session technical check. This technical independence does not assert that a
+second human reviewer participated.
 
-The foundation Environment defines only
-`MIGRATION_FOUNDATION_DEPLOYER_CLIENT_ID=223af00d-69e5-4302-9ac5-6b338f3ea2e5`,
-`MIGRATION_FOUNDATION_DEPLOYER_PRINCIPAL_ID=b77b6201-ad26-4f77-8f88-6d0d43f7dbb8`,
-`AZURE_SUBSCRIPTION_ID`, `WORKFORCE_TENANT_ID`, and
-`MIGRATION_RESOURCE_GROUP`. The RBAC Environment substitutes only
-`MIGRATION_RBAC_DEPLOYER_CLIENT_ID=d678e2ad-ada2-4cde-bb79-44630acf1cc8` and
-`MIGRATION_RBAC_DEPLOYER_PRINCIPAL_ID=822c1c0c-39e1-400f-b9fc-9532a11bae5d`.
-The shared target variables must equal the exact subscription, tenant, and
-resource group above. Neither Environment contains secrets, credentials for the
-other deployer, publisher/starter variables, or database/application variables.
-
-Before execution, verify exact PR SHA, subscription, tenant, Owner object ID,
-identity resource/principal/client IDs, absence of either proposed credential,
-zero role assignments at all scopes, zero secrets/certificates, exact workflow
-path, pinned actions, Environment protection/variables, and the corresponding
-exact GitHub Environment subject. Verify that publisher and starter still have no
-federated credentials. Stop on any mismatch, existing credential, role,
-attachment, unexpected workflow, or environment-policy drift; do not repair,
-replace, retry, grant roles, or deploy.
-
-After the two child resources are created, read each credential back and compare
-name, issuer, single audience, and subject exactly. Re-prove zero direct or
-inherited role assignments for both deployer principal IDs. Authenticate each
-identity only from its permitted protected workflow and run its federation-proof
-mode. The ARM resource-group read and non-mutating deployment-validation
-capability probe use explicit ARM URLs and must both return the exact
-`AuthorizationFailed` denial. A successful HTTP result, subscription-resolution
-error, authentication failure, resource-not-found response, malformed response,
-network failure, or throttling is inconclusive and fails closed. No deployment
-may be submitted. Confirm the activity log contains only the
-two federated-credential writes and no Azure resource, role, network, SQL, or
-application mutation. Any successful resource read, effective permission,
-deployment ability, or inconclusive denial is a stop condition and security
-review trigger.
+Stop on any mismatch, unexpected access, role, attachment, publisher/starter
+federation, workflow-source drift, inconclusive denial, cleanup failure, or
+unrelated activity. Do not grant roles, deploy Bicep, publish images, access SQL,
+run migrations, or change applications, networking, production, or MAUI.
