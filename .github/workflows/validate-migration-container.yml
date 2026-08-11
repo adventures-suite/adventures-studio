@@ -69,7 +69,7 @@ jobs:
       - name: Validate migration catalog and infrastructure policy
         run: |
           test "$(find database/migrations -name '*.sql' -printf '%f\n' | sort | tail -n 2 | tr '\n' ' ')" = \
-            '0007_create_traveler_participations.sql 0008_create_companion_read_role.sql '
+            '0008_create_companion_read_role.sql 0009_create_adventure_plan_create_results.sql '
           grep -q "triggerType: 'Manual'" infrastructure/container-apps-migrations/job-resource.bicep
           grep -q 'replicaRetryLimit: 0' infrastructure/container-apps-migrations/job-resource.bicep
           grep -q 'replicaTimeout: 900' infrastructure/container-apps-migrations/job-resource.bicep
