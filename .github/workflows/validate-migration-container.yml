@@ -11,6 +11,7 @@ on:
       - .github/workflows/database-migration-job.yml
       - .github/workflows/provision-migration-foundation-resources.yml
       - .github/workflows/provision-migration-rbac-access.yml
+      - .github/workflows/manage-migration-foundation-rbac.yml
       - .github/scripts/**
   workflow_dispatch:
 
@@ -81,6 +82,13 @@ jobs:
           ! grep -q 'federatedIdentityCredentials' infrastructure/container-apps-migrations/foundation-resources.bicep
           test "$(grep -c 'resource .*userAssignedIdentities@.* existing =' infrastructure/container-apps-migrations/foundation-resources.bicep)" -eq 4
           ! grep -q 'Microsoft.ManagedIdentity/' infrastructure/container-apps-migrations/roles/infrastructure-deployer.role.json
+          grep -q '4bfa5b8d-8e4a-4fc8-9f2b-6115f07cad54' infrastructure/container-apps-migrations/roles/infrastructure-deployer.role.json
+          grep -q '9df6bf68-4db7-4d38-b7f1-7bb26a541199' infrastructure/container-apps-migrations/roles/identity-reader.role.json
+          ! grep -Eq '"[^"]*\*[^"]*"' infrastructure/container-apps-migrations/roles/infrastructure-deployer.role.json infrastructure/container-apps-migrations/roles/identity-reader.role.json
+          grep -q "publicNetworkAccess: 'Disabled'" infrastructure/container-apps-migrations/foundation-resources.bicep
+          grep -q "publicNetworkAccessForIngestion: 'Disabled'" infrastructure/container-apps-migrations/foundation-resources.bicep
+          grep -q "publicNetworkAccessForQuery: 'Disabled'" infrastructure/container-apps-migrations/foundation-resources.bicep
+          grep -q 'internal: true' infrastructure/container-apps-migrations/foundation-resources.bicep
           grep -A4 "resource starterAssignment" infrastructure/container-apps-migrations/job-access.bicep | grep -q 'scope: job'
           ! grep -Eq 'configurator|configure-dormant-job|DATABASE_JOB_CONFIGURATOR' \
             infrastructure/container-apps-migrations/*.bicep .github/workflows/database-migration-job.yml
@@ -88,7 +96,7 @@ jobs:
 
       - name: Build Bicep template
         run: |
-          for template in foundation-resources identity-access foundation-access job-resource job-access; do
+          for template in deployer-role-definitions foundation-temporary-access foundation-resources identity-access foundation-access job-resource job-access; do
             az bicep build --file "infrastructure/container-apps-migrations/$template.bicep"
           done
 

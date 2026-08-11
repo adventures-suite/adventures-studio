@@ -3,13 +3,14 @@ set -euo pipefail
 set +x
 umask 077
 
-if [ "$#" -ne 3 ]; then
+if [ "$#" -lt 3 ] || [ "$#" -gt 4 ]; then
   exit 2
 fi
 
 environment_name="$1"
 error_prefix="$2"
 state_file="$3"
+proof_mode="${4:-denial}"
 stage='arm_token_acquisition'
 classification='operation_failed'
 token_response="${error_prefix}-token.json"
@@ -42,6 +43,10 @@ trap cleanup EXIT
 
 case "$environment_name" in
   migration-foundation-deployment|migration-rbac-deployment) ;;
+  *) exit 2 ;;
+esac
+case "$proof_mode" in
+  denial|identity-only) ;;
   *) exit 2 ;;
 esac
 
@@ -116,6 +121,13 @@ case "$claim_exit" in
   44) classification='claim_mismatch_aud'; exit 1 ;;
   *) classification='malformed_token'; exit 1 ;;
 esac
+
+if [ "$proof_mode" = 'identity-only' ]; then
+  stage='complete'
+  classification='identity_validated'
+  write_state 0
+  exit 0
+fi
 
 stage='resource_read_probe'
 set +e

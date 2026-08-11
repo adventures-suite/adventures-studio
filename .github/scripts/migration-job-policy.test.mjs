@@ -6,6 +6,8 @@ import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import test from 'node:test';
 import { validateExecutionEvidence, validateJobDefinition, validateRoleAssignmentScope } from './migration-job-policy.mjs';
+import { validateApproval, validateDeployment, validateWhatIf } from './foundation-deployment-policy.mjs';
+import { validateRbacWhatIf, validateRoleCatalog } from './rbac-boundary-policy.mjs';
 
 const expected = { operationId: 'operation-0001', releaseSha: 'a'.repeat(40), imageDigest: `sha256:${'b'.repeat(64)}`, classification: 'ExecutionChannelComplete' };
 function envelope() {
@@ -54,7 +56,7 @@ test('deployer action sets preserve authority separation', () => {
   const roleDefinition = JSON.parse(readFileSync('infrastructure/container-apps-migrations/roles/rbac-role-definition-deployer.role.json'));
   const assignment = JSON.parse(readFileSync('infrastructure/container-apps-migrations/roles/rbac-assignment-deployer.role.json'));
   const federation = JSON.parse(readFileSync('infrastructure/container-apps-migrations/roles/identity-federation-deployer.role.json'));
-  const infraActions = infrastructure.permissions.flatMap(value => value.actions);
+  const infraActions = infrastructure.properties.permissions.flatMap(value => value.actions);
   const rbacActions = [...roleDefinition.permissions, ...assignment.permissions].flatMap(value => value.actions);
   assert.ok(infraActions.some(value => value.endsWith('/write')));
   assert.ok(infraActions.every(value => !value.startsWith('Microsoft.Authorization/')));
@@ -63,6 +65,14 @@ test('deployer action sets preserve authority separation', () => {
   assert.ok(federation.permissions.flatMap(value => value.actions).filter(value => value.endsWith('/write')).every(value => value === 'Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentityCredentials/write'));
   assert.ok(rbacActions.filter(value => value.endsWith('/write')).every(value => value.startsWith('Microsoft.Authorization/') || value === 'Microsoft.Resources/deployments/write'));
   assert.ok(rbacActions.every(value => !value.startsWith('Microsoft.Network/') && !value.startsWith('Microsoft.App/jobs/write') && !value.startsWith('Microsoft.ContainerRegistry/registries/write')));
+  assert.equal(infrastructure.name, '4bfa5b8d-8e4a-4fc8-9f2b-6115f07cad54');
+  assert.equal(infrastructure.properties.roleName, 'AdventuresSuite Migration Infrastructure Deployer');
+  assert.deepEqual(infrastructure.properties.assignableScopes, ['/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev']);
+  validateRoleCatalog(infrastructure);
+  const identityReader = JSON.parse(readFileSync('infrastructure/container-apps-migrations/roles/identity-reader.role.json'));
+  assert.equal(identityReader.name, '9df6bf68-4db7-4d38-b7f1-7bb26a541199');
+  assert.deepEqual(identityReader.properties.permissions[0].actions, ['Microsoft.ManagedIdentity/userAssignedIdentities/read']);
+  validateRoleCatalog(identityReader);
 });
 
 test('old combined templates are absent and deployment order is documented', () => {
@@ -76,7 +86,7 @@ test('old combined templates are absent and deployment order is documented', () 
 });
 
 test('third-party GitHub Actions are pinned to full commit SHAs', () => {
-  for (const path of ['.github/workflows/database-migration-job.yml', '.github/workflows/deploy-companion-api-dev.yml', '.github/workflows/deploy-dev.yml', '.github/workflows/provision-migration-foundation-resources.yml', '.github/workflows/provision-migration-rbac-access.yml', '.github/workflows/publish-companion-testflight.yml', '.github/workflows/validate-migration-container.yml', '.github/workflows/validate-pull-request.yml', '.github/workflows/validate-sql-migrations.yml']) {
+  for (const path of ['.github/workflows/database-migration-job.yml', '.github/workflows/deploy-companion-api-dev.yml', '.github/workflows/deploy-dev.yml', '.github/workflows/provision-migration-foundation-resources.yml', '.github/workflows/provision-migration-rbac-access.yml', '.github/workflows/manage-migration-foundation-rbac.yml', '.github/workflows/publish-companion-testflight.yml', '.github/workflows/validate-migration-container.yml', '.github/workflows/validate-pull-request.yml', '.github/workflows/validate-sql-migrations.yml']) {
     const workflow = readFileSync(path, 'utf8');
     const uses = workflow.split('\n').map(line => line.match(/^\s*uses:\s*([^\s#]+)/)?.[1]).filter(Boolean);
     assert.ok(uses.length > 0);
@@ -84,7 +94,7 @@ test('third-party GitHub Actions are pinned to full commit SHAs', () => {
   }
 });
 
-test('deployer federation workflows are isolated proof-only controls', () => {
+test('deployer workflows preserve identity separation and proof-only mode', () => {
   const foundation = readFileSync('.github/workflows/provision-migration-foundation-resources.yml', 'utf8');
   const rbac = readFileSync('.github/workflows/provision-migration-rbac-access.yml', 'utf8');
   const proofRunner = readFileSync('.github/scripts/run-deployer-federation-proof.sh', 'utf8');
@@ -102,7 +112,7 @@ test('deployer federation workflows are isolated proof-only controls', () => {
     assert.doesNotMatch(workflow, /client-secret|AZURE_CLIENT_SECRET|password|certificate/i);
     assert.match(workflow, /uses: azure\/login@[0-9a-f]{40}/);
     assert.match(workflow, /tenant-id: \$\{\{ vars\.WORKFORCE_TENANT_ID \}\}/);
-    assert.doesNotMatch(workflow, /az deployment (group|sub|mg|tenant) create|az role (assignment|definition) (create|update)|az (resource|group|identity) (create|update)|bicep/i);
+    assert.doesNotMatch(workflow, /az role (assignment|definition) (create|update|delete)|az (resource|group|identity) (create|update)/i);
     assert.equal((workflow.match(/'eventName': 'migration-deployer-federation-proof'/g) ?? []).length, 1);
     assert.match(workflow, /if: always\(\)/);
     for (const stage of ['input_validation', 'checkout_integrity', 'oidc_authentication', 'arm_token_acquisition', 'arm_token_claim_validation', 'resource_read_probe', 'resource_read_denial_classification', 'deployment_validation_probe', 'deployment_validation_denial_classification', 'complete']) {
@@ -117,8 +127,13 @@ test('deployer federation workflows are isolated proof-only controls', () => {
   assert.equal((proofRunner.match(/require-arm-authorization-denial\.sh/g) ?? []).length, 2);
   assert.doesNotMatch(proofRunner, /az account show/);
   assert.match(foundation, /environment: migration-foundation-deployment/);
+  assert.match(foundation, /deploy-foundation/);
+  assert.match(foundation, /run-foundation-deployment\.sh/);
+  assert.match(foundation, /remove-temporary-access:[\s\S]*environment: migration-rbac-deployment/);
+  assert.match(foundation, /prove-access-removed:[\s\S]*environment: migration-foundation-deployment/);
+  assert.doesNotMatch(readFileSync('.github/scripts/run-foundation-deployment.sh', 'utf8'), /role assignment (create|delete)|role definition (create|delete)|Microsoft\.Authorization/i);
   assert.match(foundation, /vars\.MIGRATION_FOUNDATION_DEPLOYER_CLIENT_ID/);
-  assert.doesNotMatch(foundation, /MIGRATION_RBAC_DEPLOYER|822c1c0c|d678e2ad/);
+  assert.doesNotMatch(foundation.slice(0, foundation.indexOf('  remove-temporary-access:')), /MIGRATION_RBAC_DEPLOYER|822c1c0c|d678e2ad/);
   assert.match(rbac, /environment: migration-rbac-deployment/);
   assert.match(rbac, /vars\.MIGRATION_RBAC_DEPLOYER_CLIENT_ID/);
   assert.doesNotMatch(rbac, /MIGRATION_FOUNDATION_DEPLOYER|b77b6201|223af00d/);
@@ -129,6 +144,7 @@ test('deployer federation workflows parse semantically and keep runner context o
   const paths = [
     '.github/workflows/provision-migration-foundation-resources.yml',
     '.github/workflows/provision-migration-rbac-access.yml',
+    '.github/workflows/manage-migration-foundation-rbac.yml',
   ];
   const validator = String.raw`
     require 'yaml'
@@ -153,8 +169,7 @@ test('deployer federation workflows parse semantically and keep runner context o
   for (const path of paths) {
     const workflow = readFileSync(path, 'utf8');
     assert.doesNotMatch(workflow, /^    env:\n(?:^      .*\n)*^      [A-Z0-9_]+:\s*\$\{\{\s*runner\./m);
-    assert.match(workflow, /evidence_path="\$RUNNER_TEMP\/migration-federation-proof\.state"/);
-    assert.match(workflow, /printf 'PROOF_STATE_FILE=%s\\n' "\$evidence_path" >> "\$GITHUB_ENV"/);
+    assert.doesNotMatch(workflow, /\$\{\{\s*runner\./);
   }
 });
 
@@ -434,6 +449,9 @@ test('federation proof reporter emits exactly one sanitized envelope for every s
     INTEGRITY_OUTCOME: 'success',
     OIDC_OUTCOME: 'success',
     PROOF_OUTCOME: 'success',
+    OPERATION: 'proof',
+    DEPLOYMENT_IDENTITY_OUTCOME: '',
+    DEPLOYMENT_OUTCOME: '',
   };
   const report = (overrides = {}, state) => {
     if (state) writeFileSync(stateFile, `stage=${state.stage}\nclassification=${state.classification}\nexit_code=${state.exitCode}\n`);
@@ -452,6 +470,7 @@ test('federation proof reporter emits exactly one sanitized envelope for every s
       stage: 'complete',
       classification: 'complete',
       exitCode: 0,
+      cleanupRequired: false,
     });
     assert.equal(report({ INPUT_OUTCOME: 'failure' }).envelope.stage, 'input_validation');
     assert.equal(report({ CHECKOUT_OUTCOME: 'failure' }).envelope.stage, 'checkout_integrity');
@@ -470,5 +489,127 @@ test('federation proof reporter emits exactly one sanitized envelope for every s
     assert.doesNotMatch(redacted.result.stdout, /token=value|Bearer|abc\.def/i);
   } finally {
     rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('foundation what-if accepts only the four exact reviewed resources', () => {
+  const scope = '/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev';
+  const changes = [
+    ['Microsoft.Network/virtualNetworks/subnets', `${scope}/providers/Microsoft.Network/virtualNetworks/vnet-adventures-suite-dev/subnets/snet-container-apps-migrations`],
+    ['Microsoft.OperationalInsights/workspaces', `${scope}/providers/Microsoft.OperationalInsights/workspaces/log-adventures-suite-migrations-dev`],
+    ['Microsoft.ContainerRegistry/registries', `${scope}/providers/Microsoft.ContainerRegistry/registries/advsuitemigrationsdev`],
+    ['Microsoft.App/managedEnvironments', `${scope}/providers/Microsoft.App/managedEnvironments/cae-adventures-suite-migrations-dev`],
+  ].map(([resourceType, resourceId]) => ({ resourceType, resourceId, changeType: 'Create', after: { properties: { publicNetworkAccess: 'Disabled' } } }));
+  const document = { properties: { changes } };
+  assert.deepEqual(validateWhatIf(document), { classification: 'what_if_approved', resourceCount: 4 });
+  for (const changeType of ['Delete', 'Deploy', 'Modify', 'NoChange', 'Unsupported']) {
+    const drift = structuredClone(document); drift.properties.changes[0].changeType = changeType;
+    assert.throws(() => validateWhatIf(drift), /unexpected_what_if_operation/);
+  }
+  const outside = structuredClone(document); outside.properties.changes[0].resourceId = `${scope}/providers/Microsoft.Storage/storageAccounts/unreviewed`;
+  assert.throws(() => validateWhatIf(outside), /unexpected_what_if_resource/);
+  const role = structuredClone(document); role.properties.changes[0].after = { type: 'Microsoft.Authorization/roleAssignments' };
+  assert.throws(() => validateWhatIf(role), /forbidden_what_if_content/);
+  const identity = structuredClone(document); identity.properties.changes[0].after = { operation: 'Microsoft.ManagedIdentity/userAssignedIdentities/write' };
+  assert.throws(() => validateWhatIf(identity), /forbidden_what_if_content/);
+  const publicAccess = structuredClone(document); publicAccess.properties.changes[2].after.properties.publicNetworkAccess = 'Enabled';
+  assert.throws(() => validateWhatIf(publicAccess), /forbidden_what_if_content/);
+  const externalEnvironment = structuredClone(document); externalEnvironment.properties.changes[3].after = { properties: { vnetConfiguration: { internal: false } } };
+  assert.throws(() => validateWhatIf(externalEnvironment), /forbidden_what_if_content/);
+});
+
+test('foundation deployment result requires terminal success and exact sanitized outputs', () => {
+  const scope = '/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev';
+  const value = output => ({ type: 'String', value: output });
+  const outputs = {
+    registryResourceId: value(`${scope}/providers/Microsoft.ContainerRegistry/registries/advsuitemigrationsdev`),
+    registryLoginServer: value('advsuitemigrationsdev.azurecr.io'),
+    logWorkspaceResourceId: value(`${scope}/providers/Microsoft.OperationalInsights/workspaces/log-adventures-suite-migrations-dev`),
+    environmentResourceId: value(`${scope}/providers/Microsoft.App/managedEnvironments/cae-adventures-suite-migrations-dev`),
+    migrationIdentityResourceId: value(`${scope}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-adventures-suite-migrate-job-dev`),
+    migrationIdentityPrincipalId: value('ffc9a4bd-67c4-44af-82dc-b7f663f8bea5'),
+    migrationIdentityClientId: value('d0da8236-91dc-4454-8a3d-19d08a406e5d'),
+    pullIdentityResourceId: value(`${scope}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-adventures-suite-migrate-pull-dev`),
+    publisherIdentityResourceId: value(`${scope}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-adventures-suite-migrate-publisher-dev`),
+    starterIdentityResourceId: value(`${scope}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-adventures-suite-migrate-starter-dev`),
+  };
+  const document = { properties: { provisioningState: 'Succeeded', outputs } };
+  assert.equal(validateDeployment(document).classification, 'deployment_complete');
+  const failed = structuredClone(document); failed.properties.provisioningState = 'Failed';
+  assert.throws(() => validateDeployment(failed), /deployment_not_succeeded/);
+  const missing = structuredClone(document); delete missing.properties.outputs.registryResourceId;
+  assert.throws(() => validateDeployment(missing), /unexpected_deployment_outputs/);
+  const leaked = structuredClone(document); leaked.properties.outputs.secret = value('credential');
+  assert.throws(() => validateDeployment(leaked), /unexpected_deployment_outputs/);
+});
+
+test('deterministic role definitions reject broad scopes, wildcards, RBAC, identity mutation, and broad substitutions', () => {
+  const infrastructure = JSON.parse(readFileSync('infrastructure/container-apps-migrations/roles/infrastructure-deployer.role.json'));
+  for (const mutate of [
+    role => { role.properties.assignableScopes = ['/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a']; },
+    role => { role.properties.permissions[0].actions.push('Microsoft.Resources/*'); },
+    role => { role.properties.permissions[0].actions.push('Microsoft.Authorization/roleAssignments/write'); },
+    role => { role.properties.permissions[0].actions.push('Microsoft.ManagedIdentity/userAssignedIdentities/write'); },
+  ]) {
+    const drift = structuredClone(infrastructure); mutate(drift);
+    assert.throws(() => validateRoleCatalog(drift));
+  }
+  const roleTemplate = readFileSync('infrastructure/container-apps-migrations/deployer-role-definitions.bicep', 'utf8');
+  assert.match(roleTemplate, /loadJsonContent/);
+  assert.match(roleTemplate, /4bfa5b8d|infrastructureRole\.name/);
+  assert.doesNotMatch(roleTemplate, /Owner|Contributor|\*/);
+});
+
+test('RBAC boundary what-if and workflows prevent substitution, self-management, and residual access', () => {
+  const scope = '/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev';
+  const roleChanges = ['4bfa5b8d-8e4a-4fc8-9f2b-6115f07cad54', '9df6bf68-4db7-4d38-b7f1-7bb26a541199'].map(id => ({ resourceId: `${scope}/providers/Microsoft.Authorization/roleDefinitions/${id}`, changeType: 'Create' }));
+  assert.equal(validateRbacWhatIf('bootstrap', { properties: { changes: roleChanges } }).resourceCount, 2);
+  const broad = structuredClone(roleChanges); broad[0].after = { roleName: 'Owner' };
+  assert.throws(() => validateRbacWhatIf('bootstrap', { properties: { changes: broad } }), /broad_role_substitution/);
+  const foundationWorkflow = readFileSync('.github/workflows/provision-migration-foundation-resources.yml', 'utf8');
+  const rbacWorkflow = readFileSync('.github/workflows/manage-migration-foundation-rbac.yml', 'utf8');
+  const rbacRunner = readFileSync('.github/scripts/run-rbac-boundary-operation.sh', 'utf8');
+  assert.doesNotMatch(foundationWorkflow, /role assignment (create|delete)|role definition (create|delete)|Microsoft\.Authorization/i);
+  assert.doesNotMatch(rbacWorkflow, /MIGRATION_FOUNDATION_DEPLOYER_CLIENT_ID|223af00d-69e5-4302-9ac5-6b338f3ea2e5/);
+  assert.match(rbacRunner, /5c14d19b-04c7-4dfa-83ed-9447d0ea3c33/);
+  assert.match(rbacRunner, /fa329695-3907-4852-94f5-fda8a26a4698/);
+  assert.match(rbacRunner, /set \+e[\s\S]*role assignment delete[\s\S]*role assignment delete[\s\S]*set -e/);
+  assert.match(rbacRunner, /residue_verification/);
+  assert.doesNotMatch(`${foundationWorkflow}\n${rbacWorkflow}\n${rbacRunner}`, /Owner|Contributor|AZURE_CLIENT_SECRET|client-secret|set -x/i);
+});
+
+test('foundation deployment mode is exact-approval bound and never emits raw evidence', () => {
+  const workflow = readFileSync('.github/workflows/provision-migration-foundation-resources.yml', 'utf8');
+  const runner = readFileSync('.github/scripts/run-foundation-deployment.sh', 'utf8');
+  assert.match(workflow, /operation:[\s\S]*deploy-foundation/);
+  assert.match(workflow, /foundation-deploy-\*/);
+  assert.match(workflow, /TEMPLATE_SHA256/);
+  assert.match(workflow, /PARAMETERS_SHA256/);
+  assert.match(runner, /sha256sum "\$template"/);
+  assert.match(runner, /sha256sum "\$parameters"/);
+  assert.match(runner, /deployment group validate/);
+  assert.match(runner, /deployment group what-if/);
+  assert.match(runner, /deployment group create/);
+  assert.match(runner, /deployment group show/);
+  assert.match(runner, /trap cleanup EXIT/);
+  assert.doesNotMatch(`${workflow}\n${runner}`, /cat .*\.json|cat .*\.err|set -x|--debug|Bearer|accessToken|client-secret/i);
+});
+
+test('foundation deployment approval rejects missing approval and changed SHA or artifacts', () => {
+  const valid = {
+    ref: 'refs/heads/main', releaseSha: 'a'.repeat(40), workflowSha: 'a'.repeat(40),
+    approvalId: 'foundation-deploy-operation-0001', templateSha: 'b'.repeat(64), actualTemplateSha: 'b'.repeat(64),
+    parametersSha: 'c'.repeat(64), actualParametersSha: 'c'.repeat(64),
+    subscriptionId: '5ace9cdd-06d1-47d9-8214-1e7c756d076a', resourceGroup: 'rg-adventures-suite-dev',
+    clientId: '223af00d-69e5-4302-9ac5-6b338f3ea2e5', principalId: 'b77b6201-ad26-4f77-8f88-6d0d43f7dbb8',
+  };
+  assert.equal(validateApproval(valid), true);
+  for (const mutation of [
+    value => { value.approvalId = ''; }, value => { value.ref = 'refs/heads/feature'; },
+    value => { value.workflowSha = 'd'.repeat(40); }, value => { value.actualTemplateSha = 'd'.repeat(64); },
+    value => { value.actualParametersSha = 'd'.repeat(64); }, value => { value.clientId = 'wrong'; },
+  ]) {
+    const drift = structuredClone(valid); mutation(drift);
+    assert.throws(() => validateApproval(drift));
   }
 });

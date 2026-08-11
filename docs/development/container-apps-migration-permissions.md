@@ -8,7 +8,10 @@
 | --- | --- | --- | --- |
 | Owner bootstrap | Approved Owner | Six UAMIs, all with no initial roles — **complete 2026-08-11** | Federated credentials, roles, other resources |
 | Deployer federation | Separately approved Owner | One reviewed OIDC credential on each deployer identity — **complete 2026-08-11** | Roles, deployment, publisher/starter federation |
+| Deployer role bootstrap | Temporarily authorized RBAC bootstrap identity | Two fixed-UUID custom definitions from `deployer-role-definitions.bicep` | Assignments, ordinary resources, SQL |
+| Foundation temporary access | Temporarily authorized RBAC bootstrap identity | Two fixed-ID assignments from `foundation-temporary-access.bicep` | Self-access, other roles/principals/scopes, resources, SQL |
 | `foundation-resources.bicep` | Temporary infrastructure deployer | Subnet, workspace, ACR, environment; reference four existing operational identities | Identity creation/mutation, RBAC, Job, SQL |
+| Foundation cleanup | Temporarily authorized RBAC bootstrap identity | Remove both exact temporary assignments and prove no residue | Other RBAC changes, resources, SQL |
 | `identity-access.bicep` | Infrastructure deployer with exact-identity temporary grants | Publisher and starter OIDC credentials only | Other identities/resources, RBAC, SQL |
 | `foundation-access.bicep` | Temporary RBAC deployer | Two ACR assignments, starter custom role, dedicated-workspace reader assignment | Ordinary resources, Job, SQL |
 | Image publication | Publisher identity | Full-SHA image and registry digest evidence | IaC, Job start, SQL |
@@ -37,8 +40,13 @@ The infrastructure action catalog is source controlled under
 `infrastructure/container-apps-migrations/roles/`. Assignment is temporary at
 the development resource group and excludes role-definition and role-assignment
 writes. It also excludes every Managed Identity write. Operational identity
-read is granted separately only at each exact identity referenced by the named
-resource template. Federated-credential read/write is granted only at the exact
+read is isolated in the second temporary role, whose sole action is
+`Microsoft.ManagedIdentity/userAssignedIdentities/read`; both temporary
+assignments use the exact development resource-group scope and are removed
+together. The fixed role UUIDs are
+`4bfa5b8d-8e4a-4fc8-9f2b-6115f07cad54` and
+`9df6bf68-4db7-4d38-b7f1-7bb26a541199`; both definitions use only the exact
+development resource-group assignable scope and contain no wildcard. Federated-credential read/write is granted only at the exact
 publisher and starter identities for `identity-access.bicep` and is removed
 immediately afterward. Provider registration, if needed, is a distinct temporary approval for
 only provider read and the two exact register actions at subscription scope.
@@ -90,15 +98,20 @@ Bicep compilation is insufficient and a missing action is a stop condition.
    were created and both protected workflows conclusively proved authentication
    plus zero ARM access. The FICs remain as durable secretless authentication;
    both deployers retain zero roles and zero attachments.
-3. **Temporarily authorize the infrastructure deployer.** Approve one named
-   resource-template deployment in a bounded window. Record assignment and
+3. **Bootstrap definitions, then temporarily authorize the infrastructure
+   deployer.** Use separate approvals for the fixed role-definition template,
+   the exact two-assignment template, and the named foundation resource
+   deployment. Record assignment and
    deadline, verify plan and post-state, remove access, refresh credentials, and
    prove loss of write access. Provider registration requires a separate packet.
-4. **Temporarily authorize the RBAC deployer.** Approve one named access-template
+4. **Remove foundation authority unconditionally.** After resource deployment
+   success or failure, remove both deterministic assignments, prove no residue,
+   and run a fresh foundation proof that must again return `AuthorizationFailed`.
+5. **Temporarily authorize the RBAC deployer.** Approve one named access-template
    deployment with resolved exact scopes, principals, roles, conditions, and a
    bounded window. Verify assignments and absence of broader roles, remove
    authority, refresh credentials, and prove loss of access.
-5. **Deploy and clean up each boundary in sequence.** Separately approve and
+6. **Deploy and clean up each boundary in sequence.** Separately approve and
    verify foundation resources, identity access, foundation access, publication,
    Job resource, and Job access. Retain source SHA, template checksum, deployment ID, inputs,
    outputs, UTC timing, post-state, and cleanup. Stop on drift, excess authority,
