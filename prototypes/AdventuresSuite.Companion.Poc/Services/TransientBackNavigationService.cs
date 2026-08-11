@@ -1,7 +1,15 @@
 namespace AdventuresSuite.Companion.Poc.Services;
 
+/// <summary>Dispatches presentation callbacks onto the owning UI thread.</summary>
+public interface ICompanionUiDispatcher
+{
+	/// <summary>Dispatches one asynchronous presentation callback.</summary>
+	/// <param name="callback">The callback to dispatch.</param>
+	void Dispatch(Func<Task> callback);
+}
+
 /// <summary>Coordinates the single transient layer that may consume platform Back.</summary>
-public sealed class TransientBackNavigationService
+public sealed class TransientBackNavigationService(ICompanionUiDispatcher dispatcher)
 {
 	private Func<Task>? _handler;
 
@@ -25,7 +33,7 @@ public sealed class TransientBackNavigationService
 			return false;
 		}
 
-		_ = MainThread.InvokeOnMainThreadAsync(handler);
+		dispatcher.Dispatch(handler);
 		return true;
 	}
 

@@ -8,12 +8,12 @@
             type="button"
             aria-labelledby="memory-adventure-label memory-adventure-value"
             aria-haspopup="listbox"
-            aria-expanded="@_isOpen"
+            aria-expanded="@SelectorState.IsOpen"
             @onclick="ToggleAsync">
         <span id="memory-adventure-value">@SelectedAdventure.Title</span>
-        <b aria-hidden="true">@(_isOpen ? "⌃" : "⌄")</b>
+        <b aria-hidden="true">@(SelectorState.IsOpen ? "⌃" : "⌄")</b>
     </button>
-    @if (_isOpen)
+    @if (SelectorState.IsOpen)
     {
         <button class="selector-scrim" type="button" tabindex="-1" aria-label="Close Adventure selector" @onclick="DismissAsync"></button>
         <div class="memory-adventure-options" role="listbox" aria-labelledby="memory-adventure-label">
@@ -34,8 +34,10 @@
 
 @code {
     private ElementReference _trigger;
-    private IDisposable? _backRegistration;
-    private bool _isOpen;
+    private TransientSelectorState<CompanionAdventure>? _selectorState;
+
+    private TransientSelectorState<CompanionAdventure> SelectorState =>
+        _selectorState ??= new TransientSelectorState<CompanionAdventure>(BackNavigation);
 
     /// <summary>Gets or sets the Adventures available to the traveler.</summary>
     [Parameter, EditorRequired]
@@ -51,45 +53,40 @@
 
     private async Task ToggleAsync()
     {
-        if (_isOpen)
+        if (SelectorState.IsOpen)
         {
             await DismissAsync();
             return;
         }
 
-        _isOpen = true;
-        _backRegistration = BackNavigation.Register(DismissAsync);
+        SelectorState.Open(DismissAsync);
     }
 
     private async Task SelectAsync(CompanionAdventure adventure)
     {
-        await SelectedAdventureChanged.InvokeAsync(adventure);
-        await DismissAsync();
+        await SelectorState.SelectAsync(
+            adventure,
+            selected => SelectedAdventureChanged.InvokeAsync(selected),
+            RenderClosedAsync,
+            RestoreFocusAsync);
     }
 
     private async Task DismissAsync()
     {
-        if (!_isOpen)
-        {
-            return;
-        }
-
-        _isOpen = false;
-        _backRegistration?.Dispose();
-        _backRegistration = null;
-        await InvokeAsync(StateHasChanged);
-        await _trigger.FocusAsync();
+        await SelectorState.DismissAsync(RenderClosedAsync, RestoreFocusAsync);
     }
 
-    private Task HandleKeyDown(KeyboardEventArgs args) => args.Key == "Escape" && _isOpen
+    private Task HandleKeyDown(KeyboardEventArgs args) => args.Key == "Escape" && SelectorState.IsOpen
         ? DismissAsync()
         : Task.CompletedTask;
+
+    private Task RenderClosedAsync() => InvokeAsync(StateHasChanged);
+
+    private async Task RestoreFocusAsync() => await _trigger.FocusAsync();
 
     /// <inheritdoc />
     public void Dispose()
     {
-        _isOpen = false;
-        _backRegistration?.Dispose();
-        _backRegistration = null;
+        _selectorState?.Dispose();
     }
 }
