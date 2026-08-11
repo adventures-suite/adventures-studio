@@ -18,6 +18,9 @@ public static class CompanionTelemetry
     /// <summary>Gets the detail-operation signal value.</summary>
     public const string GetAdventureOperation = "GetCompanionAdventure";
 
+    /// <summary>Gets the Today-operation signal value.</summary>
+    public const string GetTodayOperation = "GetCompanionToday";
+
     internal static readonly ActivitySource ActivitySource = new(ActivitySourceName);
     private static readonly Meter Meter = new(MeterName);
     private static readonly Counter<long> Requests = Meter.CreateCounter<long>(
@@ -35,6 +38,10 @@ public static class CompanionTelemetry
     /// <summary>Starts a trace span for one Adventure detail query.</summary>
     public static Activity? StartGetAdventure() =>
         ActivitySource.StartActivity("companion.adventures.get", ActivityKind.Server);
+
+    /// <summary>Starts a trace span for one Adventure Today query.</summary>
+    public static Activity? StartGetToday() =>
+        ActivitySource.StartActivity("companion.adventures.today", ActivityKind.Server);
 
     /// <summary>Records a completed operation without identity or resource dimensions.</summary>
     public static void Record(string outcome, TimeSpan elapsed, Activity? activity) =>

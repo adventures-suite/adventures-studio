@@ -58,6 +58,85 @@ public sealed record CompanionAdventureDetailProjection(
     string? Description,
     IReadOnlyList<CompanionDestinationProjection> Destinations);
 
+/// <summary>Contains the server-established scope for one Today projection.</summary>
+public sealed record CompanionTodayReadScope(
+    CreatorId CreatorId,
+    UserId UserId,
+    string TravelerId,
+    long MembershipVersion,
+    DateTimeOffset EvaluatedAtUtc);
+
+/// <summary>Describes the authorized local-day position without using wire-contract types.</summary>
+public enum CompanionTodayProjectionState
+{
+    /// <summary>The Adventure has not begun.</summary>
+    BeforeAdventure,
+    /// <summary>The Adventure is active and has visible items today.</summary>
+    Active,
+    /// <summary>The Adventure has ended.</summary>
+    AfterAdventure,
+    /// <summary>The Adventure is active without visible scheduled items today.</summary>
+    NoScheduledItems
+}
+
+/// <summary>Describes local schedule timing without using wire-contract types.</summary>
+public enum CompanionScheduleTimeState
+{
+    /// <summary>The item has an explicit local time.</summary>
+    Scheduled,
+    /// <summary>The item is explicitly all-day.</summary>
+    AllDay,
+    /// <summary>The item's local time remains to be confirmed.</summary>
+    ToBeConfirmed,
+    /// <summary>The item is cancelled.</summary>
+    Cancelled
+}
+
+/// <summary>Describes operational schedule state without using wire-contract types.</summary>
+public enum CompanionScheduleOperationalState
+{
+    /// <summary>The item is proposed.</summary>
+    Proposed,
+    /// <summary>The item is reserved without implying platform booking.</summary>
+    Reserved,
+    /// <summary>The item is confirmed by the authoritative projection.</summary>
+    Confirmed,
+    /// <summary>The item materially changed.</summary>
+    Changed,
+    /// <summary>The item is cancelled.</summary>
+    Cancelled,
+    /// <summary>The item is complete.</summary>
+    Completed
+}
+
+/// <summary>Provides one minimized, authorized schedule item projection.</summary>
+public sealed record CompanionScheduleItemProjection(
+    string ItemId,
+    string ItemType,
+    string Title,
+    string? Summary,
+    DateOnly LocalDate,
+    TimeOnly? StartLocalTime,
+    TimeOnly? EndLocalTime,
+    string TimeZone,
+    CompanionScheduleTimeState TimeState,
+    CompanionScheduleOperationalState OperationalState,
+    string? PlaceSummary,
+    string? TransportationSummary,
+    int Sequence,
+    bool RequiresAcknowledgment);
+
+/// <summary>Provides the minimized authorized Today and Next application projection.</summary>
+public sealed record CompanionTodayProjection(
+    CompanionAdventureSummaryProjection Adventure,
+    string InformationProfileVersion,
+    DateOnly LocalDate,
+    string TimeZone,
+    CompanionTodayProjectionState State,
+    IReadOnlyList<CompanionScheduleItemProjection> TodayItems,
+    CompanionScheduleItemProjection? NextItem,
+    string? Notice);
+
 /// <summary>Queries authorized Adventure summaries without exposing persistence technology.</summary>
 public interface ICompanionAdventureSummaryQuery
 {
@@ -77,4 +156,25 @@ public interface ICompanionAdventureDetailQuery
         CompanionAdventureReadScope scope,
         string adventureId,
         CancellationToken cancellationToken = default);
+}
+
+/// <summary>Queries one authorized Today projection without revealing unavailable resources.</summary>
+public interface ICompanionTodayQuery
+{
+    /// <summary>Gets Today and Next, or <see langword="null"/> for every unavailable case.</summary>
+    Task<CompanionTodayProjection?> GetAsync(
+        CompanionTodayReadScope scope,
+        string adventureId,
+        CancellationToken cancellationToken = default);
+}
+
+/// <summary>Keeps Today unavailable until an owning authoritative adapter is implemented.</summary>
+public sealed class ClosedCompanionTodayQuery : ICompanionTodayQuery
+{
+    /// <inheritdoc />
+    public Task<CompanionTodayProjection?> GetAsync(
+        CompanionTodayReadScope scope,
+        string adventureId,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult<CompanionTodayProjection?>(null);
 }
