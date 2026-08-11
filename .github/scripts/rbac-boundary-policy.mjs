@@ -19,6 +19,10 @@ function exactChanges(document, expectedIds, allowedOperations) {
   const observed = new Set();
   for (const change of changes) {
     const id = String(change.resourceId ?? '').toLowerCase();
+    if (change.changeType === 'Ignore') {
+      if (!id.startsWith(`${scope.toLowerCase()}/providers/`)) fail('malformed_what_if');
+      continue;
+    }
     if (!expected.has(id) || observed.has(id)) fail('unexpected_rbac_resource');
     if (!allowedOperations.includes(change.changeType)) fail('unexpected_rbac_operation');
     observed.add(id);
@@ -42,7 +46,7 @@ export function validateRbacWhatIf(mode, document) {
   const ids = mode === 'bootstrap'
     ? Object.values(roleIds).map(id => `${scope}/providers/Microsoft.Authorization/roleDefinitions/${id}`)
     : assignmentIds.map(id => `${scope}/providers/Microsoft.Authorization/roleAssignments/${id}`);
-  exactChanges(document, ids, mode === 'bootstrap' ? ['Create', 'NoChange'] : ['Create']);
+  exactChanges(document, ids, ['Create']);
   const text = JSON.stringify(document).toLowerCase();
   if (text.includes('owner') || text.includes('contributor')) fail('broad_role_substitution');
   return { classification: `${mode}_what_if_approved`, resourceCount: ids.length };

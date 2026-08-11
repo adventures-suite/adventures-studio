@@ -583,9 +583,34 @@ test('deterministic role definitions reject broad scopes, wildcards, RBAC, ident
 test('RBAC boundary what-if and workflows prevent substitution, self-management, and residual access', () => {
   const scope = '/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev';
   const roleChanges = ['4bfa5b8d-8e4a-4fc8-9f2b-6115f07cad54', '9df6bf68-4db7-4d38-b7f1-7bb26a541199'].map(id => ({ resourceId: `${scope}/providers/Microsoft.Authorization/roleDefinitions/${id}`, changeType: 'Create' }));
-  assert.equal(validateRbacWhatIf('bootstrap', { properties: { changes: roleChanges } }).resourceCount, 2);
+  const ignoredResources = [
+    { resourceId: `${scope}/providers/Microsoft.Network/virtualNetworks/vnet-adventures-suite-dev`, changeType: 'Ignore' },
+    { resourceId: `${scope}/providers/Microsoft.Sql/servers/adventures-suite-dev-sql`, changeType: 'Ignore' },
+  ];
+  const liveShapedChanges = [...roleChanges, ...ignoredResources];
+  assert.equal(validateRbacWhatIf('bootstrap', { properties: { changes: liveShapedChanges } }).resourceCount, 2);
   const broad = structuredClone(roleChanges); broad[0].after = { roleName: 'Owner' };
   assert.throws(() => validateRbacWhatIf('bootstrap', { properties: { changes: broad } }), /broad_role_substitution/);
+  for (const targetIndex of [0, 1]) {
+    const noChange = structuredClone(liveShapedChanges); noChange[targetIndex].changeType = 'NoChange';
+    assert.throws(() => validateRbacWhatIf('bootstrap', { properties: { changes: noChange } }), /unexpected_rbac_operation/);
+  }
+  for (const changeType of ['Modify', 'Delete', 'Deploy']) {
+    const unexpectedOperation = structuredClone(liveShapedChanges); unexpectedOperation[0].changeType = changeType;
+    assert.throws(() => validateRbacWhatIf('bootstrap', { properties: { changes: unexpectedOperation } }), /unexpected_rbac_operation/);
+  }
+  const replacement = structuredClone(liveShapedChanges); replacement[0].changeType = 'Modify'; replacement[0].delta = [{ path: 'properties', propertyChangeType: 'Modify' }];
+  assert.throws(() => validateRbacWhatIf('bootstrap', { properties: { changes: replacement } }), /unexpected_rbac_operation/);
+  const duplicate = structuredClone(liveShapedChanges); duplicate.splice(1, 0, structuredClone(duplicate[0]));
+  assert.throws(() => validateRbacWhatIf('bootstrap', { properties: { changes: duplicate } }), /unexpected_rbac_resource/);
+  const missing = structuredClone(liveShapedChanges); missing.splice(1, 1);
+  assert.throws(() => validateRbacWhatIf('bootstrap', { properties: { changes: missing } }), /missing_rbac_resource/);
+  const additional = structuredClone(liveShapedChanges); additional.push({ resourceId: `${scope}/providers/Microsoft.Authorization/roleDefinitions/00000000-0000-0000-0000-000000000000`, changeType: 'Create' });
+  assert.throws(() => validateRbacWhatIf('bootstrap', { properties: { changes: additional } }), /unexpected_rbac_resource/);
+  const malformedIgnore = structuredClone(liveShapedChanges); malformedIgnore.push({ resourceId: 'not-an-arm-resource-id', changeType: 'Ignore' });
+  assert.throws(() => validateRbacWhatIf('bootstrap', { properties: { changes: malformedIgnore } }), /malformed_what_if/);
+  const lowercaseIgnore = structuredClone(liveShapedChanges); lowercaseIgnore[2].changeType = 'ignore';
+  assert.throws(() => validateRbacWhatIf('bootstrap', { properties: { changes: lowercaseIgnore } }), /unexpected_rbac_resource/);
   const foundationWorkflow = readFileSync('.github/workflows/provision-migration-foundation-resources.yml', 'utf8');
   const rbacWorkflow = readFileSync('.github/workflows/manage-migration-foundation-rbac.yml', 'utf8');
   const rbacRunner = readFileSync('.github/scripts/run-rbac-boundary-operation.sh', 'utf8');
