@@ -433,6 +433,15 @@
           "AdventuresSuite.Identity": "[1.0.0, )"
         }
       },
+      "adventuressuite.authorization.sqlserver": {
+        "type": "Project",
+        "dependencies": {
+          "AdventuresSuite.Authorization": "[1.0.0, )",
+          "AdventuresSuite.Identity": "[1.0.0, )",
+          "Dapper": "[2.1.79, )",
+          "Microsoft.Data.SqlClient": "[7.0.2, )"
+        }
+      },
       "adventuressuite.identity": {
         "type": "Project"
       },
@@ -452,6 +461,20 @@
           "Dapper": "[2.1.79, )",
           "Microsoft.Data.SqlClient": "[7.0.2, )",
           "Microsoft.Data.SqlClient.Extensions.Azure": "[7.0.2, )"
+        }
+      },
+      "adventuressuite.planning": {
+        "type": "Project",
+        "dependencies": {
+          "AdventuresSuite.Authorization": "[1.0.0, )"
+        }
+      },
+      "adventuressuite.planning.sqlserver": {
+        "type": "Project",
+        "dependencies": {
+          "AdventuresSuite.Planning": "[1.0.0, )",
+          "Dapper": "[2.1.79, )",
+          "Microsoft.Data.SqlClient": "[7.0.2, )"
         }
       }
     }

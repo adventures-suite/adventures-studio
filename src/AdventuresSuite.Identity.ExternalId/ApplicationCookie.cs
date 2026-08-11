@@ -10,10 +10,17 @@ using AdventuresSuite.Identity;
 
 namespace AdventuresSuite.Identity.ExternalId;
 
+/// <summary>Defines the minimal application-principal claims exposed to trusted hosts.</summary>
+public static class ApplicationUserClaims
+{
+    /// <summary>Gets the claim containing the stable AdventuresSuite user identity.</summary>
+    public const string UserId = "adventures_suite_user_id";
+}
+
 /// <summary>Creates and validates the minimal protected application-cookie principal.</summary>
 internal static class ApplicationCookiePrincipal
 {
-    internal const string UserIdClaim = "adventures_suite_user_id";
+    internal const string UserIdClaim = ApplicationUserClaims.UserId;
     internal const string SessionIdClaim = "adventures_suite_session_id";
     internal const string SecurityVersionClaim = "adventures_suite_security_version";
     internal const string AuthenticationTimeClaim = "adventures_suite_auth_time";

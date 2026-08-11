@@ -27,7 +27,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../AdventuresSuite.Planning/AdventuresSuite.Planning.csproj" />
+    <ProjectReference Include="../AdventuresSuite.Planning.SqlServer/AdventuresSuite.Planning.SqlServer.csproj" />
     <ProjectReference Include="../AdventuresSuite.Authorization/AdventuresSuite.Authorization.csproj" />
+    <ProjectReference Include="../AdventuresSuite.Authorization.SqlServer/AdventuresSuite.Authorization.SqlServer.csproj" />
     <ProjectReference Include="../AdventuresSuite.Identity/AdventuresSuite.Identity.csproj" />
     <ProjectReference Include="../AdventuresSuite.Identity.ExternalId/AdventuresSuite.Identity.ExternalId.csproj" />
     <ProjectReference Include="../AdventuresSuite.Identity.SqlServer/AdventuresSuite.Identity.SqlServer.csproj" />

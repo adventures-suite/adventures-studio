@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../TheSimontonAdventures.Web/TheSimontonAdventures.Web.csproj" />
+    <ProjectReference Include="../AdventuresSuite.Planning/AdventuresSuite.Planning.csproj" />
   </ItemGroup>
 
 </Project>

@@ -3,7 +3,12 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using AdventuresSuite.Identity.ExternalId;
+using TheSimontonAdventures.Web.Authorization;
 using TheSimontonAdventures.Web.Components;
+using TheSimontonAdventures.Web.Creators;
+using TheSimontonAdventures.Web.Planning;
+using TheSimontonAdventures.Web.Planning.Persistence;
 
 namespace TheSimontonAdventures.Web.Tests;
 
@@ -40,18 +45,143 @@ public sealed class WorkspaceRootTests
         Assert.DoesNotContain("opaque-user", html);
     }
 
-    private static async Task<string> RenderAsync(ClaimsPrincipal user)
+    /// <summary>An explicitly addressed and authorized Creator renders only its dashboard projection.</summary>
+    [Fact]
+    public async Task AddressedCreatorRoute_RendersAuthorizedDashboard()
+    {
+        var query = new StubPlannerWorkspaceQueryService(
+            PlannerWorkspaceResult.Allowed([new AdventurePlanDashboardItem
+            {
+                Id = new("plan_spain_2027"),
+                Title = "Spain and Atlantic",
+                LifecycleStage = AdventureLifecycleStage.Plan,
+                Status = PlanningStatus.Planned,
+                Dates = new(new(2027, 10, 25), new(2027, 11, 15)),
+                Version = 7,
+                IsArchived = false
+            }]));
+        var html = await RenderAsync(ApplicationPrincipal(),
+            "/workspace/creators/creator_alpha_01/plans",
+            services =>
+            {
+                services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>();
+                services.AddSingleton<IPlannerWorkspaceQueryService>(query);
+            });
+
+        Assert.Contains("Spain and Atlantic", html);
+        Assert.Contains("Plan version", html);
+        Assert.Equal(new CreatorId("creator_alpha_01"), query.LastCreatorId);
+    }
+
+    /// <summary>An authorized instance route renders allowlisted details without sensitive values.</summary>
+    [Fact]
+    public async Task AddressedPlanRoute_RendersReadOnlyDetailWithoutSensitiveValues()
+    {
+        var query = new StubPlannerWorkspaceQueryService(
+            PlannerWorkspaceResult.Denied(),
+            PlannerPlanDetailResult.Allowed(new AdventurePlanDetail
+            {
+                Id = new("plan_spain_2027"),
+                Title = "Spain and Atlantic",
+                WorkingDescription = "Private working plan",
+                LifecycleStage = AdventureLifecycleStage.Plan,
+                Status = PlanningStatus.Planned,
+                Dates = new(new(2027, 10, 25), new(2027, 11, 15)),
+                Version = 7,
+                TravelerCount = 2,
+                Destinations = [new(new("visit_madrid"), "Madrid",
+                    new(new(2027, 10, 26), new(2027, 10, 29)), new("Europe/Madrid"), 1)]
+            }));
+        var html = await RenderAsync(ApplicationPrincipal(),
+            "/workspace/creators/creator_alpha_01/plans/plan_spain_2027",
+            services =>
+            {
+                services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>();
+                services.AddSingleton<IPlannerWorkspaceQueryService>(query);
+            });
+
+        Assert.Contains("Spain and Atlantic", html);
+        Assert.Contains("Madrid", html);
+        Assert.Contains("Sensitive reservation references", html);
+        Assert.DoesNotContain("RESERVATION-SECRET-123", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Traveler Private Name", html, StringComparison.Ordinal);
+        Assert.Equal(new AdventurePlanId("plan_spain_2027"), query.LastPlanId);
+    }
+
+    /// <summary>Denied Creator routes return a generic state without protected plan content.</summary>
+    [Fact]
+    public async Task AddressedCreatorRoute_DeniedAccess_DoesNotRevealPlans()
+    {
+        var html = await RenderAsync(ApplicationPrincipal(),
+            "/workspace/creators/creator_forged_01/plans",
+            services =>
+            {
+                services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>();
+                services.AddSingleton<IPlannerWorkspaceQueryService>(
+                    new StubPlannerWorkspaceQueryService(PlannerWorkspaceResult.Denied()));
+            });
+
+        Assert.Contains("Workspace unavailable", html);
+        Assert.DoesNotContain("Spain and Atlantic", html);
+        Assert.DoesNotContain("creator_forged_01", html);
+    }
+
+    /// <summary>Malformed or non-dashboard paths never invoke the private Planning query.</summary>
+    [Fact]
+    public async Task UnaddressedWorkspacePath_DoesNotQueryPlanning()
+    {
+        var query = new StubPlannerWorkspaceQueryService(PlannerWorkspaceResult.Denied());
+        var html = await RenderAsync(ApplicationPrincipal(),
+            "/workspace/creators/INVALID/plans",
+            services =>
+            {
+                services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>();
+                services.AddSingleton<IPlannerWorkspaceQueryService>(query);
+            });
+
+        Assert.Contains("Choose a Creator workspace", html);
+        Assert.Equal(0, query.CallCount);
+    }
+
+    /// <summary>Read failures render a safe retry state without exception or scope details.</summary>
+    [Fact]
+    public async Task AddressedCreatorRoute_ReadFailure_RendersSafeFailure()
+    {
+        var html = await RenderAsync(ApplicationPrincipal(),
+            "/workspace/creators/creator_alpha_01/plans",
+            services =>
+            {
+                services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>();
+                services.AddSingleton<IPlannerWorkspaceQueryService>(
+                    new ThrowingPlannerWorkspaceQueryService());
+            });
+
+        Assert.Contains("Planner temporarily unavailable", html);
+        Assert.DoesNotContain("creator_alpha_01", html);
+        Assert.DoesNotContain("database detail", html);
+    }
+
+    private static ClaimsPrincipal ApplicationPrincipal() => new(new ClaimsIdentity(
+        [new Claim(ApplicationUserClaims.UserId, "user_planner_01")],
+        authenticationType: "test"));
+
+    private static async Task<string> RenderAsync(
+        ClaimsPrincipal user,
+        string path = "/",
+        Action<ServiceCollection>? configure = null)
     {
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddAntiforgery();
         services.AddHttpContextAccessor();
+        configure?.Invoke(services);
         await using var provider = services.BuildServiceProvider();
         var context = new DefaultHttpContext
         {
             RequestServices = provider,
             User = user
         };
+        context.Request.Path = path;
         provider.GetRequiredService<IHttpContextAccessor>().HttpContext = context;
 
         await using var renderer = new HtmlRenderer(
@@ -64,5 +194,53 @@ public sealed class WorkspaceRootTests
         });
 
         return html;
+    }
+
+    private sealed class StubPlannerWorkspaceQueryService(
+        PlannerWorkspaceResult result,
+        PlannerPlanDetailResult? detailResult = null)
+        : IPlannerWorkspaceQueryService
+    {
+        public int CallCount { get; private set; }
+        public CreatorId LastCreatorId { get; private set; }
+        public AdventurePlanId LastPlanId { get; private set; }
+
+        public Task<PlannerWorkspaceResult> ListAsync(
+            AdventuresSuite.Identity.ActorIdentity actor,
+            CreatorId creatorId,
+            CancellationToken cancellationToken = default)
+        {
+            CallCount++;
+            LastCreatorId = creatorId;
+            return Task.FromResult(result);
+        }
+
+        public Task<PlannerPlanDetailResult> GetAsync(
+            AdventuresSuite.Identity.ActorIdentity actor,
+            CreatorId creatorId,
+            AdventurePlanId planId,
+            CancellationToken cancellationToken = default)
+        {
+            CallCount++;
+            LastCreatorId = creatorId;
+            LastPlanId = planId;
+            return Task.FromResult(detailResult ?? PlannerPlanDetailResult.Denied());
+        }
+    }
+
+    private sealed class ThrowingPlannerWorkspaceQueryService : IPlannerWorkspaceQueryService
+    {
+        public Task<PlannerWorkspaceResult> ListAsync(
+            AdventuresSuite.Identity.ActorIdentity actor,
+            CreatorId creatorId,
+            CancellationToken cancellationToken = default) =>
+            throw new InvalidOperationException("database detail");
+
+        public Task<PlannerPlanDetailResult> GetAsync(
+            AdventuresSuite.Identity.ActorIdentity actor,
+            CreatorId creatorId,
+            AdventurePlanId planId,
+            CancellationToken cancellationToken = default) =>
+            throw new InvalidOperationException("database detail");
     }
 }
