@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using AdventuresSuite.Companion.Contracts;
 
 namespace AdventuresSuite.Companion.Client;
@@ -32,10 +33,17 @@ public sealed class HttpCompanionAdventureListTransport(HttpClient httpClient) :
             throw new CompanionApiException(response.StatusCode, problem);
         }
 
-        return await response.Content.ReadFromJsonAsync(
-                CompanionJsonSerializerContext.Default.CompanionAdventureCollectionDto,
-                cancellationToken).ConfigureAwait(false)
-            ?? throw new CompanionApiException(HttpStatusCode.BadGateway, null);
+        try
+        {
+            return await response.Content.ReadFromJsonAsync(
+                    CompanionJsonSerializerContext.Default.CompanionAdventureCollectionDto,
+                    cancellationToken).ConfigureAwait(false)
+                ?? throw new CompanionApiException(HttpStatusCode.BadGateway, null);
+        }
+        catch (JsonException)
+        {
+            throw new CompanionApiException(HttpStatusCode.BadGateway, null);
+        }
     }
 
     private static async Task<CompanionProblemDto?> TryReadProblemAsync(
@@ -56,7 +64,7 @@ public sealed class HttpCompanionAdventureListTransport(HttpClient httpClient) :
         {
             return null;
         }
-        catch (System.Text.Json.JsonException)
+        catch (JsonException)
         {
             return null;
         }

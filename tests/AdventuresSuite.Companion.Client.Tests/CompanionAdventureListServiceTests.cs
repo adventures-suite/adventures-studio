@@ -76,19 +76,47 @@ public sealed class CompanionAdventureListServiceTests
         Assert.Empty(result.Adventures);
     }
 
-    [Theory]
-    [InlineData(HttpStatusCode.Unauthorized)]
-    [InlineData(HttpStatusCode.Forbidden)]
-    public async Task AuthorizationFailureDoesNotExposeProblem(HttpStatusCode statusCode)
+    [Fact]
+    public async Task AuthorizationFailuresRemainDistinctAndDoNotExposeProblems()
     {
         var problem = Problem("private_detail", "Do not expose this title");
 
-        var result = await new CompanionAdventureListService(new ThrowingTransport(new CompanionApiException(statusCode, problem))).LoadAsync();
+        foreach (var statusCode in new[] { HttpStatusCode.Unauthorized, HttpStatusCode.Forbidden })
+        {
+            var result = await new CompanionAdventureListService(new ThrowingTransport(new CompanionApiException(statusCode, problem))).LoadAsync();
 
-        Assert.Equal(CompanionAdventureListState.Unauthorized, result.State);
-        Assert.Null(result.ErrorCode);
-        Assert.Null(result.ErrorTitle);
-        Assert.Null(result.SupportId);
+            Assert.Equal(CompanionAdventureListState.Unauthorized, result.State);
+            Assert.Null(result.ErrorCode);
+            Assert.Null(result.ErrorTitle);
+            Assert.Null(result.SupportId);
+        }
+    }
+
+    [Fact]
+    public async Task MalformedPayloadAndUnknownClosedEnumFailSafely()
+    {
+        var payloads = new[]
+        {
+            "{not-json",
+            "{\"schemaVersion\":\"1.0\",\"projectionVersion\":\"pv\",\"generatedAtUtc\":\"2026-08-11T16:00:00Z\",\"freshUntilUtc\":\"2026-08-11T16:15:00Z\",\"supportId\":\"support\",\"adventures\":[{\"adventureId\":\"adv\",\"title\":\"Trip\",\"status\":\"futureUnknownStatus\"}]}"
+        };
+
+        foreach (var payload in payloads)
+        {
+            using var handler = new StubHttpHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(payload, Encoding.UTF8, "application/json")
+            });
+            using var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.example.invalid/") };
+            var service = new CompanionAdventureListService(new HttpCompanionAdventureListTransport(httpClient));
+
+            var result = await service.LoadAsync();
+
+            Assert.Equal(CompanionAdventureListState.Error, result.State);
+            Assert.Equal("companion_request_failed", result.ErrorCode);
+            Assert.DoesNotContain(payload, result.ErrorTitle);
+            Assert.Null(result.SupportId);
+        }
     }
 
     [Fact]
