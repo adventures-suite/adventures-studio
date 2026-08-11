@@ -25,7 +25,9 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DOTNET_VERSION: "10.0.x"
+  # packages.lock.json is generated with this SDK; floating to a newer servicing
+  # runtime changes the SDK-injected Microsoft.AspNetCore.App.Internal.Assets.
+  DOTNET_VERSION: "10.0.302"
   PROJECT: src/AdventuresSuite.Api/AdventuresSuite.Api.csproj
   PUBLISH_DIR: ./artifacts/companion-api/publish
   PACKAGE_DIR: ./artifacts/companion-api/package

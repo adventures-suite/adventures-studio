@@ -60,6 +60,8 @@ if (string.Equals(authenticationMode, nameof(AuthenticationMode.ExternalProvider
     builder.Services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>();
     builder.Services.AddSingleton(TimeProvider.System);
     builder.Services.AddScoped<IPlannerWorkspaceQueryService, PlannerWorkspaceQueryService>();
+    builder.Services.AddSingleton<IPlanningCreationIdentityGenerator, GuidPlanningCreationIdentityGenerator>();
+    builder.Services.AddScoped<IManualAdventurePlanCreateService, ManualAdventurePlanCreateService>();
 }
 
 // Register the existing JSON-backed travel-content implementation.
@@ -225,6 +227,7 @@ app.MapGet(
 if (authenticationConfiguration.Mode == AuthenticationMode.ExternalProvider)
 {
     app.MapAdventuresSuiteExternalIdEndpoints(authenticationConfiguration);
+    app.MapManualAdventurePlanCreateEndpoint();
 }
 
 /// <summary>
