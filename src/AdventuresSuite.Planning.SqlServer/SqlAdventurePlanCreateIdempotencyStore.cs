@@ -75,8 +75,8 @@ internal sealed class SqlAdventurePlanCreateIdempotencyStore(
                        AND auditEvents.ResultingVersion=results.ResultingVersion) AS AuditCount
               FROM planning.AdventurePlanCreateResults AS results
               LEFT JOIN planning.AdventurePlans AS plans
-                ON plans.CreatorId=results.CreatorId
-               AND plans.AdventurePlanId=results.AdventurePlanId
+                ON plans.CreatorId COLLATE Latin1_General_100_BIN2=results.CreatorId
+               AND plans.AdventurePlanId COLLATE Latin1_General_100_BIN2=results.AdventurePlanId
              WHERE results.CreatorId=@CreatorId
                AND results.Operation=@Operation
                AND results.IdempotencyKey=@IdempotencyKey;
