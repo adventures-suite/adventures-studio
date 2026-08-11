@@ -27,7 +27,11 @@ public static class MauiProgram
 		builder.Services.AddMauiBlazorWebView();
 		if (providerSettings.Provider == Models.CompanionContentProviderKind.Demo)
 		{
-			builder.Services.AddSingleton<Services.ICompanionContentProvider, Services.CompanionContentService>();
+			builder.Services.AddSingleton<Services.CompanionContentService>();
+			builder.Services.AddSingleton<Services.ICompanionContentProvider>(services =>
+				services.GetRequiredService<Services.CompanionContentService>());
+			builder.Services.AddSingleton<Services.ICompanionAdventureDetailProvider,
+				Services.DemoCompanionAdventureDetailProvider>();
 		}
 		else
 		{
@@ -37,6 +41,12 @@ public static class MauiProgram
 			builder.Services.AddSingleton<AdventuresSuite.Companion.Client.ICompanionAdventureListService,
 				AdventuresSuite.Companion.Client.CompanionAdventureListService>();
 			builder.Services.AddSingleton<Services.ICompanionContentProvider, Services.ApiCompanionContentProvider>();
+			builder.Services.AddSingleton<AdventuresSuite.Companion.Client.ICompanionAdventureDetailTransport,
+				AdventuresSuite.Companion.Client.HttpCompanionAdventureDetailTransport>();
+			builder.Services.AddSingleton<AdventuresSuite.Companion.Client.ICompanionAdventureDetailService,
+				AdventuresSuite.Companion.Client.CompanionAdventureDetailService>();
+			builder.Services.AddSingleton<Services.ICompanionAdventureDetailProvider,
+				Services.ApiCompanionAdventureDetailProvider>();
 		}
 		builder.Services.AddSingleton<Services.PlaybookContentService>();
 		builder.Services.AddSingleton<Services.IAppearancePreferenceStore, Services.MauiAppearancePreferenceStore>();

@@ -1,8 +1,10 @@
 ﻿@page "/"
 @implements IDisposable
 @inject ICompanionContentProvider ContentProvider
+@inject ICompanionAdventureDetailProvider DetailProvider
 @inject PlaybookContentService PlaybookService
 @inject ICompanionAppearanceService Appearance
+@inject TransientBackNavigationService BackNavigation
 
 @if (_state is null)
 {
@@ -74,40 +76,56 @@ else
         <ErrorBoundary>
             <ChildContent>
                 <section class="screen" aria-live="polite">
-                    @switch (_selectedTab)
+                    @if (_detailState?.IsOpen == true)
                     {
-                        case CompanionTab.Home:
-                            @if (_hasDetailedContent)
-                            {
-                                <HomeTab Adventure="_adventure"
-                                         OnOpenJourney="() => SelectTab(CompanionTab.Itinerary)"
-                                         OnOpenReadiness="() => SelectTab(CompanionTab.Readiness)"
-                                         OnOpenPlaybook="OpenPlaybook"
-                                         OnFeedback="ShowToast" />
-                            }
-                            else
-                            {
-                                <AdventureListTab Adventure="_adventure" />
-                            }
-                            break;
-                        case CompanionTab.Itinerary:
-                            <JourneyTab Adventure="_adventure" />
-                            break;
-                        case CompanionTab.Readiness:
-                            <ReadinessTab Adventure="_adventure" OnFeedback="ShowToast" />
-                            break;
-                        case CompanionTab.Memories:
-                            <MemoriesTab Adventures="_adventures"
-                                         SelectedAdventure="_adventure"
-                                         SelectedAdventureChanged="SelectMemoryAdventure"
-                                         OnFeedback="ShowToast" />
-                            break;
-                        case CompanionTab.Playbook:
-                            @if (_playbook is not null)
-                            {
-                                <PlaybookTab Playbook="_playbook" OnBack="() => SelectTab(CompanionTab.Home)" />
-                            }
-                            break;
+                        <AdventureDetailView IsLoading="_detailState.IsLoading"
+                                             Result="_detailState.Current"
+                                             OnBack="CloseDetailAsync"
+                                             OnRetry="RetryDetailAsync" />
+                    }
+                    else
+                    {
+                        @switch (_selectedTab)
+                        {
+                            case CompanionTab.Home:
+                                @if (_hasDetailedContent)
+                                {
+                                    <HomeTab Adventure="_adventure"
+                                             OnOpenJourney="() => SelectTab(CompanionTab.Itinerary)"
+                                             OnOpenReadiness="() => SelectTab(CompanionTab.Readiness)"
+                                             OnOpenPlaybook="OpenPlaybook"
+                                             OnOpenDetail="OpenDetailAsync"
+                                             RestoreDetailFocus="_restoreDetailFocus"
+                                             DetailFocusRestored="DetailFocusRestored"
+                                             OnFeedback="ShowToast" />
+                                }
+                                else
+                                {
+                                    <AdventureListTab Adventure="_adventure"
+                                                      OnOpenDetail="OpenDetailAsync"
+                                                      RestoreDetailFocus="_restoreDetailFocus"
+                                                      DetailFocusRestored="DetailFocusRestored" />
+                                }
+                                break;
+                            case CompanionTab.Itinerary:
+                                <JourneyTab Adventure="_adventure" />
+                                break;
+                            case CompanionTab.Readiness:
+                                <ReadinessTab Adventure="_adventure" OnFeedback="ShowToast" />
+                                break;
+                            case CompanionTab.Memories:
+                                <MemoriesTab Adventures="_adventures"
+                                             SelectedAdventure="_adventure"
+                                             SelectedAdventureChanged="SelectMemoryAdventure"
+                                             OnFeedback="ShowToast" />
+                                break;
+                            case CompanionTab.Playbook:
+                                @if (_playbook is not null)
+                                {
+                                    <PlaybookTab Playbook="_playbook" OnBack="() => SelectTab(CompanionTab.Home)" />
+                                }
+                                break;
+                        }
                     }
                 </section>
             </ChildContent>
@@ -149,10 +167,14 @@ else
     private bool _hasDetailedContent;
     private string? _errorTitle;
     private string? _supportId;
+    private CompanionAdventureDetailPresentationState? _detailState;
+    private IDisposable? _detailBackRegistration;
+    private bool _restoreDetailFocus;
 
     protected override async Task OnInitializedAsync()
     {
 		Appearance.Changed += OnAppearanceChanged;
+        _detailState = new CompanionAdventureDetailPresentationState(DetailProvider);
         await LoadAsync();
         _timer = new PeriodicTimer(TimeSpan.FromMinutes(1));
         _timerCancellation = new CancellationTokenSource();
@@ -202,6 +224,45 @@ else
     }
 
     private void SelectMemoryAdventure(CompanionAdventure adventure) => _adventure = adventure;
+
+    private async Task OpenDetailAsync()
+    {
+        if (_adventure is null || _detailState is null)
+        {
+            return;
+        }
+
+        _detailBackRegistration?.Dispose();
+        _detailBackRegistration = BackNavigation.Register(CloseDetailAsync);
+        var load = _detailState.OpenAsync(_adventure.Id);
+        StateHasChanged();
+        await load;
+        StateHasChanged();
+    }
+
+    private async Task RetryDetailAsync()
+    {
+        if (_detailState is null)
+        {
+            return;
+        }
+
+        var load = _detailState.RetryAsync();
+        StateHasChanged();
+        await load;
+        StateHasChanged();
+    }
+
+    private Task CloseDetailAsync()
+    {
+        _detailState?.Close();
+        _detailBackRegistration?.Dispose();
+        _detailBackRegistration = null;
+        _restoreDetailFocus = true;
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private void DetailFocusRestored() => _restoreDetailFocus = false;
 
     private void ChangeAppearance(ChangeEventArgs args)
     {
@@ -254,6 +315,8 @@ else
     public void Dispose()
     {
 		Appearance.Changed -= OnAppearanceChanged;
+        _detailBackRegistration?.Dispose();
+        _detailState?.Dispose();
         _timerCancellation?.Cancel();
         _timerCancellation?.Dispose();
         _timer?.Dispose();

@@ -35,6 +35,10 @@
     </div>
 </article>
 
+<button @ref="_detailButton" class="detail-entry" type="button" @onclick="OnOpenDetail">
+    View Adventure details
+</button>
+
 @if (Adventure.Segments.Count > 0)
 {
 <section class="section-block today-block">
@@ -89,7 +93,18 @@
     public EventCallback OnOpenPlaybook { get; set; }
 
     [Parameter]
+    public EventCallback OnOpenDetail { get; set; }
+
+    [Parameter]
+    public bool RestoreDetailFocus { get; set; }
+
+    [Parameter]
+    public EventCallback DetailFocusRestored { get; set; }
+
+    [Parameter]
     public EventCallback<string> OnFeedback { get; set; }
+
+    private ElementReference _detailButton;
 
     private CompanionSegment FeaturedSegment => Adventure.Segments[Adventure.IsCurrent ? Math.Min(6, Adventure.Segments.Count - 1) : 0];
     private DateOnly FeaturedDate => DateOnly.ParseExact(FeaturedSegment.ArrivalDate, "MMMM d, yyyy", System.Globalization.CultureInfo.InvariantCulture);
@@ -104,4 +119,13 @@
     private int CurrentAdventureDay => Math.Clamp(DateOnly.FromDateTime(DateTime.Now).DayNumber - Adventure.StartDate.DayNumber + 1, 1, AdventureLengthDays);
 
     private Task FeedbackAsync(string message) => OnFeedback.InvokeAsync(message);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (RestoreDetailFocus)
+        {
+            await _detailButton.FocusAsync();
+            await DetailFocusRestored.InvokeAsync();
+        }
+    }
 }
