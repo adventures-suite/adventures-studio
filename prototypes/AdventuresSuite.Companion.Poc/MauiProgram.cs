@@ -18,7 +18,8 @@ public static class MauiProgram
 		builder.Services.AddSingleton<Services.CompanionContentService>();
 		builder.Services.AddSingleton<Services.PlaybookContentService>();
 		builder.Services.AddSingleton<Services.IAppearancePreferenceStore, Services.MauiAppearancePreferenceStore>();
-		builder.Services.AddSingleton<Services.ISystemAppearanceSource, Services.MauiSystemAppearanceSource>();
+		builder.Services.AddSingleton<Services.MauiSystemAppearanceSource>();
+		builder.Services.AddSingleton<Services.ISystemAppearanceSource>(services => services.GetRequiredService<Services.MauiSystemAppearanceSource>());
 		builder.Services.AddSingleton<Services.ICompanionAppearanceService, Services.CompanionAppearanceService>();
 		builder.Services.AddSingleton<Services.ICompanionUiDispatcher, Services.MauiCompanionUiDispatcher>();
 		builder.Services.AddSingleton<Services.TransientBackNavigationService>();

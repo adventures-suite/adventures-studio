@@ -4,10 +4,14 @@ public partial class App : Application
 {
 	private readonly MainPage _mainPage;
 
-	public App(MainPage mainPage, Services.ICompanionAppearanceService appearance)
+	public App(
+		MainPage mainPage,
+		Services.ICompanionAppearanceService appearance,
+		Services.MauiSystemAppearanceSource systemAppearance)
 	{
 		InitializeComponent();
 		_mainPage = mainPage;
+		systemAppearance.Attach(this);
 		ApplyNativeAppearance(appearance);
 		appearance.Changed += (_, _) => ApplyNativeAppearance(appearance);
 	}

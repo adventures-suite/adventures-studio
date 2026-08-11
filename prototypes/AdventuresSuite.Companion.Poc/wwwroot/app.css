@@ -52,6 +52,8 @@ button:focus-visible, select:focus-visible { outline: 3px solid var(--focus-ring
 
 .theme-dark {
     color-scheme: dark;
+    color: var(--text-primary);
+    background: var(--surface-canvas);
     --surface-canvas: #101815;
     --surface-card: #18231f;
     --surface-raised: rgba(29, 42, 37, .94);
@@ -79,9 +81,17 @@ button:focus-visible, select:focus-visible { outline: 3px solid var(--focus-ring
     --forest: var(--accent-strong);
     --forest-soft: var(--accent-primary);
     --sage: #84a99b;
+    --sand: #101815;
+    --paper: #18231f;
+    --ink: #f2f5f1;
+    --muted: #b7c2bc;
     --gold: var(--accent-warm);
     --coral: #f29a83;
+    --line: #3e4c46;
+    --glass-background: rgba(24, 35, 31, .82);
+    --glass-background-strong: rgba(29, 42, 37, .94);
     --glass-border: rgba(159, 184, 174, .3);
+    --glass-shadow: 0 14px 36px rgba(0, 0, 0, .46);
 }
 
 .visually-hidden { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important; white-space: nowrap !important; border: 0 !important; }
@@ -288,6 +298,7 @@ button:focus-visible, select:focus-visible { outline: 3px solid var(--focus-ring
 h1:focus { outline: none; }
 
 .theme-dark .topbar { background: linear-gradient(180deg, rgba(16,24,21,.96), rgba(16,24,21,.72)); }
+.theme-dark .creator-badge { background: #fffdf8; border-color: rgba(255,255,255,.62); }
 .theme-dark .adventure-menu button.selected,
 .theme-dark .date-tile,
 .theme-dark .memory-card > span,
@@ -309,6 +320,13 @@ h1:focus { outline: none; }
     body { padding: 24px 0; background: #d9dfd8; }
     .companion-shell { min-height: calc(100vh - 48px); border-radius: 28px; overflow: hidden; box-shadow: 0 20px 70px rgba(27,47,39,.2); }
     .tabbar { bottom: 38px; }
+}
+
+@media (max-width: 430px) {
+    .header-actions { gap: 5px; }
+    .avatar { display: none; }
+    .creator-badge { width: 82px; }
+    .appearance-picker select { max-width: 68px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
