@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -201,7 +201,8 @@ test('federation proof evidence is stage-bounded, exactly-once, and subscription
   assert.doesNotMatch(runner, /az account show/);
   assert.match(runner, /claims\.get\('tid'\)/);
   assert.match(runner, /trap cleanup EXIT/);
-  assert.match(runner, /rm -f "\$read_error" "\$write_error"/);
+  assert.match(runner, /umask 077/);
+  assert.match(runner, /rm -f "\$token_response" "\$token_error" "\$read_error" "\$write_error"/);
   for (const claim of ['tid', 'oid', 'client_id', 'aud']) assert.match(runner, new RegExp(`claim_mismatch_${claim}`));
   for (const workflow of workflows) {
     assert.equal((workflow.match(/print\(json\.dumps\(envelope/g) ?? []).length, 1);
@@ -211,6 +212,122 @@ test('federation proof evidence is stage-bounded, exactly-once, and subscription
     }
     assert.match(workflow, /if not re\.fullmatch/);
     assert.doesNotMatch(workflow, /observed.*claim|raw.*error|request.*header/i);
+  }
+});
+
+test('federation proof acquires an ARM token for the explicit tenant without subscription context or leakage', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'migration-federation-runner-'));
+  const fakeBin = join(directory, 'bin');
+  const fakeAz = join(fakeBin, 'az');
+  const stateFile = join(directory, 'proof.state');
+  const prefix = join(directory, 'proof');
+  const expectedTenant = 'd7add2bb-ac03-49a8-9377-d0bf6a012f2f';
+  const expectedPrincipal = 'b77b6201-ad26-4f77-8f88-6d0d43f7dbb8';
+  const expectedClient = '223af00d-69e5-4302-9ac5-6b338f3ea2e5';
+  const jwt = claims => {
+    const encode = value => Buffer.from(JSON.stringify(value)).toString('base64url');
+    return `${encode({ alg: 'none', typ: 'JWT' })}.${encode(claims)}.signature`;
+  };
+  const validToken = jwt({ tid: expectedTenant, oid: expectedPrincipal, appid: expectedClient, aud: 'https://management.azure.com/' });
+  const fake = `#!/usr/bin/env bash
+set -euo pipefail
+if [ "\${1-} \${2-}" = 'account get-access-token' ]; then
+  [ "\${FAKE_TOKEN_MODE-}" != 'acquisition_failure' ] || exit 19
+  tenant=''
+  resource_type=''
+  output=''
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      --tenant) tenant="$2"; shift 2 ;;
+      --resource-type) resource_type="$2"; shift 2 ;;
+      --output) output="$2"; shift 2 ;;
+      *) shift ;;
+    esac
+  done
+  [ "$tenant" = "\${EXPECTED_FAKE_TENANT-}" ] || exit 20
+  [ "$resource_type" = 'arm' ] || exit 21
+  [ "$output" = 'json' ] || exit 22
+  if [ "\${FAKE_TOKEN_MODE-}" = 'malformed_response' ]; then
+    printf '{not-json'
+  else
+    printf '{"accessToken":"%s"}\n' "$FAKE_ARM_TOKEN"
+  fi
+  exit 0
+fi
+if [ "\${1-} \${2-}" = 'account show' ]; then
+  exit 88
+fi
+if [ "\${1-}" = 'rest' ]; then
+  if [ "\${FAKE_ARM_SUCCESS-}" = '1' ]; then
+    printf '{}\n'
+    exit 0
+  fi
+  printf 'ERROR: (AuthorizationFailed) The client does not have authorization.\n' >&2
+  exit 1
+fi
+exit 89
+`;
+  const run = (overrides = {}, remove = []) => {
+    const environment = {
+      ...process.env,
+      PATH: `${fakeBin}:${process.env.PATH}`,
+      APPROVED_TENANT_ID: expectedTenant,
+      EXPECTED_FAKE_TENANT: expectedTenant,
+      EXPECTED_PRINCIPAL_ID: expectedPrincipal,
+      AZURE_CLIENT_ID: expectedClient,
+      APPROVED_SUBSCRIPTION_ID: '5ace9cdd-06d1-47d9-8214-1e7c756d076a',
+      TARGET_RESOURCE_GROUP: 'rg-adventures-suite-dev',
+      FAKE_ARM_TOKEN: validToken,
+      ...overrides,
+    };
+    for (const name of remove) delete environment[name];
+    writeFileSync(stateFile, 'stage=oidc_authentication\n');
+    const result = spawnSync('bash', ['.github/scripts/run-deployer-federation-proof.sh', 'migration-foundation-deployment', prefix, stateFile], { encoding: 'utf8', env: environment });
+    const state = Object.fromEntries(readFileSync(stateFile, 'utf8').trim().split('\n').map(line => line.split('=', 2)));
+    return { result, state };
+  };
+  try {
+    spawnSync('mkdir', ['-p', fakeBin]);
+    writeFileSync(fakeAz, fake);
+    chmodSync(fakeAz, 0o700);
+
+    const success = run();
+    assert.equal(success.result.status, 0);
+    assert.deepEqual(success.state, { stage: 'complete', classification: 'complete', exit_code: '0' });
+    assert.equal(success.result.stdout, '');
+    assert.doesNotMatch(success.result.stderr, new RegExp(validToken.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+
+    const missingTenant = run({}, ['APPROVED_TENANT_ID']);
+    assert.notEqual(missingTenant.result.status, 0);
+    assert.equal(missingTenant.state.stage, 'arm_token_acquisition');
+    assert.equal(missingTenant.state.classification, 'operation_failed');
+
+    const incorrectTenant = run({ APPROVED_TENANT_ID: '00000000-0000-0000-0000-000000000000' });
+    assert.notEqual(incorrectTenant.result.status, 0);
+    assert.equal(incorrectTenant.state.stage, 'arm_token_acquisition');
+
+    const acquisitionFailure = run({ FAKE_TOKEN_MODE: 'acquisition_failure' });
+    assert.notEqual(acquisitionFailure.result.status, 0);
+    assert.deepEqual({ stage: acquisitionFailure.state.stage, classification: acquisitionFailure.state.classification }, { stage: 'arm_token_acquisition', classification: 'operation_failed' });
+
+    const malformed = run({ FAKE_TOKEN_MODE: 'malformed_response' });
+    assert.notEqual(malformed.result.status, 0);
+    assert.deepEqual({ stage: malformed.state.stage, classification: malformed.state.classification }, { stage: 'arm_token_claim_validation', classification: 'malformed_token' });
+
+    const wrongTenant = run({ FAKE_ARM_TOKEN: jwt({ tid: 'wrong', oid: expectedPrincipal, appid: expectedClient, aud: 'https://management.azure.com/' }) });
+    assert.equal(wrongTenant.state.classification, 'claim_mismatch_tid');
+    const wrongAudience = run({ FAKE_ARM_TOKEN: jwt({ tid: expectedTenant, oid: expectedPrincipal, appid: expectedClient, aud: 'https://graph.microsoft.com/' }) });
+    assert.equal(wrongAudience.state.classification, 'claim_mismatch_aud');
+
+    const unexpectedSuccess = run({ FAKE_ARM_SUCCESS: '1' });
+    assert.notEqual(unexpectedSuccess.result.status, 0);
+    assert.deepEqual({ stage: unexpectedSuccess.state.stage, classification: unexpectedSuccess.state.classification }, { stage: 'resource_read_denial_classification', classification: 'unexpected_success' });
+    for (const value of [success, missingTenant, incorrectTenant, acquisitionFailure, malformed, wrongTenant, wrongAudience, unexpectedSuccess]) {
+      assert.doesNotMatch(`${value.result.stdout}\n${value.result.stderr}`, /accessToken|Bearer|eyJ|signature/);
+      for (const suffix of ['-token.json', '-token.err', '-read.err', '-write.err']) assert.throws(() => readFileSync(`${prefix}${suffix}`));
+    }
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
   }
 });
 
