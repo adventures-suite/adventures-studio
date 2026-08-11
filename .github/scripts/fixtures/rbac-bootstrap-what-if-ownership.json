@@ -1,0 +1,39 @@
+{
+  "changes": [
+    {
+      "resourceId": "/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.Authorization/roleDefinitions/4bfa5b8d-8e4a-4fc8-9f2b-6115f07cad54",
+      "changeType": "Create",
+      "after": {
+        "name": "4bfa5b8d-8e4a-4fc8-9f2b-6115f07cad54",
+        "properties": {
+          "roleName": "AdventuresSuite Migration Infrastructure Deployer"
+        }
+      }
+    },
+    {
+      "resourceId": "/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.Authorization/roleDefinitions/9df6bf68-4db7-4d38-b7f1-7bb26a541199",
+      "changeType": "Create",
+      "after": {
+        "name": "9df6bf68-4db7-4d38-b7f1-7bb26a541199",
+        "properties": {
+          "roleName": "AdventuresSuite Migration Identity Reader"
+        }
+      }
+    },
+    {
+      "resourceId": "/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-adventures-suite-migrate-job-dev",
+      "changeType": "Ignore",
+      "before": {
+        "tags": {
+          "ownership": "adventures-suite"
+        }
+      },
+      "after": {
+        "tags": {
+          "ownership": "adventures-suite"
+        }
+      }
+    }
+  ],
+  "status": "Succeeded"
+}

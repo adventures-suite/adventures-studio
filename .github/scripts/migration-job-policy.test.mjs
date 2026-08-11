@@ -638,6 +638,46 @@ test('RBAC boundary accepts the live-shaped root what-if envelope and one legacy
   }
 });
 
+test('RBAC boundary ignores benign metadata outside actionable structured RBAC fields', () => {
+  const live = JSON.parse(readFileSync('.github/scripts/fixtures/rbac-bootstrap-what-if-ownership.json', 'utf8'));
+  assert.deepEqual(validateRbacWhatIf('bootstrap', live), { classification: 'bootstrap_what_if_approved', resourceCount: 2 });
+  live.changes[2].after.properties = { roleName: 'Owner' };
+  assert.deepEqual(validateRbacWhatIf('bootstrap', live), { classification: 'bootstrap_what_if_approved', resourceCount: 2 });
+  live.changes[0].after.tags = { roleName: 'Owner', ownership: 'adventures-suite' };
+  assert.deepEqual(validateRbacWhatIf('bootstrap', live), { classification: 'bootstrap_what_if_approved', resourceCount: 2 });
+});
+
+test('RBAC boundary rejects structured Owner and Contributor substitutions on actionable targets', () => {
+  const scope = '/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev';
+  const ownerId = '8e3af657-a8ff-443c-a75c-2fe8c4bcb635';
+  const contributorId = 'b24988ac-6180-42a0-ab88-20f7382dd24c';
+  const bootstrap = JSON.parse(readFileSync('.github/scripts/fixtures/rbac-bootstrap-what-if-ownership.json', 'utf8'));
+  const assignments = {
+    changes: ['5c14d19b-04c7-4dfa-83ed-9447d0ea3c33', 'fa329695-3907-4852-94f5-fda8a26a4698'].map(id => ({
+      resourceId: `${scope}/providers/Microsoft.Authorization/roleAssignments/${id}`,
+      changeType: 'Create',
+      after: { properties: { roleDefinitionId: `${scope}/providers/Microsoft.Authorization/roleDefinitions/4bfa5b8d-8e4a-4fc8-9f2b-6115f07cad54` } },
+    })),
+  };
+  const cases = [
+    ['bootstrap', bootstrap, { roleName: 'OWNER' }],
+    ['bootstrap', bootstrap, { properties: { roleName: 'contributor' } }],
+    ['bootstrap', bootstrap, { roleDefinitionName: 'Owner' }],
+    ['bootstrap', bootstrap, { properties: { roleDefinitionId: ownerId } }],
+    ['bootstrap', bootstrap, { name: contributorId }],
+    ['bootstrap', bootstrap, { id: `${scope}/providers/Microsoft.Authorization/roleDefinitions/${ownerId}` }],
+    ['assignment', assignments, { roleName: 'Contributor' }],
+    ['assignment', assignments, { roleDefinitionName: 'owner' }],
+    ['assignment', assignments, { roleDefinitionId: contributorId }],
+    ['assignment', assignments, { properties: { roleDefinitionId: `/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/providers/Microsoft.Authorization/roleDefinitions/${ownerId}` } }],
+  ];
+  for (const [mode, source, after] of cases) {
+    const document = structuredClone(source);
+    document.changes[0].after = after;
+    assert.throws(() => validateRbacWhatIf(mode, document), /broad_role_substitution/);
+  }
+});
+
 test('RBAC boundary requires complete ignored ARM resource IDs under the exact approved scope', () => {
   const live = JSON.parse(readFileSync('.github/scripts/fixtures/rbac-bootstrap-what-if-root.json', 'utf8'));
   const validIgnoredIds = [
