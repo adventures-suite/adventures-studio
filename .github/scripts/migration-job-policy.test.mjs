@@ -64,7 +64,7 @@ test('old combined templates are absent and deployment order is documented', () 
 });
 
 test('third-party GitHub Actions are pinned to full commit SHAs', () => {
-  for (const path of ['.github/workflows/database-migration-job.yml', '.github/workflows/validate-migration-container.yml']) {
+  for (const path of ['.github/workflows/database-migration-job.yml', '.github/workflows/deploy-companion-api-dev.yml', '.github/workflows/deploy-dev.yml', '.github/workflows/publish-companion-testflight.yml', '.github/workflows/validate-migration-container.yml', '.github/workflows/validate-pull-request.yml', '.github/workflows/validate-sql-migrations.yml']) {
     const workflow = readFileSync(path, 'utf8');
     const uses = workflow.split('\n').map(line => line.match(/^\s*uses:\s*([^\s#]+)/)?.[1]).filter(Boolean);
     assert.ok(uses.length > 0);
