@@ -191,10 +191,25 @@ Common values:
 
 - Issuer: `https://token.actions.githubusercontent.com`
 - Audience: `api://AzureADTokenExchange`
+- Repository owner: `ssimonton007`
+- Repository owner ID: `55812276`
+- Repository: `adventures-studio`
+- Repository ID: `1317655952`
 - Subscription: `5ace9cdd-06d1-47d9-8214-1e7c756d076a`
 - Tenant: `d7add2bb-ac03-49a8-9377-d0bf6a012f2f`
 - Resource group: `rg-adventures-suite-dev`
 - Required workflow release SHA: `<EXACT_CURRENT_MAIN_SHA>`
+
+Read-only GitHub OIDC evidence recorded on 2026-08-11 showed
+`use_default=true`, `use_immutable_subject=false`, no custom
+`include_claim_keys` template, and effective default prefix
+`repo:ssimonton007@55812276/adventures-studio@1317655952`. The explicit opt-in
+flag is therefore not enabled, but this repository's effective GitHub default
+is the immutable owner/repository-ID format. A live federation-proof assertion
+confirmed the same prefix. The immutable IDs protect against owner or repository
+namespace reuse and GitHub does not permit removing them from an immutable
+subject. Approval and Entra trust records must use the effective subject
+verbatim; the legacy name-only form is prohibited.
 
 Immediately before execution, the approval record must resolve
 `<EXACT_CURRENT_MAIN_SHA>` to the then-current full lowercase 40-character SHA
@@ -205,8 +220,8 @@ approval for the new SHA.
 
 | Purpose | Identity resource ID | Principal ID | Client ID | Credential | Subject | Workflow |
 | --- | --- | --- | --- | --- | --- | --- |
-| Foundation/Job resources | `/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-adventures-suite-migration-foundation-deployer-dev` | `b77b6201-ad26-4f77-8f88-6d0d43f7dbb8` | `223af00d-69e5-4302-9ac5-6b338f3ea2e5` | `github-migration-foundation-deployment` | `repo:ssimonton007/adventures-studio:environment:migration-foundation-deployment` | `.github/workflows/provision-migration-foundation-resources.yml` |
-| Access resources | `/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-adventures-suite-migration-rbac-bootstrap-dev` | `822c1c0c-39e1-400f-b9fc-9532a11bae5d` | `d678e2ad-ada2-4cde-bb79-44630acf1cc8` | `github-migration-rbac-deployment` | `repo:ssimonton007/adventures-studio:environment:migration-rbac-deployment` | `.github/workflows/provision-migration-rbac-access.yml` |
+| Foundation/Job resources | `/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-adventures-suite-migration-foundation-deployer-dev` | `b77b6201-ad26-4f77-8f88-6d0d43f7dbb8` | `223af00d-69e5-4302-9ac5-6b338f3ea2e5` | `github-migration-foundation-deployment` | `repo:ssimonton007@55812276/adventures-studio@1317655952:environment:migration-foundation-deployment` | `.github/workflows/provision-migration-foundation-resources.yml` |
+| Access resources | `/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-adventures-suite-migration-rbac-bootstrap-dev` | `822c1c0c-39e1-400f-b9fc-9532a11bae5d` | `d678e2ad-ada2-4cde-bb79-44630acf1cc8` | `github-migration-rbac-deployment` | `repo:ssimonton007@55812276/adventures-studio@1317655952:environment:migration-rbac-deployment` | `.github/workflows/provision-migration-rbac-access.yml` |
 
 Before creation, record approving operator and executing Azure identity;
 resolve and record `<EXACT_CURRENT_MAIN_SHA>` immediately before execution, and
