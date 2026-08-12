@@ -52,6 +52,28 @@ publisher and starter identities for `identity-access.bicep` and is removed
 immediately afterward. Provider registration, if needed, is a distinct temporary approval for
 only provider read and the two exact register actions at subscription scope.
 
+Provider registration has five non-combinable approval boundaries. First, an
+Owner creates fixed registrar role `fcdbbdc4-b56a-4863-aebb-32790e5b1a51`
+while it is assigned to nobody. Second, an Owner creates only deterministic
+assignment `3327e40f-74ee-42e5-a0ee-e8002b125cb3` for foundation-deployer
+principal `b77b6201-ad26-4f77-8f88-6d0d43f7dbb8`, recording the assignment
+timestamp and an absolute deadline no more than 30 minutes later. Third, the
+protected foundation workflow requests registration of only `Microsoft.App`
+and `Microsoft.ContainerRegistry`. Fourth, the Owner immediately and
+idempotently removes that exact assignment after every terminal or ambiguous
+outcome. Fifth, readback proves zero assignment residue and a separately
+approved fresh foundation OIDC session must receive structured
+`AuthorizationFailed`. No delegated cleanup role exists.
+
+The registration workflow neither creates nor deletes assignments and refuses
+to start after five elapsed minutes or with less than 25 minutes remaining.
+Owner cleanup is independently executable even if registration never starts.
+Hard cancellation and runner loss cannot guarantee GitHub cleanup execution;
+safety comes from the short deadline, immediate Owner cleanup, exact-ID
+deletion, zero-residue readback, and fresh-session denial proof. Stop on
+identity, UUID, checksum, assignment, provider-state, cleanup, residue,
+denial-proof, or deadline ambiguity.
+
 The RBAC deployer has no ordinary resource write. Role-definition authority is
 resource-group scoped. Its bootstrap role has fixed UUID
 `78b75ed3-4333-4e87-a79c-d39bad7aaab3`, the exact seven-action catalog in

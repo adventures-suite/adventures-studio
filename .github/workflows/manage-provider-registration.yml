@@ -1,0 +1,134 @@
+name: Manage Migration Provider Registration
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Exact separately approved operation
+        required: true
+        type: choice
+        options: [register-providers, prove-owner-cleanup]
+      release_sha:
+        description: Exact approved protected-main SHA
+        required: true
+        type: string
+      approval_id:
+        description: Exact operation approval identifier
+        required: true
+        type: string
+      assignment_id:
+        description: Exact deterministic provider-registration assignment resource ID
+        required: true
+        type: string
+      assignment_timestamp_utc:
+        description: Exact Owner-recorded assignment timestamp
+        required: true
+        type: string
+      authority_deadline_utc:
+        description: Absolute deadline no more than 30 minutes after assignment
+        required: true
+        type: string
+      runner_sha256:
+        description: Approved operation runner SHA-256
+        required: true
+        type: string
+      owner_cleanup_evidence_sha256:
+        description: Approved bounded Owner-cleanup evidence SHA-256 for denial proof
+        required: false
+        type: string
+      owner_cleanup_evidence:
+        description: Exact bounded sanitized Owner-cleanup evidence JSON for denial proof
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  operate:
+    runs-on: ubuntu-24.04
+    environment: migration-foundation-deployment
+    timeout-minutes: 25
+    env:
+      AZURE_CLIENT_ID: ${{ vars.MIGRATION_FOUNDATION_DEPLOYER_CLIENT_ID }}
+      EXPECTED_PRINCIPAL_ID: ${{ vars.MIGRATION_FOUNDATION_DEPLOYER_PRINCIPAL_ID }}
+      APPROVED_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      APPROVED_TENANT_ID: ${{ vars.WORKFORCE_TENANT_ID }}
+    steps:
+      - name: Validate exact source and approval record
+        env:
+          OPERATION: ${{ inputs.operation }}
+          RELEASE_SHA: ${{ inputs.release_sha }}
+          WORKFLOW_SHA: ${{ github.sha }}
+          WORKFLOW_REF: ${{ github.ref }}
+          APPROVAL_ID: ${{ inputs.approval_id }}
+          ASSIGNMENT_ID: ${{ inputs.assignment_id }}
+          ASSIGNMENT_TIMESTAMP: ${{ inputs.assignment_timestamp_utc }}
+          DEADLINE: ${{ inputs.authority_deadline_utc }}
+          RUNNER_SHA: ${{ inputs.runner_sha256 }}
+          CLEANUP_EVIDENCE_SHA: ${{ inputs.owner_cleanup_evidence_sha256 }}
+          CLEANUP_EVIDENCE: ${{ inputs.owner_cleanup_evidence }}
+          REPOSITORY: ${{ github.repository }}
+          REPOSITORY_ID: ${{ github.repository_id }}
+        run: |
+          test "$REPOSITORY" = 'ssimonton007/adventures-studio'
+          test "$REPOSITORY_ID" = '1317655952'
+          test "$WORKFLOW_REF" = refs/heads/main
+          [[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]] && test "$RELEASE_SHA" = "$WORKFLOW_SHA"
+          test "${ASSIGNMENT_ID,,}" = '/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/providers/microsoft.authorization/roleassignments/3327e40f-74ee-42e5-a0ee-e8002b125cb3'
+          [[ "$ASSIGNMENT_TIMESTAMP" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]]
+          [[ "$DEADLINE" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]]
+          [[ "$RUNNER_SHA" =~ ^[0-9a-f]{64}$ ]]
+          case "$OPERATION" in
+            register-providers)
+              [[ "$APPROVAL_ID" =~ ^provider-register-[A-Za-z0-9._-]{8,96}$ ]]
+              test -z "$CLEANUP_EVIDENCE_SHA"
+              test -z "$CLEANUP_EVIDENCE"
+              ;;
+            prove-owner-cleanup)
+              [[ "$APPROVAL_ID" =~ ^provider-cleanup-proof-[A-Za-z0-9._-]{8,96}$ ]]
+              [[ "$CLEANUP_EVIDENCE_SHA" =~ ^[0-9a-f]{64}$ ]]
+              test "${#CLEANUP_EVIDENCE}" -le 512
+              ;;
+            *) exit 2 ;;
+          esac
+
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: { ref: "${{ inputs.release_sha }}", persist-credentials: false }
+
+      - name: Verify approved runner
+        env:
+          OPERATION: ${{ inputs.operation }}
+          EXPECTED_SHA: ${{ inputs.runner_sha256 }}
+        run: |
+          if [ "$OPERATION" = register-providers ]; then runner=.github/scripts/run-provider-registration.sh; else runner=.github/scripts/run-deployer-federation-proof.sh; fi
+          test "$(sha256sum "$runner" | awk '{print $1}')" = "$EXPECTED_SHA"
+
+      - uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac
+        with: { client-id: "${{ vars.MIGRATION_FOUNDATION_DEPLOYER_CLIENT_ID }}", tenant-id: "${{ vars.WORKFORCE_TENANT_ID }}", allow-no-subscriptions: true }
+
+      - name: Validate fresh exact foundation identity
+        if: inputs.operation == 'register-providers'
+        run: .github/scripts/run-deployer-federation-proof.sh migration-foundation-deployment "$RUNNER_TEMP/provider-identity" "$RUNNER_TEMP/provider-identity.state" identity-only
+
+      - name: Register only the approved providers
+        if: inputs.operation == 'register-providers'
+        run: |
+          .github/scripts/run-provider-registration.sh '${{ inputs.assignment_id }}' '${{ inputs.assignment_timestamp_utc }}' '${{ inputs.authority_deadline_utc }}' "$RUNNER_TEMP/provider.state" "$RUNNER_TEMP/provider.evidence.json" "$RUNNER_TEMP/provider"
+          cat "$RUNNER_TEMP/provider.evidence.json"
+
+      - name: Require structured AuthorizationFailed after Owner cleanup
+        if: inputs.operation == 'prove-owner-cleanup'
+        env:
+          CLEANUP_EVIDENCE: ${{ inputs.owner_cleanup_evidence }}
+          CLEANUP_EVIDENCE_SHA: ${{ inputs.owner_cleanup_evidence_sha256 }}
+        run: |
+          printf '%s' "$CLEANUP_EVIDENCE" >"$RUNNER_TEMP/provider-owner-cleanup.json"
+          test "$(sha256sum "$RUNNER_TEMP/provider-owner-cleanup.json" | awk '{print $1}')" = "$CLEANUP_EVIDENCE_SHA"
+          node .github/scripts/provider-registration-policy.mjs cleanup-evidence "$RUNNER_TEMP/provider-owner-cleanup.json" >/dev/null
+          .github/scripts/run-deployer-federation-proof.sh migration-foundation-deployment "$RUNNER_TEMP/provider-denial" "$RUNNER_TEMP/provider-denial.state" provider-registration-denial
+
+      - name: Remove bounded evidence
+        if: always()
+        run: rm -f "$RUNNER_TEMP/provider"*

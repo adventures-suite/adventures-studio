@@ -118,3 +118,30 @@ catalog in the approved subscription confirmed all four custom-role actions:
 `Microsoft.App/jobs/execution/read`, and
 `Microsoft.App/jobs/executions/read`. Repeat that read-only validation directly
 before custom-role creation and stop if any action is absent.
+
+## Provider-registration control plane
+
+Provider registration is a subscription-scoped Owner/foundation boundary. The
+fixed registrar role `fcdbbdc4-b56a-4863-aebb-32790e5b1a51` contains only
+provider read plus the `Microsoft.App` and `Microsoft.ContainerRegistry`
+register actions. An Owner creates it while unassigned, then under a separate
+approval creates only deterministic assignment
+`3327e40f-74ee-42e5-a0ee-e8002b125cb3` for the foundation-deployer identity.
+No delegated cleanup role exists.
+
+The approval record includes the assignment ID, assignment timestamp, and an
+absolute deadline no more than 30 minutes later. The protected registration
+workflow refuses to start after five elapsed minutes or with less than 25
+minutes remaining. It does not create or delete assignments. The Owner runs
+`run-provider-registration-owner-cleanup.sh` immediately after any success,
+failure, cancellation, timeout, runner loss, or inconclusive evidence. That
+idempotent procedure validates and targets only the deterministic assignment,
+then verifies zero registrar-role assignment residue. A separately approved
+fresh foundation OIDC session must subsequently receive structured
+`AuthorizationFailed` from the safe registration probe.
+
+GitHub cannot guarantee cleanup after hard cancellation or runner loss. Safety
+comes from the short absolute deadline, independently executable Owner cleanup,
+immediate post-run cleanup, zero-residue readback, and fresh-session denial
+proof. No role creation, assignment, cleanup, and registration boundaries are
+combined.

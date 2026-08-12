@@ -147,7 +147,9 @@ test('deployer workflows preserve identity separation and proof-only mode', () =
   assert.match(proofRunner, /az cloud show[\s\S]*?--query endpoints\.activeDirectoryResourceId/);
   assert.doesNotMatch(proofRunner, /management\.core\.windows\.net|graph\.microsoft\.com|storage\.azure\.com/);
   assert.doesNotMatch(proofRunner, /az rest/);
-  assert.equal((proofRunner.match(/require-arm-authorization-denial\.sh/g) ?? []).length, 2);
+  assert.equal((proofRunner.match(/require-arm-authorization-denial\.sh/g) ?? []).length, 3);
+  assert.match(proofRunner, /provider-registration-denial/);
+  assert.match(proofRunner, /Microsoft\.App\/register\?api-version=2021-04-01/);
   assert.doesNotMatch(proofRunner, /az account show/);
   assert.match(foundation, /environment: migration-foundation-deployment/);
   assert.match(foundation, /deploy-foundation/);

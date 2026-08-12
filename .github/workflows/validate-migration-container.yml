@@ -12,6 +12,7 @@ on:
       - .github/workflows/provision-migration-foundation-resources.yml
       - .github/workflows/provision-migration-rbac-access.yml
       - .github/workflows/manage-migration-foundation-rbac.yml
+      - .github/workflows/manage-provider-registration.yml
       - .github/scripts/**
   workflow_dispatch:
 
@@ -64,7 +65,7 @@ jobs:
           ! grep -Eiq 'connection string|access.token|select |insert |update |delete ' /tmp/direct.out /tmp/failure.out
 
       - name: Test execution observer and live-definition policy
-        run: node --test .github/scripts/migration-job-policy.test.mjs
+        run: node --test .github/scripts/migration-job-policy.test.mjs .github/scripts/provider-registration-policy.test.mjs
 
       - name: Validate migration catalog and infrastructure policy
         run: |
@@ -93,10 +94,11 @@ jobs:
           ! grep -Eq 'configurator|configure-dormant-job|DATABASE_JOB_CONFIGURATOR' \
             infrastructure/container-apps-migrations/*.bicep .github/workflows/database-migration-job.yml
           ! grep -Eiq 'ingress:|external: true|latest' infrastructure/container-apps-migrations/*.bicep
+          node .github/scripts/provider-registration-policy.mjs registration-catalog infrastructure/container-apps-migrations/roles/provider-registration.role.json
 
       - name: Build Bicep template
         run: |
-          for template in bootstrap-role-definition deployer-role-definitions foundation-temporary-access foundation-resources identity-access foundation-access job-resource job-access; do
+          for template in bootstrap-role-definition deployer-role-definitions foundation-temporary-access foundation-resources identity-access foundation-access job-resource job-access provider-registration-role-definitions provider-registration-access; do
             az bicep build --file "infrastructure/container-apps-migrations/$template.bicep"
           done
 

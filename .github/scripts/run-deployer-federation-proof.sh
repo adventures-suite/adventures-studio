@@ -46,9 +46,13 @@ case "$environment_name" in
   *) exit 2 ;;
 esac
 case "$proof_mode" in
-  denial|identity-only) ;;
+  denial|identity-only|provider-registration-denial) ;;
   *) exit 2 ;;
 esac
+if [ -z "${APPROVED_TENANT_ID-}" ] || [ -z "${APPROVED_SUBSCRIPTION_ID-}" ] || \
+   [ -z "${EXPECTED_PRINCIPAL_ID-}" ] || [ -z "${AZURE_CLIENT_ID-}" ]; then
+  exit 1
+fi
 
 if ! az cloud show \
   --query endpoints.activeDirectoryResourceId \
@@ -127,6 +131,21 @@ if [ "$proof_mode" = 'identity-only' ]; then
   classification='identity_validated'
   write_state 0
   exit 0
+fi
+
+if [ "$proof_mode" = 'provider-registration-denial' ]; then
+  printf '{}\n' >"$request_body"
+  stage='provider_registration_probe'
+  set +e
+  classification="$(.github/scripts/require-arm-authorization-denial.sh \
+    "$authorization_config" POST \
+    "https://management.azure.com/subscriptions/$APPROVED_SUBSCRIPTION_ID/providers/Microsoft.App/register?api-version=2021-04-01" \
+    "$request_body" "$write_prefix")"
+  classification_exit="$?"
+  set -e
+  stage='provider_registration_denial_classification'
+  if [ "$classification_exit" -ne 0 ]; then exit 1; fi
+  stage='complete'; classification='complete'; write_state 0; exit 0
 fi
 
 stage='resource_read_probe'
