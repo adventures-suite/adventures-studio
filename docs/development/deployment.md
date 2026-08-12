@@ -101,13 +101,12 @@ rollback.
 
 ## Azure Separation
 
-Database migration deployment is independent from web/API deployment. It uses
-the protected `database-development` GitHub Environment, separate OIDC image
-publisher and exact-Job starter identities, an approval-gated infrastructure
-administrator deployment for every Job definition change, a full-SHA ACR tag,
-and an immutable image digest in the dormant Job definition. No push or
-pull-request trigger may start the Job. See
-`docs/architecture/database-migration-job.md`.
+Database migration deployment is independent from web/API deployment. The only
+current artifact is the protected-main, self-contained DbUp package bound to
+its source SHA, hashes, dependency locks, build run, and provenance attestation.
+No workflow currently executes it. A future one-job ephemeral private runner
+requires separate repository, GitHub, Azure, and SQL approvals. See
+`docs/architecture/private-sql-migration-execution.md`.
 
 Development and production use separate Azure Monitor/Application Insights
 destinations, retention settings, access controls, alerts, dashboards, and cost

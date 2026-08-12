@@ -14,7 +14,12 @@ internal static partial class MigrationOperationRunner
         if (!OperationIdPattern().IsMatch(operationId))
             throw new InvalidOperationException("The migration operation identifier is invalid.");
         var releaseSha = RequireHex("ADVENTURESSUITE_RELEASE_SHA", 40);
-        var imageDigest = RequireImageDigest("ADVENTURESSUITE_IMAGE_DIGEST");
+        var packageSha256 = RequireHex("ADVENTURESSUITE_MIGRATION_PACKAGE_SHA256", 64);
+        var catalogSha256 = RequireHex("ADVENTURESSUITE_MIGRATION_CATALOG_SHA256", 64);
+        if (!string.Equals(catalogSha256,
+            MigrationCatalog.CalculateOrderedCatalogSha256(typeof(MigrationCatalog).Assembly),
+            StringComparison.Ordinal))
+            throw new InvalidOperationException("The migration catalog checksum does not match the embedded catalog.");
         var tenantId = RequireGuid("ADVENTURESSUITE_MIGRATION_TENANT_ID");
         var objectId = RequireGuid("ADVENTURESSUITE_MIGRATION_PRINCIPAL_ID");
         var clientId = RequireGuid("ADVENTURESSUITE_MIGRATION_PRINCIPAL_CLIENT_ID");
@@ -29,7 +34,8 @@ internal static partial class MigrationOperationRunner
             operationId,
             startedAt,
             releaseSha,
-            imageDigest,
+            packageSha256,
+            orderedMigrationCatalogSha256 = catalogSha256,
             orderedCatalog = MigrationCatalog.GetOrderedResourceNames(typeof(MigrationCatalog).Assembly)
         });
 
@@ -88,13 +94,14 @@ internal static partial class MigrationOperationRunner
             operationId,
             completedAt = DateTimeOffset.UtcNow,
             releaseSha,
-            imageDigest,
+            packageSha256,
+            orderedMigrationCatalogSha256 = catalogSha256,
             selectedScripts,
             classification = classification.ToString(),
             exitCode
         });
-        MigrationContainerModes.WriteCompletionEnvelope(
-            operationId, releaseSha, imageDigest, startedAt,
+        MigrationExecutionModes.WriteCompletionEnvelope(
+            operationId, releaseSha, packageSha256, catalogSha256, startedAt,
             classification.ToString(), exitCode, new
             {
                 journalClassification = afterOutcome.ToString(),
@@ -212,18 +219,9 @@ internal static partial class MigrationOperationRunner
             : throw new InvalidOperationException($"Set a valid {name} value.");
     }
 
-    private static string RequireImageDigest(string name)
-    {
-        var value = Require(name);
-        return ImageDigestPattern().IsMatch(value)
-            ? value : throw new InvalidOperationException($"Set a valid immutable {name} value.");
-    }
-
     [GeneratedRegex("^[a-z0-9][a-z0-9-]{7,63}$", RegexOptions.CultureInvariant)]
     private static partial Regex OperationIdPattern();
 
-    [GeneratedRegex("^sha256:[0-9a-f]{64}$", RegexOptions.CultureInvariant)]
-    private static partial Regex ImageDigestPattern();
 }
 
 internal enum MigrationOperationClassification

@@ -38,7 +38,7 @@ Stop if any value differs from approved inventory.
    self-contained migration package containing the executable evidence capture
    and wrapper under the same SHA-256 checksum. Through the approved private
    execution path, invoke only `run-reviewed-migration-operation.sh`. It must
-   verify the migration App Service system-assigned Managed Identity before
+   verify the approved ephemeral runner's migration user-assigned Managed Identity before
    DbUp, hold the zero-wait SQL migration lock across pre-state, migration, and
    post-state capture, and apply pending scripts in order with one transaction
    per script: `0007_create_traveler_participations.sql`, then

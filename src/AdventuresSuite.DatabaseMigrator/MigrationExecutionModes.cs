@@ -7,8 +7,8 @@ using Azure.Identity;
 
 namespace AdventuresSuite.DatabaseMigrator;
 
-/// <summary>Provides finite, reviewed Container Apps Job execution modes.</summary>
-internal static partial class MigrationContainerModes
+/// <summary>Provides finite, reviewed private SQL migration execution modes.</summary>
+internal static partial class MigrationExecutionModes
 {
     internal static Task<int> VerifyExecutionChannelAsync()
     {
@@ -82,7 +82,7 @@ internal static partial class MigrationContainerModes
     }
 
     private static async Task<MigrationIdentityEvidence> ValidateIdentityAsync(
-        ContainerOperationContext context, string connectionString)
+        MigrationOperationContext context, string connectionString)
     {
         var credential = new ManagedIdentityCredential(
             ManagedIdentityId.FromUserAssignedClientId(context.ClientId.ToString()));
@@ -103,15 +103,20 @@ internal static partial class MigrationContainerModes
         identity.Database
     };
 
-    private static ContainerOperationContext ReadContext(bool requireSqlTarget)
+    private static MigrationOperationContext ReadContext(bool requireSqlTarget)
     {
         var operationId = Require("ADVENTURESSUITE_MIGRATION_OPERATION_ID");
         if (!OperationIdPattern().IsMatch(operationId))
             throw new InvalidOperationException("The migration operation identifier is invalid.");
         var releaseSha = RequireHex("ADVENTURESSUITE_RELEASE_SHA", 40);
-        var imageDigest = RequireImageDigest("ADVENTURESSUITE_IMAGE_DIGEST");
+        var packageSha256 = RequireHex("ADVENTURESSUITE_MIGRATION_PACKAGE_SHA256", 64);
+        var catalogSha256 = RequireHex("ADVENTURESSUITE_MIGRATION_CATALOG_SHA256", 64);
+        if (!string.Equals(catalogSha256,
+            MigrationCatalog.CalculateOrderedCatalogSha256(typeof(MigrationCatalog).Assembly),
+            StringComparison.Ordinal))
+            throw new InvalidOperationException("The migration catalog checksum does not match the embedded catalog.");
         return new(
-            operationId, releaseSha, imageDigest,
+            operationId, releaseSha, packageSha256, catalogSha256,
             DateTimeOffset.UtcNow,
             RequireGuid("ADVENTURESSUITE_MIGRATION_TENANT_ID"),
             RequireGuid("ADVENTURESSUITE_MIGRATION_PRINCIPAL_ID"),
@@ -122,14 +127,15 @@ internal static partial class MigrationContainerModes
     }
 
     private static void WriteEnvelope(
-        ContainerOperationContext context, string classification, int exitCode, object evidence)
-        => WriteCompletionEnvelope(context.OperationId, context.ReleaseSha, context.ImageDigest,
-            context.StartedAt, classification, exitCode, evidence);
+        MigrationOperationContext context, string classification, int exitCode, object evidence)
+        => WriteCompletionEnvelope(context.OperationId, context.ReleaseSha, context.PackageSha256,
+            context.CatalogSha256, context.StartedAt, classification, exitCode, evidence);
 
     internal static void WriteCompletionEnvelope(
         string operationId,
         string releaseSha,
-        string imageDigest,
+        string packageSha256,
+        string catalogSha256,
         DateTimeOffset startedAt,
         string classification,
         int exitCode,
@@ -141,7 +147,8 @@ internal static partial class MigrationContainerModes
             schemaVersion = 1,
             operationId,
             releaseSha,
-            imageDigest,
+            packageSha256,
+            orderedMigrationCatalogSha256 = catalogSha256,
             processStartedAt = startedAt,
             processCompletedAt = completedAt,
             classification,
@@ -152,7 +159,7 @@ internal static partial class MigrationContainerModes
         var canonical = JsonSerializer.Serialize(payload);
         Console.WriteLine(JsonSerializer.Serialize(new
         {
-            eventName = "migration-job-completion",
+            eventName = "private-sql-migration-completion",
             payload,
             envelopeChecksum = Convert.ToHexString(
                 SHA256.HashData(Encoding.UTF8.GetBytes(canonical))).ToLowerInvariant()
@@ -162,7 +169,7 @@ internal static partial class MigrationContainerModes
     private static string Require(string name) =>
         !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(name))
             ? Environment.GetEnvironmentVariable(name)!.Trim()
-            : throw new InvalidOperationException($"Set {name} for the reviewed migration job.");
+            : throw new InvalidOperationException($"Set {name} for the reviewed migration operation.");
 
     private static Guid RequireGuid(string name) =>
         Guid.TryParse(Require(name), out var value)
@@ -176,24 +183,16 @@ internal static partial class MigrationContainerModes
             : throw new InvalidOperationException($"Set a valid {name} value.");
     }
 
-    private static string RequireImageDigest(string name)
-    {
-        var value = Require(name);
-        return DigestPattern().IsMatch(value)
-            ? value : throw new InvalidOperationException($"Set a valid immutable {name} value.");
-    }
-
     [GeneratedRegex("^[a-z0-9][a-z0-9-]{7,63}$", RegexOptions.CultureInvariant)]
     private static partial Regex OperationIdPattern();
 
-    [GeneratedRegex("^sha256:[0-9a-f]{64}$", RegexOptions.CultureInvariant)]
-    private static partial Regex DigestPattern();
 }
 
-internal sealed record ContainerOperationContext(
+internal sealed record MigrationOperationContext(
     string OperationId,
     string ReleaseSha,
-    string ImageDigest,
+    string PackageSha256,
+    string CatalogSha256,
     DateTimeOffset StartedAt,
     Guid TenantId,
     Guid ObjectId,
