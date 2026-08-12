@@ -3,7 +3,7 @@ set -euo pipefail
 set +x
 umask 077
 
-if [ "$#" -ne 7 ]; then exit 2; fi
+if [ "$#" -ne 9 ]; then exit 2; fi
 operation="$1"
 expected_template_sha="$2"
 expected_parameters_sha="$3"
@@ -11,6 +11,8 @@ expected_catalog_sha="$4"
 state_file="$5"
 evidence_file="$6"
 prefix="$7"
+assignment_timestamp_utc="$8"
+authority_deadline_utc="$9"
 error_file="${prefix}.err"
 what_if_file="${prefix}.what-if.json"
 result_file="${prefix}.result.json"
@@ -25,8 +27,8 @@ infra_assignment="$scope/providers/Microsoft.Authorization/roleAssignments/5c14d
 reader_assignment="$scope/providers/Microsoft.Authorization/roleAssignments/fa329695-3907-4852-94f5-fda8a26a4698"
 
 write_state() {
-  printf 'stage=%s\nclassification=%s\nazure_error_code=%s\nexit_code=%s\n' \
-    "$stage" "$classification" "$azure_error_code" "$1" >"$state_file"
+  printf 'stage=%s\nclassification=%s\nazure_error_code=%s\nassignment_timestamp_utc=%s\nauthority_deadline_utc=%s\nexit_code=%s\n' \
+    "$stage" "$classification" "$azure_error_code" "$assignment_timestamp_utc" "$authority_deadline_utc" "$1" >"$state_file"
 }
 run_azure() {
   local restore_errexit=false
@@ -75,6 +77,7 @@ case "$operation" in
     parameters=()
     ;;
   assign-foundation-access)
+    node .github/scripts/foundation-authority-window.mjs active "$assignment_timestamp_utc" "$authority_deadline_utc" >/dev/null
     template='infrastructure/container-apps-migrations/foundation-temporary-access.bicep'
     parameter_file='infrastructure/container-apps-migrations/foundation-temporary-access.dev.bicepparam'
     test "$(sha256sum "$template" | awk '{print $1}')" = "$expected_template_sha"
@@ -86,35 +89,33 @@ case "$operation" in
     ;;
   remove-foundation-access)
     test -z "$expected_template_sha" && test -z "$expected_parameters_sha" && test -z "$expected_catalog_sha"
-    stage='assignment_removal'
+    node .github/scripts/foundation-authority-window.mjs cleanup "$assignment_timestamp_utc" "$authority_deadline_utc" >/dev/null
+    stage='assignment_inspection'
     classification='cleanup_failed'
-    set +e
-    run_azure az role assignment delete --ids "$infra_assignment" --only-show-errors
-    first_exit="$?"
-    run_azure az role assignment delete --ids "$reader_assignment" --only-show-errors
-    second_exit="$?"
-    set -e
-    test "$first_exit" -eq 0 && test "$second_exit" -eq 0
+    run_azure az role assignment list --subscription "$APPROVED_SUBSCRIPTION_ID" --assignee-object-id b77b6201-ad26-4f77-8f88-6d0d43f7dbb8 \
+      --scope "$scope" --all --only-show-errors --output json >"$result_file"
+    deletion_plan="$(node .github/scripts/foundation-assignment-cleanup-policy.mjs inspect "$result_file")"
+    stage='assignment_removal'
+    for assignment_id in $deletion_plan; do
+      run_azure az role assignment delete --ids "$scope/providers/Microsoft.Authorization/roleAssignments/$assignment_id" --only-show-errors
+    done
     stage='residue_verification'
     run_azure az role assignment list --subscription "$APPROVED_SUBSCRIPTION_ID" --assignee-object-id b77b6201-ad26-4f77-8f88-6d0d43f7dbb8 \
       --include-inherited --all --only-show-errors --output json >"$result_file"
-    RESULT_FILE="$result_file" python3 - <<'PY'
-import json, os
-assignments = json.load(open(os.environ['RESULT_FILE'], encoding='utf-8'))
-blocked = {'4bfa5b8d-8e4a-4fc8-9f2b-6115f07cad54', '9df6bf68-4db7-4d38-b7f1-7bb26a541199'}
-if any(item.get('roleDefinitionId', '').rsplit('/', 1)[-1].lower() in blocked for item in assignments):
-    raise SystemExit(1)
-PY
-    printf '{"classification":"access_removed","assignmentCount":0}\n' >"$evidence_file"
+    node .github/scripts/foundation-assignment-cleanup-policy.mjs residue "$result_file" >/dev/null
+    printf '{"classification":"access_removed","assignmentCount":0,"assignmentTimestampUtc":"%s","authorityDeadlineUtc":"%s"}\n' \
+      "$assignment_timestamp_utc" "$authority_deadline_utc" >"$evidence_file"
     stage='complete'; classification='complete'; write_state 0; exit 0
     ;;
   *) exit 2 ;;
 esac
 
 stage='deployment_validation'
+if [ "$mode" = 'assignment' ]; then node .github/scripts/foundation-authority-window.mjs active "$assignment_timestamp_utc" "$authority_deadline_utc" >/dev/null; fi
 run_azure az deployment group validate --subscription "$APPROVED_SUBSCRIPTION_ID" --resource-group "$TARGET_RESOURCE_GROUP" \
   --name "$deployment_name" --template-file "$template" "${parameters[@]}" --only-show-errors --output none
 stage='what_if'
+if [ "$mode" = 'assignment' ]; then node .github/scripts/foundation-authority-window.mjs active "$assignment_timestamp_utc" "$authority_deadline_utc" >/dev/null; fi
 run_azure az deployment group what-if --subscription "$APPROVED_SUBSCRIPTION_ID" --resource-group "$TARGET_RESOURCE_GROUP" \
   --name "$deployment_name" --template-file "$template" "${parameters[@]}" --result-format FullResourcePayloads \
   --no-pretty-print --only-show-errors --output json >"$what_if_file"
@@ -126,9 +127,11 @@ classification="$(POLICY_FILE="$policy_file" python3 -c 'import json,os; print(j
 test "$policy_exit" -eq 0
 stage='deployment'
 classification='deployment_failed'
+if [ "$mode" = 'assignment' ]; then node .github/scripts/foundation-authority-window.mjs active "$assignment_timestamp_utc" "$authority_deadline_utc" >/dev/null; fi
 run_azure az deployment group create --subscription "$APPROVED_SUBSCRIPTION_ID" --resource-group "$TARGET_RESOURCE_GROUP" \
   --name "$deployment_name" --template-file "$template" "${parameters[@]}" --only-show-errors --output none
 stage='deployment_readback'
+if [ "$mode" = 'assignment' ]; then node .github/scripts/foundation-authority-window.mjs active "$assignment_timestamp_utc" "$authority_deadline_utc" >/dev/null; fi
 if [ "$mode" = 'bootstrap' ]; then
   run_azure az role definition list --subscription "$APPROVED_SUBSCRIPTION_ID" --name 4bfa5b8d-8e4a-4fc8-9f2b-6115f07cad54 --output json >"$result_file"
   run_azure az role definition list --subscription "$APPROVED_SUBSCRIPTION_ID" --name 9df6bf68-4db7-4d38-b7f1-7bb26a541199 --output json >"$second_result_file"

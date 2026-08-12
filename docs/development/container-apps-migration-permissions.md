@@ -145,6 +145,37 @@ Bicep compilation is insufficient and a missing action is a stop condition.
    outputs, UTC timing, post-state, and cleanup. Stop on drift, excess authority,
    ambiguous output, cleanup failure, or combined steps.
 
+### Foundation execution evidence and deadline contract
+
+The foundation assignment approval records a strict UTC assignment timestamp
+and absolute deadline no more than 30 minutes later. Assignment and deployment
+stages recheck the deadline immediately before every authority-dependent Azure
+CLI call and stop when it expires. Cleanup validates the same immutable window
+but remains independently dispatchable after expiry. Queue and Environment
+review time consume the approved window; they never extend it.
+
+`foundation-identity-catalog.dev.json` is an explicit checksum-bound input. A
+preflight reads the four existing operational identities and matches their exact
+resource IDs plus the migration principal and client IDs before deployment.
+Deployment readback requires exactly the ten declared outputs, their Azure
+`String` wrappers, exact resource types and names, canonical identity GUIDs, and
+the exact registry hostname. Missing, additional, malformed, or conflicting
+output evidence fails closed.
+
+Every Azure CLI stage retains at most 64 KiB of temporary stderr and exposes
+only its stage, allowlisted classification, one constrained Azure error code,
+and numeric exit code. Raw evidence is deleted unconditionally. Ambiguous,
+oversized, malformed, or unrecognized errors are
+`azure_error_unclassified`.
+
+Foundation cleanup first lists the exact principal's assignments at the exact
+resource-group scope. Each present deterministic assignment must match its
+reviewed ID, role, principal, and scope before deletion; a conclusively absent
+assignment is already clean. Repeated cleanup and partial prior cleanup are
+safe. Ambiguity, an unrelated or inherited assignment, deletion failure, or a
+nonempty complete direct-and-inherited post-readback fails closed. A new OIDC
+session must then prove structured `AuthorizationFailed`.
+
 These packets do not authorize SQL, Job execution, migration, public ingress,
 production changes, or retirement of the old bridge. The SQL-free proof remains
 a later separate approval.

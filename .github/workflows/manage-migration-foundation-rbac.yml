@@ -31,6 +31,14 @@ on:
         description: Approved ordered role-catalog SHA-256 for bootstrap only
         required: false
         type: string
+      assignment_timestamp_utc:
+        description: Exact UTC timestamp when temporary authority was assigned
+        required: false
+        type: string
+      authority_deadline_utc:
+        description: Absolute UTC deadline no more than 30 minutes after assignment
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -61,6 +69,8 @@ jobs:
           TEMPLATE_SHA256: ${{ inputs.template_sha256 }}
           PARAMETERS_SHA256: ${{ inputs.parameters_sha256 }}
           CATALOG_SHA256: ${{ inputs.catalog_sha256 }}
+          ASSIGNMENT_TIMESTAMP_UTC: ${{ inputs.assignment_timestamp_utc }}
+          AUTHORITY_DEADLINE_UTC: ${{ inputs.authority_deadline_utc }}
         run: |
           state_file="$RUNNER_TEMP/migration-foundation-rbac.state"
           evidence_file="$RUNNER_TEMP/migration-foundation-rbac-evidence.json"
@@ -81,16 +91,19 @@ jobs:
               [[ "$TEMPLATE_SHA256" =~ ^[0-9a-f]{64}$ ]]
               test -z "$PARAMETERS_SHA256"
               [[ "$CATALOG_SHA256" =~ ^[0-9a-f]{64}$ ]]
+              test -z "$ASSIGNMENT_TIMESTAMP_UTC" && test -z "$AUTHORITY_DEADLINE_UTC"
               ;;
             assign-foundation-access)
               [[ "$APPROVAL_ID" == foundation-access-assign-* ]]
               [[ "$TEMPLATE_SHA256" =~ ^[0-9a-f]{64}$ ]]
               [[ "$PARAMETERS_SHA256" =~ ^[0-9a-f]{64}$ ]]
               test -z "$CATALOG_SHA256"
+              [[ "$ASSIGNMENT_TIMESTAMP_UTC" =~ Z$ ]] && [[ "$AUTHORITY_DEADLINE_UTC" =~ Z$ ]]
               ;;
             remove-foundation-access)
               [[ "$APPROVAL_ID" == foundation-access-remove-* ]]
               test -z "$TEMPLATE_SHA256" && test -z "$PARAMETERS_SHA256" && test -z "$CATALOG_SHA256"
+              [[ "$ASSIGNMENT_TIMESTAMP_UTC" =~ Z$ ]] && [[ "$AUTHORITY_DEADLINE_UTC" =~ Z$ ]]
               ;;
             *) exit 2 ;;
           esac
@@ -137,10 +150,12 @@ jobs:
           TEMPLATE_SHA256: ${{ inputs.template_sha256 }}
           PARAMETERS_SHA256: ${{ inputs.parameters_sha256 }}
           CATALOG_SHA256: ${{ inputs.catalog_sha256 }}
+          ASSIGNMENT_TIMESTAMP_UTC: ${{ inputs.assignment_timestamp_utc }}
+          AUTHORITY_DEADLINE_UTC: ${{ inputs.authority_deadline_utc }}
         run: |
           .github/scripts/run-rbac-boundary-operation.sh "$OPERATION" "$TEMPLATE_SHA256" \
             "$PARAMETERS_SHA256" "$CATALOG_SHA256" "$RBAC_STATE_FILE" "$RBAC_EVIDENCE_FILE" \
-            "$RUNNER_TEMP/rbac-boundary-operation"
+            "$RUNNER_TEMP/rbac-boundary-operation" "$ASSIGNMENT_TIMESTAMP_UTC" "$AUTHORITY_DEADLINE_UTC"
 
       - name: Emit exactly one sanitized RBAC envelope
         if: always()
@@ -169,16 +184,17 @@ jobs:
           if stage == 'rbac_operation':
               try:
                   state = dict(line.split('=', 1) for line in open(os.environ['RBAC_STATE_FILE'], encoding='utf-8').read().splitlines() if '=' in line)
-                  allowed_stages = {'artifact_validation', 'deployment_validation', 'what_if', 'deployment', 'deployment_readback', 'assignment_removal', 'residue_verification'}
-                  allowed_classifications = {'operation_failed', 'deployment_failed', 'cleanup_failed', 'azure_authorization_failed', 'azure_template_validation_failed', 'azure_error_unclassified', 'oversized_evidence', 'malformed_evidence', 'malformed_what_if', 'unexpected_rbac_resource', 'unexpected_rbac_operation', 'missing_rbac_resource', 'broad_role_substitution'}
+                  allowed_stages = {'artifact_validation', 'deployment_validation', 'what_if', 'deployment', 'deployment_readback', 'assignment_inspection', 'assignment_removal', 'residue_verification'}
+                  allowed_classifications = {'operation_failed', 'deployment_failed', 'cleanup_failed', 'azure_authorization_failed', 'azure_template_validation_failed', 'azure_deployment_failed', 'azure_error_unclassified', 'oversized_evidence', 'malformed_evidence', 'malformed_what_if', 'unexpected_rbac_resource', 'unexpected_rbac_operation', 'missing_rbac_resource', 'broad_role_substitution'}
                   if state.get('stage') in allowed_stages: stage = state['stage']
                   if state.get('classification') in allowed_classifications: classification = state['classification']
                   candidate_code = state.get('azure_error_code', '')
-                  allowed_error_codes = {'AuthorizationFailed', 'InvalidTemplate', 'InvalidTemplateDeployment'}
+                  allowed_error_codes = {'AuthorizationFailed', 'InvalidTemplate', 'InvalidTemplateDeployment', 'DeploymentFailed'}
                   azure_error_code = candidate_code if candidate_code in allowed_error_codes else None
                   expected_codes = {
                       'azure_authorization_failed': {'AuthorizationFailed'},
                       'azure_template_validation_failed': {'InvalidTemplate', 'InvalidTemplateDeployment'},
+                      'azure_deployment_failed': {'DeploymentFailed'},
                   }
                   if classification in expected_codes and azure_error_code not in expected_codes[classification]:
                       classification, azure_error_code = 'malformed_evidence', None
@@ -188,7 +204,7 @@ jobs:
                   stage, classification, azure_error_code = 'rbac_operation', 'malformed_evidence', None
           else:
               azure_error_code = None
-          envelope = {'eventName':'migration-foundation-rbac-boundary','operation':os.environ.get('OPERATION'),'approvalId':os.environ.get('APPROVAL_ID'),'releaseSha':os.environ.get('RELEASE_SHA'),'stage':stage,'classification':classification,'azureErrorCode':azure_error_code,'exitCode':exit_code}
+          envelope = {'eventName':'migration-foundation-rbac-boundary','operation':os.environ.get('OPERATION'),'approvalId':os.environ.get('APPROVAL_ID'),'releaseSha':os.environ.get('RELEASE_SHA'),'assignmentTimestampUtc':'${{ inputs.assignment_timestamp_utc }}','authorityDeadlineUtc':'${{ inputs.authority_deadline_utc }}','stage':stage,'classification':classification,'azureErrorCode':azure_error_code,'exitCode':exit_code}
           if not re.fullmatch(r'[0-9a-f]{40}', envelope['releaseSha'] or ''): envelope['releaseSha'] = '<invalid>'
           if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{7,127}', envelope['approvalId'] or ''): envelope['approvalId'] = '<invalid>'
           print(json.dumps(envelope, separators=(',', ':')))

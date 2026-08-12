@@ -117,32 +117,58 @@ export function validateWhatIf(document) {
   return { classification: 'what_if_approved', resourceCount: seen.size };
 }
 
-export function validateDeployment(document) {
+function validateTrustedIdentities(trusted) {
+  if (!trusted || typeof trusted !== 'object' || Array.isArray(trusted)) fail('malformed_identity_catalog');
+  const expected = {
+    migrationIdentityResourceId: `${scope}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-adventures-suite-migrate-job-dev`,
+    migrationIdentityPrincipalId: 'ffc9a4bd-67c4-44af-82dc-b7f663f8bea5',
+    migrationIdentityClientId: 'd0da8236-91dc-4454-8a3d-19d08a406e5d',
+    pullIdentityResourceId: `${scope}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-adventures-suite-migrate-pull-dev`,
+    publisherIdentityResourceId: `${scope}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-adventures-suite-migrate-publisher-dev`,
+    starterIdentityResourceId: `${scope}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-adventures-suite-migrate-starter-dev`,
+  };
+  if (Object.keys(trusted).length !== Object.keys(expected).length) fail('malformed_identity_catalog');
+  for (const [name, value] of Object.entries(expected)) {
+    const actual = trusted[name];
+    if (typeof actual !== 'string' || (name.endsWith('ResourceId') ? actual.toLowerCase() !== value.toLowerCase() : actual.toLowerCase() !== value)) {
+      fail('identity_catalog_mismatch');
+    }
+  }
+  return expected;
+}
+
+export function validateDeployment(document, trustedIdentities) {
   const properties = document?.properties;
   if (properties?.provisioningState !== 'Succeeded') fail('deployment_not_succeeded');
   const outputs = properties.outputs;
   if (!outputs || typeof outputs !== 'object' || Array.isArray(outputs)) fail('malformed_deployment_outputs');
   if (Object.keys(outputs).length !== expectedOutputs.size || Object.keys(outputs).some(name => !expectedOutputs.has(name))) fail('unexpected_deployment_outputs');
   if (containsForbidden(outputs)) fail('forbidden_deployment_output');
-  const resourceIds = ['registryResourceId', 'logWorkspaceResourceId', 'environmentResourceId'];
-  for (const name of resourceIds) {
-    const value = outputs[name]?.value;
-    if (typeof value !== 'string' || !expectedResources.has(value.toLowerCase())) fail('deployment_output_identity_mismatch');
-  }
-  return {
-    classification: 'deployment_complete',
-    provisioningState: 'Succeeded',
-    registryResourceId: outputs.registryResourceId.value,
-    logWorkspaceResourceId: outputs.logWorkspaceResourceId.value,
-    environmentResourceId: outputs.environmentResourceId.value,
+  const trusted = validateTrustedIdentities(trustedIdentities);
+  const exact = {
+    registryResourceId: `${scope}/providers/Microsoft.ContainerRegistry/registries/advsuitemigrationsdev`,
+    registryLoginServer: 'advsuitemigrationsdev.azurecr.io',
+    logWorkspaceResourceId: `${scope}/providers/Microsoft.OperationalInsights/workspaces/log-adventures-suite-migrations-dev`,
+    environmentResourceId: `${scope}/providers/Microsoft.App/managedEnvironments/cae-adventures-suite-migrations-dev`,
+    ...trusted,
   };
+  for (const [name, expected] of Object.entries(exact)) {
+    const output = outputs[name];
+    if (!output || Object.keys(output).length !== 2 || output.type !== 'String' || typeof output.value !== 'string') fail('malformed_deployment_outputs');
+    const isId = name.endsWith('ResourceId');
+    const isGuid = name.endsWith('PrincipalId') || name.endsWith('ClientId');
+    if ((isId && output.value.toLowerCase() !== expected.toLowerCase()) ||
+        (isGuid && (!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/.test(output.value) || output.value.toLowerCase() !== expected)) ||
+        (!isId && !isGuid && output.value !== expected)) fail('deployment_output_identity_mismatch');
+  }
+  return { classification: 'deployment_complete', provisioningState: 'Succeeded', ...Object.fromEntries(Object.keys(exact).map(name => [name, outputs[name].value])) };
 }
 
 if (process.argv[1]?.endsWith('foundation-deployment-policy.mjs')) {
-  const [mode, path] = process.argv.slice(2);
+  const [mode, path, trustedPath] = process.argv.slice(2);
   try {
     const result = mode === 'what-if' ? validateWhatIf(parse(path)) :
-      mode === 'deployment' ? validateDeployment(parse(path)) : fail('unsupported_policy_mode');
+      mode === 'deployment' ? validateDeployment(parse(path), parse(trustedPath)) : fail('unsupported_policy_mode');
     process.stdout.write(`${JSON.stringify(result)}\n`);
   } catch (error) {
     process.stdout.write(`${JSON.stringify({ classification: error.message })}\n`);

@@ -14,6 +14,7 @@ CLASSIFICATIONS = {
     "AuthorizationFailed": "azure_authorization_failed",
     "InvalidTemplate": "azure_template_validation_failed",
     "InvalidTemplateDeployment": "azure_template_validation_failed",
+    "DeploymentFailed": "azure_deployment_failed",
 }
 
 
