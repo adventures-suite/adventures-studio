@@ -30,7 +30,8 @@ Read these documents together and in this order:
 8. `architecture/adventure-readiness-and-change-management.md`
 9. `architecture/ai-planning-copilot.md`
 10. `product/creator-planning-workspace.md`
-11. `development/planning-engine-implementation-plan.md`
+11. `product/workspace-experience-and-value.md`
+12. `development/planning-engine-implementation-plan.md`
 
 The governing principle is:
 
@@ -138,9 +139,10 @@ The governing principle is:
 
 1. `architecture/platform-billing-entitlements.md`
 2. `product/pricing-model.md`
-3. `business/business-model.md`
-4. `development/platform-billing-entitlements-implementation-plan.md`
-5. `architecture/commerce-engine.md`
+3. `product/workspace-experience-and-value.md`
+4. `business/business-model.md`
+5. `development/platform-billing-entitlements-implementation-plan.md`
+6. `architecture/commerce-engine.md`
 
 > Authorization decides what a user may do. Platform entitlement decides what
 > the Creator has purchased or been granted.

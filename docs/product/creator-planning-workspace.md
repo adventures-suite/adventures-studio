@@ -61,6 +61,36 @@ domain and authorization model preserve a path to multiple members.
 - show explainable readiness categories and material changes requiring action
 - create, open, archive, and resume a plan according to permissions
 
+### Workspace Shell and Navigation
+
+- place primary Planner tools in a persistent left-side workspace pane
+- support expanded, compact icon-rail, user-resized, auto-hidden, and explicitly
+  hidden states
+- restore hidden navigation through a persistent accessible control
+- open auto-hidden navigation for keyboard focus as well as pointer interaction
+- use a mobile overlay drawer rather than permanently compressing the planning
+  canvas
+- render a cohesive AdventuresSuite SVG icon family with the tool name normally
+  beneath each icon in the expanded state
+- persist user navigation and theme preferences without treating client state as
+  authorization
+- provide light, dark, and system themes; dark mode is required for workspace
+  launch
+- build both themes from semantic surface, text, focus, and planning-state tokens
+  that meet WCAG 2.2 AA expectations
+
+The navigation is an authorized and entitlement-aware tool projection, not a
+static role menu. Tool visibility and usability may depend on user relationship,
+Creator permission, resource context, stable Platform Capability, remaining
+allowance, time-bounded grant, feature rollout, and service availability.
+Subscription-locked tools may be discoverable with a restrained explanation;
+tools hidden by authorization or irrelevant resource context normally remain
+undisclosed. Every underlying operation enforces the same applicable gates below
+the UI.
+
+See `docs/product/workspace-experience-and-value.md` and
+`docs/architecture/platform-billing-entitlements.md`.
+
 ### Adventure Overview
 
 - title and working description
@@ -213,6 +243,11 @@ See `docs/architecture/adventure-readiness-and-change-management.md`.
 - Complex travel plans should remain understandable without reading raw JSON.
 - The workspace should reduce planning anxiety rather than add administrative
   burden.
+- Workspace navigation should adapt to the current user's authorized role,
+  relationship, subscription capabilities, effective period, and Adventure
+  context without becoming a confusing feature catalog.
+- Light and dark themes should feel deliberately designed rather than treated as
+  independent or inverted products.
 
 ## Privacy and Safety
 
