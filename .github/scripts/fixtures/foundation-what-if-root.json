@@ -1,0 +1,11 @@
+{
+  "status": "Succeeded",
+  "changes": [
+    { "resourceId": "/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.Network/virtualNetworks/vnet-adventures-suite-dev", "changeType": "Ignore" },
+    { "resourceId": "/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-adventures-suite-migrate-job-dev", "changeType": "Ignore" },
+    { "resourceId": "/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.Network/virtualNetworks/vnet-adventures-suite-dev/subnets/snet-container-apps-migrations", "resourceType": "Microsoft.Network/virtualNetworks/subnets", "changeType": "Create", "after": { "properties": { "privateEndpointNetworkPolicies": "Disabled" } } },
+    { "resourceId": "/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.OperationalInsights/workspaces/log-adventures-suite-migrations-dev", "resourceType": "Microsoft.OperationalInsights/workspaces", "changeType": "Create", "after": { "properties": { "publicNetworkAccessForIngestion": "Disabled", "publicNetworkAccessForQuery": "Disabled" } } },
+    { "resourceId": "/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.ContainerRegistry/registries/advsuitemigrationsdev", "resourceType": "Microsoft.ContainerRegistry/registries", "changeType": "Create", "after": { "properties": { "publicNetworkAccess": "Disabled" } } },
+    { "resourceId": "/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.App/managedEnvironments/cae-adventures-suite-migrations-dev", "resourceType": "Microsoft.App/managedEnvironments", "changeType": "Create", "after": { "properties": { "vnetConfiguration": { "internal": true } } } }
+  ]
+}
