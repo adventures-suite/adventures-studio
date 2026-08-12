@@ -189,6 +189,12 @@ booking, payment, cancellation, refund, ticket, insurance policy, or supplier
 confirmation exists. The authoritative external source and verification state
 must remain visible.
 
+The approved long-term direction is a booking-companion model: AdventuresSuite
+supports planning, supplier or professional handoff, consent-based confirmation
+import, and the complete experience around externally fulfilled travel. Direct
+selling, ticketing, payment, and merchant-of-record responsibility remain
+explicitly deferred. See `docs/architecture/travel-booking-companion.md`.
+
 ## Provider-Neutral Integrations
 
 Future integrations should use provider-neutral capabilities such as:

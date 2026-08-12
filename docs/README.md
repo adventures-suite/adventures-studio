@@ -101,10 +101,14 @@ The governing principle is:
 ## Travel Professional Partnerships
 
 1. `architecture/partner-collaboration-engine.md`
-2. `product/travel-professional-partnership.md`
-3. `development/partner-collaboration-implementation-plan.md`
+2. `architecture/travel-booking-companion.md`
+3. `product/travel-professional-partnership.md`
+4. `development/partner-collaboration-implementation-plan.md`
 
 > The customer owns the Adventure. The travel professional improves it.
+
+> AdventuresSuite supports the experience around externally fulfilled travel.
+> Direct selling, ticketing, and merchant-of-record responsibility are deferred.
 
 ## AdventuresCompanion Mobile
 

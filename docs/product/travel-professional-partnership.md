@@ -19,6 +19,10 @@ memory preservation, public storytelling, and future books and publications.
 Commercial terms, partner tiers, commissions, and pricing are intentionally
 deferred. This document defines the product and technology experience.
 
+AdventuresSuite may support booking handoffs and confirmation import while the
+approved supplier or professional remains the seller, merchant, and servicing
+authority. See `docs/architecture/travel-booking-companion.md`.
+
 ## Value for the Customer
 
 - one private Adventure Plan shared on the customer's terms
