@@ -22,10 +22,10 @@ not convert the migration model to DACPAC.
 
 Only the protected-main workflow may produce an executable release artifact.
 Its evidence binds the full source SHA, package SHA-256, ordered migration
-catalog SHA-256, exact SDK and runtime identifier, hashes of every dependency
-lock file in the migrator project graph, GitHub build run ID, and GitHub build
-provenance attestation. The package is self-contained; loose scripts and local
-rebuilds are not release artifacts.
+catalog SHA-256, exact SDK and runtime identifier, hashes of every dedicated
+`linux-x64` dependency lock file in the migrator project graph, GitHub build
+run ID, and GitHub build provenance attestation. The package is self-contained;
+loose scripts and local rebuilds are not release artifacts.
 
 ## Future execution boundary
 

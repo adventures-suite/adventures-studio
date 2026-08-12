@@ -30,7 +30,8 @@ package. Retained evidence must contain and match:
 2. self-contained package SHA-256;
 3. ordered embedded migration-catalog SHA-256;
 4. exact .NET SDK/toolchain and `linux-x64` runtime identifier;
-5. SHA-256 for every `packages.lock.json` in the migrator project graph;
+5. SHA-256 for every dedicated `packages.linux-x64.lock.json` in the migrator
+   project graph;
 6. GitHub build run ID; and
 7. GitHub artifact provenance attestation.
 

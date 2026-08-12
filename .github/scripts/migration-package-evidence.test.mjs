@@ -39,7 +39,7 @@ for (const [name, value, message] of [
   await assert.rejects(() => createEvidence(input), message);
 });
 
-test('rejects missing, duplicate, or non-lock dependency evidence', async () => {
+test('rejects missing, duplicate, or non-runtime-lock dependency evidence', async () => {
   const { root } = await fixture();
   const base = { sourceSha: 'a'.repeat(40), buildRunId: '123', sdkVersion: '10.0.302',
     packagePath: join(root, 'package.tar.gz'), catalogPath: join(root, 'catalog.txt'),

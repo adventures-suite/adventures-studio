@@ -8,12 +8,12 @@ const SHA256 = /^[0-9a-f]{64}$/;
 const RUN_ID = /^[1-9][0-9]*$/;
 const SDK = /^10\.0\.[0-9]{3}$/;
 export const REQUIRED_LOCK_PATHS = [
-  'src/AdventuresSuite.Authorization/packages.lock.json',
-  'src/AdventuresSuite.Companion.Application/packages.lock.json',
-  'src/AdventuresSuite.Companion.Contracts/packages.lock.json',
-  'src/AdventuresSuite.Companion.SqlServer/packages.lock.json',
-  'src/AdventuresSuite.DatabaseMigrator/packages.lock.json',
-  'src/AdventuresSuite.Identity/packages.lock.json'
+  'src/AdventuresSuite.Authorization/packages.linux-x64.lock.json',
+  'src/AdventuresSuite.Companion.Application/packages.linux-x64.lock.json',
+  'src/AdventuresSuite.Companion.Contracts/packages.linux-x64.lock.json',
+  'src/AdventuresSuite.Companion.SqlServer/packages.linux-x64.lock.json',
+  'src/AdventuresSuite.DatabaseMigrator/packages.linux-x64.lock.json',
+  'src/AdventuresSuite.Identity/packages.linux-x64.lock.json'
 ];
 
 const hash = value => createHash('sha256').update(value).digest('hex');
