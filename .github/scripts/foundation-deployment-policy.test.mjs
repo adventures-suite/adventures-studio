@@ -4,6 +4,7 @@ import test from 'node:test';
 import { validateWhatIf } from './foundation-deployment-policy.mjs';
 
 const fixture = () => JSON.parse(readFileSync('.github/scripts/fixtures/foundation-what-if-root.json', 'utf8'));
+const nullTypeFixture = () => JSON.parse(readFileSync('.github/scripts/fixtures/foundation-what-if-root-null-types.json', 'utf8'));
 const scope = '/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev';
 
 test('accepts the live-shaped root envelope and one legacy envelope', () => {
@@ -12,6 +13,36 @@ test('accepts the live-shaped root envelope and one legacy envelope', () => {
   legacy.properties = { changes: legacy.changes };
   delete legacy.changes;
   assert.deepEqual(validateWhatIf(legacy), { classification: 'what_if_approved', resourceCount: 4 });
+});
+
+test('derives exact simple and nested types when resourceType is null or omitted', () => {
+  assert.deepEqual(validateWhatIf(nullTypeFixture()), { classification: 'what_if_approved', resourceCount: 4 });
+});
+
+test('accepts a valid present matching type case-insensitively', () => {
+  const document = nullTypeFixture();
+  document.changes[2].resourceType = 'microsoft.network/VIRTUALNETWORKS/Subnets';
+  assert.deepEqual(validateWhatIf(document), { classification: 'what_if_approved', resourceCount: 4 });
+});
+
+test('rejects conflicting, malformed, shortened, parent-only, and unrelated supplied types', () => {
+  for (const resourceType of [
+    '', ' Microsoft.Network/virtualNetworks/subnets', 'Microsoft.Network//subnets',
+    'Microsoft.Network/virtualNetworks', 'Microsoft.Network/subnets',
+    'Microsoft.Network/virtualNetworks/subnets/child', 'Microsoft.Storage/storageAccounts', 42, {},
+  ]) {
+    const document = nullTypeFixture();
+    document.changes[2].resourceType = resourceType;
+    assert.throws(() => validateWhatIf(document), /unexpected_what_if_type/, String(resourceType));
+  }
+});
+
+test('derives nested types from alternating type and name segments', () => {
+  const document = nullTypeFixture();
+  document.changes[2].resourceId = `${scope}/providers/Microsoft.Network/virtualNetworks/subnets/snet-container-apps-migrations`;
+  assert.throws(() => validateWhatIf(document), /malformed_actionable_resource_id/);
+  document.changes[2].resourceId = `${scope}/providers/Microsoft.Network/virtualNetworks/vnet-adventures-suite-dev/subnets`;
+  assert.throws(() => validateWhatIf(document), /malformed_actionable_resource_id/);
 });
 
 test('rejects missing, competing, conflicting, and malformed collections', () => {
