@@ -1,0 +1,222 @@
+name: Prove Organization Federation
+
+on:
+  workflow_dispatch:
+    inputs:
+      proof_target:
+        description: Exact organization-bound identity to prove
+        required: true
+        type: choice
+        options:
+          - web-dev
+          - companion-api-dev
+          - migration-foundation
+          - migration-rbac
+          - database-migration
+      source_sha:
+        description: Exact current protected-main SHA
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: organization-federation-proof-${{ inputs.proof_target }}
+  cancel-in-progress: false
+
+jobs:
+  web-dev:
+    if: inputs.proof_target == 'web-dev'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: dev
+    permissions: { contents: read, id-token: write }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: "${{ inputs.source_sha }}", fetch-depth: 0 }
+      - name: Require exact current protected main
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = refs/heads/main
+          test "$GITHUB_SHA" = "${{ inputs.source_sha }}"
+          test "$(git rev-parse HEAD)" = "${{ inputs.source_sha }}"
+          git fetch --quiet origin main
+          test "$(git rev-parse origin/main)" = "${{ inputs.source_sha }}"
+      - uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac # v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Prove exact organization federation
+        env:
+          PROOF_TARGET: web-dev
+          PROOF_ENVIRONMENT: dev
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          EXPECTED_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+          EXPECTED_PRINCIPAL_ID: dd9500f5-9ba7-46b5-8dbc-94038f1ef03e
+          EXPECTED_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+          EXPECTED_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          GITHUB_REPOSITORY_ID: ${{ github.repository_id }}
+          GITHUB_REPOSITORY_OWNER_ID: ${{ github.repository_owner_id }}
+        run: node .github/scripts/organization-federation-proof.mjs
+      - if: always()
+        name: Clear Azure session
+        run: az logout
+
+  companion-api-dev:
+    if: inputs.proof_target == 'companion-api-dev'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: dev
+    permissions: { contents: read, id-token: write }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: "${{ inputs.source_sha }}", fetch-depth: 0 }
+      - name: Require exact current protected main
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = refs/heads/main
+          test "$GITHUB_SHA" = "${{ inputs.source_sha }}"
+          test "$(git rev-parse HEAD)" = "${{ inputs.source_sha }}"
+          git fetch --quiet origin main
+          test "$(git rev-parse origin/main)" = "${{ inputs.source_sha }}"
+      - uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac # v2
+        with:
+          client-id: ${{ vars.AZURE_COMPANION_API_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Prove exact organization federation
+        env:
+          PROOF_TARGET: companion-api-dev
+          PROOF_ENVIRONMENT: dev
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          EXPECTED_CLIENT_ID: ${{ vars.AZURE_COMPANION_API_CLIENT_ID }}
+          EXPECTED_PRINCIPAL_ID: 96b245aa-8f4c-4ce4-a37d-aaf5c8b470bc
+          EXPECTED_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+          EXPECTED_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          GITHUB_REPOSITORY_ID: ${{ github.repository_id }}
+          GITHUB_REPOSITORY_OWNER_ID: ${{ github.repository_owner_id }}
+        run: node .github/scripts/organization-federation-proof.mjs
+      - if: always()
+        name: Clear Azure session
+        run: az logout
+
+  migration-foundation:
+    if: inputs.proof_target == 'migration-foundation'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: migration-foundation-deployment
+    permissions: { contents: read, id-token: write }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: "${{ inputs.source_sha }}", fetch-depth: 0 }
+      - name: Require exact current protected main
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = refs/heads/main
+          test "$GITHUB_SHA" = "${{ inputs.source_sha }}"
+          test "$(git rev-parse HEAD)" = "${{ inputs.source_sha }}"
+          git fetch --quiet origin main
+          test "$(git rev-parse origin/main)" = "${{ inputs.source_sha }}"
+      - uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac # v2
+        with:
+          client-id: ${{ vars.MIGRATION_FOUNDATION_DEPLOYER_CLIENT_ID }}
+          tenant-id: ${{ vars.WORKFORCE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Prove exact organization federation
+        env:
+          PROOF_TARGET: migration-foundation
+          PROOF_ENVIRONMENT: migration-foundation-deployment
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          EXPECTED_CLIENT_ID: ${{ vars.MIGRATION_FOUNDATION_DEPLOYER_CLIENT_ID }}
+          EXPECTED_PRINCIPAL_ID: ${{ vars.MIGRATION_FOUNDATION_DEPLOYER_PRINCIPAL_ID }}
+          EXPECTED_TENANT_ID: ${{ vars.WORKFORCE_TENANT_ID }}
+          EXPECTED_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          GITHUB_REPOSITORY_ID: ${{ github.repository_id }}
+          GITHUB_REPOSITORY_OWNER_ID: ${{ github.repository_owner_id }}
+        run: node .github/scripts/organization-federation-proof.mjs
+      - if: always()
+        name: Clear Azure session
+        run: az logout
+
+  migration-rbac:
+    if: inputs.proof_target == 'migration-rbac'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: migration-rbac-deployment
+    permissions: { contents: read, id-token: write }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: "${{ inputs.source_sha }}", fetch-depth: 0 }
+      - name: Require exact current protected main
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = refs/heads/main
+          test "$GITHUB_SHA" = "${{ inputs.source_sha }}"
+          test "$(git rev-parse HEAD)" = "${{ inputs.source_sha }}"
+          git fetch --quiet origin main
+          test "$(git rev-parse origin/main)" = "${{ inputs.source_sha }}"
+      - uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac # v2
+        with:
+          client-id: ${{ vars.MIGRATION_RBAC_DEPLOYER_CLIENT_ID }}
+          tenant-id: ${{ vars.WORKFORCE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Prove exact organization federation
+        env:
+          PROOF_TARGET: migration-rbac
+          PROOF_ENVIRONMENT: migration-rbac-deployment
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          EXPECTED_CLIENT_ID: ${{ vars.MIGRATION_RBAC_DEPLOYER_CLIENT_ID }}
+          EXPECTED_PRINCIPAL_ID: ${{ vars.MIGRATION_RBAC_DEPLOYER_PRINCIPAL_ID }}
+          EXPECTED_TENANT_ID: ${{ vars.WORKFORCE_TENANT_ID }}
+          EXPECTED_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          GITHUB_REPOSITORY_ID: ${{ github.repository_id }}
+          GITHUB_REPOSITORY_OWNER_ID: ${{ github.repository_owner_id }}
+        run: node .github/scripts/organization-federation-proof.mjs
+      - if: always()
+        name: Clear Azure session
+        run: az logout
+
+  database-migration:
+    if: inputs.proof_target == 'database-migration'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: database-development
+    permissions: { contents: read, id-token: write }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: "${{ inputs.source_sha }}", fetch-depth: 0 }
+      - name: Require exact current protected main
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = refs/heads/main
+          test "$GITHUB_SHA" = "${{ inputs.source_sha }}"
+          test "$(git rev-parse HEAD)" = "${{ inputs.source_sha }}"
+          git fetch --quiet origin main
+          test "$(git rev-parse origin/main)" = "${{ inputs.source_sha }}"
+      - uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac # v2
+        with:
+          client-id: ${{ vars.MIGRATION_EXECUTION_CLIENT_ID }}
+          tenant-id: ${{ vars.WORKFORCE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Prove exact organization federation
+        env:
+          PROOF_TARGET: database-migration
+          PROOF_ENVIRONMENT: database-development
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          EXPECTED_CLIENT_ID: ${{ vars.MIGRATION_EXECUTION_CLIENT_ID }}
+          EXPECTED_PRINCIPAL_ID: ${{ vars.MIGRATION_EXECUTION_PRINCIPAL_ID }}
+          EXPECTED_TENANT_ID: ${{ vars.WORKFORCE_TENANT_ID }}
+          EXPECTED_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          GITHUB_REPOSITORY_ID: ${{ github.repository_id }}
+          GITHUB_REPOSITORY_OWNER_ID: ${{ github.repository_owner_id }}
+        run: node .github/scripts/organization-federation-proof.mjs
+      - if: always()
+        name: Clear Azure session
+        run: az logout
