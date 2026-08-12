@@ -9,6 +9,8 @@
         "actions": [
           "Microsoft.Resources/deployments/read",
           "Microsoft.Resources/deployments/write",
+          "Microsoft.Resources/deployments/validate/action",
+          "Microsoft.Resources/deployments/whatIf/action",
           "Microsoft.Resources/deployments/operationStatuses/read",
           "Microsoft.Authorization/roleDefinitions/read",
           "Microsoft.Authorization/roleDefinitions/write"

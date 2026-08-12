@@ -54,12 +54,25 @@ only provider read and the two exact register actions at subscription scope.
 
 The RBAC deployer has no ordinary resource write. Role-definition authority is
 resource-group scoped. Its bootstrap role has fixed UUID
-`78b75ed3-4333-4e87-a79c-d39bad7aaab3`, the exact five-action catalog in
+`78b75ed3-4333-4e87-a79c-d39bad7aaab3`, the exact seven-action catalog in
 `roles/rbac-role-definition-deployer.role.json`, empty `NotActions`,
 `DataActions`, and `NotDataActions`, and only the exact development resource
-group as its assignable scope. An Owner creates that definition alone through
+group as its assignable scope. The deployment authority includes only read,
+write, operation-status read, validate, and what-if; it excludes wildcards,
+deployment-operation reads, assignments, and ordinary resource writes. An
+Owner creates that definition alone through
 `bootstrap-role-definition.bicep` and verifies it has zero assignments before a
 separate approval may temporarily assign it to the RBAC bootstrap identity.
+The exact seven actions are:
+
+- `Microsoft.Resources/deployments/read`
+- `Microsoft.Resources/deployments/write`
+- `Microsoft.Resources/deployments/validate/action`
+- `Microsoft.Resources/deployments/whatIf/action`
+- `Microsoft.Resources/deployments/operationStatuses/read`
+- `Microsoft.Authorization/roleDefinitions/read`
+- `Microsoft.Authorization/roleDefinitions/write`
+
 Assignment authority is granted separately at each exact
 target. Its assignment role includes only deployment read, write, and operation
 status read at resource-group scope so it can submit and observe the access-only

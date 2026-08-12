@@ -18,11 +18,34 @@ second_result_file="${prefix}.result-2.json"
 policy_file="${prefix}.policy.json"
 stage='artifact_validation'
 classification='operation_failed'
+azure_error_code=''
+azure_error_limit=65536
 scope="/subscriptions/$APPROVED_SUBSCRIPTION_ID/resourceGroups/$TARGET_RESOURCE_GROUP"
 infra_assignment="$scope/providers/Microsoft.Authorization/roleAssignments/5c14d19b-04c7-4dfa-83ed-9447d0ea3c33"
 reader_assignment="$scope/providers/Microsoft.Authorization/roleAssignments/fa329695-3907-4852-94f5-fda8a26a4698"
 
-write_state() { printf 'stage=%s\nclassification=%s\nexit_code=%s\n' "$stage" "$classification" "$1" >"$state_file"; }
+write_state() {
+  printf 'stage=%s\nclassification=%s\nazure_error_code=%s\nexit_code=%s\n' \
+    "$stage" "$classification" "$azure_error_code" "$1" >"$state_file"
+}
+run_azure() {
+  local restore_errexit=false
+  local command_exit
+  local -a parsed
+  case "$-" in *e*) restore_errexit=true; set +e ;; esac
+  "$@" 2> >(
+    { head -c "$((azure_error_limit + 1))"; cat >/dev/null; } >"$error_file"
+  )
+  command_exit="$?"
+  wait
+  if [ "$command_exit" -ne 0 ]; then
+    mapfile -t parsed < <(python3 .github/scripts/classify-azure-error.py "$error_file")
+    classification="${parsed[0]:-azure_error_unclassified}"
+    azure_error_code="${parsed[1]:-}"
+  fi
+  if [ "$restore_errexit" = true ]; then set -e; fi
+  return "$command_exit"
+}
 cleanup() {
   original_exit="$?"
   rm -f "$error_file" "$what_if_file" "$result_file" "$second_result_file" "$policy_file"
@@ -66,15 +89,15 @@ case "$operation" in
     stage='assignment_removal'
     classification='cleanup_failed'
     set +e
-    az role assignment delete --ids "$infra_assignment" --only-show-errors 2>"$error_file"
+    run_azure az role assignment delete --ids "$infra_assignment" --only-show-errors
     first_exit="$?"
-    az role assignment delete --ids "$reader_assignment" --only-show-errors 2>"$error_file"
+    run_azure az role assignment delete --ids "$reader_assignment" --only-show-errors
     second_exit="$?"
     set -e
     test "$first_exit" -eq 0 && test "$second_exit" -eq 0
     stage='residue_verification'
-    az role assignment list --subscription "$APPROVED_SUBSCRIPTION_ID" --assignee-object-id b77b6201-ad26-4f77-8f88-6d0d43f7dbb8 \
-      --include-inherited --all --only-show-errors --output json >"$result_file" 2>"$error_file"
+    run_azure az role assignment list --subscription "$APPROVED_SUBSCRIPTION_ID" --assignee-object-id b77b6201-ad26-4f77-8f88-6d0d43f7dbb8 \
+      --include-inherited --all --only-show-errors --output json >"$result_file"
     RESULT_FILE="$result_file" python3 - <<'PY'
 import json, os
 assignments = json.load(open(os.environ['RESULT_FILE'], encoding='utf-8'))
@@ -89,12 +112,12 @@ PY
 esac
 
 stage='deployment_validation'
-az deployment group validate --subscription "$APPROVED_SUBSCRIPTION_ID" --resource-group "$TARGET_RESOURCE_GROUP" \
-  --name "$deployment_name" --template-file "$template" "${parameters[@]}" --only-show-errors --output none 2>"$error_file"
+run_azure az deployment group validate --subscription "$APPROVED_SUBSCRIPTION_ID" --resource-group "$TARGET_RESOURCE_GROUP" \
+  --name "$deployment_name" --template-file "$template" "${parameters[@]}" --only-show-errors --output none
 stage='what_if'
-az deployment group what-if --subscription "$APPROVED_SUBSCRIPTION_ID" --resource-group "$TARGET_RESOURCE_GROUP" \
+run_azure az deployment group what-if --subscription "$APPROVED_SUBSCRIPTION_ID" --resource-group "$TARGET_RESOURCE_GROUP" \
   --name "$deployment_name" --template-file "$template" "${parameters[@]}" --result-format FullResourcePayloads \
-  --no-pretty-print --only-show-errors --output json >"$what_if_file" 2>"$error_file"
+  --no-pretty-print --only-show-errors --output json >"$what_if_file"
 set +e
 node .github/scripts/rbac-boundary-policy.mjs "$mode" "$what_if_file" >"$policy_file" 2>"$error_file"
 policy_exit="$?"
@@ -103,12 +126,12 @@ classification="$(POLICY_FILE="$policy_file" python3 -c 'import json,os; print(j
 test "$policy_exit" -eq 0
 stage='deployment'
 classification='deployment_failed'
-az deployment group create --subscription "$APPROVED_SUBSCRIPTION_ID" --resource-group "$TARGET_RESOURCE_GROUP" \
-  --name "$deployment_name" --template-file "$template" "${parameters[@]}" --only-show-errors --output none 2>"$error_file"
+run_azure az deployment group create --subscription "$APPROVED_SUBSCRIPTION_ID" --resource-group "$TARGET_RESOURCE_GROUP" \
+  --name "$deployment_name" --template-file "$template" "${parameters[@]}" --only-show-errors --output none
 stage='deployment_readback'
 if [ "$mode" = 'bootstrap' ]; then
-  az role definition list --subscription "$APPROVED_SUBSCRIPTION_ID" --name 4bfa5b8d-8e4a-4fc8-9f2b-6115f07cad54 --output json >"$result_file" 2>"$error_file"
-  az role definition list --subscription "$APPROVED_SUBSCRIPTION_ID" --name 9df6bf68-4db7-4d38-b7f1-7bb26a541199 --output json >"$second_result_file" 2>"$error_file"
+  run_azure az role definition list --subscription "$APPROVED_SUBSCRIPTION_ID" --name 4bfa5b8d-8e4a-4fc8-9f2b-6115f07cad54 --output json >"$result_file"
+  run_azure az role definition list --subscription "$APPROVED_SUBSCRIPTION_ID" --name 9df6bf68-4db7-4d38-b7f1-7bb26a541199 --output json >"$second_result_file"
   FIRST_RESULT="$result_file" SECOND_RESULT="$second_result_file" python3 - <<'PY'
 import json, os
 scope = '/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev'
@@ -127,8 +150,8 @@ for path, (role_id, role_name) in zip([os.environ['FIRST_RESULT'], os.environ['S
         raise SystemExit(1)
 PY
 else
-  az role assignment show --ids "$infra_assignment" --output json >"$result_file" 2>"$error_file"
-  az role assignment show --ids "$reader_assignment" --output json >"$second_result_file" 2>"$error_file"
+  run_azure az role assignment show --ids "$infra_assignment" --output json >"$result_file"
+  run_azure az role assignment show --ids "$reader_assignment" --output json >"$second_result_file"
   FIRST_RESULT="$result_file" SECOND_RESULT="$second_result_file" python3 - <<'PY'
 import json, os
 scope = '/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev'
