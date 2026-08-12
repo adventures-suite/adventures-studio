@@ -31,6 +31,41 @@ function containsForbidden(value) {
     text.includes('"external":true') || text.includes('"external": true');
 }
 
+function selectChanges(document) {
+  if (!document || typeof document !== 'object' || Array.isArray(document)) fail('malformed_what_if');
+  const rootPresent = Object.prototype.hasOwnProperty.call(document, 'changes');
+  const properties = document.properties;
+  const legacyPresent = properties !== null && typeof properties === 'object' && !Array.isArray(properties) &&
+    Object.prototype.hasOwnProperty.call(properties, 'changes');
+  if (rootPresent === legacyPresent) fail('malformed_what_if');
+  const changes = rootPresent ? document.changes : properties.changes;
+  if (!Array.isArray(changes)) fail('malformed_what_if');
+  return changes;
+}
+
+function validateObservedResourceId(value) {
+  if (typeof value !== 'string' || value.length === 0 || value.includes('?') || value.includes('#') ||
+      value.includes('\\') || value.includes('//')) fail('malformed_ignored_resource_id');
+  const segments = value.split('/');
+  if (segments[0] !== '' || segments.some((segment, index) => index > 0 && segment.length === 0)) fail('malformed_ignored_resource_id');
+  let decoded;
+  try { decoded = segments.map(segment => decodeURIComponent(segment)); } catch { fail('malformed_ignored_resource_id'); }
+  if (decoded.some(segment => segment === '.' || segment === '..' || segment.includes('/') || segment.includes('\\'))) {
+    fail('malformed_ignored_resource_id');
+  }
+  if (segments.length < 9 || segments.length % 2 === 0 ||
+      segments[1].toLowerCase() !== 'subscriptions' || segments[2].toLowerCase() !== subscriptionId ||
+      segments[3].toLowerCase() !== 'resourcegroups' || segments[4].toLowerCase() !== resourceGroup ||
+      segments[5].toLowerCase() !== 'providers' || !/^[A-Za-z0-9]+(?:\.[A-Za-z0-9]+)+$/.test(segments[6])) {
+    fail('malformed_ignored_resource_id');
+  }
+  for (let index = 7; index < segments.length; index += 2) {
+    if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(segments[index]) ||
+        !/^[A-Za-z0-9][A-Za-z0-9._() -]*$/.test(segments[index + 1])) fail('malformed_ignored_resource_id');
+  }
+  return value.toLowerCase();
+}
+
 export function validateApproval(input) {
   if (input.ref !== 'refs/heads/main' || !/^[0-9a-f]{40}$/.test(input.releaseSha) || input.workflowSha !== input.releaseSha) fail('approval_sha_mismatch');
   if (!/^foundation-deploy-[A-Za-z0-9._-]{8,96}$/.test(input.approvalId ?? '')) fail('approval_id_mismatch');
@@ -42,10 +77,15 @@ export function validateApproval(input) {
 }
 
 export function validateWhatIf(document) {
-  if (!Array.isArray(document?.properties?.changes)) fail('malformed_what_if');
+  const changes = selectChanges(document);
   if (containsForbidden(document)) fail('forbidden_what_if_content');
   const seen = new Set();
-  for (const change of document.properties.changes) {
+  for (const change of changes) {
+    if (!change || typeof change !== 'object' || Array.isArray(change)) fail('malformed_what_if');
+    if (change.changeType === 'Ignore') {
+      validateObservedResourceId(change.resourceId);
+      continue;
+    }
     const id = String(change.resourceId ?? '').toLowerCase();
     const expectedType = expectedResources.get(id);
     if (!expectedType) fail('unexpected_what_if_resource');

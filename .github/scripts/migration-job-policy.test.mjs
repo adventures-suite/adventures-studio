@@ -523,21 +523,21 @@ test('foundation what-if accepts only the four exact reviewed resources', () => 
     ['Microsoft.ContainerRegistry/registries', `${scope}/providers/Microsoft.ContainerRegistry/registries/advsuitemigrationsdev`],
     ['Microsoft.App/managedEnvironments', `${scope}/providers/Microsoft.App/managedEnvironments/cae-adventures-suite-migrations-dev`],
   ].map(([resourceType, resourceId]) => ({ resourceType, resourceId, changeType: 'Create', after: { properties: { publicNetworkAccess: 'Disabled' } } }));
-  const document = { properties: { changes } };
+  const document = { changes };
   assert.deepEqual(validateWhatIf(document), { classification: 'what_if_approved', resourceCount: 4 });
   for (const changeType of ['Delete', 'Deploy', 'Modify', 'NoChange', 'Unsupported']) {
-    const drift = structuredClone(document); drift.properties.changes[0].changeType = changeType;
+    const drift = structuredClone(document); drift.changes[0].changeType = changeType;
     assert.throws(() => validateWhatIf(drift), /unexpected_what_if_operation/);
   }
-  const outside = structuredClone(document); outside.properties.changes[0].resourceId = `${scope}/providers/Microsoft.Storage/storageAccounts/unreviewed`;
+  const outside = structuredClone(document); outside.changes[0].resourceId = `${scope}/providers/Microsoft.Storage/storageAccounts/unreviewed`;
   assert.throws(() => validateWhatIf(outside), /unexpected_what_if_resource/);
-  const role = structuredClone(document); role.properties.changes[0].after = { type: 'Microsoft.Authorization/roleAssignments' };
+  const role = structuredClone(document); role.changes[0].after = { type: 'Microsoft.Authorization/roleAssignments' };
   assert.throws(() => validateWhatIf(role), /forbidden_what_if_content/);
-  const identity = structuredClone(document); identity.properties.changes[0].after = { operation: 'Microsoft.ManagedIdentity/userAssignedIdentities/write' };
+  const identity = structuredClone(document); identity.changes[0].after = { operation: 'Microsoft.ManagedIdentity/userAssignedIdentities/write' };
   assert.throws(() => validateWhatIf(identity), /forbidden_what_if_content/);
-  const publicAccess = structuredClone(document); publicAccess.properties.changes[2].after.properties.publicNetworkAccess = 'Enabled';
+  const publicAccess = structuredClone(document); publicAccess.changes[2].after.properties.publicNetworkAccess = 'Enabled';
   assert.throws(() => validateWhatIf(publicAccess), /forbidden_what_if_content/);
-  const externalEnvironment = structuredClone(document); externalEnvironment.properties.changes[3].after = { properties: { vnetConfiguration: { internal: false } } };
+  const externalEnvironment = structuredClone(document); externalEnvironment.changes[3].after = { properties: { vnetConfiguration: { internal: false } } };
   assert.throws(() => validateWhatIf(externalEnvironment), /forbidden_what_if_content/);
 });
 
