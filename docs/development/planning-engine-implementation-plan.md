@@ -103,6 +103,8 @@ Acceptance criteria:
 - reversed or inconsistent date ranges fail predictably
 - local date/time values are not silently converted to UTC
 - UTC audit timestamps remain distinct from travel dates
+- initial travelers do not imply a reusable profile, guardian authority,
+  protected booking identity, loyalty storage, or supplier disclosure
 - no type depends on JSON, Razor, EF Core, or an AI provider
 - the Spain/trans-Atlantic scenario can be represented in tests
 
