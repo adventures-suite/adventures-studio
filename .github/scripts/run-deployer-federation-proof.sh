@@ -49,6 +49,19 @@ case "$proof_mode" in
   denial|identity-only) ;;
   *) exit 2 ;;
 esac
+test "${APPROVED_TENANT_ID:-}" = 'd7add2bb-ac03-49a8-9377-d0bf6a012f2f'
+test "${APPROVED_SUBSCRIPTION_ID:-}" = '5ace9cdd-06d1-47d9-8214-1e7c756d076a'
+test "${TARGET_RESOURCE_GROUP:-}" = 'rg-adventures-suite-dev'
+case "$environment_name" in
+  migration-foundation-deployment)
+    test "${AZURE_CLIENT_ID:-}" = '223af00d-69e5-4302-9ac5-6b338f3ea2e5'
+    test "${EXPECTED_PRINCIPAL_ID:-}" = 'b77b6201-ad26-4f77-8f88-6d0d43f7dbb8'
+    ;;
+  migration-rbac-deployment)
+    test "${AZURE_CLIENT_ID:-}" = 'd678e2ad-ada2-4cde-bb79-44630acf1cc8'
+    test "${EXPECTED_PRINCIPAL_ID:-}" = '822c1c0c-39e1-400f-b9fc-9532a11bae5d'
+    ;;
+esac
 
 if ! az cloud show \
   --query endpoints.activeDirectoryResourceId \

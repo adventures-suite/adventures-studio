@@ -33,6 +33,13 @@ own approval and verification; no workflow may combine them:
    validated `existing` resources.
 4. The RBAC boundary removes both assignments after success or failure, and a
    fresh foundation proof must again receive `AuthorizationFailed`.
+
+Foundation assignment, deployment, cleanup, and denial evidence carry the same
+strict UTC assignment timestamp and maximum-30-minute absolute deadline.
+Authority-dependent stages refuse an expired window, while exact idempotent
+cleanup remains executable afterward. Foundation output validation is bound to
+the checksum-reviewed identity catalog and requires all ten exact deployment
+outputs; bounded Azure error handling never retains raw CLI messages.
 5. With federated-credential write assigned only on the exact publisher and
    starter identity resources, it deploys `identity-access.bicep` only and then
    loses that identity-specific authority.

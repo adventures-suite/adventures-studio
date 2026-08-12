@@ -557,13 +557,14 @@ test('foundation deployment result requires terminal success and exact sanitized
     starterIdentityResourceId: value(`${scope}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-adventures-suite-migrate-starter-dev`),
   };
   const document = { properties: { provisioningState: 'Succeeded', outputs } };
-  assert.equal(validateDeployment(document).classification, 'deployment_complete');
+  const trusted = JSON.parse(readFileSync('infrastructure/container-apps-migrations/foundation-identity-catalog.dev.json', 'utf8'));
+  assert.equal(validateDeployment(document, trusted).classification, 'deployment_complete');
   const failed = structuredClone(document); failed.properties.provisioningState = 'Failed';
-  assert.throws(() => validateDeployment(failed), /deployment_not_succeeded/);
+  assert.throws(() => validateDeployment(failed, trusted), /deployment_not_succeeded/);
   const missing = structuredClone(document); delete missing.properties.outputs.registryResourceId;
-  assert.throws(() => validateDeployment(missing), /unexpected_deployment_outputs/);
+  assert.throws(() => validateDeployment(missing, trusted), /unexpected_deployment_outputs/);
   const leaked = structuredClone(document); leaked.properties.outputs.secret = value('credential');
-  assert.throws(() => validateDeployment(leaked), /unexpected_deployment_outputs/);
+  assert.throws(() => validateDeployment(leaked, trusted), /unexpected_deployment_outputs/);
 });
 
 test('deterministic role definitions reject broad scopes, wildcards, RBAC, identity mutation, and broad substitutions', () => {
@@ -621,15 +622,15 @@ test('RBAC boundary what-if and workflows prevent substitution, self-management,
   assert.doesNotMatch(rbacWorkflow, /MIGRATION_FOUNDATION_DEPLOYER_CLIENT_ID|223af00d-69e5-4302-9ac5-6b338f3ea2e5/);
   assert.match(rbacRunner, /5c14d19b-04c7-4dfa-83ed-9447d0ea3c33/);
   assert.match(rbacRunner, /fa329695-3907-4852-94f5-fda8a26a4698/);
-  assert.match(rbacRunner, /set \+e[\s\S]*role assignment delete[\s\S]*role assignment delete[\s\S]*set -e/);
+  assert.match(rbacRunner, /assignment_inspection[\s\S]*for assignment_id in \$deletion_plan[\s\S]*role assignment delete/);
   assert.match(rbacRunner, /residue_verification/);
   assert.match(rbacRunner, /azure_error_limit=65536/);
   assert.match(rbacRunner, /classify-azure-error\.py/);
-  assert.match(rbacRunner, /stage=%s\\nclassification=%s\\nazure_error_code=%s\\nexit_code=%s/);
+  assert.match(rbacRunner, /stage=%s\\nclassification=%s\\nazure_error_code=%s\\nassignment_timestamp_utc=%s\\nauthority_deadline_utc=%s\\nexit_code=%s/);
   assert.match(rbacRunner, /rm -f "\$error_file"/);
   assert.match(rbacWorkflow, /azureErrorCode/);
   assert.match(rbacWorkflow, /azure_error_unclassified/);
-  assert.match(rbacWorkflow, /allowed_error_codes = \{'AuthorizationFailed', 'InvalidTemplate', 'InvalidTemplateDeployment'\}/);
+  assert.match(rbacWorkflow, /allowed_error_codes = \{'AuthorizationFailed', 'InvalidTemplate', 'InvalidTemplateDeployment', 'DeploymentFailed'\}/);
   assert.doesNotMatch(`${foundationWorkflow}\n${rbacWorkflow}\n${rbacRunner}`, /Owner|Contributor|AZURE_CLIENT_SECRET|client-secret|set -x/i);
 });
 
@@ -656,6 +657,12 @@ test('RBAC Azure error evidence classifies one authorization failure without lea
 test('RBAC Azure error evidence classifies one template validation failure', () => {
   assert.deepEqual(classifyAzureError('ERROR: (InvalidTemplateDeployment) omitted\nCode: InvalidTemplateDeployment\n'), {
     classification: 'azure_template_validation_failed', azureErrorCode: 'InvalidTemplateDeployment', output: 'azure_template_validation_failed\nInvalidTemplateDeployment\n',
+  });
+});
+
+test('Azure error evidence classifies one deployment failure', () => {
+  assert.deepEqual(classifyAzureError('ERROR: (DeploymentFailed) omitted\nCode: DeploymentFailed\n'), {
+    classification: 'azure_deployment_failed', azureErrorCode: 'DeploymentFailed', output: 'azure_deployment_failed\nDeploymentFailed\n',
   });
 });
 
@@ -784,7 +791,22 @@ test('foundation deployment mode is exact-approval bound and never emits raw evi
   assert.match(runner, /deployment group create/);
   assert.match(runner, /deployment group show/);
   assert.match(runner, /trap cleanup EXIT/);
+  assert.match(runner, /azure_error_limit=65536/);
+  assert.match(runner, /classify-azure-error\.py/);
+  assert.match(runner, /foundation-authority-window\.mjs active/);
+  assert.match(runner, /foundation-identity-catalog\.dev\.json/);
   assert.doesNotMatch(`${workflow}\n${runner}`, /cat .*\.json|cat .*\.err|set -x|--debug|Bearer|accessToken|client-secret/i);
+});
+
+test('foundation cleanup is exact, independently dispatchable, idempotent, and proves total zero residue', () => {
+  const runner = readFileSync('.github/scripts/run-rbac-boundary-operation.sh', 'utf8');
+  const workflow = readFileSync('.github/workflows/manage-migration-foundation-rbac.yml', 'utf8');
+  assert.match(workflow, /remove-foundation-access/);
+  assert.match(runner, /assignment_inspection/);
+  assert.match(runner, /role assignment list[\s\S]*--scope "\$scope"/);
+  assert.match(runner, /foundation-assignment-cleanup-policy\.mjs residue/);
+  assert.match(runner, /for assignment_id in \$deletion_plan/);
+  assert.doesNotMatch(runner, /assignmentCount[^\n]*[1-9]/);
 });
 
 test('foundation deployment approval rejects missing approval and changed SHA or artifacts', () => {
