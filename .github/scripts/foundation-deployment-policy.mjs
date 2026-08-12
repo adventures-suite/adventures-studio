@@ -43,27 +43,46 @@ function selectChanges(document) {
   return changes;
 }
 
-function validateObservedResourceId(value) {
+function parseResourceId(value, classification = 'malformed_ignored_resource_id') {
   if (typeof value !== 'string' || value.length === 0 || value.includes('?') || value.includes('#') ||
-      value.includes('\\') || value.includes('//')) fail('malformed_ignored_resource_id');
+      value.includes('\\') || value.includes('//')) fail(classification);
   const segments = value.split('/');
-  if (segments[0] !== '' || segments.some((segment, index) => index > 0 && segment.length === 0)) fail('malformed_ignored_resource_id');
+  if (segments[0] !== '' || segments.some((segment, index) => index > 0 && segment.length === 0)) fail(classification);
   let decoded;
-  try { decoded = segments.map(segment => decodeURIComponent(segment)); } catch { fail('malformed_ignored_resource_id'); }
+  try { decoded = segments.map(segment => decodeURIComponent(segment)); } catch { fail(classification); }
   if (decoded.some(segment => segment === '.' || segment === '..' || segment.includes('/') || segment.includes('\\'))) {
-    fail('malformed_ignored_resource_id');
+    fail(classification);
   }
   if (segments.length < 9 || segments.length % 2 === 0 ||
       segments[1].toLowerCase() !== 'subscriptions' || segments[2].toLowerCase() !== subscriptionId ||
       segments[3].toLowerCase() !== 'resourcegroups' || segments[4].toLowerCase() !== resourceGroup ||
       segments[5].toLowerCase() !== 'providers' || !/^[A-Za-z0-9]+(?:\.[A-Za-z0-9]+)+$/.test(segments[6])) {
-    fail('malformed_ignored_resource_id');
+    fail(classification);
   }
+  const typeSegments = [];
   for (let index = 7; index < segments.length; index += 2) {
     if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(segments[index]) ||
-        !/^[A-Za-z0-9][A-Za-z0-9._() -]*$/.test(segments[index + 1])) fail('malformed_ignored_resource_id');
+        !/^[A-Za-z0-9][A-Za-z0-9._() -]*$/.test(segments[index + 1])) fail(classification);
+    typeSegments.push(segments[index]);
   }
-  return value.toLowerCase();
+  return { normalizedId: value.toLowerCase(), derivedType: `${segments[6]}/${typeSegments.join('/')}` };
+}
+
+function validateObservedResourceId(value) {
+  return parseResourceId(value).normalizedId;
+}
+
+function validateActionableResourceType(parsedId, suppliedType, expectedType) {
+  const { normalizedId, derivedType } = parsedId;
+  if (derivedType.toLowerCase() !== expectedType.toLowerCase()) fail('unexpected_what_if_type');
+  if (suppliedType !== undefined && suppliedType !== null) {
+    if (typeof suppliedType !== 'string' || suppliedType.length === 0 || suppliedType.trim() !== suppliedType ||
+        !/^[A-Za-z0-9]+(?:\.[A-Za-z0-9]+)+(?:\/[A-Za-z0-9][A-Za-z0-9._-]*)+$/.test(suppliedType) ||
+        suppliedType.toLowerCase() !== derivedType.toLowerCase() || suppliedType.toLowerCase() !== expectedType.toLowerCase()) {
+      fail('unexpected_what_if_type');
+    }
+  }
+  return normalizedId;
 }
 
 export function validateApproval(input) {
@@ -86,10 +105,10 @@ export function validateWhatIf(document) {
       validateObservedResourceId(change.resourceId);
       continue;
     }
-    const id = String(change.resourceId ?? '').toLowerCase();
-    const expectedType = expectedResources.get(id);
+    const parsedId = parseResourceId(change.resourceId, 'malformed_actionable_resource_id');
+    const expectedType = expectedResources.get(parsedId.normalizedId);
     if (!expectedType) fail('unexpected_what_if_resource');
-    if (String(change.resourceType ?? '').toLowerCase() !== expectedType.toLowerCase()) fail('unexpected_what_if_type');
+    const id = validateActionableResourceType(parsedId, change.resourceType, expectedType);
     if (change.changeType !== 'Create') fail('unexpected_what_if_operation');
     if (seen.has(id)) fail('duplicate_what_if_resource');
     seen.add(id);
