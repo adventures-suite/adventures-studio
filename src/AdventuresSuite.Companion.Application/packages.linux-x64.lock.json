@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net10.0": {
+      "adventuressuite.authorization": {
+        "type": "Project",
+        "dependencies": {
+          "AdventuresSuite.Identity": "[1.0.0, )"
+        }
+      },
+      "adventuressuite.companion.contracts": {
+        "type": "Project"
+      },
+      "adventuressuite.identity": {
+        "type": "Project"
+      }
+    },
+    "net10.0/linux-x64": {}
+  }
+}

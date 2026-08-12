@@ -871,6 +871,9 @@ Status:
 Approved
 # ADR: Use a manual Azure Container Apps Job for database migrations
 
+**Status: Superseded on 2026-08-12 by “Execute DbUp from a one-job ephemeral
+private runner.”**
+
 **Decision:** AdventuresSuite database migrations run as a finite, manually
 started Azure Container Apps Job using an immutable image digest and dedicated
 user-assigned migration identity. The temporary App Service/Kudu/VM bridge is
@@ -885,3 +888,37 @@ startup. See `docs/architecture/database-migration-job.md`.
 **Consequences:** Deployment and SQL bootstrap remain separate approvals; ACR,
 Container Apps environment/subnet, two user-assigned identities, and logging add
 development cost; only digest-addressed images may execute.
+
+---
+
+## 2026-08-12
+
+### Execute DbUp from a One-Job Ephemeral Private Runner
+
+Decision:
+
+Retain the mature AdventuresSuite DbUp migration model and package it as a
+deterministic, self-contained, attested protected-main artifact. A future
+separately approved implementation will execute that artifact once on an
+ephemeral GitHub self-hosted Azure VM in the existing VNet, using the existing
+migration UAMI and Azure SQL private endpoint. Independent cleanup must delete
+the runner after every outcome.
+
+The Container Apps Job/ACR design is superseded and its active workflows,
+images, and IaC are removed. DACPAC conversion, public SQL, temporary firewall
+rules, SQL passwords, client secrets, persistent runner compute, ACR, automatic
+retry, web/API startup migration, and destructive rollback are prohibited.
+
+Reason:
+
+The repository already has ordered immutable DbUp scripts, journaling,
+application locking, per-script transactions, pre/post classification,
+fingerprints, and verification. Reusing that model avoids an unjustified
+conversion and removes a registry/container control plane that failed before
+SQL execution. See `docs/architecture/private-sql-migration-execution.md` and
+the retained postmortem.
+
+Status:
+
+Approved; runner implementation and all Azure/SQL operations remain separately
+blocked.

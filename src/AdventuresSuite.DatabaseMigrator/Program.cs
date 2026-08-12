@@ -39,12 +39,12 @@ try
             return await MigrationOperationRunner.RunAsync(
                 RequireEnvironment(migrationConnectionVariable));
         case ["--verify-execution-channel"]:
-            return await MigrationContainerModes.VerifyExecutionChannelAsync();
+            return await MigrationExecutionModes.VerifyExecutionChannelAsync();
         case ["--capture-migration-state"]:
-            return await MigrationContainerModes.CaptureMigrationStateAsync(
+            return await MigrationExecutionModes.CaptureMigrationStateAsync(
                 RequireEnvironment(migrationConnectionVariable));
         case ["--verify-migration-state"]:
-            return await MigrationContainerModes.VerifyMigrationStateAsync(
+            return await MigrationExecutionModes.VerifyMigrationStateAsync(
                 RequireEnvironment(migrationConnectionVariable));
         case ["--bind-companion-read-runtime"]:
             await AzureDevelopmentBootstrapper.BindCompanionReadIdentityAsync(

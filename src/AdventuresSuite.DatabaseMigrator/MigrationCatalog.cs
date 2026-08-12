@@ -1,4 +1,6 @@
 using System.Reflection;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace AdventuresSuite.DatabaseMigrator;
@@ -41,6 +43,16 @@ public static partial class MigrationCatalog
     /// <summary>Determines whether a manifest resource is a validated migration.</summary>
     public static bool IsMigrationResource(Assembly assembly, string resourceName) =>
         GetOrderedResourceNames(assembly).Contains(resourceName, StringComparer.Ordinal);
+
+    /// <summary>Computes the package contract hash for the ordered migration filenames.</summary>
+    public static string CalculateOrderedCatalogSha256(Assembly assembly)
+    {
+        var catalog = string.Join('\n', GetOrderedResourceNames(assembly).Select(name =>
+            name[(name.LastIndexOf(".Database.Migrations.", StringComparison.Ordinal)
+                + ".Database.Migrations.".Length)..])) + "\n";
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(catalog)))
+            .ToLowerInvariant();
+    }
 
     [GeneratedRegex(@"^(\d{4})_[a-z0-9_]+\.sql$", RegexOptions.CultureInvariant)]
     private static partial Regex MigrationNamePattern();

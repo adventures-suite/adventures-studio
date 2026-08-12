@@ -228,13 +228,13 @@ deduplication, ownership, and escalation are explicit.
 
 ## Environment Behavior
 
-Finite migration Jobs emit a bounded structured start record and exactly one
-completion envelope. Operation ID and release metadata are high-cardinality log
+Finite migration operations emit a bounded structured start record and exactly
+one completion envelope. Operation ID and release metadata are high-cardinality log
 properties used only for access-controlled evidence, never metric dimensions.
 Migration classification, execution status category, and mode are bounded
 dimensions. Logs exclude SQL text, connection strings, tokens, environment
-dumps, application rows, and arbitrary exception messages. Azure terminal Job
-status and the envelope must agree; missing evidence fails the operation closed.
+dumps, application rows, and arbitrary exception messages. Runner process status
+and the envelope must agree; missing evidence fails the operation closed.
 
 - Local development uses readable console output and optional local trace
   inspection. Privacy rules remain active.

@@ -332,7 +332,7 @@
   confidential web client.
 - Read `docs/development/slice-5f-azure-environment.md` and its linked runbooks
   before changing External ID, Azure SQL, private networking, Key Vault, Data
-  Protection storage, workload identities, or the migration app.
+  Protection storage, workload identities, or the migration runner.
 - Treat Azure as live state, reviewed IaC as the reproducible definition, and
   runbooks as the authority for cross-tenant and data-plane operations.
 - Keep application DML and migration DDL identities separate. The application
@@ -341,19 +341,14 @@
   hosted workflow pass. Approve and prove a private execution path.
 - Resolve generated principal IDs, private addresses, and object versions from
   deployment outputs; never hardcode them in application behavior.
-- Keep the migration app stopped by default and return it to stopped state after
-  success or failure with retained artifact and journal evidence.
-- Treat the Azure Container Apps migration Job as the permanent migration
-  execution boundary. It is manual-only, digest-addressed, ingress-free,
-  single-replica, zero-retry, and protected by the `database-development`
-  GitHub Environment.
-- Keep image publication, Job configuration/start, registry pull, and SQL
-  migration identities distinct. Never run database migration from web/API
-  startup or reuse the retired App Service/Kudu/VM bridge for new operations.
-- Keep migration IaC in five non-combinable boundaries: foundation resources,
-  publisher/starter identity access, foundation access, Job resource, and Job
-  access. Owner-created operational identities are referenced as existing.
-  Resource deployers receive
-  no authorization writes; RBAC deployers receive no ordinary resource writes.
-  Approve and verify each boundary separately in the documented order, passing
-  only exact validated deployment-output resource IDs.
+- Treat the attested, self-contained DbUp package as the migration artifact;
+  never run database migration from web/API startup or convert the migration
+  model to DACPAC without a new architecture decision.
+- The future execution boundary is one ephemeral, one-job GitHub self-hosted
+  Azure VM in the existing VNet using the migration UAMI and private SQL
+  endpoint. It has no ACR, persistent compute, or automatic retry, and requires
+  independently approved cleanup after every outcome.
+- Before runner implementation, require one design review proving secure
+  one-job registration delivery, attested artifact retrieval, private SQL
+  reachability, and VM deletion after success, failure, cancellation, timeout,
+  runner loss, or inconclusive evidence.
