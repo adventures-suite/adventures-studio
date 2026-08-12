@@ -152,11 +152,11 @@ test('deployer workflows preserve identity separation and proof-only mode', () =
   assert.match(foundation, /environment: migration-foundation-deployment/);
   assert.match(foundation, /deploy-foundation/);
   assert.match(foundation, /run-foundation-deployment\.sh/);
-  assert.match(foundation, /remove-temporary-access:[\s\S]*environment: migration-rbac-deployment/);
-  assert.match(foundation, /prove-access-removed:[\s\S]*environment: migration-foundation-deployment/);
+  assert.doesNotMatch(foundation, /remove-temporary-access|prove-access-removed|cleanup_approval_id/);
+  assert.match(foundation, /externalOwnerCleanupRequired/);
   assert.doesNotMatch(readFileSync('.github/scripts/run-foundation-deployment.sh', 'utf8'), /role assignment (create|delete)|role definition (create|delete)|Microsoft\.Authorization/i);
   assert.match(foundation, /vars\.MIGRATION_FOUNDATION_DEPLOYER_CLIENT_ID/);
-  assert.doesNotMatch(foundation.slice(0, foundation.indexOf('  remove-temporary-access:')), /MIGRATION_RBAC_DEPLOYER|822c1c0c|d678e2ad/);
+  assert.doesNotMatch(foundation, /MIGRATION_RBAC_DEPLOYER|822c1c0c|d678e2ad/);
   assert.match(rbac, /environment: migration-rbac-deployment/);
   assert.match(rbac, /vars\.MIGRATION_RBAC_DEPLOYER_CLIENT_ID/);
   assert.doesNotMatch(rbac, /MIGRATION_FOUNDATION_DEPLOYER|b77b6201|223af00d/);
@@ -493,7 +493,7 @@ test('federation proof reporter emits exactly one sanitized envelope for every s
       stage: 'complete',
       classification: 'complete',
       exitCode: 0,
-      cleanupRequired: false,
+      externalOwnerCleanupRequired: false,
     });
     assert.equal(report({ INPUT_OUTCOME: 'failure' }).envelope.stage, 'input_validation');
     assert.equal(report({ CHECKOUT_OUTCOME: 'failure' }).envelope.stage, 'checkout_integrity');
@@ -631,7 +631,7 @@ test('RBAC boundary what-if and workflows prevent substitution, self-management,
   assert.match(rbacWorkflow, /azureErrorCode/);
   assert.match(rbacWorkflow, /azure_error_unclassified/);
   assert.match(rbacWorkflow, /allowed_error_codes = \{'AuthorizationFailed', 'InvalidTemplate', 'InvalidTemplateDeployment', 'DeploymentFailed'\}/);
-  assert.doesNotMatch(`${foundationWorkflow}\n${rbacWorkflow}\n${rbacRunner}`, /Owner|Contributor|AZURE_CLIENT_SECRET|client-secret|set -x/i);
+  assert.doesNotMatch(`${foundationWorkflow}\n${rbacWorkflow}\n${rbacRunner}`, /\bOwner\b|\bContributor\b|AZURE_CLIENT_SECRET|client-secret|set -x/i);
 });
 
 function classifyAzureError(evidence) {
@@ -798,15 +798,23 @@ test('foundation deployment mode is exact-approval bound and never emits raw evi
   assert.doesNotMatch(`${workflow}\n${runner}`, /cat .*\.json|cat .*\.err|set -x|--debug|Bearer|accessToken|client-secret/i);
 });
 
-test('foundation cleanup is exact, independently dispatchable, idempotent, and proves total zero residue', () => {
-  const runner = readFileSync('.github/scripts/run-rbac-boundary-operation.sh', 'utf8');
-  const workflow = readFileSync('.github/workflows/manage-migration-foundation-rbac.yml', 'utf8');
-  assert.match(workflow, /remove-foundation-access/);
-  assert.match(runner, /assignment_inspection/);
-  assert.match(runner, /role assignment list[\s\S]*--scope "\$scope"/);
-  assert.match(runner, /foundation-assignment-cleanup-policy\.mjs residue/);
-  assert.match(runner, /for assignment_id in \$deletion_plan/);
-  assert.doesNotMatch(runner, /assignmentCount[^\n]*[1-9]/);
+test('foundation access and cleanup are Owner-operated and proof remains separately dispatchable', () => {
+  const foundation = readFileSync('.github/workflows/provision-migration-foundation-resources.yml', 'utf8');
+  const rbac = readFileSync('.github/workflows/manage-migration-foundation-rbac.yml', 'utf8');
+  const documentation = `${readFileSync('docs/development/container-apps-migration-permissions.md', 'utf8')}\n${readFileSync('infrastructure/container-apps-migrations/README.md', 'utf8')}`;
+  assert.doesNotMatch(`${foundation}\n${rbac}`, /az role assignment (create|delete)|assign-foundation-access|remove-foundation-access/);
+  assert.doesNotMatch(foundation, /remove-temporary-access|prove-access-removed|cleanup_approval_id|migration-foundation-access-cleanup|migration-foundation-loss-of-access/);
+  assert.match(foundation, /options:[\s\S]*- proof[\s\S]*- deploy-foundation/);
+  assert.match(foundation, /run-deployer-federation-proof\.sh/);
+  assert.match(foundation, /externalOwnerCleanupRequired/);
+  assert.doesNotMatch(foundation, /\bcleanupRequired\b|cleanup completed|cleanupComplete/i);
+  assert.doesNotMatch(rbac, /assign-foundation-access|remove-foundation-access|role assignment (create|delete)/);
+  assert.match(documentation, /fd462691-dc24-4127-afd9-e15321dc9050/);
+  assert.match(documentation, /5c14d19b-04c7-4dfa-83ed-9447d0ea3c33/);
+  assert.match(documentation, /fa329695-3907-4852-94f5-fda8a26a4698/);
+  assert.match(documentation, /conclusively absent\s+assignment is already clean/);
+  assert.match(documentation, /complete direct-and-inherited post-readback/);
+  assert.match(documentation, /separately dispatched/);
 });
 
 test('foundation deployment approval rejects missing approval and changed SHA or artifacts', () => {
