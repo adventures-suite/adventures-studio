@@ -24,14 +24,15 @@ Read these documents together and in this order:
 2. `architecture/adventure-templates.md`
 3. `architecture/adventure-map-experience.md`
 4. `architecture/itinerary-ingestion.md`
-5. `architecture/group-travel-collaboration.md`
-6. `architecture/adventure-travel-playbook.md`
-7. `architecture/adventure-calendar-integration.md`
-8. `architecture/adventure-readiness-and-change-management.md`
-9. `architecture/ai-planning-copilot.md`
-10. `product/creator-planning-workspace.md`
-11. `product/workspace-experience-and-value.md`
-12. `development/planning-engine-implementation-plan.md`
+5. `architecture/published-cruise-itinerary-import.md`
+6. `architecture/group-travel-collaboration.md`
+7. `architecture/adventure-travel-playbook.md`
+8. `architecture/adventure-calendar-integration.md`
+9. `architecture/adventure-readiness-and-change-management.md`
+10. `architecture/ai-planning-copilot.md`
+11. `product/creator-planning-workspace.md`
+12. `product/workspace-experience-and-value.md`
+13. `development/planning-engine-implementation-plan.md`
 
 The governing principle is:
 
@@ -49,6 +50,9 @@ The governing principle is:
 
 > Uploaded itineraries produce reviewable Journey Stop proposals. OCR and AI
 > never silently create authoritative or public travel records.
+
+> Licensed published cruise schedules use the same proposal and review
+> boundary. No live catalog is enabled before commercial-use approval.
 
 > Group conversation exists to support Adventure decisions. Travelers express
 > preferences; authorized planners commit Planning changes.

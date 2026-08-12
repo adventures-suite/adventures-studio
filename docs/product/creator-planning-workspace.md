@@ -132,6 +132,8 @@ See `docs/architecture/adventure-map-experience.md`.
 
 ### Itinerary Import
 
+- optionally find a published sailing by cruise line, ship, and departure date
+  after an approved commercial data provider is available
 - upload a protected cruise-itinerary image or PDF, or paste itinerary text
 - review ordered Journey Stop proposals beside the source
 - capture place, local date, arrival and departure time, and proposed IANA time
@@ -141,7 +143,8 @@ See `docs/architecture/adventure-map-experience.md`.
 - correct, accept, or reject stops before any private Planning mutation
 - require a separate publication workflow before any stop becomes public
 
-See `docs/architecture/itinerary-ingestion.md`.
+See `docs/architecture/itinerary-ingestion.md` and
+`docs/architecture/published-cruise-itinerary-import.md`.
 
 ### Group Travel Collaboration
 

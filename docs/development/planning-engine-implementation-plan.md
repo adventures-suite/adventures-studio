@@ -328,6 +328,8 @@ Exit gate:
 
 Scope:
 
+- dormant provider-neutral published-cruise search, sailing, freshness, and
+  unavailable-provider contracts; no live adapter until commercial approval
 - protected itinerary image/PDF upload and pasted-text input
 - framework-independent source-evidence, extracted-field, confidence, and
   `JourneyStopProposal` contracts
@@ -355,6 +357,8 @@ Exit gate:
 - Resource, Planning, AI, security, privacy, accessibility, provider, and
   regression review approved
 - `docs/architecture/itinerary-ingestion.md` definition of done is satisfied
+- a live published-cruise adapter additionally satisfies the commercial
+  activation gate in `docs/architecture/published-cruise-itinerary-import.md`
 
 ## Phase 6B: Group Travel Collaboration Foundation
 
