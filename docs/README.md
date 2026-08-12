@@ -26,13 +26,14 @@ Read these documents together and in this order:
 4. `architecture/itinerary-ingestion.md`
 5. `architecture/published-cruise-itinerary-import.md`
 6. `architecture/group-travel-collaboration.md`
-7. `architecture/adventure-travel-playbook.md`
-8. `architecture/adventure-calendar-integration.md`
-9. `architecture/adventure-readiness-and-change-management.md`
-10. `architecture/ai-planning-copilot.md`
-11. `product/creator-planning-workspace.md`
-12. `product/workspace-experience-and-value.md`
-13. `development/planning-engine-implementation-plan.md`
+7. `architecture/traveler-profile-and-preference-resolution.md`
+8. `architecture/adventure-travel-playbook.md`
+9. `architecture/adventure-calendar-integration.md`
+10. `architecture/adventure-readiness-and-change-management.md`
+11. `architecture/ai-planning-copilot.md`
+12. `product/creator-planning-workspace.md`
+13. `product/workspace-experience-and-value.md`
+14. `development/planning-engine-implementation-plan.md`
 
 The governing principle is:
 
@@ -56,6 +57,9 @@ The governing principle is:
 
 > Group conversation exists to support Adventure decisions. Travelers express
 > preferences; authorized planners commit Planning changes.
+
+> Traveler profiles remain private and reusable. Adventure-specific constraints
+> and scoped decision authority resolve group choices without ranking people.
 
 ## Identity and Authorization
 

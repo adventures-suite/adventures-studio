@@ -23,6 +23,7 @@ Read before implementation:
 - `docs/architecture/adventure-lifecycle.md`
 - `docs/architecture/adventure-readiness-and-change-management.md`
 - `docs/architecture/partner-collaboration-engine.md`
+- `docs/architecture/traveler-profile-and-preference-resolution.md`
 
 ## Working Rules
 

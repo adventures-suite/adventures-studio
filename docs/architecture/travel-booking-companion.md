@@ -136,6 +136,11 @@ supplier and booking channel, confirmation and synchronization times,
 externally reported status, source-linked proposals, consent, authorized
 traveler visibility, and protected Resource references when required.
 
+Reusable traveler data and booking-specific field projection follow
+`docs/architecture/traveler-profile-and-preference-resolution.md`. A booking
+handoff never receives the full profile merely because a traveler participates
+in the Adventure.
+
 Booking PINs, ticket codes, payment-card data, passport details, and supplier
 credentials do not belong in ordinary plan fields, logs, analytics, messages,
 calendar events, URLs, or push payloads.
