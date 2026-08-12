@@ -42,6 +42,18 @@ catalog.
 
 ## Future one-job procedure
 
+Organization-bound GitHub federation is proven through the manual-only
+`Prove Organization Federation` workflow before any personal-owner federated
+credential is removed. The proof is independently Environment-gated, validates
+the immutable organization/repository subject plus exact Azure workload
+identity, and performs only account/token introspection. It never connects to
+SQL, deploys resources, changes RBAC, executes migrations, or rebuilds the
+migration package. Raw GitHub and Azure tokens, headers, request URLs, and
+environment dumps are never retained. The `database-development` Environment
+is protected-branch-only, requires reviewer `ssimonton007` (user ID
+`55812276`), disables administrator bypass, contains only the four reviewed
+non-secret identity/subscription variables, and contains zero secrets.
+
 The next repository increment may define—but must not silently provision—a
 one-job ephemeral GitHub self-hosted Azure VM in the existing VNet. A separate
 Azure approval will be required for runner creation and independent cleanup; a
