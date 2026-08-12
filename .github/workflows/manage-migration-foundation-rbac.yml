@@ -170,12 +170,25 @@ jobs:
               try:
                   state = dict(line.split('=', 1) for line in open(os.environ['RBAC_STATE_FILE'], encoding='utf-8').read().splitlines() if '=' in line)
                   allowed_stages = {'artifact_validation', 'deployment_validation', 'what_if', 'deployment', 'deployment_readback', 'assignment_removal', 'residue_verification'}
-                  allowed_classifications = {'operation_failed', 'deployment_failed', 'cleanup_failed', 'oversized_evidence', 'malformed_evidence', 'malformed_what_if', 'unexpected_rbac_resource', 'unexpected_rbac_operation', 'missing_rbac_resource', 'broad_role_substitution'}
+                  allowed_classifications = {'operation_failed', 'deployment_failed', 'cleanup_failed', 'azure_authorization_failed', 'azure_template_validation_failed', 'azure_error_unclassified', 'oversized_evidence', 'malformed_evidence', 'malformed_what_if', 'unexpected_rbac_resource', 'unexpected_rbac_operation', 'missing_rbac_resource', 'broad_role_substitution'}
                   if state.get('stage') in allowed_stages: stage = state['stage']
                   if state.get('classification') in allowed_classifications: classification = state['classification']
+                  candidate_code = state.get('azure_error_code', '')
+                  allowed_error_codes = {'AuthorizationFailed', 'InvalidTemplate', 'InvalidTemplateDeployment'}
+                  azure_error_code = candidate_code if candidate_code in allowed_error_codes else None
+                  expected_codes = {
+                      'azure_authorization_failed': {'AuthorizationFailed'},
+                      'azure_template_validation_failed': {'InvalidTemplate', 'InvalidTemplateDeployment'},
+                  }
+                  if classification in expected_codes and azure_error_code not in expected_codes[classification]:
+                      classification, azure_error_code = 'malformed_evidence', None
+                  if classification not in expected_codes:
+                      azure_error_code = None
               except Exception:
-                  stage, classification = 'rbac_operation', 'malformed_evidence'
-          envelope = {'eventName':'migration-foundation-rbac-boundary','operation':os.environ.get('OPERATION'),'approvalId':os.environ.get('APPROVAL_ID'),'releaseSha':os.environ.get('RELEASE_SHA'),'stage':stage,'classification':classification,'exitCode':exit_code}
+                  stage, classification, azure_error_code = 'rbac_operation', 'malformed_evidence', None
+          else:
+              azure_error_code = None
+          envelope = {'eventName':'migration-foundation-rbac-boundary','operation':os.environ.get('OPERATION'),'approvalId':os.environ.get('APPROVAL_ID'),'releaseSha':os.environ.get('RELEASE_SHA'),'stage':stage,'classification':classification,'azureErrorCode':azure_error_code,'exitCode':exit_code}
           if not re.fullmatch(r'[0-9a-f]{40}', envelope['releaseSha'] or ''): envelope['releaseSha'] = '<invalid>'
           if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{7,127}', envelope['approvalId'] or ''): envelope['approvalId'] = '<invalid>'
           print(json.dumps(envelope, separators=(',', ':')))

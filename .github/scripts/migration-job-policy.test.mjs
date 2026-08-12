@@ -71,6 +71,8 @@ test('deployer action sets preserve authority separation', () => {
     actions: [
       'Microsoft.Resources/deployments/read',
       'Microsoft.Resources/deployments/write',
+      'Microsoft.Resources/deployments/validate/action',
+      'Microsoft.Resources/deployments/whatIf/action',
       'Microsoft.Resources/deployments/operationStatuses/read',
       'Microsoft.Authorization/roleDefinitions/read',
       'Microsoft.Authorization/roleDefinitions/write',
@@ -78,6 +80,7 @@ test('deployer action sets preserve authority separation', () => {
     notActions: [], dataActions: [], notDataActions: [],
   });
   assert.deepEqual(roleDefinition.properties.assignableScopes, ['/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev']);
+  assert.ok(!roleDefinition.properties.permissions[0].actions.includes('Microsoft.Resources/deployments/operations/read'));
   assert.equal(infrastructure.name, '4bfa5b8d-8e4a-4fc8-9f2b-6115f07cad54');
   assert.equal(infrastructure.properties.roleName, 'AdventuresSuite Migration Infrastructure Deployer');
   assert.deepEqual(infrastructure.properties.assignableScopes, ['/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev']);
@@ -620,7 +623,57 @@ test('RBAC boundary what-if and workflows prevent substitution, self-management,
   assert.match(rbacRunner, /fa329695-3907-4852-94f5-fda8a26a4698/);
   assert.match(rbacRunner, /set \+e[\s\S]*role assignment delete[\s\S]*role assignment delete[\s\S]*set -e/);
   assert.match(rbacRunner, /residue_verification/);
+  assert.match(rbacRunner, /azure_error_limit=65536/);
+  assert.match(rbacRunner, /classify-azure-error\.py/);
+  assert.match(rbacRunner, /stage=%s\\nclassification=%s\\nazure_error_code=%s\\nexit_code=%s/);
+  assert.match(rbacRunner, /rm -f "\$error_file"/);
+  assert.match(rbacWorkflow, /azureErrorCode/);
+  assert.match(rbacWorkflow, /azure_error_unclassified/);
+  assert.match(rbacWorkflow, /allowed_error_codes = \{'AuthorizationFailed', 'InvalidTemplate', 'InvalidTemplateDeployment'\}/);
   assert.doesNotMatch(`${foundationWorkflow}\n${rbacWorkflow}\n${rbacRunner}`, /Owner|Contributor|AZURE_CLIENT_SECRET|client-secret|set -x/i);
+});
+
+function classifyAzureError(evidence) {
+  const directory = mkdtempSync(join(tmpdir(), 'azure-error-policy-'));
+  const evidencePath = join(directory, 'stderr.txt');
+  try {
+    writeFileSync(evidencePath, evidence);
+    const result = spawnSync('python3', ['.github/scripts/classify-azure-error.py', evidencePath], { encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stderr);
+    const [classification, azureErrorCode = ''] = result.stdout.replace(/\n$/, '').split('\n');
+    return { classification, azureErrorCode, output: result.stdout };
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+}
+
+test('RBAC Azure error evidence classifies one authorization failure without leaking its message', () => {
+  const result = classifyAzureError('ERROR: (AuthorizationFailed) token=must-not-escape\nCode: AuthorizationFailed\nMessage: sensitive request details\n');
+  assert.deepEqual({ classification: result.classification, azureErrorCode: result.azureErrorCode }, { classification: 'azure_authorization_failed', azureErrorCode: 'AuthorizationFailed' });
+  assert.doesNotMatch(result.output, /token|request|sensitive|Message/);
+});
+
+test('RBAC Azure error evidence classifies one template validation failure', () => {
+  assert.deepEqual(classifyAzureError('ERROR: (InvalidTemplateDeployment) omitted\nCode: InvalidTemplateDeployment\n'), {
+    classification: 'azure_template_validation_failed', azureErrorCode: 'InvalidTemplateDeployment', output: 'azure_template_validation_failed\nInvalidTemplateDeployment\n',
+  });
+});
+
+test('RBAC Azure error evidence rejects malformed codes', () => {
+  assert.deepEqual(classifyAzureError('Code: Authorization Failed\n').classification, 'azure_error_unclassified');
+});
+
+test('RBAC Azure error evidence rejects ambiguous codes', () => {
+  assert.deepEqual(classifyAzureError('Code: AuthorizationFailed\nCode: InvalidTemplateDeployment\n').classification, 'azure_error_unclassified');
+});
+
+test('RBAC Azure error evidence rejects oversized buffers', () => {
+  assert.deepEqual(classifyAzureError(Buffer.alloc((64 * 1024) + 1, 65)).classification, 'azure_error_unclassified');
+});
+
+test('RBAC Azure error evidence rejects unrecognized codes', () => {
+  const result = classifyAzureError('Code: SubscriptionNotFound\n');
+  assert.deepEqual({ classification: result.classification, azureErrorCode: result.azureErrorCode }, { classification: 'azure_error_unclassified', azureErrorCode: '' });
 });
 
 test('RBAC boundary accepts the live-shaped root what-if envelope and one legacy envelope only', () => {
