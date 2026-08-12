@@ -126,14 +126,14 @@ remove that elevation after creation and verification.
 
 ## Workload Identities
 
-### Proposed permanent migration runner (not provisioned)
+### Proposed one-job migration runner (not provisioned)
 
-PR #18 defines a manual Azure Container Apps Job, Basic ACR, Consumption
-environment, dedicated `10.40.3.0/27` subnet, Log Analytics workspace, dedicated
-user-assigned migration identity, and separate ACR pull identity. None exists as
-a result of this repository increment. Live network ranges must be checked
-before deployment. The current migration App Service and temporary VM remain
-unchanged and may be retired only after successful replacement proofs.
+The approved architecture is one ephemeral GitHub self-hosted Azure VM in the
+existing VNet, using the existing migration UAMI and Azure SQL private endpoint.
+It has no ACR, persistent compute, automatic retry, public SQL, or temporary
+firewall rule. Before implementation, a separate design review must prove
+short-lived one-job registration delivery, attested package retrieval, private
+DNS/SQL reachability, and independent deletion after every outcome.
 
 | Workload | Observed principal/object ID | Boundary |
 | --- | --- | --- |
@@ -144,17 +144,9 @@ These generated IDs are recorded for bootstrap verification and audit. IaC,
 deployment, and bootstrap scripts resolve current identities from Azure resource
 outputs rather than embedding principal IDs in application code.
 
-The migration app:
-
-- shares the existing B1 App Service plan;
-- is stopped by default;
-- is HTTPS-only;
-- has public ingress disabled;
-- uses the development VNet integration subnet; and
-- has no application runtime assignment.
-
-Starting, deploying, invoking, and stopping it are protected operational actions
-with retained evidence.
+Existing identities are not deleted by this architecture change and remain
+unauthorized unless separately assigned. The former migration App Service path
+must not receive a new execution approval.
 
 ## SQL Permission Boundary
 
@@ -244,7 +236,7 @@ GitHub-hosted runner cannot be assumed to:
 
 - connect to Azure SQL for contained-user bootstrap or migrations;
 - reach Key Vault or Blob data-plane endpoints; or
-- deploy through a migration app's publicly disabled SCM endpoint.
+- rely on a public deployment endpoint for migration execution.
 
 Before those operations, approve and prove a private execution path. Acceptable
 directions include a tightly controlled ephemeral or self-hosted runner in the
@@ -265,7 +257,7 @@ Before application configuration:
 3. record currently unresolved resource names and object URIs;
 4. run DNS resolution from each VNet-integrated workload;
 5. prove public data-plane access is denied;
-6. confirm the migration app is stopped;
+6. confirm no persistent migration runner is active;
 7. estimate actual monthly cost and configure budget visibility; and
 8. retain sanitized evidence without keys, tokens, connection strings, or
    private customer data.
@@ -278,7 +270,7 @@ Any material drift blocks Slice 5F until reconciled or explicitly approved.
 - IaC deployment/reconciliation passes;
 - External ID registration and certificate readiness pass;
 - SQL contained users and least-privilege grants are verified;
-- exact migrator package runs once and the migration app returns to stopped;
+- exact attested migrator package runs once and the ephemeral runner is deleted;
 - application reaches SQL, Key Vault, and Blob only over approved paths;
 - shared Data Protection keys survive restart and multiple instances;
 - first sign-in maps exact `iss`/`sub` and creates one atomic session;

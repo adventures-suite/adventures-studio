@@ -4,8 +4,8 @@ using Azure.Core;
 
 namespace AdventuresSuite.DatabaseIntegrationTests;
 
-/// <summary>Verifies finite migration-container execution and evidence behavior.</summary>
-public sealed class MigrationContainerModesTests
+/// <summary>Verifies finite private SQL migration execution and evidence behavior.</summary>
+public sealed class MigrationExecutionModesTests
 {
     [Fact]
     public async Task ExecutionChannelProducesBoundedSqlFreeEnvelope()
@@ -16,7 +16,7 @@ public sealed class MigrationContainerModesTests
         Console.SetOut(writer);
         try
         {
-            Assert.Equal(0, await MigrationContainerModes.VerifyExecutionChannelAsync(
+            Assert.Equal(0, await MigrationExecutionModes.VerifyExecutionChannelAsync(
                 new FixedTokenCredential(Token(new Dictionary<string, string>
                 {
                     ["tid"] = "00000000-0000-0000-0000-000000000001",
@@ -34,7 +34,7 @@ public sealed class MigrationContainerModesTests
         Assert.DoesNotContain("connection string", output, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("SELECT ", output, StringComparison.OrdinalIgnoreCase);
         using var document = JsonDocument.Parse(output);
-        Assert.Equal("migration-job-completion",
+        Assert.Equal("private-sql-migration-completion",
             document.RootElement.GetProperty("eventName").GetString());
         var payload = document.RootElement.GetProperty("payload");
         Assert.Equal("ExecutionChannelComplete",
@@ -45,13 +45,23 @@ public sealed class MigrationContainerModesTests
     }
 
     [Fact]
-    public async Task MutableImageReferenceIsRejectedBeforeAnySqlAccess()
+    public async Task MalformedPackageHashIsRejectedBeforeAnySqlAccess()
     {
         using var environment = ValidEnvironment();
-        environment.Set("ADVENTURESSUITE_IMAGE_DIGEST", "latest");
+        environment.Set("ADVENTURESSUITE_MIGRATION_PACKAGE_SHA256", "latest");
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => MigrationContainerModes.VerifyExecutionChannelAsync(new FixedTokenCredential(default)));
-        Assert.Equal("Set a valid immutable ADVENTURESSUITE_IMAGE_DIGEST value.", exception.Message);
+            () => MigrationExecutionModes.VerifyExecutionChannelAsync(new FixedTokenCredential(default)));
+        Assert.Equal("Set a valid ADVENTURESSUITE_MIGRATION_PACKAGE_SHA256 value.", exception.Message);
+    }
+
+    [Fact]
+    public async Task MismatchedCatalogHashIsRejectedBeforeAnySqlAccess()
+    {
+        using var environment = ValidEnvironment();
+        environment.Set("ADVENTURESSUITE_MIGRATION_CATALOG_SHA256", new string('d', 64));
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => MigrationExecutionModes.VerifyExecutionChannelAsync(new FixedTokenCredential(default)));
+        Assert.Equal("The migration catalog checksum does not match the embedded catalog.", exception.Message);
     }
 
     [Fact]
@@ -70,7 +80,7 @@ public sealed class MigrationContainerModesTests
                 Guid.Parse("00000000-0000-0000-0000-000000000001"),
                 Guid.Parse("00000000-0000-0000-0000-000000000002"),
                 Guid.Parse("00000000-0000-0000-0000-000000000003"),
-                "migration-job", "approved", "Approved"));
+                "migration-runner", "approved", "Approved"));
         Assert.Equal("The migration token tid claim is not approved.", exception.Message);
     }
 
@@ -110,13 +120,15 @@ public sealed class MigrationContainerModesTests
     private static EnvironmentScope ValidEnvironment()
     {
         var scope = new EnvironmentScope();
-        scope.Set("ADVENTURESSUITE_MIGRATION_OPERATION_ID", "container-proof-0001");
+        scope.Set("ADVENTURESSUITE_MIGRATION_OPERATION_ID", "private-sql-proof-0001");
         scope.Set("ADVENTURESSUITE_RELEASE_SHA", new string('a', 40));
-        scope.Set("ADVENTURESSUITE_IMAGE_DIGEST", "sha256:" + new string('b', 64));
+        scope.Set("ADVENTURESSUITE_MIGRATION_PACKAGE_SHA256", new string('b', 64));
+        scope.Set("ADVENTURESSUITE_MIGRATION_CATALOG_SHA256",
+            MigrationCatalog.CalculateOrderedCatalogSha256(typeof(MigrationCatalog).Assembly));
         scope.Set("ADVENTURESSUITE_MIGRATION_TENANT_ID", "00000000-0000-0000-0000-000000000001");
         scope.Set("ADVENTURESSUITE_MIGRATION_PRINCIPAL_ID", "00000000-0000-0000-0000-000000000002");
         scope.Set("ADVENTURESSUITE_MIGRATION_PRINCIPAL_CLIENT_ID", "00000000-0000-0000-0000-000000000003");
-        scope.Set("ADVENTURESSUITE_MIGRATION_PRINCIPAL_NAME", "migration-job-proof");
+        scope.Set("ADVENTURESSUITE_MIGRATION_PRINCIPAL_NAME", "migration-runner-proof");
         return scope;
     }
 

@@ -91,15 +91,10 @@ with the infrastructure implementation.
 ## Deployment Network Prerequisite
 
 GitHub-hosted runners must not require Azure SQL to remain publicly reachable.
-Before migration is added to the deployment workflow, Adventures Studio must
-approve one of these bounded approaches:
-
-1. a self-hosted or managed runner with private-network access;
-2. an Azure-hosted migration job inside the approved network; or
-3. for early development only, a temporary firewall rule restricted to the
-   current runner and removed in an unconditional cleanup step.
-
-No option is selected silently in application code. The migration identity gets
+The approved architecture is a one-job ephemeral GitHub self-hosted Azure VM in
+the existing VNet. It is not yet implemented and must pass the detailed design
+review in `private-sql-migration-execution.md`. Public SQL and temporary firewall
+rules are prohibited. The migration identity gets
 bounded schema-management rights for the Planning schema and DbUp journal. The
 App Service runtime Managed Identity receives only connect plus required DML
 rights on the Planning tables; it receives no schema-alteration or DbUp-journal

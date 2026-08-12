@@ -2,6 +2,15 @@ name: Validate SQL Migrations
 
 on:
   workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Exact protected-main commit to package
+        required: true
+        type: string
+
+  push:
+    branches:
+      - main
 
   pull_request:
     paths:
@@ -12,6 +21,8 @@ on:
       - src/AdventuresSuite.Planning.SqlServer/**
       - tests/AdventuresSuite.DatabaseIntegrationTests/**
       - .github/workflows/validate-sql-migrations.yml
+      - .github/scripts/migration-package-evidence.mjs
+      - .github/scripts/migration-package-evidence.test.mjs
 
 permissions:
   contents: read
@@ -33,7 +44,7 @@ jobs:
           - 1433:1433
 
     env:
-      DOTNET_VERSION: "10.0.x"
+      DOTNET_VERSION: "10.0.302"
       RESULTS_DIR: artifacts/sql-migration-results
       MIGRATOR_PUBLISH_DIR: artifacts/database-migrator
       MIGRATOR_PACKAGE_DIR: artifacts/database-migrator-package
@@ -50,6 +61,21 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Bind package source to workflow commit
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          REQUESTED_SOURCE_SHA: ${{ inputs.source_sha }}
+        run: |
+          [[ "$EVENT_SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          test "$(git rev-parse HEAD)" = "$EVENT_SOURCE_SHA"
+          if [ "$EVENT_NAME" = workflow_dispatch ]; then
+            test "$GITHUB_REF" = refs/heads/main
+            test "$REQUESTED_SOURCE_SHA" = "$EVENT_SOURCE_SHA"
+          fi
 
       - name: Setup .NET
         uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
@@ -80,10 +106,13 @@ jobs:
 
       - name: Restore
         run: |
-          dotnet restore TheSimontonAdventures.slnx
-          dotnet restore tests/AdventuresSuite.DatabaseIntegrationTests/AdventuresSuite.DatabaseIntegrationTests.csproj
+          dotnet restore TheSimontonAdventures.slnx --locked-mode
+          dotnet restore tests/AdventuresSuite.DatabaseIntegrationTests/AdventuresSuite.DatabaseIntegrationTests.csproj --locked-mode
           dotnet restore src/AdventuresSuite.DatabaseMigrator/AdventuresSuite.DatabaseMigrator.csproj \
-            --runtime linux-x64
+            --runtime linux-x64 --locked-mode
+
+      - name: Validate package evidence policy
+        run: node --test .github/scripts/migration-package-evidence.test.mjs
 
       - name: Build
         run: |
@@ -108,6 +137,9 @@ jobs:
             --results-directory "$RESULTS_DIR"
 
       - name: Publish migrator artifact
+        id: package
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           dotnet publish src/AdventuresSuite.DatabaseMigrator/AdventuresSuite.DatabaseMigrator.csproj \
             --configuration Release \
@@ -142,10 +174,28 @@ jobs:
             "$RESULTS_DIR/published-migrations.txt"
 
           mkdir -p "$MIGRATOR_PACKAGE_DIR"
-          package="$MIGRATOR_PACKAGE_DIR/adventures-suite-database-migrator-${GITHUB_SHA}-${GITHUB_RUN_ATTEMPT}.tar.gz"
+          artifact_name="adventures-suite-database-migrator-${SOURCE_SHA}"
+          package="$MIGRATOR_PACKAGE_DIR/${artifact_name}.tar.gz"
           tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner \
             -C "$MIGRATOR_PUBLISH_DIR" -czf "$package" .
-          sha256sum "$package" > "$package.sha256"
+          sha256sum "$package" | sed "s#  .*#  $(basename "$package")#" > "$package.sha256"
+          sdk_version="$(dotnet --version)"
+          test "$sdk_version" = "$DOTNET_VERSION"
+          node .github/scripts/migration-package-evidence.mjs \
+            --source-sha "$SOURCE_SHA" \
+            --build-run-id "$GITHUB_RUN_ID" \
+            --sdk-version "$sdk_version" \
+            --package "$package" \
+            --catalog "$RESULTS_DIR/published-migrations.txt" \
+            --artifact-name "$artifact_name" \
+            --lock src/AdventuresSuite.DatabaseMigrator/packages.lock.json \
+            --lock src/AdventuresSuite.Companion.SqlServer/packages.lock.json \
+            --lock src/AdventuresSuite.Companion.Application/packages.lock.json \
+            --lock src/AdventuresSuite.Companion.Contracts/packages.lock.json \
+            --lock src/AdventuresSuite.Authorization/packages.lock.json \
+            --lock src/AdventuresSuite.Identity/packages.lock.json \
+            --output "$MIGRATOR_PACKAGE_DIR/${artifact_name}.evidence.json"
+          echo "package=$package" >> "$GITHUB_OUTPUT"
 
       - name: Capture SQL Server diagnostics
         if: always()
@@ -160,9 +210,45 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: sql-migration-evidence-${{ github.sha }}-${{ github.run_attempt }}
+          name: sql-migration-evidence-${{ github.event.pull_request.head.sha || github.sha }}-${{ github.run_attempt }}
           path: |
             ${{ env.RESULTS_DIR }}
             ${{ env.MIGRATOR_PACKAGE_DIR }}
           if-no-files-found: error
           retention-days: 14
+
+  attest-protected-main-package:
+    name: Attest protected-main migration package
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    needs: validate-sql-migrations
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - name: Download exact migration evidence artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: sql-migration-evidence-${{ github.sha }}-${{ github.run_attempt }}
+          path: evidence
+
+      - name: Verify exact package checksum before attestation
+        id: package
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          mapfile -t packages < <(find evidence -type f -name "adventures-suite-database-migrator-${SOURCE_SHA}.tar.gz")
+          test "${#packages[@]}" -eq 1
+          package="${packages[0]}"
+          checksum_file="${package}.sha256"
+          test -f "$checksum_file"
+          (cd "$(dirname "$package")" && sha256sum --check "$(basename "$checksum_file")")
+          echo "package=$package" >> "$GITHUB_OUTPUT"
+
+      - name: Attest exact protected-main package
+        uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661 # v3
+        with:
+          subject-path: ${{ steps.package.outputs.package }}
