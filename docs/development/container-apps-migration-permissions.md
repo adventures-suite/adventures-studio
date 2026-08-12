@@ -10,9 +10,9 @@
 | Deployer federation | Separately approved Owner | One reviewed OIDC credential on each deployer identity — **complete 2026-08-11** | Roles, deployment, publisher/starter federation |
 | Bootstrap-role definition | Approved Owner | One fixed-UUID definition from `bootstrap-role-definition.bicep`, assigned to nobody | Assignments, ordinary resources, SQL |
 | Deployer role bootstrap | Temporarily authorized RBAC bootstrap identity | Two fixed-UUID custom definitions from `deployer-role-definitions.bicep` | Assignments, ordinary resources, SQL |
-| Foundation temporary access | Temporarily authorized RBAC bootstrap identity | Two fixed-ID assignments from `foundation-temporary-access.bicep` | Self-access, other roles/principals/scopes, resources, SQL |
+| Foundation temporary access | Owner `fd462691-dc24-4127-afd9-e15321dc9050` | Two fixed-ID assignments from `foundation-temporary-access.bicep` | Other roles/principals/scopes, resources, SQL |
 | `foundation-resources.bicep` | Temporary infrastructure deployer | Subnet, workspace, ACR, environment; reference four existing operational identities | Identity creation/mutation, RBAC, Job, SQL |
-| Foundation cleanup | Temporarily authorized RBAC bootstrap identity | Remove both exact temporary assignments and prove no residue | Other RBAC changes, resources, SQL |
+| Foundation cleanup | Owner `fd462691-dc24-4127-afd9-e15321dc9050` | Idempotently remove both exact temporary assignments and prove no residue | Other RBAC changes, resources, SQL |
 | `identity-access.bicep` | Infrastructure deployer with exact-identity temporary grants | Publisher and starter OIDC credentials only | Other identities/resources, RBAC, SQL |
 | `foundation-access.bicep` | Temporary RBAC deployer | Two ACR assignments, starter custom role, dedicated-workspace reader assignment | Ordinary resources, Job, SQL |
 | Image publication | Publisher identity | Full-SHA image and registry digest evidence | IaC, Job start, SQL |
@@ -127,8 +127,8 @@ Bicep compilation is insufficient and a missing action is a stop condition.
 4. **Temporarily authorize role-definition creation, then the infrastructure
    deployer.** Under a new exact-SHA approval, an Owner assigns the bootstrap
    role only to the RBAC bootstrap principal for no more than 30 minutes. Use
-   separate approvals for the fixed two-role-definition template,
-   the exact two-assignment template, and the named foundation resource
+   separate approvals for the fixed two-role-definition template, Owner creation
+   of the exact two assignments, and the named foundation resource
    deployment. Record assignment and
    deadline, verify plan and post-state, remove access, refresh credentials, and
    prove loss of write access. Provider registration requires a separate packet.
@@ -168,13 +168,24 @@ and numeric exit code. Raw evidence is deleted unconditionally. Ambiguous,
 oversized, malformed, or unrecognized errors are
 `azure_error_unclassified`.
 
-Foundation cleanup first lists the exact principal's assignments at the exact
+Owner object ID `fd462691-dc24-4127-afd9-e15321dc9050` alone creates and removes
+foundation assignments `5c14d19b-04c7-4dfa-83ed-9447d0ea3c33` and
+`fa329695-3907-4852-94f5-fda8a26a4698`. Both use the exact development
+resource-group scope and foundation principal
+`b77b6201-ad26-4f77-8f88-6d0d43f7dbb8`. Their recorded assignment timestamp
+and absolute deadline are at most 30 minutes apart.
+
+Owner cleanup first lists the exact principal's assignments at the exact
 resource-group scope. Each present deterministic assignment must match its
 reviewed ID, role, principal, and scope before deletion; a conclusively absent
 assignment is already clean. Repeated cleanup and partial prior cleanup are
-safe. Ambiguity, an unrelated or inherited assignment, deletion failure, or a
-nonempty complete direct-and-inherited post-readback fails closed. A new OIDC
-session must then prove structured `AuthorizationFailed`.
+safe. Cleanup is independent of workflow completion and runs immediately after
+success, failure, cancellation, timeout, or inconclusive evidence, before the
+absolute deadline. Ambiguity, an unrelated or inherited assignment, deletion
+failure, or a nonempty complete direct-and-inherited post-readback fails closed.
+Only after that complete zero-assignment readback may a separately dispatched
+proof obtain a new foundation-deployer OIDC session and require structured
+`AuthorizationFailed`. No workflow claims that external Owner cleanup completed.
 
 These packets do not authorize SQL, Job execution, migration, public ingress,
 production changes, or retirement of the old bridge. The SQL-free proof remains

@@ -39,10 +39,6 @@ on:
         description: Absolute UTC deadline no more than 30 minutes after assignment
         required: false
         type: string
-      cleanup_approval_id:
-        description: Separately approved RBAC cleanup identifier; required only for deployment
-        required: false
-        type: string
 
 permissions:
   contents: read
@@ -73,7 +69,6 @@ jobs:
           IDENTITY_CATALOG_SHA256: ${{ inputs.identity_catalog_sha256 }}
           ASSIGNMENT_TIMESTAMP_UTC: ${{ inputs.assignment_timestamp_utc }}
           AUTHORITY_DEADLINE_UTC: ${{ inputs.authority_deadline_utc }}
-          CLEANUP_APPROVAL_ID: ${{ inputs.cleanup_approval_id }}
           WORKFLOW_REF: ${{ github.ref }}
           WORKFLOW_SHA: ${{ github.sha }}
         run: |
@@ -90,12 +85,10 @@ jobs:
             [[ "$TEMPLATE_SHA256" =~ ^[0-9a-f]{64}$ ]]
             [[ "$PARAMETERS_SHA256" =~ ^[0-9a-f]{64}$ ]]
             [[ "$IDENTITY_CATALOG_SHA256" =~ ^[0-9a-f]{64}$ ]]
-            [[ "$CLEANUP_APPROVAL_ID" == foundation-access-remove-* ]]
           else
             test -z "$TEMPLATE_SHA256"
             test -z "$PARAMETERS_SHA256"
             test -z "$IDENTITY_CATALOG_SHA256"
-            test -z "$CLEANUP_APPROVAL_ID"
             test -z "$ASSIGNMENT_TIMESTAMP_UTC" && test -z "$AUTHORITY_DEADLINE_UTC"
           fi
           [[ "$AZURE_CLIENT_ID" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]]
@@ -319,7 +312,7 @@ jobs:
               'stage': stage,
               'classification': classification,
               'exitCode': exit_code,
-              'cleanupRequired': os.environ.get('OPERATION') == 'deploy-foundation',
+              'externalOwnerCleanupRequired': os.environ.get('OPERATION') == 'deploy-foundation',
           }
           if os.environ.get('OPERATION') == 'deploy-foundation':
               envelope['azureErrorCode'] = azure_error_code
@@ -344,150 +337,3 @@ jobs:
       - name: Remove temporary workflow evidence
         if: always()
         run: rm -f "${PROOF_STATE_FILE:-}" "${FOUNDATION_EVIDENCE_FILE:-}"
-
-  remove-temporary-access:
-    needs: verify-federation
-    if: always() && inputs.operation == 'deploy-foundation'
-    runs-on: ubuntu-24.04
-    environment: migration-rbac-deployment
-    timeout-minutes: 10
-    env:
-      AZURE_CLIENT_ID: ${{ vars.MIGRATION_RBAC_DEPLOYER_CLIENT_ID }}
-      EXPECTED_PRINCIPAL_ID: ${{ vars.MIGRATION_RBAC_DEPLOYER_PRINCIPAL_ID }}
-      APPROVED_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-      APPROVED_TENANT_ID: ${{ vars.WORKFORCE_TENANT_ID }}
-      TARGET_RESOURCE_GROUP: ${{ vars.MIGRATION_RESOURCE_GROUP }}
-      PROOF_ENVIRONMENT: migration-rbac-deployment
-    steps:
-      - name: Validate separate cleanup approval and exact source
-        env:
-          RELEASE_SHA: ${{ inputs.release_sha }}
-          CLEANUP_APPROVAL_ID: ${{ inputs.cleanup_approval_id }}
-          WORKFLOW_REF: ${{ github.ref }}
-          WORKFLOW_SHA: ${{ github.sha }}
-          ASSIGNMENT_TIMESTAMP_UTC: ${{ inputs.assignment_timestamp_utc }}
-          AUTHORITY_DEADLINE_UTC: ${{ inputs.authority_deadline_utc }}
-        run: |
-          state_file="$RUNNER_TEMP/foundation-cleanup.state"
-          evidence_file="$RUNNER_TEMP/foundation-cleanup-evidence.json"
-          printf 'RBAC_STATE_FILE=%s\nRBAC_EVIDENCE_FILE=%s\n' "$state_file" "$evidence_file" >> "$GITHUB_ENV"
-          test "$WORKFLOW_REF" = 'refs/heads/main'
-          test "$WORKFLOW_SHA" = "$RELEASE_SHA"
-          [[ "$CLEANUP_APPROVAL_ID" == foundation-access-remove-* ]]
-          [[ "$AZURE_CLIENT_ID" = 'd678e2ad-ada2-4cde-bb79-44630acf1cc8' ]]
-          [[ "$EXPECTED_PRINCIPAL_ID" = '822c1c0c-39e1-400f-b9fc-9532a11bae5d' ]]
-          node .github/scripts/foundation-authority-window.mjs cleanup "$ASSIGNMENT_TIMESTAMP_UTC" "$AUTHORITY_DEADLINE_UTC" >/dev/null
-
-      - name: Checkout exact approved SHA for cleanup
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with:
-          ref: ${{ inputs.release_sha }}
-          persist-credentials: false
-
-      - name: Authenticate separately authorized RBAC cleanup identity
-        uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac # v2
-        with:
-          client-id: ${{ vars.MIGRATION_RBAC_DEPLOYER_CLIENT_ID }}
-          tenant-id: ${{ vars.WORKFORCE_TENANT_ID }}
-          allow-no-subscriptions: true
-
-      - name: Validate RBAC cleanup identity claims
-        run: .github/scripts/run-deployer-federation-proof.sh "$PROOF_ENVIRONMENT" "$RUNNER_TEMP/foundation-cleanup" "$RBAC_STATE_FILE" identity-only
-
-      - name: Remove both exact temporary assignments and prove no residue
-        env:
-          CLEANUP_APPROVAL_ID: ${{ inputs.cleanup_approval_id }}
-          ASSIGNMENT_TIMESTAMP_UTC: ${{ inputs.assignment_timestamp_utc }}
-          AUTHORITY_DEADLINE_UTC: ${{ inputs.authority_deadline_utc }}
-        run: |
-          .github/scripts/run-rbac-boundary-operation.sh remove-foundation-access '' '' '' \
-            "$RBAC_STATE_FILE" "$RBAC_EVIDENCE_FILE" "$RUNNER_TEMP/foundation-cleanup-operation" \
-            "$ASSIGNMENT_TIMESTAMP_UTC" "$AUTHORITY_DEADLINE_UTC"
-
-      - name: Emit sanitized cleanup envelope
-        if: always()
-        env:
-          RELEASE_SHA: ${{ inputs.release_sha }}
-          APPROVAL_ID: ${{ inputs.cleanup_approval_id }}
-        run: |
-          python3 - <<'PY'
-          import json, os
-          state = {}
-          try:
-              state = dict(line.split('=', 1) for line in open(os.environ['RBAC_STATE_FILE'], encoding='utf-8').read().splitlines() if '=' in line)
-          except Exception:
-              pass
-          success = state.get('stage') == 'complete' and state.get('classification') == 'complete' and state.get('exit_code') == '0'
-          print(json.dumps({'eventName':'migration-foundation-access-cleanup','approvalId':os.environ.get('APPROVAL_ID'),'releaseSha':os.environ.get('RELEASE_SHA'),'assignmentTimestampUtc':'${{ inputs.assignment_timestamp_utc }}','authorityDeadlineUtc':'${{ inputs.authority_deadline_utc }}','stage':'complete' if success else 'cleanup','classification':'complete' if success else 'cleanup_failed','exitCode':0 if success else 1}, separators=(',', ':')))
-          raise SystemExit(0 if success else 1)
-          PY
-
-      - name: Remove temporary cleanup evidence
-        if: always()
-        run: rm -f "${RBAC_STATE_FILE:-}" "${RBAC_EVIDENCE_FILE:-}"
-
-  prove-access-removed:
-    needs: remove-temporary-access
-    if: always() && inputs.operation == 'deploy-foundation'
-    runs-on: ubuntu-24.04
-    environment: migration-foundation-deployment
-    timeout-minutes: 10
-    env:
-      AZURE_CLIENT_ID: ${{ vars.MIGRATION_FOUNDATION_DEPLOYER_CLIENT_ID }}
-      EXPECTED_PRINCIPAL_ID: ${{ vars.MIGRATION_FOUNDATION_DEPLOYER_PRINCIPAL_ID }}
-      APPROVED_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-      APPROVED_TENANT_ID: ${{ vars.WORKFORCE_TENANT_ID }}
-      TARGET_RESOURCE_GROUP: ${{ vars.MIGRATION_RESOURCE_GROUP }}
-      PROOF_ENVIRONMENT: migration-foundation-deployment
-    steps:
-      - name: Validate exact fresh-session source
-        env:
-          RELEASE_SHA: ${{ inputs.release_sha }}
-          WORKFLOW_REF: ${{ github.ref }}
-          WORKFLOW_SHA: ${{ github.sha }}
-          ASSIGNMENT_TIMESTAMP_UTC: ${{ inputs.assignment_timestamp_utc }}
-          AUTHORITY_DEADLINE_UTC: ${{ inputs.authority_deadline_utc }}
-        run: |
-          proof_state="$RUNNER_TEMP/foundation-loss-of-access.state"
-          printf 'LOSS_PROOF_STATE=%s\n' "$proof_state" >> "$GITHUB_ENV"
-          test "$WORKFLOW_REF" = 'refs/heads/main'
-          test "$WORKFLOW_SHA" = "$RELEASE_SHA"
-          node .github/scripts/foundation-authority-window.mjs cleanup "$ASSIGNMENT_TIMESTAMP_UTC" "$AUTHORITY_DEADLINE_UTC" >/dev/null
-
-      - name: Checkout exact approved SHA for fresh proof
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with:
-          ref: ${{ inputs.release_sha }}
-          persist-credentials: false
-
-      - name: Obtain fresh foundation identity session
-        uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac # v2
-        with:
-          client-id: ${{ vars.MIGRATION_FOUNDATION_DEPLOYER_CLIENT_ID }}
-          tenant-id: ${{ vars.WORKFORCE_TENANT_ID }}
-          allow-no-subscriptions: true
-
-      - name: Prove foundation access is denied again
-        run: .github/scripts/run-deployer-federation-proof.sh "$PROOF_ENVIRONMENT" "$RUNNER_TEMP/foundation-loss-of-access" "$LOSS_PROOF_STATE"
-
-      - name: Emit sanitized loss-of-access envelope
-        if: always()
-        env:
-          RELEASE_SHA: ${{ inputs.release_sha }}
-          APPROVAL_ID: ${{ inputs.cleanup_approval_id }}
-        run: |
-          python3 - <<'PY'
-          import json, os
-          state = {}
-          try:
-              state = dict(line.split('=', 1) for line in open(os.environ['LOSS_PROOF_STATE'], encoding='utf-8').read().splitlines() if '=' in line)
-          except Exception:
-              pass
-          success = state.get('stage') == 'complete' and state.get('classification') == 'complete' and state.get('exit_code') == '0'
-          print(json.dumps({'eventName':'migration-foundation-loss-of-access','approvalId':os.environ.get('APPROVAL_ID'),'releaseSha':os.environ.get('RELEASE_SHA'),'assignmentTimestampUtc':'${{ inputs.assignment_timestamp_utc }}','authorityDeadlineUtc':'${{ inputs.authority_deadline_utc }}','stage':'complete' if success else 'loss_of_access_verification','classification':'complete' if success else 'access_not_conclusively_removed','exitCode':0 if success else 1}, separators=(',', ':')))
-          raise SystemExit(0 if success else 1)
-          PY
-
-      - name: Remove temporary loss-of-access evidence
-        if: always()
-        run: rm -f "${LOSS_PROOF_STATE:-}"

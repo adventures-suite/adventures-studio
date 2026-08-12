@@ -13,8 +13,9 @@ The workflows use distinct protected Environments:
 `migration-foundation-deployment` and `migration-rbac-deployment`. They can
 authenticate and prove identity/denial. Proof-only mode remains available. An
 explicit checksum-bound foundation mode deploys only the reviewed resource
-template, while a separate RBAC workflow handles role bootstrap, exact temporary
-assignment, or unconditional cleanup as distinct approved operations. The full
+template, while the RBAC workflow handles role-definition bootstrap only. Owner
+object ID `fd462691-dc24-4127-afd9-e15321dc9050` alone creates and removes the
+two deterministic foundation assignments as distinct approved operations. The full
 protection and variable contract is documented in
 `docs/development/container-apps-migration-permissions.md`.
 Provisioning then has five least-privilege template
@@ -26,18 +27,23 @@ own approval and verification; no workflow may combine them:
    and stops. Under a separate approval, the Owner temporarily assigns that role
    only to the RBAC bootstrap identity.
 2. The temporarily authorized RBAC bootstrap identity deploys
-   `deployer-role-definitions.bicep` only, then separately deploys
-   `foundation-temporary-access.bicep` to create the exact two assignments.
+   `deployer-role-definitions.bicep` only. Under a separate approval, the Owner
+   creates only assignments `5c14d19b-04c7-4dfa-83ed-9447d0ea3c33` and
+   `fa329695-3907-4852-94f5-fda8a26a4698` for the foundation deployer at the
+   exact development resource-group scope.
 3. The temporary infrastructure deployer deploys
    `foundation-resources.bicep` only; the four operational identities are
    validated `existing` resources.
-4. The RBAC boundary removes both assignments after success or failure, and a
-   fresh foundation proof must again receive `AuthorizationFailed`.
+4. The Owner independently removes both assignments immediately after success,
+   failure, cancellation, timeout, or inconclusive evidence. Confirmed absence
+   is successful idempotent cleanup. Complete direct-and-inherited assignment
+   readback must be empty before a separately dispatched fresh foundation proof
+   may require structured `AuthorizationFailed`.
 
 Foundation assignment, deployment, cleanup, and denial evidence carry the same
 strict UTC assignment timestamp and maximum-30-minute absolute deadline.
-Authority-dependent stages refuse an expired window, while exact idempotent
-cleanup remains executable afterward. Foundation output validation is bound to
+Authority-dependent stages refuse an expired window. Owner cleanup is external
+to workflow completion and must occur before the absolute deadline. Foundation output validation is bound to
 the checksum-reviewed identity catalog and requires all ten exact deployment
 outputs; bounded Azure error handling never retains raw CLI messages.
 5. With federated-credential write assigned only on the exact publisher and

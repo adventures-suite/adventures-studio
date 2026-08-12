@@ -9,8 +9,6 @@ on:
         type: choice
         options:
           - bootstrap-role-definitions
-          - assign-foundation-access
-          - remove-foundation-access
       release_sha:
         description: Exact approved protected-main SHA
         required: true
@@ -92,18 +90,6 @@ jobs:
               test -z "$PARAMETERS_SHA256"
               [[ "$CATALOG_SHA256" =~ ^[0-9a-f]{64}$ ]]
               test -z "$ASSIGNMENT_TIMESTAMP_UTC" && test -z "$AUTHORITY_DEADLINE_UTC"
-              ;;
-            assign-foundation-access)
-              [[ "$APPROVAL_ID" == foundation-access-assign-* ]]
-              [[ "$TEMPLATE_SHA256" =~ ^[0-9a-f]{64}$ ]]
-              [[ "$PARAMETERS_SHA256" =~ ^[0-9a-f]{64}$ ]]
-              test -z "$CATALOG_SHA256"
-              [[ "$ASSIGNMENT_TIMESTAMP_UTC" =~ Z$ ]] && [[ "$AUTHORITY_DEADLINE_UTC" =~ Z$ ]]
-              ;;
-            remove-foundation-access)
-              [[ "$APPROVAL_ID" == foundation-access-remove-* ]]
-              test -z "$TEMPLATE_SHA256" && test -z "$PARAMETERS_SHA256" && test -z "$CATALOG_SHA256"
-              [[ "$ASSIGNMENT_TIMESTAMP_UTC" =~ Z$ ]] && [[ "$AUTHORITY_DEADLINE_UTC" =~ Z$ ]]
               ;;
             *) exit 2 ;;
           esac
