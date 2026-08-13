@@ -80,8 +80,9 @@ The proposed VM uses existing UAMI `id-adventures-suite-migrate-job-dev`
 fresh Azure and database identity readback.
 
 An approved run will capture pre-state, acquire the zero-wait application lock,
-execute the exact operation once, capture post-state, classify `Complete`,
-`Migration0007Committed`, `NoScriptCommitted`, or `Unexpected`, and retain
+execute the exact operation once through migration 0009, capture post-state,
+classify `Complete`, `Migration0008Committed`, `Migration0007Committed`,
+`NoScriptCommitted`, or `Unexpected`, and retain
 bounded logs. Independent VM cleanup is mandatory even if GitHub loses the
 runner. None of those operations is implemented or authorized here.
 

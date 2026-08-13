@@ -163,9 +163,9 @@ public sealed class SqlMigrationIntegrationTests
         }
     }
 
-    /// <summary>Proves the reviewed operational state advances exactly from 0006 to 0008.</summary>
+    /// <summary>Proves the reviewed operation classifies each committed boundary through 0009.</summary>
     [Fact]
-    public async Task ReviewedOperationState_AdvancesFrom0006To0008WithStableApplicationFingerprint()
+    public async Task ReviewedOperationState_AdvancesFrom0006To0009WithStableApplicationFingerprint()
     {
         var masterConnectionString = Environment.GetEnvironmentVariable(ConnectionVariable);
         Assert.False(string.IsNullOrWhiteSpace(masterConnectionString),
@@ -193,15 +193,35 @@ public sealed class SqlMigrationIntegrationTests
             Assert.Equal(MigrationJournalOutcome.At0006,
                 MigrationOperationalState.Classify(before.Journal));
 
-            Assert.Equal(2, DatabaseMigratorRunner.MigrateWithLockHeld(
-                connectionString,
-                maximumMigrationNumber: "0008").Count);
+            Assert.Single(DatabaseMigratorRunner.MigrateWithLockHeld(
+                connectionString, maximumMigrationNumber: "0007"));
+            var at0007 = await MigrationOperationalState.CaptureAsync(connectionString);
+            Assert.Equal(MigrationJournalOutcome.At0007,
+                MigrationOperationalState.Classify(at0007.Journal));
+            Assert.Equal(MigrationOperationClassification.Migration0007Committed,
+                MigrationOperationRunner.ClassifyResult(
+                    before, at0007, MigrationJournalOutcome.At0007, new InvalidOperationException()));
+
+            Assert.Single(DatabaseMigratorRunner.MigrateWithLockHeld(
+                connectionString, maximumMigrationNumber: "0008"));
+            var at0008 = await MigrationOperationalState.CaptureAsync(connectionString);
+            Assert.Equal(MigrationJournalOutcome.At0008,
+                MigrationOperationalState.Classify(at0008.Journal));
+            Assert.Equal(MigrationOperationClassification.Migration0008Committed,
+                MigrationOperationRunner.ClassifyResult(
+                    before, at0008, MigrationJournalOutcome.At0008, new InvalidOperationException()));
+
+            Assert.Single(DatabaseMigratorRunner.MigrateWithLockHeld(
+                connectionString, maximumMigrationNumber: "0009"));
             var after = await MigrationOperationalState.CaptureAsync(connectionString);
 
-            Assert.Equal(MigrationJournalOutcome.At0008,
+            Assert.Equal(MigrationJournalOutcome.At0009,
                 MigrationOperationalState.Classify(after.Journal));
             Assert.Equal(before.ApplicationFingerprint, after.ApplicationFingerprint);
             Assert.True(MigrationOperationRunner.VerifyExpectedPostState(after));
+            Assert.Equal(MigrationOperationClassification.Complete,
+                MigrationOperationRunner.ClassifyResult(
+                    before, after, MigrationJournalOutcome.At0009, null));
         }
         finally
         {
