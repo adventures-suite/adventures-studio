@@ -6,14 +6,26 @@ namespace AdventuresSuite.DatabaseIntegrationTests;
 public sealed class MigrationOperationRunnerTests
 {
     [Fact]
-    public void CompleteRequires0008SchemaPermissionsAndUnchangedFingerprint()
+    public void CompleteRequires0009SchemaPermissionsAndUnchangedFingerprint()
     {
         var before = State(MigrationJournalOutcome.At0006, fingerprint: "SAME");
-        var after = State(MigrationJournalOutcome.At0008, fingerprint: "SAME", complete: true);
+        var after = State(MigrationJournalOutcome.At0009, fingerprint: "SAME", complete: true);
 
         Assert.Equal(
             MigrationOperationClassification.Complete,
-            MigrationOperationRunner.ClassifyResult(before, after, MigrationJournalOutcome.At0008, null));
+            MigrationOperationRunner.ClassifyResult(before, after, MigrationJournalOutcome.At0009, null));
+    }
+
+    [Fact]
+    public void FailureAfter0008IsReportedAsCommittedPartialProgress()
+    {
+        var before = State(MigrationJournalOutcome.At0006, fingerprint: "SAME");
+        var after = State(MigrationJournalOutcome.At0008, fingerprint: "SAME", migration0008: true);
+
+        Assert.Equal(
+            MigrationOperationClassification.Migration0008Committed,
+            MigrationOperationRunner.ClassifyResult(
+                before, after, MigrationJournalOutcome.At0008, new InvalidOperationException()));
     }
 
     [Fact]
@@ -41,12 +53,13 @@ public sealed class MigrationOperationRunnerTests
     }
 
     [Fact]
-    public void SuccessfulDbUpAtAnyStateOtherThan0008FailsClosed()
+    public void SuccessfulDbUpAtAnyStateOtherThan0009FailsClosed()
     {
         var before = State(MigrationJournalOutcome.At0006, fingerprint: "SAME");
         foreach (var outcome in new[]
                  {
                      MigrationJournalOutcome.Unexpected,
+                     MigrationJournalOutcome.At0008,
                      MigrationJournalOutcome.At0007,
                      MigrationJournalOutcome.At0006
                  })
@@ -62,11 +75,11 @@ public sealed class MigrationOperationRunnerTests
     public void FingerprintChangeAlwaysFailsClosed()
     {
         var before = State(MigrationJournalOutcome.At0006, fingerprint: "BEFORE");
-        var after = State(MigrationJournalOutcome.At0008, fingerprint: "AFTER", complete: true);
+        var after = State(MigrationJournalOutcome.At0009, fingerprint: "AFTER", complete: true);
 
         Assert.Equal(
             MigrationOperationClassification.Unexpected,
-            MigrationOperationRunner.ClassifyResult(before, after, MigrationJournalOutcome.At0008, null));
+            MigrationOperationRunner.ClassifyResult(before, after, MigrationJournalOutcome.At0009, null));
     }
 
     [Fact]
@@ -82,6 +95,36 @@ public sealed class MigrationOperationRunnerTests
     }
 
     [Fact]
+    public void Partial0009ResidueAt0008FailsClosed()
+    {
+        var before = State(MigrationJournalOutcome.At0006, fingerprint: "SAME");
+        var residue = State(MigrationJournalOutcome.At0009, fingerprint: "SAME", complete: true) with
+        {
+            Journal = Journal(8)
+        };
+
+        Assert.Equal(
+            MigrationOperationClassification.Unexpected,
+            MigrationOperationRunner.ClassifyResult(
+                before, residue, MigrationJournalOutcome.At0008, new InvalidOperationException()));
+    }
+
+    [Fact]
+    public void CompleteStateRejectsMissingOrUnexpectedPlanningPermissions()
+    {
+        var complete = State(MigrationJournalOutcome.At0009, fingerprint: "SAME", complete: true);
+        Assert.False(MigrationOperationRunner.VerifyExpectedPostState(complete with
+        {
+            PlanningPermissions = complete.PlanningPermissions.Skip(1).ToArray()
+        }));
+        Assert.False(MigrationOperationRunner.VerifyExpectedPostState(complete with
+        {
+            PlanningPermissions = complete.PlanningPermissions.Append(
+                "GRANT|UPDATE|planning|AdventurePlanCreateResults").ToArray()
+        }));
+    }
+
+    [Fact]
     public void JournalClassifierAcceptsOnlyExactOrderedStates()
     {
         Assert.Equal(MigrationJournalOutcome.At0006,
@@ -90,14 +133,21 @@ public sealed class MigrationOperationRunnerTests
             MigrationOperationalState.Classify(Journal(7)));
         Assert.Equal(MigrationJournalOutcome.At0008,
             MigrationOperationalState.Classify(Journal(8)));
+        Assert.Equal(MigrationJournalOutcome.At0009,
+            MigrationOperationalState.Classify(Journal(9)));
         Assert.Equal(MigrationJournalOutcome.Unexpected,
             MigrationOperationalState.Classify(Journal(8).Reverse().ToArray()));
+        Assert.Equal(MigrationJournalOutcome.Unexpected,
+            MigrationOperationalState.Classify(Journal(9).Append("malformed").ToArray()));
+        Assert.Equal(MigrationJournalOutcome.Unexpected,
+            MigrationOperationalState.Classify(["x"]));
     }
 
     private static MigrationStateEvidence State(
         MigrationJournalOutcome outcome,
         string fingerprint,
         bool complete = false,
+        bool migration0008 = false,
         bool migration0007 = false) =>
         new(
             Journal(outcome switch
@@ -105,24 +155,34 @@ public sealed class MigrationOperationRunnerTests
                 MigrationJournalOutcome.At0006 => 6,
                 MigrationJournalOutcome.At0007 => 7,
                 MigrationJournalOutcome.At0008 => 8,
+                MigrationJournalOutcome.At0009 => 9,
                 _ => 5
             }),
-            complete || migration0007 ? ["planning.TravelerParticipations|USER_TABLE"] : [],
-            complete ? ExpectedPermissions() : [],
+            complete
+                ? ["planning.AdventurePlanCreateResults|USER_TABLE", "planning.TravelerParticipations|USER_TABLE"]
+                : migration0008 || migration0007 ? ["planning.TravelerParticipations|USER_TABLE"] : [],
+            complete || migration0008 ? ExpectedPermissions() : [],
+            complete ? ExpectedPlanningPermissions() : [],
             ["planning.AdventurePlans|0|0"],
             fingerprint,
-            complete || migration0007,
+            complete || migration0008 || migration0007,
+            complete || migration0008,
+            0,
+            0,
+            complete || migration0008 ? "dbo" : string.Empty,
+            complete || migration0008 || migration0007 ? 7 : 0,
+            complete || migration0008 || migration0007,
+            complete,
             complete,
             0,
             0,
             complete ? "dbo" : string.Empty,
-            complete || migration0007 ? 7 : 0,
-            complete || migration0007);
+            complete ? 7 : 0,
+            complete);
 
     private static IReadOnlyList<string> Journal(int count) =>
-        Enumerable.Range(1, count)
-            .Select(number =>
-                $"AdventuresSuite.DatabaseMigrator.Database.Migrations.{number:0000}_migration.sql")
+        MigrationCatalog.GetOrderedResourceNames(typeof(MigrationCatalog).Assembly)
+            .Take(count)
             .ToArray();
 
     private static IReadOnlyList<string> ExpectedPermissions()
@@ -145,4 +205,13 @@ public sealed class MigrationOperationRunnerTests
         permissions.Add("DENY|ALTER|planning|");
         return permissions;
     }
+
+    private static IReadOnlyList<string> ExpectedPlanningPermissions() =>
+    [
+        "GRANT|INSERT|planning|AdventurePlanCreateResults",
+        "GRANT|SELECT|planning|AdventurePlanCreateResults",
+        "DENY|UPDATE|planning|AdventurePlanCreateResults",
+        "DENY|DELETE|planning|AdventurePlanCreateResults",
+        "DENY|ALTER|planning|"
+    ];
 }
