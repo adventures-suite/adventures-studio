@@ -83,7 +83,7 @@ export function validateAzureEvidence(account, claims, context) {
     environment: target.environment,
     tenantId: FIXED.tenantId,
     subscriptionId: FIXED.subscriptionId,
-    clientId: target.clientId,
+    clientIdVerified: account.user.name.toLowerCase() === target.clientId,
     principalId: target.principalId,
     issuerVerified: claims.iss === FIXED.issuer,
     audienceVerified: claims.aud === FIXED.oidcAudience,

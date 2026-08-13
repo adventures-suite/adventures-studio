@@ -28,6 +28,7 @@ const account = (overrides = {}) => ({
 test('accepts exact immutable organization federation evidence', () => {
   const evidence = validateAzureEvidence(account(), claims(), context());
   assert.equal(evidence.classification, 'organization_federation_verified');
+  assert.equal(evidence.clientIdVerified, true);
   assert.equal(evidence.subjectVerified, true);
 });
 
@@ -61,12 +62,22 @@ test('rejects malformed Azure evidence and unexpected identity', () => {
   assert.throws(() => validateAzureEvidence(account({ extra: true }), claims(), context()));
   assert.throws(() => validateAzureEvidence(account({ tenantId: 'wrong' }), claims(), context()));
   assert.throws(() => validateAzureEvidence(account({ user: { name: 'wrong', type: 'servicePrincipal' } }), claims(), context()));
+  assert.throws(() => validateAzureEvidence(account({ user: { type: 'servicePrincipal' } }), claims(), context()));
 });
 
-test('bounded evidence contains no token or URL fields', () => {
+test('bounded evidence contains exact client verification and no raw client ID, token, or URL fields', () => {
   const evidence = validateAzureEvidence(account(), claims(), context());
+  assert.equal(evidence.clientIdVerified, true);
+  assert.equal(Object.hasOwn(evidence, 'clientId'), false);
   const serialized = JSON.stringify(evidence);
+  assert.doesNotMatch(serialized, /d0da8236-91dc-4454-8a3d-19d08a406e5d/i);
   assert.doesNotMatch(serialized, /token|authorization|header|url|request/i);
+});
+
+test('clientIdVerified is the exact boolean true in successful evidence', () => {
+  const evidence = validateAzureEvidence(account(), claims(), context());
+  assert.strictEqual(evidence.clientIdVerified, true);
+  assert.equal(typeof evidence.clientIdVerified, 'boolean');
 });
 
 test('workflow is manual-only, statically Environment-bound, pinned, and mutation-free', () => {
