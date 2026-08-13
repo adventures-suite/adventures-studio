@@ -14,11 +14,11 @@ export const FIXED = Object.freeze({
 });
 
 const TARGETS = Object.freeze({
-  'web-dev': { environment: 'dev', clientId: '1a45a93e-9630-4df9-861b-ad9cca04a05f', principalId: 'dd9500f5-9ba7-46b5-8dbc-94038f1ef03e' },
-  'companion-api-dev': { environment: 'dev', clientId: '91d49097-719d-44ae-9d8c-c394a68781e3', principalId: '96b245aa-8f4c-4ce4-a37d-aaf5c8b470bc' },
-  'migration-foundation': { environment: 'migration-foundation-deployment', clientId: '223af00d-69e5-4302-9ac5-6b338f3ea2e5', principalId: 'b77b6201-ad26-4f77-8f88-6d0d43f7dbb8' },
-  'migration-rbac': { environment: 'migration-rbac-deployment', clientId: 'd678e2ad-ada2-4cde-bb79-44630acf1cc8', principalId: '822c1c0c-39e1-400f-b9fc-9532a11bae5d' },
-  'database-migration': { environment: 'database-development', clientId: 'd0da8236-91dc-4454-8a3d-19d08a406e5d', principalId: 'ffc9a4bd-67c4-44af-82dc-b7f663f8bea5' },
+  'web-dev': { environment: 'dev', clientId: '1a45a93e-9630-4df9-861b-ad9cca04a05f', principalId: 'dd9500f5-9ba7-46b5-8dbc-94038f1ef03e', subscriptionVisibility: 'exact' },
+  'companion-api-dev': { environment: 'dev', clientId: '91d49097-719d-44ae-9d8c-c394a68781e3', principalId: '96b245aa-8f4c-4ce4-a37d-aaf5c8b470bc', subscriptionVisibility: 'exact' },
+  'migration-foundation': { environment: 'migration-foundation-deployment', clientId: '223af00d-69e5-4302-9ac5-6b338f3ea2e5', principalId: 'b77b6201-ad26-4f77-8f88-6d0d43f7dbb8', subscriptionVisibility: 'none_expected' },
+  'migration-rbac': { environment: 'migration-rbac-deployment', clientId: 'd678e2ad-ada2-4cde-bb79-44630acf1cc8', principalId: '822c1c0c-39e1-400f-b9fc-9532a11bae5d', subscriptionVisibility: 'none_expected' },
+  'database-migration': { environment: 'database-development', clientId: 'd0da8236-91dc-4454-8a3d-19d08a406e5d', principalId: 'ffc9a4bd-67c4-44af-82dc-b7f663f8bea5', subscriptionVisibility: 'none_expected' },
 });
 
 const exactKeys = (value, expected) =>
@@ -63,16 +63,24 @@ export function validateGitHubClaims(claims, context) {
   return { target, subject };
 }
 
-export function validateAzureEvidence(account, claims, context) {
+export function validateAzureEvidence(accounts, claims, context) {
   const { target, subject } = validateGitHubClaims(claims, context);
-  if (!exactKeys(account, ['environmentName', 'homeTenantId', 'id', 'isDefault', 'name', 'state', 'tenantId', 'user']))
-    throw new Error('Azure account evidence is malformed.');
-  if (!exactKeys(account.user, ['name', 'type'])) throw new Error('Azure account identity evidence is malformed.');
-  requireExact(account.id, FIXED.subscriptionId, 'Azure subscription');
-  requireExact(account.tenantId, FIXED.tenantId, 'Azure tenant');
-  requireExact(account.homeTenantId, FIXED.tenantId, 'Azure home tenant');
-  requireExact(account.user.type, 'servicePrincipal', 'Azure account type');
-  requireExact(account.user.name.toLowerCase(), target.clientId, 'Azure account client ID');
+  if (!Array.isArray(accounts)) throw new Error('Azure account evidence is malformed.');
+  for (const account of accounts) {
+    if (!exactKeys(account, ['id', 'state', 'tenantId', 'user']) || !exactKeys(account.user, ['name', 'type']))
+      throw new Error('Azure account evidence is malformed.');
+    requireExact(account.tenantId?.toLowerCase(), FIXED.tenantId, 'Azure account tenant');
+    requireExact(account.user.type, 'servicePrincipal', 'Azure account type');
+    requireExact(account.user.name?.toLowerCase(), target.clientId, 'Azure account client ID');
+    requireExact(account.state, 'Enabled', 'Azure account state');
+  }
+  const visibleSubscriptions = accounts.filter(({ id }) => id?.toLowerCase() !== FIXED.tenantId);
+  if (target.subscriptionVisibility === 'exact') {
+    if (visibleSubscriptions.length !== 1) throw new Error('Exact Azure subscription visibility is required.');
+    requireExact(visibleSubscriptions[0].id?.toLowerCase(), FIXED.subscriptionId, 'Azure subscription');
+  } else if (visibleSubscriptions.length !== 0) {
+    throw new Error('Azure subscription visibility is not approved.');
+  }
 
   return {
     classification: 'organization_federation_verified',
@@ -82,8 +90,9 @@ export function validateAzureEvidence(account, claims, context) {
     sourceSha: context.sourceSha,
     environment: target.environment,
     tenantId: FIXED.tenantId,
-    subscriptionId: FIXED.subscriptionId,
-    clientIdVerified: account.user.name.toLowerCase() === target.clientId,
+    subscriptionConfigured: true,
+    subscriptionVisibility: target.subscriptionVisibility,
+    clientIdVerified: true,
     principalId: target.principalId,
     issuerVerified: claims.iss === FIXED.issuer,
     audienceVerified: claims.aud === FIXED.oidcAudience,
@@ -92,13 +101,25 @@ export function validateAzureEvidence(account, claims, context) {
   };
 }
 
+export function validateAzureTokenEvidence(access, expectedClientId, expectedPrincipalId) {
+  if (!exactKeys(access, ['accessToken', 'tenant', 'tokenType']))
+    throw new Error('Azure token evidence is malformed.');
+  requireExact(access.tenant?.toLowerCase(), FIXED.tenantId, 'Azure token tenant');
+  requireExact(access.tokenType, 'Bearer', 'Azure token type');
+  const azureClaims = decodeClaims(access.accessToken);
+  requireExact(azureClaims.tid?.toLowerCase(), FIXED.tenantId, 'Azure token tenant claim');
+  requireExact(azureClaims.oid?.toLowerCase(), expectedPrincipalId, 'Azure token principal claim');
+  requireExact((azureClaims.appid ?? azureClaims.azp)?.toLowerCase(), expectedClientId, 'Azure token client claim');
+  requireExact(azureClaims.aud, FIXED.azureAudience, 'Azure token audience');
+}
+
 const required = (name) => {
   const value = process.env[name];
   if (!value || value.trim() !== value) throw new Error(`${name} is required.`);
   return value;
 };
 
-async function requestGitHubToken(fetchImpl = fetch) {
+export async function requestGitHubToken(fetchImpl = fetch) {
   const requestUrl = new URL(required('ACTIONS_ID_TOKEN_REQUEST_URL'));
   requestUrl.searchParams.set('audience', FIXED.oidcAudience);
   const response = await fetchImpl(requestUrl, {
@@ -135,27 +156,18 @@ export async function runProof(dependencies = {}) {
   requireExact(required('EXPECTED_SUBSCRIPTION_ID').toLowerCase(), FIXED.subscriptionId, 'Configured subscription ID');
 
   const exec = dependencies.execFileSyncImpl ?? execFileSync;
-  const account = JSON.parse(exec('az', ['account', 'show', '--query',
-    '{environmentName:environmentName,homeTenantId:homeTenantId,id:id,isDefault:isDefault,name:name,state:state,tenantId:tenantId,user:user}',
+  const accounts = JSON.parse(exec('az', ['account', 'list', '--query',
+    '[].{id:id,state:state,tenantId:tenantId,user:user}',
     '--output', 'json'], {
     encoding: 'utf8', maxBuffer: 64 * 1024, stdio: ['ignore', 'pipe', 'ignore'],
   }));
   const access = JSON.parse(exec('az', ['account', 'get-access-token', '--resource', 'https://management.azure.com/', '--query',
-    '{accessToken:accessToken,subscription:subscription,tenant:tenant,tokenType:tokenType}', '--output', 'json'], {
+    '{accessToken:accessToken,tenant:tenant,tokenType:tokenType}', '--output', 'json'], {
     encoding: 'utf8', maxBuffer: 64 * 1024, stdio: ['ignore', 'pipe', 'ignore'],
   }));
-  if (!exactKeys(access, ['accessToken', 'subscription', 'tenant', 'tokenType']))
-    throw new Error('Azure token evidence is malformed.');
-  requireExact(access.subscription, FIXED.subscriptionId, 'Azure token subscription');
-  requireExact(access.tenant, FIXED.tenantId, 'Azure token tenant');
-  requireExact(access.tokenType, 'Bearer', 'Azure token type');
-  const azureClaims = decodeClaims(access.accessToken);
-  requireExact(azureClaims.tid?.toLowerCase(), FIXED.tenantId, 'Azure token tenant claim');
-  requireExact(azureClaims.oid?.toLowerCase(), target.principalId, 'Azure token principal claim');
-  requireExact((azureClaims.appid ?? azureClaims.azp)?.toLowerCase(), target.clientId, 'Azure token client claim');
-  requireExact(azureClaims.aud, FIXED.azureAudience, 'Azure token audience');
+  validateAzureTokenEvidence(access, target.clientId, target.principalId);
 
-  const evidence = validateAzureEvidence(account, claims, context);
+  const evidence = validateAzureEvidence(accounts, claims, context);
   process.stdout.write(`${JSON.stringify(evidence)}\n`);
   return evidence;
 }

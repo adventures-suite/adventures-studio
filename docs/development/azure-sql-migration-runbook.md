@@ -54,6 +54,17 @@ is protected-branch-only, requires reviewer `ssimonton007` (user ID
 `55812276`), disables administrator bypass, contains only the four reviewed
 non-secret identity/subscription variables, and contains zero secrets.
 
+Federation proof distinguishes token exchange from subscription visibility.
+The Web and Companion deployment identities must see exactly the configured
+development subscription. The intentionally unassigned foundation, RBAC, and
+database-migration identities authenticate at tenant scope with Azure CLI
+`allow-no-subscriptions`, must see no Azure subscription, and emit
+`subscriptionConfigured: true` with `subscriptionVisibility: none_expected`.
+Any subscription visible to those zero-authority identities fails the proof.
+This evidence proves authentication and expected absence of control-plane
+authority; it does not claim that the configured subscription was visible or
+authenticated.
+
 The next repository increment may define—but must not silently provision—a
 one-job ephemeral GitHub self-hosted Azure VM in the existing VNet. A separate
 Azure approval will be required for runner creation and independent cleanup; a
