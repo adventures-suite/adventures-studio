@@ -13,11 +13,19 @@ param ubuntuImageVersion string = '24.04.202608070'
 param vmSize string = 'Standard_B2als_v2'
 @secure()
 param bootstrapCustomData string
-var vnetName = last(split(existingVnetResourceId, '/'))
-var identityName = last(split(migrationIdentityResourceId, '/'))
+var vnetIdParts = split(existingVnetResourceId, '/')
+var identityIdParts = split(migrationIdentityResourceId, '/')
+var vnetName = last(vnetIdParts)
+var identityName = last(identityIdParts)
 var tags = { purpose: 'one-job-private-migration-runner', operationId: operationId, expiresAfterMinutes: '45' }
-resource vnet 'Microsoft.Network/virtualNetworks@2024-05-01' existing = { name: vnetName }
-resource migrationIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = { name: identityName }
+resource vnet 'Microsoft.Network/virtualNetworks@2024-05-01' existing = {
+  name: vnetName
+  scope: resourceGroup(vnetIdParts[2], vnetIdParts[4])
+}
+resource migrationIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
+  name: identityName
+  scope: resourceGroup(identityIdParts[2], identityIdParts[4])
+}
 resource nsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
   name: 'nsg-migration-runner-${operationId}'
   location: resourceGroup().location
@@ -29,8 +37,16 @@ resource nsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
     { name: 'DenyAllOtherOutbound', properties: { priority: 200, direction: 'Outbound', access: 'Deny', protocol: '*', sourcePortRange: '*', destinationPortRange: '*', sourceAddressPrefix: '*', destinationAddressPrefix: '*' } }
   ] }
 }
-resource subnet 'Microsoft.Network/virtualNetworks/subnets@2024-05-01' = { name: 'snet-migration-runner-${operationId}', parent: vnet, properties: { addressPrefix: '10.40.3.0/27', networkSecurityGroup: { id: nsg.id }, privateEndpointNetworkPolicies: 'Enabled', privateLinkServiceNetworkPolicies: 'Enabled' } }
-resource nic 'Microsoft.Network/networkInterfaces@2024-05-01' = { name: 'nic-migration-runner-${operationId}', location: resourceGroup().location, tags: tags, properties: { enableAcceleratedNetworking: false, enableIPForwarding: false, ipConfigurations: [{ name: 'ipconfig1', properties: { privateIPAllocationMethod: 'Dynamic', subnet: { id: subnet.id } } }] } }
+module runnerSubnet './subnet.bicep' = {
+  name: 'migration-runner-subnet-${operationId}'
+  scope: resourceGroup(vnetIdParts[2], vnetIdParts[4])
+  params: {
+    vnetName: vnet.name
+    subnetName: 'snet-migration-runner-${operationId}'
+    networkSecurityGroupResourceId: nsg.id
+  }
+}
+resource nic 'Microsoft.Network/networkInterfaces@2024-05-01' = { name: 'nic-migration-runner-${operationId}', location: resourceGroup().location, tags: tags, properties: { enableAcceleratedNetworking: false, enableIPForwarding: false, ipConfigurations: [{ name: 'ipconfig1', properties: { privateIPAllocationMethod: 'Dynamic', subnet: { id: runnerSubnet.outputs.subnetResourceId } } }] } }
 resource vm 'Microsoft.Compute/virtualMachines@2024-07-01' = {
   name: 'vm-migration-runner-${operationId}'
   location: resourceGroup().location
@@ -46,4 +62,6 @@ resource vm 'Microsoft.Compute/virtualMachines@2024-07-01' = {
   }
 }
 output operationId string = operationId
-output resourceIds array = [vm.id, nic.id, vm.properties.storageProfile.osDisk.name, nsg.id, subnet.id]
+output resolvedExistingVnetResourceId string = vnet.id
+output resolvedMigrationIdentityResourceId string = migrationIdentity.id
+output resourceIds array = [vm.id, nic.id, vm.properties.storageProfile.osDisk.name, nsg.id, runnerSubnet.outputs.subnetResourceId]
