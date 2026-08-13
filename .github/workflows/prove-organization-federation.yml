@@ -126,7 +126,7 @@ jobs:
         with:
           client-id: ${{ vars.MIGRATION_FOUNDATION_DEPLOYER_CLIENT_ID }}
           tenant-id: ${{ vars.WORKFORCE_TENANT_ID }}
-          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          allow-no-subscriptions: true
       - name: Prove exact organization federation
         env:
           PROOF_TARGET: migration-foundation
@@ -141,7 +141,7 @@ jobs:
         run: node .github/scripts/organization-federation-proof.mjs
       - if: always()
         name: Clear Azure session
-        run: az logout
+        run: az account clear
 
   migration-rbac:
     if: inputs.proof_target == 'migration-rbac'
@@ -165,7 +165,7 @@ jobs:
         with:
           client-id: ${{ vars.MIGRATION_RBAC_DEPLOYER_CLIENT_ID }}
           tenant-id: ${{ vars.WORKFORCE_TENANT_ID }}
-          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          allow-no-subscriptions: true
       - name: Prove exact organization federation
         env:
           PROOF_TARGET: migration-rbac
@@ -180,7 +180,7 @@ jobs:
         run: node .github/scripts/organization-federation-proof.mjs
       - if: always()
         name: Clear Azure session
-        run: az logout
+        run: az account clear
 
   database-migration:
     if: inputs.proof_target == 'database-migration'
@@ -204,7 +204,7 @@ jobs:
         with:
           client-id: ${{ vars.MIGRATION_EXECUTION_CLIENT_ID }}
           tenant-id: ${{ vars.WORKFORCE_TENANT_ID }}
-          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          allow-no-subscriptions: true
       - name: Prove exact organization federation
         env:
           PROOF_TARGET: database-migration
@@ -219,4 +219,4 @@ jobs:
         run: node .github/scripts/organization-federation-proof.mjs
       - if: always()
         name: Clear Azure session
-        run: az logout
+        run: az account clear
