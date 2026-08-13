@@ -84,3 +84,12 @@ execute the exact operation once, capture post-state, classify `Complete`,
 `Migration0007Committed`, `NoScriptCommitted`, or `Unexpected`, and retain
 bounded logs. Independent VM cleanup is mandatory even if GitHub loses the
 runner. None of those operations is implemented or authorized here.
+
+## Inert runner lifecycle definition
+
+The repository-only design is documented in
+`docs/architecture/ephemeral-private-migration-runner.md` and under
+`infrastructure/private-migration-runner`. Its manual Environment-gated
+workflow deliberately fails before login or provisioning until an OIDC
+registration broker and exact temporary provisioning/cleanup assignments pass
+separate reviews. This is not runner, SQL, or migration approval.

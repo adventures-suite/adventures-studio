@@ -1,0 +1,41 @@
+name: Operate Ephemeral Private Migration Runner
+on:
+  workflow_dispatch:
+    inputs:
+      approved_source_sha: { description: Exact approved protected-main SHA, required: true, type: string }
+      operation_id: { description: Unique reviewed operation ID, required: true, type: string }
+      package_run_id: { description: Exact package workflow run ID, required: true, type: string }
+      package_artifact_id: { description: Exact package artifact ID, required: true, type: string }
+      package_sha256: { description: Exact package SHA-256, required: true, type: string }
+      catalog_sha256: { description: Exact catalog SHA-256, required: true, type: string }
+      approval_nonce: { description: One-use future broker approval nonce, required: true, type: string }
+permissions: { contents: read }
+concurrency: { group: "private-migration-runner-${{ inputs.operation_id }}", cancel-in-progress: false }
+jobs:
+  authorize-and-provision:
+    environment: database-development
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions: { contents: read, id-token: write, actions: read }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: "${{ inputs.approved_source_sha }}" }
+      - name: Fail closed until the reviewed registration broker exists
+        run: |
+          echo '::error::Runner registration broker and provisioning-role assignment are intentionally absent.'
+          exit 1
+  independent-cleanup:
+    if: always()
+    needs: authorize-and-provision
+    environment: database-development
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions: { contents: read, id-token: write }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: "${{ inputs.approved_source_sha }}" }
+      - name: Fail closed until independent cleanup authority exists
+        run: |
+          echo '::notice::No provisioning can occur while the authorization guard is present.'
+          echo '::error::Independent cleanup identity and exact assignment are intentionally absent.'
+          exit 1
