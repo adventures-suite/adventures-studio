@@ -42,6 +42,29 @@ catalog.
 
 ## Future one-job procedure
 
+Organization-bound GitHub federation is proven through the manual-only
+`Prove Organization Federation` workflow before any personal-owner federated
+credential is removed. The proof is independently Environment-gated, validates
+the immutable organization/repository subject plus exact Azure workload
+identity, and performs only account/token introspection. It never connects to
+SQL, deploys resources, changes RBAC, executes migrations, or rebuilds the
+migration package. Raw GitHub and Azure tokens, headers, request URLs, and
+environment dumps are never retained. The `database-development` Environment
+is protected-branch-only, requires reviewer `ssimonton007` (user ID
+`55812276`), disables administrator bypass, contains only the four reviewed
+non-secret identity/subscription variables, and contains zero secrets.
+
+Federation proof distinguishes token exchange from subscription visibility.
+The Web and Companion deployment identities must see exactly the configured
+development subscription. The intentionally unassigned foundation, RBAC, and
+database-migration identities authenticate at tenant scope with Azure CLI
+`allow-no-subscriptions`, must see no Azure subscription, and emit
+`subscriptionConfigured: true` with `subscriptionVisibility: none_expected`.
+Any subscription visible to those zero-authority identities fails the proof.
+This evidence proves authentication and expected absence of control-plane
+authority; it does not claim that the configured subscription was visible or
+authenticated.
+
 The next repository increment may define—but must not silently provision—a
 one-job ephemeral GitHub self-hosted Azure VM in the existing VNet. A separate
 Azure approval will be required for runner creation and independent cleanup; a
@@ -51,13 +74,46 @@ short-lived one-job runner registration, downloads and verifies the attested
 artifact, resolves the private SQL endpoint, authenticates as the exact UAMI,
 and is deleted after every outcome.
 
+The repository-defined SQL boundary separates three authorities. An Entra
+administrator creates and owns the `planning`, `auth`, and `audit` schemas,
+the four dbo-owned runtime roles, the exact DbUp journal table, and the
+contained migration user. The temporary migration principal receives only
+`CONNECT`, `CREATE TABLE`, `VIEW DEFINITION`, schema `CONTROL` on those three
+schemas, and journal `SELECT`/`INSERT`. It receives no fixed-role membership,
+schema ownership, role administration, schema creation, journal
+`UPDATE`/`DELETE`, or unrelated `dbo` authority. Runtime principals retain
+only their separately verified application DML grants and denials. Live
+bootstrap remains a later, exact approval boundary.
+
+The repository-only administrator path is documented at
+`docs/architecture/private-sql-administrator-operation.md`. Its mandatory
+first mode is a statically allowlisted metadata baseline using the dedicated
+`id-adventures-suite-sql-bootstrap-dev` UAMI and direct contained principal
+`AdventuresSuiteSqlBootstrapDev`; neither exists or has authority merely
+because the design is present. The identity is never the migration UAMI and
+never gains authority through an Entra group. The inert workflow binds exact
+repository and organization IDs, protected SHA, workflow checksum, operation
+ID, identity IDs, server, database, and private endpoint, then fails before
+Azure login. A baseline dispatch and any later bootstrap dispatch require
+separate approval packets and independent cleanup and residue proof.
+
 The proposed VM uses existing UAMI `id-adventures-suite-migrate-job-dev`
 (object ID `ffc9a4bd-67c4-44af-82dc-b7f663f8bea5`, client ID
 `d0da8236-91dc-4454-8a3d-19d08a406e5d`). Repository text never substitutes for
 fresh Azure and database identity readback.
 
 An approved run will capture pre-state, acquire the zero-wait application lock,
-execute the exact operation once, capture post-state, classify `Complete`,
-`Migration0007Committed`, `NoScriptCommitted`, or `Unexpected`, and retain
+execute the exact operation once through migration 0009, capture post-state,
+classify `Complete`, `Migration0008Committed`, `Migration0007Committed`,
+`NoScriptCommitted`, or `Unexpected`, and retain
 bounded logs. Independent VM cleanup is mandatory even if GitHub loses the
 runner. None of those operations is implemented or authorized here.
+
+## Inert runner lifecycle definition
+
+The repository-only design is documented in
+`docs/architecture/ephemeral-private-migration-runner.md` and under
+`infrastructure/private-migration-runner`. Its manual Environment-gated
+workflow deliberately fails before login or provisioning until an OIDC
+registration broker and exact temporary provisioning/cleanup assignments pass
+separate reviews. This is not runner, SQL, or migration approval.

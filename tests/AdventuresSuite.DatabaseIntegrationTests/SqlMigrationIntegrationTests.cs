@@ -163,9 +163,9 @@ public sealed class SqlMigrationIntegrationTests
         }
     }
 
-    /// <summary>Proves the reviewed operational state advances exactly from 0006 to 0008.</summary>
+    /// <summary>Proves the reviewed operation classifies each committed boundary through 0009.</summary>
     [Fact]
-    public async Task ReviewedOperationState_AdvancesFrom0006To0008WithStableApplicationFingerprint()
+    public async Task ReviewedOperationState_AdvancesFrom0006To0009WithStableApplicationFingerprint()
     {
         var masterConnectionString = Environment.GetEnvironmentVariable(ConnectionVariable);
         Assert.False(string.IsNullOrWhiteSpace(masterConnectionString),
@@ -193,20 +193,165 @@ public sealed class SqlMigrationIntegrationTests
             Assert.Equal(MigrationJournalOutcome.At0006,
                 MigrationOperationalState.Classify(before.Journal));
 
-            Assert.Equal(2, DatabaseMigratorRunner.MigrateWithLockHeld(
-                connectionString,
-                maximumMigrationNumber: "0008").Count);
+            Assert.Single(DatabaseMigratorRunner.MigrateWithLockHeld(
+                connectionString, maximumMigrationNumber: "0007"));
+            var at0007 = await MigrationOperationalState.CaptureAsync(connectionString);
+            Assert.Equal(MigrationJournalOutcome.At0007,
+                MigrationOperationalState.Classify(at0007.Journal));
+            Assert.Equal(MigrationOperationClassification.Migration0007Committed,
+                MigrationOperationRunner.ClassifyResult(
+                    before, at0007, MigrationJournalOutcome.At0007, new InvalidOperationException()));
+
+            Assert.Single(DatabaseMigratorRunner.MigrateWithLockHeld(
+                connectionString, maximumMigrationNumber: "0008"));
+            var at0008 = await MigrationOperationalState.CaptureAsync(connectionString);
+            Assert.Equal(MigrationJournalOutcome.At0008,
+                MigrationOperationalState.Classify(at0008.Journal));
+            Assert.Equal(MigrationOperationClassification.Migration0008Committed,
+                MigrationOperationRunner.ClassifyResult(
+                    before, at0008, MigrationJournalOutcome.At0008, new InvalidOperationException()));
+
+            Assert.Single(DatabaseMigratorRunner.MigrateWithLockHeld(
+                connectionString, maximumMigrationNumber: "0009"));
             var after = await MigrationOperationalState.CaptureAsync(connectionString);
 
-            Assert.Equal(MigrationJournalOutcome.At0008,
+            Assert.Equal(MigrationJournalOutcome.At0009,
                 MigrationOperationalState.Classify(after.Journal));
             Assert.Equal(before.ApplicationFingerprint, after.ApplicationFingerprint);
             Assert.True(MigrationOperationRunner.VerifyExpectedPostState(after));
+            Assert.Equal(MigrationOperationClassification.Complete,
+                MigrationOperationRunner.ClassifyResult(
+                    before, after, MigrationJournalOutcome.At0009, null));
         }
         finally
         {
             await DropDatabaseAsync(masterConnectionString, databaseName);
         }
+    }
+
+    /// <summary>Runs the real DbUp pipeline with only the explicit temporary migration catalog.</summary>
+    [Fact]
+    public async Task RestrictedMigrationPrincipal_RunsThrough0009AndRejectsBroaderAuthority()
+    {
+        var masterConnectionString = Environment.GetEnvironmentVariable(ConnectionVariable);
+        Assert.False(string.IsNullOrWhiteSpace(masterConnectionString),
+            $"Set {ConnectionVariable} for the SQL integration gate.");
+        var suffix = Guid.NewGuid().ToString("N");
+        var databaseName = $"AdventuresSuiteRestrictedMigration_{suffix}";
+        var loginName = $"migration_{suffix}";
+        var userName = $"migration_{suffix}";
+        var password = $"Local-{Guid.NewGuid():N}!aA9";
+        await ExecuteAsync(masterConnectionString,
+            $"CREATE LOGIN [{loginName}] WITH PASSWORD = '{password}'; CREATE DATABASE [{databaseName}];");
+        try
+        {
+            var administratorConnection = BuildDatabaseConnectionString(masterConnectionString, databaseName);
+            await ExecuteAsync(administratorConnection, $"CREATE USER [{userName}] FOR LOGIN [{loginName}];");
+            await ExecuteParameterizedAsync(administratorConnection,
+                AzureDevelopmentBootstrapper.BuildMigrationGrants($"[{userName}]"), userName);
+            await ExecuteParameterizedAsync(administratorConnection,
+                AzureDevelopmentBootstrapper.BuildMigrationGrants($"[{userName}]"), userName);
+
+            var restricted = new SqlConnectionStringBuilder(masterConnectionString)
+            {
+                InitialCatalog = databaseName,
+                IntegratedSecurity = false,
+                UserID = loginName,
+                Password = password
+            }.ConnectionString;
+            await AzureDevelopmentBootstrapper.VerifyMigrationPermissionsAsync(restricted);
+            Assert.Equal(9, DatabaseMigratorRunner.Migrate(restricted).Count);
+            Assert.Empty(DatabaseMigratorRunner.Migrate(restricted));
+            await AzureDevelopmentBootstrapper.VerifyMigrationPermissionsAsync(restricted);
+            var state = await MigrationOperationalState.CaptureAsync(restricted);
+            Assert.Equal(MigrationJournalOutcome.At0009, MigrationOperationalState.Classify(state.Journal));
+            Assert.True(MigrationOperationRunner.VerifyExpectedPostState(state));
+
+            var permissions = await ReadPermissionProbeAsync(restricted);
+            Assert.Equal(
+                [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+                permissions);
+            await AssertSqlRejectedAsync(restricted,
+                "UPDATE dbo.AdventuresSuiteSchemaVersions SET Applied = Applied WHERE 1 = 0;");
+            await AssertSqlRejectedAsync(restricted,
+                "DELETE dbo.AdventuresSuiteSchemaVersions WHERE 1 = 0;");
+            await AssertSqlRejectedAsync(restricted, "CREATE SCHEMA prohibited;");
+            await AssertSqlRejectedAsync(restricted, "CREATE ROLE prohibited;");
+            await AssertSqlRejectedAsync(restricted, "CREATE TABLE dbo.Prohibited (Id int);");
+
+            await ExecuteAsync(administratorConnection, $"GRANT ALTER ANY ROLE TO [{userName}];");
+            await Assert.ThrowsAsync<SqlException>(() =>
+                AzureDevelopmentBootstrapper.VerifyMigrationPermissionsAsync(restricted));
+            await ExecuteAsync(administratorConnection, $"REVOKE ALTER ANY ROLE FROM [{userName}];");
+
+            await ExecuteAsync(administratorConnection,
+                $"REVOKE SELECT ON dbo.AdventuresSuiteSchemaVersions FROM [{userName}];");
+            await Assert.ThrowsAsync<SqlException>(() =>
+                AzureDevelopmentBootstrapper.VerifyMigrationPermissionsAsync(restricted));
+            await ExecuteAsync(administratorConnection,
+                $"GRANT SELECT ON dbo.AdventuresSuiteSchemaVersions TO [{userName}];");
+
+            await ExecuteAsync(administratorConnection,
+                $"CREATE ROLE [unexpected_{suffix}]; ALTER ROLE [unexpected_{suffix}] ADD MEMBER [{userName}];");
+            await Assert.ThrowsAsync<SqlException>(() =>
+                AzureDevelopmentBootstrapper.VerifyMigrationPermissionsAsync(restricted));
+            await ExecuteAsync(administratorConnection,
+                $"ALTER ROLE [unexpected_{suffix}] DROP MEMBER [{userName}]; DROP ROLE [unexpected_{suffix}];");
+            await AzureDevelopmentBootstrapper.VerifyMigrationPermissionsAsync(restricted);
+
+            using (DatabaseMigratorRunner.AcquireMigrationLock(restricted))
+            {
+                Assert.Throws<InvalidOperationException>(() => DatabaseMigratorRunner.Migrate(restricted));
+            }
+        }
+        finally
+        {
+            await DropDatabaseAsync(masterConnectionString, databaseName);
+            await ExecuteAsync(masterConnectionString,
+                $"IF EXISTS (SELECT 1 FROM sys.server_principals WHERE name=N'{loginName}') DROP LOGIN [{loginName}];");
+        }
+    }
+
+    private static async Task<IReadOnlyList<int>> ReadPermissionProbeAsync(string connectionString)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT Value FROM (VALUES
+              (1, HAS_PERMS_BY_NAME(DB_NAME(),'DATABASE','CONNECT')),
+              (2, HAS_PERMS_BY_NAME(DB_NAME(),'DATABASE','CREATE TABLE')),
+              (3, HAS_PERMS_BY_NAME(DB_NAME(),'DATABASE','VIEW DEFINITION')),
+              (4, HAS_PERMS_BY_NAME('planning','SCHEMA','CONTROL')),
+              (5, HAS_PERMS_BY_NAME('auth','SCHEMA','CONTROL')),
+              (6, HAS_PERMS_BY_NAME('audit','SCHEMA','CONTROL')),
+              (7, HAS_PERMS_BY_NAME('dbo.AdventuresSuiteSchemaVersions','OBJECT','SELECT')),
+              (8, HAS_PERMS_BY_NAME('dbo.AdventuresSuiteSchemaVersions','OBJECT','INSERT')),
+              (9, HAS_PERMS_BY_NAME(DB_NAME(),'DATABASE','ALTER ANY ROLE')),
+              (10, HAS_PERMS_BY_NAME(DB_NAME(),'DATABASE','CREATE SCHEMA')),
+              (11, HAS_PERMS_BY_NAME('dbo','SCHEMA','CONTROL')),
+              (12, HAS_PERMS_BY_NAME('dbo.AdventuresSuiteSchemaVersions','OBJECT','UPDATE')),
+              (13, HAS_PERMS_BY_NAME('dbo.AdventuresSuiteSchemaVersions','OBJECT','DELETE')),
+              (14, ISNULL(IS_ROLEMEMBER('db_owner'),0)),
+              (15, ISNULL(IS_ROLEMEMBER('db_ddladmin'),0)),
+              (16, ISNULL(IS_ROLEMEMBER('db_datareader'),0))) AS Permissions(Sequence, Value)
+            ORDER BY Sequence;
+            """;
+        var values = new List<int>();
+        await using var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync()) values.Add(reader.GetInt32(0));
+        return values;
+    }
+
+    private static async Task ExecuteParameterizedAsync(
+        string connectionString, string sql, string alias)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        command.Parameters.AddWithValue("@AliasParameter", alias);
+        await command.ExecuteNonQueryAsync();
     }
 
     private static async Task VerifySchemaAsync(string connectionString)

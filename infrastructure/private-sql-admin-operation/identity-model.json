@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "workloadName": "id-adventures-suite-sql-bootstrap-dev",
+  "databasePrincipalAlias": "AdventuresSuiteSqlBootstrapDev",
+  "identityType": "Microsoft.ManagedIdentity/userAssignedIdentities",
+  "binding": ["immutableAzureResourceId", "tenantId", "clientId", "principalId"],
+  "authentication": {
+    "source": "AzureIMDS",
+    "audience": "https://database.windows.net/",
+    "delivery": "memoryOnlyProcessPipe",
+    "maximumOperationMinutes": 45
+  },
+  "prohibited": [
+    "migrationUami",
+    "humanIdentity",
+    "EntraGroupMembership",
+    "password",
+    "clientSecret",
+    "certificate",
+    "durableToken",
+    "interactiveGuestLogin"
+  ],
+  "note": "Design catalog only. The identity, SQL principal, authority, and assignments do not yet exist and are separately approved live boundaries."
+}

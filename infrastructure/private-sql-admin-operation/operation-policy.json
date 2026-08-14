@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "deadlineMinutes": 45,
+  "automaticRetryCount": 0,
+  "baselineMustPrecedeBootstrap": true,
+  "baselineCanInvokeBootstrap": false,
+  "successfulBaselineOutcomes": ["complete", "absent"],
+  "failureOutcomes": ["unexpected", "ambiguous", "timeout", "cancelled", "runnerLost", "identityMismatch", "authorityMismatch", "evidenceRejected", "cleanupPartial"],
+  "cleanup": {
+    "independent": true,
+    "requiredAfter": ["success", "failure", "timeout", "cancelled", "runnerLost", "ambiguous"],
+    "successRequiresZero": ["resourceCount", "registrationCount", "temporaryAssignmentCount", "guestFileCount"]
+  },
+  "authorityBoundaries": ["runnerRegistration", "runnerProvisioning", "independentCleanup", "sqlAdministrator"],
+  "prohibitedNetworkChanges": ["publicSql", "firewallException", "publicIp", "inboundSsh", "inboundRdp", "legacyAdministrationVm", "snet-devtools"]
+}
