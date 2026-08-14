@@ -2,6 +2,12 @@
 
 **Status:** Design-only; execution remains blocked
 
+The future one-job registration prerequisite is specified in
+`docs/architecture/ephemeral-runner-registration-broker.md`. Its repository
+artifacts create no GitHub App, broker, runner, token, assignment, or
+registration; live operation and zero-residue readback require separate exact
+approvals.
+
 AdventuresSuite uses the non-container `AdventuresSuite.DatabaseMigrator` DbUp
 executable for ordered, forward-only private Azure SQL migrations. The
 authoritative execution decision is

@@ -2,6 +2,11 @@
 
 **Status:** Inert reviewed design; provisioning remains blocked
 
+Repository-scoped one-job registration is defined separately in
+`docs/architecture/ephemeral-runner-registration-broker.md`. That broker is the
+only future source of JIT configuration and remains inert until separately
+provisioned and approved.
+
 This increment defines one disposable GitHub self-hosted Azure VM. It does not
 provision, grant authority, register a runner, retrieve an artifact, connect to
 SQL, or execute DbUp.
