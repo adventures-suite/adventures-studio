@@ -28,6 +28,30 @@ test('runner group selection is one fixed literal and never an expression', asyn
   assert.doesNotMatch(workflow, /^\s+group:.*\$\{\{/m);
 });
 
+test('job environment excludes runtime-only contexts and paths derive from RUNNER_TEMP', async () => {
+  const workflow = await read('.github/workflows/private-migration-runner.yml');
+  const jobEnvironment = workflow.match(/^    env:\n(?<body>(?:^      .+\n)+)    steps:/m)?.groups?.body;
+  assert.ok(jobEnvironment, 'operate job env must remain statically inspectable');
+  const contexts = [...jobEnvironment.matchAll(/\$\{\{\s*([A-Za-z_][A-Za-z0-9_]*)\./g)]
+    .map(match => match[1]);
+  const jobEnvContextAllowlist = new Set(['github', 'needs', 'strategy', 'matrix', 'vars', 'secrets', 'inputs']);
+  assert.ok(contexts.every(context => jobEnvContextAllowlist.has(context)),
+    'job env contains a context unavailable before runner allocation');
+  assert.doesNotMatch(workflow, /^\s+(?:ARTIFACT_DIRECTORY|WORK_DIRECTORY|VERIFIED_DIRECTORY):.*\$\{\{/m);
+
+  const initialization = workflow.match(
+    /- name: Initialize trusted runner-temporary paths\n(?<body>[\s\S]*?)\n      - uses:/,
+  )?.groups?.body;
+  assert.ok(initialization, 'trusted path initialization must be the first runner step');
+  assert.match(initialization, /test -n "\$\{RUNNER_TEMP:-\}"/);
+  assert.match(initialization, /ARTIFACT_DIRECTORY=%s\/migration\/artifact/);
+  assert.match(initialization, /WORK_DIRECTORY=%s\/migration/);
+  assert.match(initialization, /VERIFIED_DIRECTORY=%s\/migration\/verified/);
+  assert.equal((initialization.match(/printf '[^']+' "\$RUNNER_TEMP"/g) ?? []).length, 3);
+  assert.match(initialization, />> "\$GITHUB_ENV"/);
+  assert.doesNotMatch(initialization, /\$\{\{\s*(?:inputs|vars|github|env|needs|strategy|matrix|job|steps|runner)\./);
+});
+
 test('proof-only path has no SQL command and package verification is exact', async () => {
   const workflow = await read('.github/workflows/private-migration-runner.yml');
   const proof = await read('.github/scripts/prove-private-sql-network.sh');
