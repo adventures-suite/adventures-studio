@@ -3,8 +3,8 @@ set -euo pipefail
 root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"
 dir="$root/infrastructure/runner-registration-broker"
 workflow="$root/.github/workflows/ephemeral-runner-registration-broker.yml"
-require(){ rg -q --fixed-strings -- "$1" "$2"; }
-reject(){ ! rg -q --fixed-strings -- "$1" "$2"; }
+require(){ grep -Fq -- "$1" "$2"; }
+reject(){ ! grep -Fq -- "$1" "$2"; }
 
 npm --prefix "$dir" test
 compiled="$(mktemp)"
@@ -52,6 +52,7 @@ require "DestinationContentType = 'application/x-pem-file'" "$dir/key-custody-im
 reject "DefaultAzureCredential" "$dir/import-app-key.mjs"
 reject "process.env" "$dir/import-app-key.mjs"
 reject "stdin" "$dir/import-app-key.mjs"
+reject "KEY_CUSTODY_TEST_IMPORTER" "$dir/key-custody-session.sh"
 
 require "environment: database-development" "$workflow"
 require "workflow_dispatch:" "$workflow"
@@ -63,9 +64,9 @@ reject "az deployment" "$workflow"
 reject "import-app-key" "$workflow"
 reject "generate-jitconfig" "$workflow"
 reject "continue-on-error" "$workflow"
-test "$(rg -c '^\s*- uses:' "$workflow")" = 3
-test "$(rg -c 'actions/checkout@11d5960a326750d5838078e36cf38b85af677262' "$workflow")" = 2
-test "$(rg -c 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' "$workflow")" = 1
+test "$(grep -Ec '^[[:space:]]*- uses:' "$workflow")" = 3
+test "$(grep -Fc 'actions/checkout@11d5960a326750d5838078e36cf38b85af677262' "$workflow")" = 2
+test "$(grep -Fc 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' "$workflow")" = 1
 
 for prohibited in roleAssignments publicIPAddress networkSecurityGroups virtualMachines Microsoft.Sql firewallRules snet-devtools; do reject "$prohibited" "$dir/main.bicep"; done
 for prohibited in jitConfiguration appPrivateKey appJwt installationToken azureToken authorizationHeader rawClaims rawResponses vmBootstrapContent packageUrl connectionString arbitraryLabels; do jq -e --arg p "$prohibited" '.prohibitedMaterial|index($p)!=null' "$dir/contracts.json" >/dev/null; done
