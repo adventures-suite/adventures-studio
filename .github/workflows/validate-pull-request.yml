@@ -37,6 +37,20 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
+      - name: Setup Node.js for inert broker validation
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24.5.0"
+          cache: npm
+          cache-dependency-path: infrastructure/runner-registration-broker/package-lock.json
+
+      - name: Restore and validate inert broker foundation and custody boundary
+        shell: bash
+        run: |
+          npm ci --ignore-scripts --prefix infrastructure/runner-registration-broker
+          az bicep install --version v0.46.1
+          infrastructure/runner-registration-broker/policy-tests.sh
+
       - name: Restore
         run: dotnet restore TheSimontonAdventures.slnx
 
@@ -104,3 +118,4 @@ jobs:
             echo "::error::A vulnerable NuGet dependency was detected."
             exit 1
           fi
+          npm audit --audit-level=high --omit=dev --prefix infrastructure/runner-registration-broker
