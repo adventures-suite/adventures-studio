@@ -18,11 +18,7 @@ jq -e --arg source "$EXPECTED_SOURCE_SHA" --arg package "$actual_sha" \
   and .toolchain=={dotnetSdkVersion:"10.0.302",runtimeIdentifier:"linux-x64",selfContained:true}
   and (.dependencyLocks|length)==6 and .attestation.required==true
 ' "$evidence" >/dev/null
-while IFS=$'\t' read -r path expected; do
-  [[ "$path" =~ ^src/[A-Za-z0-9.]+/packages\.linux-x64\.lock\.json$ ]]
-  [[ "$expected" =~ ^[0-9a-f]{64}$ ]]
-  test "$(sha256sum "$path" | cut -d' ' -f1)" = "$expected"
-done < <(jq -r '.dependencyLocks[] | [.path,.sha256] | @tsv' "$evidence")
+node .github/scripts/migration-package-evidence.mjs --verify-locks "$evidence" --root
 gh attestation verify "$package" --repo adventures-suite/adventures-studio \
   --source-ref refs/heads/main --source-digest "$EXPECTED_SOURCE_SHA" >/dev/null 2>&1
 install -d -m 0700 "$VERIFIED_DIRECTORY"
