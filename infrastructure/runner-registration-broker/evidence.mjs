@@ -1,0 +1,4 @@
+import { sha256 } from './broker.mjs';
+const forbidden=/token|secret|key|authorization|claim|response|connection|package|jit|bootstrap/i;
+export function assertEvidence(value) { for(const key of Object.keys(value)) if(forbidden.test(key)) throw new Error('evidence-field-denied'); const json=JSON.stringify(value); if(json.length>4096) throw new Error('evidence-bounds'); return value; }
+export class EvidenceMapper { closed(binding,runnerId,deleteAttempts,residue) { return assertEvidence({schemaVersion:1,repositoryId:1317655952,ownerId:316268438,sourceSha:binding.sourceSha,operationHash:sha256(binding.operationId),purpose:binding.purpose,labelHash:sha256(binding.labels.join('\n')),runnerId,runnerNameHash:sha256(binding.runnerName),appId:null,installationId:null,state:'Closed',deleteAttempts,exactResidueCount:residue,deadlineUtc:binding.deadlineUtc,result:'success'}); } }

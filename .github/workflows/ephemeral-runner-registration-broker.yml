@@ -1,0 +1,45 @@
+name: Operate Ephemeral Runner Registration Broker
+on:
+  workflow_dispatch:
+    inputs:
+      approved_source_sha: { description: Exact approved protected-main SHA, required: true, type: string }
+      broker_workflow_sha256: { description: Exact approved workflow SHA-256, required: true, type: string }
+      operation_id: { description: Exact approved operation ID, required: true, type: string }
+      operation_manifest_sha256: { description: Exact approved operation manifest SHA-256, required: true, type: string }
+      broker_hostname: { description: Exact future audited broker hostname, required: true, type: string }
+      github_app_id: { description: Exact future audited GitHub App ID, required: true, type: string }
+      github_installation_id: { description: Exact future audited selected-repository installation ID, required: true, type: string }
+      runner_group_id: { description: Exact future audited repository runner-group ID, required: true, type: string }
+permissions: { contents: read }
+concurrency: { group: "runner-registration-${{ inputs.operation_id }}", cancel-in-progress: false }
+jobs:
+  authorize-only:
+    environment: database-development
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions: { contents: read, id-token: write }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: "${{ inputs.approved_source_sha }}", persist-credentials: false }
+      - name: Deliberately stop before Azure login, deployment, arming, or JIT generation
+        shell: bash
+        run: |
+          set -euo pipefail
+          infrastructure/runner-registration-broker/policy-tests.sh
+          echo '::error::Future broker resources, identity bindings, checksums, and separate live approval are intentionally absent.'
+          exit 1
+  independent-cleanup:
+    if: always()
+    needs: authorize-only
+    environment: database-development
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions: { contents: read, id-token: write }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: "${{ inputs.approved_source_sha }}", persist-credentials: false }
+      - name: Deliberately stop before broker cleanup or residue readback
+        run: |
+          echo '::notice::No registration can exist while authorize-only is guarded.'
+          echo '::error::Independent cleanup endpoint and exact approval are intentionally absent.'
+          exit 1

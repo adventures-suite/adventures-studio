@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "repository": { "id": 1317655952, "ownerId": 316268438, "name": "adventures-suite/adventures-studio" },
+  "states": ["Approved", "Issuing", "Issued", "Cleaning", "Closed", "Failed"],
+  "transitions": {
+    "Approved": ["Issuing", "Failed"],
+    "Issuing": ["Issued", "Failed"],
+    "Issued": ["Cleaning", "Failed"],
+    "Cleaning": ["Closed", "Failed"],
+    "Closed": [],
+    "Failed": []
+  },
+  "maximumLifetimeMinutes": 45,
+  "workDirectory": "_work",
+  "githubApp": {
+    "repositorySelection": "selected",
+    "repositoryPermissions": { "administration": "write" },
+    "organizationPermissions": {},
+    "userPermissions": {},
+    "webhooks": false
+  },
+  "githubEndpoints": [
+    "POST /repos/{owner}/{repository}/actions/runners/generate-jitconfig",
+    "GET /repos/{owner}/{repository}/actions/runners",
+    "DELETE /repos/{owner}/{repository}/actions/runners/{runnerId}"
+  ],
+  "prohibitedGithubPrincipals": ["migrationUami", "sqlBootstrapUami", "human", "group"],
+  "prohibitedMaterial": ["jitConfiguration", "appPrivateKey", "appJwt", "installationToken", "azureToken", "authorizationHeader", "rawClaims", "rawResponses", "vmBootstrapContent", "packageUrl", "connectionString", "arbitraryLabels"]
+}

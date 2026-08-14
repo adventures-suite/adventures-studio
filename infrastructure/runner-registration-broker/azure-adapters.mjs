@@ -1,0 +1,17 @@
+export class AtomicOperationStore {
+  constructor(tableClient) { this.tableClient=tableClient; }
+  async arm(record) { return this.tableClient.conditionalInsert({partitionKey:'runner-registration',rowKey:record.operationId,state:'Approved',repositoryId:record.repositoryId,ownerId:record.ownerId,sourceSha:record.sourceSha,manifestHash:record.manifestHash,purpose:record.purpose,runnerNameHash:record.runnerNameHash,labelHash:record.labelHash,deadlineUtc:record.deadlineUtc,allowedFields:['state','repositoryId','ownerId','sourceSha','manifestHash','purpose','runnerNameHash','labelHash','deadlineUtc','updatedUtc']}); }
+  async compareExchange(operationId,expected,next) { return this.tableClient.conditionalUpdate({partitionKey:'runner-registration',rowKey:operationId,expectedState:expected,nextState:next,allowedFields:['state','updatedUtc','failureCode']}); }
+  async failIfCurrent(operationId,expected,failureCode) { return this.tableClient.conditionalUpdate({partitionKey:'runner-registration',rowKey:operationId,expectedState:expected,nextState:'Failed',failureCode,allowedFields:['state','updatedUtc','failureCode']}); }
+}
+export class ImmutableKeyVaultAppKeyLoader {
+  constructor(secretClient, secretResourceId) { if(!/^\/subscriptions\/[^/]+\/resourceGroups\/[^/]+\/providers\/Microsoft\.KeyVault\/vaults\/[^/]+\/secrets\/[^/]+\/[0-9a-f-]+$/i.test(secretResourceId)) throw new Error('immutable-secret-version-required'); this.secretClient=secretClient; this.secretResourceId=secretResourceId; }
+  async use(callback,signal) { const key=await this.secretClient.getExactVersion(this.secretResourceId,signal); try { return await callback(key); } finally { key?.dispose?.(); } }
+}
+export function validateEntraClaims(claims, expected) { for(const k of ['iss','aud','tid','oid','azp']) if(typeof claims[k]!=='string'||claims[k]!==expected[k]) throw new Error('entra-claim-binding'); if(claims.oid===expected.migrationPrincipalId||claims.oid===expected.sqlBootstrapPrincipalId) throw new Error('github-authority-identity-prohibited'); }
+export function validateGitHubOidcClaims(claims, expected) { for(const k of ['iss','aud','repository_id','repository_owner_id','repository','ref','sha','workflow_ref','event_name','environment']) if(String(claims[k])!==String(expected[k])) throw new Error('github-oidc-binding'); if(claims.iss!=='https://token.actions.githubusercontent.com'||claims.event_name!=='workflow_dispatch'||claims.ref!=='refs/heads/main') throw new Error('github-oidc-policy'); }
+export class WorkloadTokenValidator {
+  constructor(signatureVerifier) { this.signatureVerifier=signatureVerifier; }
+  async validateGitHub(token,expected,signal) { const claims=await this.signatureVerifier.verify(token,{issuer:'https://token.actions.githubusercontent.com',audience:expected.aud,algorithms:['RS256'],maximumSeconds:600},signal); validateGitHubOidcClaims(claims,expected); return Object.freeze({repositoryId:String(claims.repository_id),ownerId:String(claims.repository_owner_id),sourceSha:claims.sha,workflowRef:claims.workflow_ref,environment:claims.environment}); }
+  async validateEntra(token,expected,signal) { const claims=await this.signatureVerifier.verify(token,{issuer:expected.iss,audience:expected.aud,algorithms:['RS256'],maximumSeconds:600},signal); validateEntraClaims(claims,expected); return Object.freeze({tenantId:claims.tid,principalId:claims.oid,clientId:claims.azp}); }
+}
