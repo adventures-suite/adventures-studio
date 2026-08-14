@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "operationId", "vaultId", "secretName", "immutableVersionUri", "githubKeyId", "publicKeyFingerprint", "startedUtc", "completedUtc"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "operationId": { "type": "string", "pattern": "^broker-key-[a-z0-9]{16,64}$", "maxLength": 75 },
+    "vaultId": { "type": "string", "pattern": "^/subscriptions/[0-9a-f-]{36}/resourceGroups/rg-adventures-suite-dev/providers/Microsoft\\.KeyVault/vaults/kv-adventures-runner-dev$", "maxLength": 256 },
+    "secretName": { "const": "github-app-4590229-private-key" },
+    "immutableVersionUri": { "type": "string", "pattern": "^https://kv-adventures-runner-dev\\.vault\\.azure\\.net/secrets/github-app-4590229-private-key/[0-9a-f]{32}$", "maxLength": 256 },
+    "githubKeyId": { "type": "string", "pattern": "^[0-9]{1,20}$", "maxLength": 20 },
+    "publicKeyFingerprint": { "type": "string", "pattern": "^SHA256:[A-Za-z0-9_-]{43}$", "maxLength": 50 },
+    "startedUtc": { "type": "string", "format": "date-time", "maxLength": 32 },
+    "completedUtc": { "type": "string", "format": "date-time", "maxLength": 32 }
+  }
+}

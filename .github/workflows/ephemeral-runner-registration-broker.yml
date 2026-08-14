@@ -21,6 +21,15 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with: { ref: "${{ inputs.approved_source_sha }}", persist-credentials: false }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24.5.0"
+          cache: npm
+          cache-dependency-path: infrastructure/runner-registration-broker/package-lock.json
+      - name: Restore inert broker validation tools
+        run: |
+          npm ci --ignore-scripts --prefix infrastructure/runner-registration-broker
+          az bicep install --version v0.46.1
       - name: Deliberately stop before Azure login, deployment, arming, or JIT generation
         shell: bash
         run: |

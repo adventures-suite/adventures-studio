@@ -22,6 +22,11 @@ SQL, or execute DbUp.
 
 The runner uses `--ephemeral --disableupdate`, one operation label, and a short-lived token never placed in VM `customData`, written, or logged. It authenticates its exact UAMI to a future broker, exchanges the one-use approval nonce in memory, and unsets the returned token immediately after configuration. The approved broker hostname must exactly match the HTTPS URL and is added to the guest allowlist; it is intentionally unresolved in this correction. Independent cleanup calls the broker to revoke/delete any registration without VM contact. Ordinary `GITHUB_TOKEN` cannot mint registration tokens, so the workflow unconditionally fails until that OIDC/managed-identity broker and cleanup identity pass a later review. No PAT, client secret, GitHub App key, runner token, or signed package URL is added.
 
+The broker foundation and fictional-key custody importer are repository
+definitions only. Foundation provisioning, identity readback, data-plane
+assignments, real-key custody, App installation, broker deployment, operation
+arming, runner provisioning, and cleanup remain separate approvals.
+
 Artifact retrieval must bind repository/organization IDs, run/artifact IDs, protected SHA, package/catalog checksums, evidence, and SLSA provenance. Storage uses 0700/`umask 077`; cleanup removes registration, VM, NIC, disk, subnet, NSG, files, later temporary assignments, and tagged residue.
 
 No automatic retry is allowed. Ambiguity, timeout, cancellation, runner loss, artifact/SQL failure, missing evidence, or residue stops the boundary. The action catalog is review input, not a role; broad Contributor, assignment writes, public IP, VNet/private-link/DNS/SQL mutation are excluded.

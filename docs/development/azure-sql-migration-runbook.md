@@ -3,8 +3,10 @@
 **Status:** Design-only; execution remains blocked
 
 The future one-job registration prerequisite is specified in
-`docs/architecture/ephemeral-runner-registration-broker.md`. Its repository
-artifacts create no GitHub App, broker, runner, token, assignment, or
+`docs/architecture/ephemeral-runner-registration-broker.md`. Its dedicated
+scale-to-zero foundation and fictional-key custody importer are inert
+repository artifacts. They create no GitHub App, broker, runner, token,
+assignment, or
 registration; live operation and zero-residue readback require separate exact
 approvals.
 
