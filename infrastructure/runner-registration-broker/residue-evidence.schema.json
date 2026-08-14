@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion","operationId","sourceSha","checkedUtc","liveResourcesAbsent","vaultDisposition","roleAssignmentsRemoved","assignmentEvidenceSha256","result"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "operationId": { "type": "string", "pattern": "^broker-foundation-cleanup-[a-z0-9]{16,64}$" },
+    "sourceSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "checkedUtc": { "type": "string", "format": "date-time", "maxLength": 32 },
+    "liveResourcesAbsent": { "const": true },
+    "vaultDisposition": { "const": "SoftDeletedRetained" },
+    "roleAssignmentsRemoved": { "const": true },
+    "assignmentEvidenceSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "result": { "const": "Clean" }
+  },
+  "maxProperties": 9
+}

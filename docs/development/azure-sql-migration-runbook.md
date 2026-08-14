@@ -105,6 +105,26 @@ ID, identity IDs, server, database, and private endpoint, then fails before
 Azure login. A baseline dispatch and any later bootstrap dispatch require
 separate approval packets and independent cleanup and residue proof.
 
+### Broker foundation authority boundary
+
+The broker foundation uses dedicated future provisioner, cleanup, and residue
+reader identities documented in
+`docs/architecture/ephemeral-runner-registration-broker.md`. Do not reuse any
+migration, SQL-bootstrap, application, human, or group identity. The
+provisioner receives only create/reconcile actions for reviewed foundation
+types and receives no delete or authorization authority.
+
+Independent cleanup receives its fixed cleanup role only at each exact
+post-deployment broker resource ID, never at resource-group or subscription
+scope. Cleanup is sequential, zero-retry, and stops after the first failed or
+ambiguous operation. It does not roll back or purge the protected Key Vault. A
+distinct type-limited reader and separate RBAC assignment inventory are
+mandatory before evidence may report clean residue.
+
+The repository templates and manual workflow are inert. They do not create an
+identity, role, assignment, resource, FIC, credential, or runner. Each live
+step requires its own exact-SHA/checksum approval and post-operation readback.
+
 The proposed VM uses existing UAMI `id-adventures-suite-migrate-job-dev`
 (object ID `ffc9a4bd-67c4-44af-82dc-b7f663f8bea5`, client ID
 `d0da8236-91dc-4454-8a3d-19d08a406e5d`). Repository text never substitutes for

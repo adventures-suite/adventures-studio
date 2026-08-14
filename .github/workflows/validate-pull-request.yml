@@ -50,6 +50,7 @@ jobs:
           npm ci --ignore-scripts --prefix infrastructure/runner-registration-broker
           az bicep install --version v0.46.1
           infrastructure/runner-registration-broker/policy-tests.sh
+          infrastructure/runner-registration-broker/authority-policy-tests.sh
 
       - name: Restore
         run: dotnet restore TheSimontonAdventures.slnx

@@ -117,6 +117,46 @@ These boundaries cannot be combined:
 
 No automatic retry or destructive rollback exists.
 
+## Foundation provisioning and independent cleanup authority
+
+The inert authority design fixes three future workload identity names while
+leaving every tenant, subscription, resource-group, region, principal, client,
+resource, and assignment ID as a mandatory checksum-bound live input without
+a repository default:
+
+- `id-adventures-suite-runner-broker-foundation-deployer-dev`;
+- `id-adventures-suite-runner-broker-foundation-cleanup-dev`; and
+- `id-adventures-suite-runner-broker-foundation-residue-reader-dev`.
+
+Their fixed custom-role UUIDs are respectively
+`36895920-b36b-4b0c-8a6a-6762164de71e`,
+`927117fa-ab5d-42a2-b39e-762663171fa4`, and
+`eff3d13d-aeac-4b96-94f8-9c03a1ceee69`. Repository catalogs are the authority
+for exact actions. None includes a data action, authorization write, identity
+write, credential operation, account-key read, secret operation, or broad
+Contributor/Owner authority.
+
+Azure RBAC can enforce the independent cleanup boundary because the cleanup
+role is assigned only after foundation readback and separately at each exact
+immutable resource ID. It is never assigned at subscription or resource-group
+scope. The role contains read/delete actions only for broker resource types.
+It cannot create, update, purge, grant, or delete a sibling resource.
+
+Exact-resource assignments disappear as their resources are deleted, so the
+cleanup identity cannot prove its own residue. The distinct residue reader has
+type-limited read actions at the separately approved resource-group scope and
+no writes. A separately authorized RBAC actor removes surviving provisioner and
+residue-reader assignments and supplies bounded zero-assignment readback. The
+final verifier requires both live-resource absence and that assignment
+evidence. Key Vault purge protection is preserved: cleanup deletes the live
+vault but classifies the recoverable object as `SoftDeletedRetained`; it never
+purges or falsely claims total object absence.
+
+Identity creation, role-definition creation, assignment, foundation
+provisioning, cleanup, assignment removal, and residue verification are
+separate approval boundaries. `broker-foundation-authority.yml` is manual and
+Environment-gated but deliberately fails before Azure login or mutation.
+
 ## Rotation, emergency response, and cost
 
 Rotation creates a new GitHub key and immutable Key Vault version, validates it

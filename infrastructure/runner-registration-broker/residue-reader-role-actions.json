@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "name": "AdventuresSuite Runner Broker Foundation Residue Reader",
+  "roleUuid": "eff3d13d-aeac-4b96-94f8-9c03a1ceee69",
+  "assignmentScope": "approved-resource-group-id-input",
+  "actions": [
+    "Microsoft.Network/virtualNetworks/read",
+    "Microsoft.Network/virtualNetworks/subnets/read",
+    "Microsoft.Network/privateEndpoints/read",
+    "Microsoft.Network/privateEndpoints/privateDnsZoneGroups/read",
+    "Microsoft.Network/privateDnsZones/read",
+    "Microsoft.Network/privateDnsZones/virtualNetworkLinks/read",
+    "Microsoft.Storage/storageAccounts/read",
+    "Microsoft.KeyVault/vaults/read",
+    "Microsoft.OperationalInsights/workspaces/read",
+    "Microsoft.Insights/components/read",
+    "Microsoft.Web/serverfarms/read",
+    "Microsoft.Web/sites/read"
+  ],
+  "notActions": [],
+  "dataActions": [],
+  "notDataActions": []
+}
