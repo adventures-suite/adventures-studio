@@ -85,6 +85,18 @@ schema ownership, role administration, schema creation, journal
 only their separately verified application DML grants and denials. Live
 bootstrap remains a later, exact approval boundary.
 
+The repository-only administrator path is documented at
+`docs/architecture/private-sql-administrator-operation.md`. Its mandatory
+first mode is a statically allowlisted metadata baseline using the dedicated
+`id-adventures-suite-sql-bootstrap-dev` UAMI and direct contained principal
+`AdventuresSuiteSqlBootstrapDev`; neither exists or has authority merely
+because the design is present. The identity is never the migration UAMI and
+never gains authority through an Entra group. The inert workflow binds exact
+repository and organization IDs, protected SHA, workflow checksum, operation
+ID, identity IDs, server, database, and private endpoint, then fails before
+Azure login. A baseline dispatch and any later bootstrap dispatch require
+separate approval packets and independent cleanup and residue proof.
+
 The proposed VM uses existing UAMI `id-adventures-suite-migrate-job-dev`
 (object ID `ffc9a4bd-67c4-44af-82dc-b7f663f8bea5`, client ID
 `d0da8236-91dc-4454-8a3d-19d08a406e5d`). Repository text never substitutes for

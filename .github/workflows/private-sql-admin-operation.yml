@@ -1,0 +1,76 @@
+name: Operate Private SQL Administrator Boundary
+on:
+  workflow_dispatch:
+    inputs:
+      operation_mode: { description: Exact mode; baseline must precede any separately approved bootstrap, required: true, type: choice, options: [baseline, bootstrap] }
+      approved_source_sha: { description: Exact approved protected-main SHA, required: true, type: string }
+      workflow_sha256: { description: Exact reviewed workflow SHA-256, required: true, type: string }
+      operation_id: { description: Unique reviewed operation ID, required: true, type: string }
+      package_run_id: { description: Exact protected-main package workflow run ID; binding only, required: true, type: string }
+      package_artifact_id: { description: Exact package artifact ID; no download is implemented, required: true, type: string }
+      package_sha256: { description: Exact attested package SHA-256; binding only, required: true, type: string }
+      catalog_sha256: { description: Exact ordered migration catalog SHA-256; binding only, required: true, type: string }
+      administrator_identity_resource_id: { description: Exact immutable dedicated administrator UAMI resource ID, required: true, type: string }
+      administrator_client_id: { description: Exact dedicated administrator UAMI client ID, required: true, type: string }
+      administrator_principal_id: { description: Exact dedicated administrator UAMI principal ID, required: true, type: string }
+      migration_identity_resource_id: { description: Exact migration UAMI resource ID for inequality proof, required: true, type: string }
+      sql_server_resource_id: { description: Exact Azure SQL server resource ID, required: true, type: string }
+      sql_database_name: { description: Exact database name, required: true, type: string }
+      sql_private_endpoint_resource_id: { description: Exact private endpoint resource ID, required: true, type: string }
+      bootstrap_approval_sha256: { description: Separate bootstrap packet SHA-256; must be empty for baseline, required: false, type: string }
+permissions: { contents: read }
+concurrency: { group: "private-sql-admin-${{ inputs.operation_id }}", cancel-in-progress: false }
+jobs:
+  authorize-operation:
+    environment: database-development
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions: { contents: read }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: "${{ inputs.approved_source_sha }}" }
+      - name: Validate immutable operation binding locally
+        env:
+          OPERATION_MODE: "${{ inputs.operation_mode }}"
+          REPOSITORY_ID: "${{ github.repository_id }}"
+          ORGANIZATION_ID: "316268438"
+          SOURCE_SHA: "${{ inputs.approved_source_sha }}"
+          CURRENT_PROTECTED_MAIN_SHA: "${{ github.sha }}"
+          WORKFLOW_SHA256: "${{ inputs.workflow_sha256 }}"
+          OPERATION_ID: "${{ inputs.operation_id }}"
+          PACKAGE_RUN_ID: "${{ inputs.package_run_id }}"
+          PACKAGE_ARTIFACT_ID: "${{ inputs.package_artifact_id }}"
+          PACKAGE_SHA256: "${{ inputs.package_sha256 }}"
+          CATALOG_SHA256: "${{ inputs.catalog_sha256 }}"
+          ADMINISTRATOR_IDENTITY_RESOURCE_ID: "${{ inputs.administrator_identity_resource_id }}"
+          ADMINISTRATOR_CLIENT_ID: "${{ inputs.administrator_client_id }}"
+          ADMINISTRATOR_PRINCIPAL_ID: "${{ inputs.administrator_principal_id }}"
+          MIGRATION_IDENTITY_RESOURCE_ID: "${{ inputs.migration_identity_resource_id }}"
+          SQL_SERVER_RESOURCE_ID: "${{ inputs.sql_server_resource_id }}"
+          SQL_DATABASE_NAME: "${{ inputs.sql_database_name }}"
+          SQL_PRIVATE_ENDPOINT_RESOURCE_ID: "${{ inputs.sql_private_endpoint_resource_id }}"
+          BOOTSTRAP_APPROVAL_SHA256: "${{ inputs.bootstrap_approval_sha256 }}"
+        run: infrastructure/private-sql-admin-operation/validate-operation.sh
+      - name: Match the reviewed workflow checksum
+        env:
+          EXPECTED_WORKFLOW_SHA256: "${{ inputs.workflow_sha256 }}"
+        run: test "$(sha256sum .github/workflows/private-sql-admin-operation.yml | cut -d' ' -f1)" = "$EXPECTED_WORKFLOW_SHA256"
+      - name: Fail closed before Azure login, provisioning, or SQL
+        run: |
+          echo '::error::Administrator identity, registration broker, provisioning authority, cleanup authority, and SQL authority are separately unapproved.'
+          exit 1
+  independent-cleanup:
+    if: always()
+    needs: authorize-operation
+    environment: database-development
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions: { contents: read }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: "${{ inputs.approved_source_sha }}" }
+      - name: Fail closed while no resources can exist
+        run: |
+          echo '::notice::The authorization guard prevents provisioning and SQL access.'
+          echo '::error::Independent cleanup identity and residue-read authority remain separately unapproved.'
+          exit 1
