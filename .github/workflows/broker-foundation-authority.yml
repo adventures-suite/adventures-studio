@@ -1,0 +1,40 @@
+name: Prepare Broker Foundation Authority
+on:
+  workflow_dispatch:
+    inputs:
+      approved_source_sha: { description: Exact approved protected-main SHA, required: true, type: string }
+      identities_template_sha256: { description: Exact approved identity-template SHA-256, required: true, type: string }
+      roles_template_sha256: { description: Exact approved role-template SHA-256, required: true, type: string }
+      resource_catalog_sha256: { description: Exact approved 23-resource catalog SHA-256, required: true, type: string }
+      partial_inventory_sha256: { description: Exact residue-reader inventory SHA-256, required: true, type: string }
+      cleanup_assignment_plan_sha256: { description: Exact validated subset assignment-plan SHA-256, required: true, type: string }
+permissions: { contents: read }
+concurrency: { group: broker-foundation-authority, cancel-in-progress: false }
+jobs:
+  validate-only:
+    environment: database-development
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions: { contents: read, id-token: write }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: "${{ inputs.approved_source_sha }}", persist-credentials: false }
+      - name: Deliberately stop before Azure login or authority mutation
+        run: |
+          echo '::error::Identity creation, role definition, assignment, provisioning, and cleanup require separate exact approvals.'
+          exit 1
+  cleanup-guard:
+    if: always()
+    needs: validate-only
+    environment: database-development
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions: { contents: read, id-token: write }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: "${{ inputs.approved_source_sha }}", persist-credentials: false }
+      - name: Deliberately stop before cleanup or residue readback
+        run: |
+          echo '::notice::No authority or resource can exist while validate-only is guarded.'
+          echo '::error::Exact-resource cleanup assignments and independent residue authority are intentionally absent.'
+          exit 1

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion","operationId","catalogSha256","inventorySha256","cleanupPrincipalId","cleanupRoleDefinitionId","assignments"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "operationId": { "type": "string", "pattern": "^broker-foundation-assign-cleanup-[a-z0-9]{16,64}$" },
+    "catalogSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "inventorySha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "cleanupPrincipalId": { "type": "string", "format": "uuid" },
+    "cleanupRoleDefinitionId": { "type": "string", "maxLength": 256 },
+    "assignments": {
+      "type": "array", "maxItems": 13,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["scope","principalId","roleDefinitionId","assignmentId"],
+        "properties": {
+          "scope": { "type": "string", "maxLength": 512 },
+          "principalId": { "type": "string", "format": "uuid" },
+          "roleDefinitionId": { "type": "string", "maxLength": 256 },
+          "assignmentId": { "type": "string", "maxLength": 640 }
+        }
+      }
+    }
+  }
+}

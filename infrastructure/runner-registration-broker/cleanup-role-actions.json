@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "name": "AdventuresSuite Runner Broker Foundation Cleanup",
+  "roleUuid": "927117fa-ab5d-42a2-b39e-762663171fa4",
+  "assignmentScope": "each-exact-post-deployment-resource-id-input",
+  "actions": [
+    "Microsoft.Network/virtualNetworks/subnets/read",
+    "Microsoft.Network/virtualNetworks/subnets/delete",
+    "Microsoft.Network/privateEndpoints/read",
+    "Microsoft.Network/privateEndpoints/delete",
+    "Microsoft.Network/privateEndpoints/privateDnsZoneGroups/read",
+    "Microsoft.Network/privateEndpoints/privateDnsZoneGroups/delete",
+    "Microsoft.Network/privateDnsZones/read",
+    "Microsoft.Network/privateDnsZones/delete",
+    "Microsoft.Network/privateDnsZones/virtualNetworkLinks/read",
+    "Microsoft.Network/privateDnsZones/virtualNetworkLinks/delete",
+    "Microsoft.Storage/storageAccounts/read",
+    "Microsoft.Storage/storageAccounts/delete",
+    "Microsoft.KeyVault/vaults/read",
+    "Microsoft.KeyVault/vaults/delete",
+    "Microsoft.OperationalInsights/workspaces/read",
+    "Microsoft.OperationalInsights/workspaces/delete",
+    "Microsoft.Insights/components/read",
+    "Microsoft.Insights/components/delete",
+    "Microsoft.Web/serverfarms/read",
+    "Microsoft.Web/serverfarms/delete",
+    "Microsoft.Web/sites/read",
+    "Microsoft.Web/sites/delete"
+  ],
+  "notActions": [],
+  "dataActions": [],
+  "notDataActions": []
+}
