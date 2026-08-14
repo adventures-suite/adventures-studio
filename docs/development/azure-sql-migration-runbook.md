@@ -73,15 +73,27 @@ authenticated.
 
 The manual hosted-runner workflow is inert until separately approved GitHub and
 Azure configuration supplies its exact runner group, label, delegated subnet,
-network settings, and readiness variable. Environment approval occurs before
+and network settings. Environment approval occurs before
 the job is sent to the runner. Proof-only validates federation, package,
 attestation, private DNS, and TCP 1433 without SQL. Migration is a distinct
 operation with no automatic retry.
 
 The runner group is limited to this repository and workflow, with concurrency
-one. Keep the $2 monthly Actions spending stop. The NSG denies inbound traffic
-and filters addresses and ports; it cannot filter FQDNs. NAT Gateway, Azure
-Firewall, or any paid egress service is outside this decision.
+one. Keep the $2 monthly Actions spending stop. Deploy the checksum-bound
+`infrastructure/github-hosted-private-migration-network/main.bicep` only under
+a separate exact-SHA approval. Its exact existing-VNet binding creates only the
+dedicated `10.40.3.0/27` subnet, dedicated NSG, and
+`GitHub.Network/networkSettings@2024-04-02` for organization business ID
+`316268438`. Validate all six outputs, including the authoritative
+`tags.GitHubId` network-configuration ID, before configuring GitHub.
+
+The NSG denies inbound traffic; allows only Azure DNS TCP/UDP 53, the fixed SQL
+private endpoint on TCP 1433, and Internet TCP 443; and denies other outbound
+traffic. The HTTPS destination is broad because an NSG cannot filter FQDNs.
+GitHub recommends separately managed DNS/domain controls and is retiring its
+legacy static-IP template. NAT Gateway, Azure Firewall, DNS filtering, or any
+other paid egress service is outside this decision and requires separate
+approval.
 
 The repository-defined SQL boundary separates three authorities. An Entra
 administrator creates and owns the `planning`, `auth`, and `audit` schemas,
