@@ -421,8 +421,19 @@ static bool IsShowcaseRequest(PathString path) =>
     || path.StartsWithSegments("/_content")
     || path.StartsWithSegments("/images")
     || path.StartsWithSegments("/lib")
-    || path == "/app.css"
-    || path == "/TheSimontonAdventures.Web.styles.css";
+    || path == "/favicon.png"
+    || IsShowcaseStylesheet(path);
+
+static bool IsShowcaseStylesheet(PathString path)
+{
+    var value = path.Value;
+    return value is not null
+        && value.EndsWith(".css", StringComparison.Ordinal)
+        && (value.StartsWith("/app.", StringComparison.Ordinal)
+            || value.StartsWith(
+                "/TheSimontonAdventures.Web.",
+                StringComparison.Ordinal));
+}
 
 /// <summary>
 /// Exposes the top-level application entry point to the integration-test host.
