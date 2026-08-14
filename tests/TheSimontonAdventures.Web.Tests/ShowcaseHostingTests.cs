@@ -46,6 +46,38 @@ public sealed class ShowcaseHostingTests
         Assert.Equal("/showcase", root.Headers.Location?.OriginalString);
     }
 
+    /// <summary>Ensures the public story showcase cannot expose private workspace routes.</summary>
+    [Fact]
+    public async Task PublicShowcaseHost_ServesCreatorStoryAndDeniesPrivateRoutes()
+    {
+        await using var factory = new PublicShowcaseWebApplicationFactory();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false,
+            BaseAddress = new Uri("https://simonton-showcase.example")
+        });
+
+        using var home = await client.GetAsync("/");
+        var html = await home.Content.ReadAsStringAsync();
+        using var adventure = await client.GetAsync(
+            "/volumes/italy-greece-croatia");
+        using var workspace = await client.GetAsync(
+            "/workspace/creators/creator_tsa_01/plans");
+        using var authentication = await client.GetAsync(
+            "/authentication/sign-in");
+        using var plannerShowcase = await client.GetAsync("/showcase");
+
+        Assert.Equal(HttpStatusCode.OK, home.StatusCode);
+        Assert.Contains("The Simonton Adventures", html);
+        Assert.Contains(
+            "Transforming inspiration into unforgettable experiences.",
+            html);
+        Assert.Equal(HttpStatusCode.OK, adventure.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, workspace.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, authentication.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, plannerShowcase.StatusCode);
+    }
+
     /// <summary>Hosts the real application with production showcase configuration disabled.</summary>
     private sealed class ProductionWebApplicationFactory : WebApplicationFactory<Program>
     {
@@ -64,6 +96,21 @@ public sealed class ShowcaseHostingTests
         {
             builder.UseEnvironment("Showcase");
             builder.UseSetting("WEBSITE_HOSTNAME", "showcase.example");
+            builder.UseSetting(
+                "CreatorResolution:AzureDefaultCreatorId",
+                "creator_tsa_01");
+        }
+    }
+
+    /// <summary>Hosts the approved public Creator story without private capabilities.</summary>
+    private sealed class PublicShowcaseWebApplicationFactory : WebApplicationFactory<Program>
+    {
+        protected override void ConfigureWebHost(IWebHostBuilder builder)
+        {
+            builder.UseEnvironment("PublicShowcase");
+            builder.UseSetting(
+                "WEBSITE_HOSTNAME",
+                "simonton-showcase.example");
             builder.UseSetting(
                 "CreatorResolution:AzureDefaultCreatorId",
                 "creator_tsa_01");

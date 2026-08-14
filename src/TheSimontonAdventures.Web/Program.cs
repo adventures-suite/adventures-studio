@@ -24,6 +24,8 @@ builder.Services.AddHttpContextAccessor();
 // fictional JSON fixture. It never changes or bypasses private authentication.
 var showcaseRequested = builder.Configuration.GetValue<bool>("Showcase:Enabled");
 var isShowcaseEnvironment = builder.Environment.IsEnvironment("Showcase");
+var isPublicShowcaseEnvironment =
+    builder.Environment.IsEnvironment("PublicShowcase");
 if (showcaseRequested
     && !builder.Environment.IsDevelopment()
     && !isShowcaseEnvironment)
@@ -191,6 +193,22 @@ app.UseMiddleware<BrowserSecurityHeadersMiddleware>();
 // Resolve the explicitly approved request host before status-page re-execution,
 // static assets, endpoints, or shared UI can expose Creator-owned content.
 app.UseMiddleware<CreatorResolutionMiddleware>();
+
+// The Simonton Adventures public showcase serves the approved public Creator
+// story and local Resources without activating any private workspace surface.
+if (isPublicShowcaseEnvironment)
+{
+    app.Use(async (context, next) =>
+    {
+        if (IsPrivateShowcaseRoute(context.Request.Path))
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            return;
+        }
+
+        await next(context);
+    });
+}
 
 // The remotely hosted showcase is a deliberately narrow public surface. It
 // shares no private workspace route and serves only the fictional experience,
@@ -424,6 +442,11 @@ static bool IsShowcaseRequest(PathString path) =>
     || path == "/favicon.png"
     || IsShowcaseStylesheet(path)
     || IsShowcaseReconnectModule(path);
+
+static bool IsPrivateShowcaseRoute(PathString path) =>
+    path.StartsWithSegments("/workspace")
+    || path.StartsWithSegments("/authentication")
+    || path.StartsWithSegments("/showcase");
 
 static bool IsShowcaseStylesheet(PathString path)
 {
