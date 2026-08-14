@@ -129,7 +129,7 @@ test('Azure CLI prefix parsing rejects altered prefixes, whitespace variants, mu
   }
 });
 
-test('inventory shell runner accepts the exact Azure CLI stderr shape through a stubbed az executable',()=>{
+function runInventoryShell(mode) {
   const directory=mkdtempSync(join(tmpdir(),'broker-azure-cli-stub-'));
   try {
     const stubPath=join(directory,'az');
@@ -142,19 +142,43 @@ const catalog = JSON.parse(readFileSync(process.env.BROKER_TEST_CATALOG,'utf8'))
 const entry = catalog.resources.find(candidate => candidate.id === args[idIndex + 1]);
 if (!entry) process.exit(65);
 const catalogIds = new Set(catalog.resources.map(candidate => candidate.id.toLowerCase()));
-const code = entry.parentId !== null && catalogIds.has(entry.parentId.toLowerCase()) ? 'ParentResourceNotFound' : 'ResourceNotFound';
-process.stderr.write('ERROR: (' + code + ') sanitized-stubbed-live-shape\\n');
+const mode = process.env.BROKER_TEST_MODE;
+const child = entry.parentId !== null && catalogIds.has(entry.parentId.toLowerCase());
+const code = mode === 'not-found' ? 'NotFound' : mode === 'parent-chain' && child ? 'ParentResourceNotFound' : 'ResourceNotFound';
+if (mode === 'stdout-contamination') process.stdout.write('sensitive-stub-message');
+if (mode === 'altered-prefix') process.stderr.write('ERROR :(ResourceNotFound) sensitive-stub-message\\n');
+else if (mode === 'leading-whitespace') process.stderr.write(' ERROR: (ResourceNotFound) sensitive-stub-message\\n');
+else if (mode === 'multiple-records') process.stderr.write('ERROR: (ResourceNotFound) sensitive-stub-message\\nERROR: (ResourceNotFound) second\\n');
+else if (mode === 'competing-codes') process.stderr.write('ERROR: (ResourceNotFound) sensitive-stub-message (NotFound)\\n');
+else if (mode === 'oversized') process.stderr.write('ERROR: (ResourceNotFound) ' + 'sensitive-stub-message'.repeat(300) + '\\n');
+else if (mode === 'unexpected-code') process.stderr.write('ERROR: (AuthorizationFailed) sensitive-stub-message\\n');
+else process.stderr.write('ERROR: (' + code + ') sensitive-stub-message\\n');
 process.exit(3);
 `,{mode:0o700});
     const runner=fileURLToPath(new URL('./inventory-foundation-residue.sh',import.meta.url));
     const catalogPath=fileURLToPath(new URL('./foundation-resource-catalog.json',import.meta.url));
-    const execution=spawnSync('bash',[runner,catalogPath,catalogSha,'broker-foundation-inventory-0123456789abcdef','a'.repeat(40)],{encoding:'utf8',env:{...process.env,PATH:`${directory}:${process.env.PATH}`,BROKER_TEST_CATALOG:catalogPath}});
-    assert.equal(execution.status,0,execution.stderr);
-    assert.equal(execution.stderr,'');
-    const evidence=JSON.parse(execution.stdout);
-    assert.equal(evidence.result,'Verified');
-    assert.equal(evidence.entries.length,23);
-    assert.equal(evidence.entries.every(entry=>entry.state==='VerifiedAbsent'),true);
-    assert.equal(execution.stdout.includes('sanitized-stubbed-live-shape'),false);
+    return spawnSync('bash',[runner,catalogPath,catalogSha,'broker-foundation-inventory-0123456789abcdef','a'.repeat(40)],{encoding:'utf8',env:{...process.env,PATH:`${directory}:${process.env.PATH}`,BROKER_TEST_CATALOG:catalogPath,BROKER_TEST_MODE:mode}});
   } finally { rmSync(directory,{recursive:true,force:true}); }
+}
+
+test('inventory shell runner accepts exact prefixed ResourceNotFound and NotFound through stubbed az',()=>{
+  for(const mode of ['resource-not-found','not-found']){
+    const execution=runInventoryShell(mode); assert.equal(execution.status,0,`${mode}: ${execution.stderr}`); assert.equal(execution.stderr,'');
+    const evidence=JSON.parse(execution.stdout); assert.equal(evidence.result,'Verified'); assert.equal(evidence.entries.length,23); assert.equal(evidence.entries.every(entry=>entry.state==='VerifiedAbsent'),true);
+    assert.equal(execution.stdout.includes('sensitive-stub-message'),false);
+  }
+});
+
+test('inventory shell runner accepts exact child ParentResourceNotFound only after absent catalog parents',()=>{
+  const execution=runInventoryShell('parent-chain'); assert.equal(execution.status,0,execution.stderr); assert.equal(execution.stderr,'');
+  const evidence=JSON.parse(execution.stdout); assert.equal(evidence.result,'Verified'); assert.equal(evidence.entries.length,23); assert.equal(evidence.entries.every(entry=>entry.state==='VerifiedAbsent'),true);
+  assert.equal(execution.stdout.includes('sensitive-stub-message'),false);
+});
+
+test('inventory shell runner rejects contaminated or malformed stubbed az evidence without raw-message leakage',()=>{
+  for(const mode of ['stdout-contamination','altered-prefix','leading-whitespace','multiple-records','competing-codes','oversized','unexpected-code']){
+    const execution=runInventoryShell(mode); assert.equal(execution.status,1,mode); assert.equal(execution.stderr,'',mode);
+    const evidence=JSON.parse(execution.stdout); assert.equal(evidence.result,'Ambiguous',mode); assert.equal(evidence.entries.every(entry=>entry.state==='Ambiguous'),true,mode);
+    assert.equal(execution.stdout.includes('sensitive-stub-message'),false,mode);
+  }
 });
