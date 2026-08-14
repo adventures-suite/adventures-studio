@@ -34,14 +34,25 @@ internal static class MigrationIdentityValidator
         Guid expectedClientId,
         string expectedPrincipalName,
         string expectedServer,
-        string expectedDatabase)
+        string expectedDatabase,
+        MigrationCredentialMode credentialMode = MigrationCredentialMode.AzureManagedIdentity)
     {
         _ = ValidateWorkloadToken(token, expectedTenantId, expectedObjectId, expectedClientId,
             "https://database.windows.net/");
 
         var builder = new SqlConnectionStringBuilder(connectionString);
-        if (builder.Authentication != SqlAuthenticationMethod.ActiveDirectoryManagedIdentity
-            || !string.Equals(builder.UserID, expectedClientId.ToString(), StringComparison.OrdinalIgnoreCase)
+        var connectionIdentityValid = credentialMode switch
+        {
+            MigrationCredentialMode.AzureManagedIdentity =>
+                builder.Authentication == SqlAuthenticationMethod.ActiveDirectoryManagedIdentity
+                && string.Equals(builder.UserID, expectedClientId.ToString(), StringComparison.OrdinalIgnoreCase),
+            MigrationCredentialMode.GitHubOidcAzureCli =>
+                builder.Authentication == SqlAuthenticationMethod.NotSpecified
+                && string.IsNullOrEmpty(builder.UserID)
+                && string.IsNullOrEmpty(builder.Password),
+            _ => false
+        };
+        if (!connectionIdentityValid
             || !string.Equals(builder.InitialCatalog, expectedDatabase, StringComparison.Ordinal)
             || !ServerMatches(builder.DataSource, expectedServer))
             throw new InvalidOperationException("The migration connection target or identity is not approved.");

@@ -1,6 +1,8 @@
-# Ephemeral Runner Registration Broker
+# Superseded Ephemeral Runner Registration Broker
 
-**Status:** repository implementation complete; no live resources, authority, key, installation, or registration exists
+**Status: Superseded; do not deploy.** The custom GitHub App/JIT broker is not
+part of the selected GitHub-hosted VNet runner design. Its repository artifacts
+remain dormant and confer no authority.
 
 ## Purpose and authority boundary
 

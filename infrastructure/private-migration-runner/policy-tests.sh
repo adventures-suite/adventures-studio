@@ -1,14 +1,31 @@
 #!/usr/bin/env bash
 set -euo pipefail
-root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"; template="$root/infrastructure/private-migration-runner/main.bicep"; subnet="$root/infrastructure/private-migration-runner/subnet.bicep"; workflow="$root/.github/workflows/private-migration-runner.yml"; bootstrap="$root/infrastructure/private-migration-runner/bootstrap.sh"; cleanup="$root/infrastructure/private-migration-runner/cleanup.sh"; roles="$root/infrastructure/private-migration-runner/role-actions.json"
-require(){ rg -q --fixed-strings -- "$1" "$2"; }; reject(){ ! rg -q --fixed-strings -- "$1" "$2"; }
-require "10.40.3.0/27" "$subnet"; reject "snet-devtools" "$template"; reject "snet-devtools" "$subnet"; require "24.04.202608070" "$template"; require "Standard_B2als_v2" "$template"; require "StandardSSD_LRS" "$template"; require "diskSizeGB: 32" "$template"; require "deleteOption: 'Delete'" "$template"; reject "publicIPAddress" "$template"; reject "destinationPortRange: '22'" "$template"; reject "3389" "$template"; require "DenyAllInbound" "$template"; require "10.40.1.4/32" "$template"; require "migrationIdentityResourceId" "$template"; require "scope: resourceGroup(identityIdParts[2], identityIdParts[4])" "$template"; require "scope: resourceGroup(vnetIdParts[2], vnetIdParts[4])" "$template"; require "resolvedMigrationIdentityResourceId string = migrationIdentity.id" "$template"; require "ephemeralAdminSshPublicKey" "$template"; require "expiresAfterMinutes: '45'" "$template"
-require "--ephemeral" "$bootstrap"; require "--disableupdate" "$bootstrap"; require "RUNNER_DEADLINE_EPOCH" "$bootstrap"; require "umask 077" "$bootstrap"; require "gh attestation verify" "$root/infrastructure/private-migration-runner/verify-artifact.sh"; require "source-digest" "$root/infrastructure/private-migration-runner/verify-artifact.sh"; require 'find "$work_dir" -mindepth 1 -delete' "$bootstrap"
-reject 'RUNNER_REGISTRATION_TOKEN:?' "$bootstrap"; require "metadata/identity/oauth2/token" "$root/infrastructure/private-migration-runner/acquire-registration.sh"; require "-X DELETE" "$root/infrastructure/private-migration-runner/revoke-registration.sh"
-require "repository_id==1317655952" "$root/infrastructure/private-migration-runner/retrieve-artifact.sh"; require "expired==false" "$root/infrastructure/private-migration-runner/retrieve-artifact.sh"; require "policy drop" "$root/infrastructure/private-migration-runner/install-reviewed-egress-policy.sh"; require "169.254.169.254" "$root/infrastructure/private-migration-runner/install-reviewed-egress-policy.sh"; require '"$RUNNER_BROKER_HOST"' "$root/infrastructure/private-migration-runner/install-reviewed-egress-policy.sh"
-require "if: always()" "$workflow"; require "cancel-in-progress: false" "$workflow"; require "Fail closed until the reviewed registration broker exists" "$workflow"; reject "azure/login@" "$workflow"; reject "az deployment" "$workflow"; reject "gh run download" "$workflow"; reject "--run-reviewed-operation" "$workflow"
-require "Microsoft.Authorization/roleAssignments/write" "$roles"; require "az vm delete" "$cleanup"; reject "|| true" "$cleanup"; require 'test "$residue" = 0' "$cleanup"; require 'test "$subnet_residue" = 0' "$cleanup"
-test "$(rg -c '^\s*- uses:' "$workflow")" = 2; test "$(rg -c 'actions/checkout@11d5960a326750d5838078e36cf38b85af677262' "$workflow")" = 2
-jq -e '.schemaVersion==1 and (.explicitlyExcluded|index("Microsoft.Authorization/roleAssignments/write"))!=null' "$roles" >/dev/null
-jq -e '.schemaVersion==1 and (.requiredAbsentAfterCleanup|index("githubRunnerRegistration"))!=null and (.requiredAbsentAfterCleanup|index("temporaryProvisioningRoleAssignment"))!=null' "$root/infrastructure/private-migration-runner/residue-manifest.json" >/dev/null
-echo 'private migration runner policy tests passed'
+root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"
+workflow="$root/.github/workflows/private-migration-runner.yml"
+require(){ rg -q --fixed-strings -- "$1" "$2"; }
+reject(){ ! rg -q --fixed-strings -- "$1" "$2"; }
+require 'Status: Superseded; do not deploy' "$root/docs/architecture/ephemeral-private-migration-runner.md"
+require 'Status: Superseded; do not deploy' "$root/docs/architecture/ephemeral-runner-registration-broker.md"
+reject 'ephemeral-runner-registration-broker.yml' "$workflow"
+reject 'az deployment' "$workflow"
+reject 'az role assignment' "$workflow"
+require 'workflow_dispatch:' "$workflow"
+reject 'push:' "$workflow"
+reject 'pull_request:' "$workflow"
+require 'environment: database-development' "$workflow"
+require 'group: private-sql-migration-vnet' "$workflow"
+require 'labels: adventures-suite-private-sql' "$workflow"
+require "test \"\$RUNNER_READY\" = 'private-sql-vnet-runner-v1'" "$workflow"
+require 'cancel-in-progress: false' "$workflow"
+require 'allow-no-subscriptions: true' "$workflow"
+require 'ADVENTURESSUITE_MIGRATION_CREDENTIAL_MODE: github-oidc-azure-cli' "$workflow"
+require "if: inputs.operation == 'proof-only'" "$workflow"
+require "if: inputs.operation == 'run-migration'" "$workflow"
+require 'sqlCommandAttempted":false' "$workflow"
+require 'gh attestation verify' "$root/.github/scripts/verify-reviewed-migration-package.sh"
+require 'dependencyLocks[]' "$root/.github/scripts/verify-reviewed-migration-package.sh"
+reject 'sqlcmd' "$root/.github/scripts/prove-private-sql-network.sh"
+reject 'AdventuresSuite.DatabaseMigrator' "$root/.github/scripts/prove-private-sql-network.sh"
+test "$(rg -c '^\s*- uses:' "$workflow")" = 2
+test "$(rg -c '@[0-9a-f]{40}' "$workflow")" = 2
+echo 'hosted private migration runner policy tests passed'

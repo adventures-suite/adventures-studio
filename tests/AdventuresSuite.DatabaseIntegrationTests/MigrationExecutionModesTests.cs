@@ -8,6 +8,26 @@ namespace AdventuresSuite.DatabaseIntegrationTests;
 public sealed class MigrationExecutionModesTests
 {
     [Fact]
+    public void CredentialModesAreExplicitAndNeverFallBack()
+    {
+        using var environment = ValidEnvironment();
+        environment.Set(MigrationCredentialFactory.ModeVariable, "azure-managed-identity");
+        var managedIdentity = MigrationCredentialFactory.Create(Guid.NewGuid(), Guid.NewGuid());
+        Assert.Equal(MigrationCredentialMode.AzureManagedIdentity, managedIdentity.Mode);
+        Assert.IsType<Azure.Identity.ManagedIdentityCredential>(managedIdentity.Credential);
+        environment.Set(MigrationCredentialFactory.ModeVariable, "github-oidc-azure-cli");
+        var azureCli = MigrationCredentialFactory.Create(Guid.NewGuid(), Guid.NewGuid());
+        Assert.Equal(MigrationCredentialMode.GitHubOidcAzureCli, azureCli.Mode);
+        Assert.IsType<Azure.Identity.AzureCliCredential>(azureCli.Credential);
+        environment.Set(MigrationCredentialFactory.ModeVariable, "");
+        Assert.Throws<InvalidOperationException>(() =>
+            MigrationCredentialFactory.Create(Guid.NewGuid(), Guid.NewGuid()));
+        environment.Set(MigrationCredentialFactory.ModeVariable, "default");
+        Assert.Throws<InvalidOperationException>(() =>
+            MigrationCredentialFactory.Create(Guid.NewGuid(), Guid.NewGuid()));
+    }
+
+    [Fact]
     public async Task ExecutionChannelProducesBoundedSqlFreeEnvelope()
     {
         using var environment = ValidEnvironment();

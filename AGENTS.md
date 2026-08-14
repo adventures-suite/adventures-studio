@@ -344,11 +344,9 @@
 - Treat the attested, self-contained DbUp package as the migration artifact;
   never run database migration from web/API startup or convert the migration
   model to DACPAC without a new architecture decision.
-- The future execution boundary is one ephemeral, one-job GitHub self-hosted
-  Azure VM in the existing VNet using the migration UAMI and private SQL
-  endpoint. It has no ACR, persistent compute, or automatic retry, and requires
-  independently approved cleanup after every outcome.
-- Before runner implementation, require one design review proving secure
-  one-job registration delivery, attested artifact retrieval, private SQL
-  reachability, and VM deletion after success, failure, cancellation, timeout,
-  runner loss, or inconclusive evidence.
+- The selected execution boundary is a GitHub-hosted Linux larger runner using
+  Azure VNet private networking, the organization-bound migration FIC, and the
+  private SQL endpoint. It has maximum concurrency one and no automatic retry.
+- Keep the custom GitHub App/JIT broker and self-hosted VM path dormant and
+  undeployed. Require separate approvals for hosted networking, runner-group
+  configuration, SQL authority, proof, and migration execution.
