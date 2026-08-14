@@ -25,6 +25,27 @@ public sealed class ShowcaseHostingTests
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
+    /// <summary>Ensures the isolated Azure showcase serves no ordinary application route.</summary>
+    [Fact]
+    public async Task ShowcaseHost_ExposesOnlyShowcaseSurface()
+    {
+        await using var factory = new ShowcaseWebApplicationFactory();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false,
+            BaseAddress = new Uri("https://showcase.example")
+        });
+
+        using var showcase = await client.GetAsync("/showcase");
+        using var ordinaryRoute = await client.GetAsync("/destinations");
+        using var root = await client.GetAsync("/");
+
+        Assert.Equal(HttpStatusCode.OK, showcase.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, ordinaryRoute.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, root.StatusCode);
+        Assert.Equal("/showcase", root.Headers.Location?.OriginalString);
+    }
+
     /// <summary>Hosts the real application with production showcase configuration disabled.</summary>
     private sealed class ProductionWebApplicationFactory : WebApplicationFactory<Program>
     {
@@ -33,6 +54,19 @@ public sealed class ShowcaseHostingTests
             builder.UseEnvironment("Production");
             builder.UseSetting("Authentication:Mode", "Disabled");
             builder.UseSetting("Showcase:Enabled", "false");
+        }
+    }
+
+    /// <summary>Hosts the application in its isolated public showcase environment.</summary>
+    private sealed class ShowcaseWebApplicationFactory : WebApplicationFactory<Program>
+    {
+        protected override void ConfigureWebHost(IWebHostBuilder builder)
+        {
+            builder.UseEnvironment("Showcase");
+            builder.UseSetting("WEBSITE_HOSTNAME", "showcase.example");
+            builder.UseSetting(
+                "CreatorResolution:AzureDefaultCreatorId",
+                "creator_tsa_01");
         }
     }
 }

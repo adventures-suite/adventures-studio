@@ -23,13 +23,18 @@ builder.Services.AddHttpContextAccessor();
 // The showcase is an isolated development surface backed only by a validated,
 // fictional JSON fixture. It never changes or bypasses private authentication.
 var showcaseRequested = builder.Configuration.GetValue<bool>("Showcase:Enabled");
-if (showcaseRequested && !builder.Environment.IsDevelopment())
+var isShowcaseEnvironment = builder.Environment.IsEnvironment("Showcase");
+if (showcaseRequested
+    && !builder.Environment.IsDevelopment()
+    && !isShowcaseEnvironment)
 {
     throw new InvalidOperationException(
-        "The read-only product showcase may be enabled only in Development.");
+        "The read-only product showcase may be enabled only in Development " +
+        "or the isolated Showcase environment.");
 }
 
-var showcaseEnabled = showcaseRequested && builder.Environment.IsDevelopment();
+var showcaseEnabled = showcaseRequested
+    && (builder.Environment.IsDevelopment() || isShowcaseEnvironment);
 if (showcaseEnabled)
 {
     builder.Services.AddSingleton<IShowcaseAdventureService, JsonShowcaseAdventureService>();
@@ -186,6 +191,29 @@ app.UseMiddleware<BrowserSecurityHeadersMiddleware>();
 // Resolve the explicitly approved request host before status-page re-execution,
 // static assets, endpoints, or shared UI can expose Creator-owned content.
 app.UseMiddleware<CreatorResolutionMiddleware>();
+
+// The remotely hosted showcase is a deliberately narrow public surface. It
+// shares no private workspace route and serves only the fictional experience,
+// its required static/interactive assets, and minimal deployment health.
+if (isShowcaseEnvironment)
+{
+    app.Use(async (context, next) =>
+    {
+        if (context.Request.Path == "/")
+        {
+            context.Response.Redirect("/showcase");
+            return;
+        }
+
+        if (!IsShowcaseRequest(context.Request.Path))
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            return;
+        }
+
+        await next(context);
+    });
+}
 
 // Keep the compiled route unreachable outside the explicit development-only
 // configuration. The route contains synthetic data, but still fails closed so
@@ -384,6 +412,17 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.Run();
+
+static bool IsShowcaseRequest(PathString path) =>
+    path.StartsWithSegments("/showcase")
+    || path.StartsWithSegments("/health")
+    || path.StartsWithSegments("/_blazor")
+    || path.StartsWithSegments("/_framework")
+    || path.StartsWithSegments("/_content")
+    || path.StartsWithSegments("/images")
+    || path.StartsWithSegments("/lib")
+    || path == "/app.css"
+    || path == "/TheSimontonAdventures.Web.styles.css";
 
 /// <summary>
 /// Exposes the top-level application entry point to the integration-test host.

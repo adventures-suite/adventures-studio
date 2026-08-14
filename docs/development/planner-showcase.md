@@ -16,7 +16,8 @@ dotnet run --project src/TheSimontonAdventures.Web
 
 `appsettings.Development.json` enables the route for local development. The
 application returns `404 Not Found` when the switch is disabled and refuses to
-start if the showcase is enabled outside the Development environment.
+start if the showcase is enabled outside the Development or isolated Showcase
+environment.
 
 ## Presentation guidance
 
@@ -43,6 +44,22 @@ references must use existing local `/images/` assets. The fixture loader rejects
 incomplete stories and non-local image paths.
 
 This route deliberately has no forms, mutation endpoints, database dependency,
-authentication bypass, external provider dependency, or production deployment
-path. A future remotely hosted demonstration should use an explicitly approved
-demo environment and synthetic Creator rather than relaxing this boundary.
+authentication bypass, or external provider dependency. The separately hosted
+Showcase environment redirects its root to this route and returns `404 Not
+Found` for ordinary application routes. It must use synthetic content, an
+independent App Service, and no production secrets or persistence settings.
+
+## Azure showcase boundary
+
+`infrastructure/planner-showcase/main.bicep` defines the public showcase as a
+separate Linux App Service on the existing non-production plan. It has HTTPS
+only, disabled basic publishing credentials, no Managed Identity, no SQL or Key
+Vault settings, no External ID configuration, and no production secrets. Its
+only permitted dynamic routes are the showcase, Blazor transport, and minimal
+health endpoint; required local static assets are allowlisted separately.
+
+The shared plan avoids a second fixed compute charge, but the showcase shares
+the plan's finite CPU and memory. Stop or remove the showcase app when it is no
+longer needed. Before recurring deployments, add a dedicated GitHub Environment
+and immutable showcase deployment workflow; do not retarget the normal
+development workflow or its live App Service.
