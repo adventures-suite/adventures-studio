@@ -54,3 +54,11 @@ SQL permission change, or migration execution is authorized by this ADR.
 Before the runner implementation begins, one design review must prove secure
 one-job registration delivery, artifact retrieval/attestation verification,
 private SQL reachability, and deletion after every outcome.
+
+The separate read-only-first administrator operation is defined in
+`docs/architecture/private-sql-administrator-operation.md`. It reuses the
+reviewed ephemeral network, compute, and deletion design with a dedicated
+administrator UAMI that is immutable-ID-bound and explicitly different from
+the migration UAMI. Its workflow remains inert before Azure login. Baseline
+readback, administrator authority establishment, bootstrap, migration, and
+cleanup remain non-combinable approvals.

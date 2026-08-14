@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "credential": "Azure.Identity.ManagedIdentityCredential",
+  "identitySelector": "exactAdministratorClientId",
+  "tokenScope": "https://database.windows.net/.default",
+  "delivery": "Microsoft.Data.SqlClient.SqlConnection.AccessTokenCallback",
+  "lifetime": "providerBoundedAndOperationDeadlineCapped",
+  "operationLimitMinutes": 45,
+  "processReuse": false,
+  "prohibitedSurfaces": ["shell", "arguments", "environment", "files", "logs", "evidence", "interactiveLogin"],
+  "implementationState": "readerNotImplementedWorkflowGuarded",
+  "note": "This closed contract is implementation input for a separately approved SDK reader. It contains no token acquisition capability."
+}
