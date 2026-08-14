@@ -39,12 +39,13 @@ internal static partial class MigrationOperationRunner
             orderedCatalog = MigrationCatalog.GetOrderedResourceNames(typeof(MigrationCatalog).Assembly)
         });
 
-        var credential = new ManagedIdentityCredential(
-            ManagedIdentityId.FromUserAssignedClientId(clientId.ToString()));
-        var token = await credential.GetTokenAsync(
-            new TokenRequestContext(["https://database.windows.net/.default"]));
+        var selection = MigrationCredentialFactory.Create(tenantId, clientId);
+        var token = await selection.Credential.GetTokenAsync(
+            new TokenRequestContext(["https://database.windows.net/.default"]),
+            CancellationToken.None);
         var identity = await MigrationIdentityValidator.ValidateAsync(
-            token, connectionString, tenantId, objectId, clientId, principalName, server, database);
+            token, connectionString, tenantId, objectId, clientId, principalName, server, database,
+            selection.Mode);
         WriteEvidence(new
         {
             eventName = "migration-identity-verified",

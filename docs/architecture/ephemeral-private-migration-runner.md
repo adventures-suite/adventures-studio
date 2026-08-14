@@ -1,6 +1,9 @@
-# Ephemeral Private Migration Runner
+# Superseded Ephemeral Private Migration Runner
 
-**Status:** Inert reviewed design; provisioning remains blocked
+**Status: Superseded; do not deploy.** The selected architecture is the
+GitHub-hosted Linux larger runner with Azure VNet private networking described
+in `private-sql-migration-execution.md`. These custom-VM artifacts remain only
+as dormant historical design material.
 
 Repository-scoped one-job registration is defined separately in
 `docs/architecture/ephemeral-runner-registration-broker.md`. That broker is the

@@ -1,41 +1,109 @@
-name: Operate Ephemeral Private Migration Runner
+name: Operate Private SQL Migration on Hosted VNet Runner
 on:
   workflow_dispatch:
     inputs:
+      operation: { description: Exact reviewed operation, required: true, type: choice, options: [proof-only, run-migration] }
       approved_source_sha: { description: Exact approved protected-main SHA, required: true, type: string }
       operation_id: { description: Unique reviewed operation ID, required: true, type: string }
       package_run_id: { description: Exact package workflow run ID, required: true, type: string }
       package_artifact_id: { description: Exact package artifact ID, required: true, type: string }
       package_sha256: { description: Exact package SHA-256, required: true, type: string }
-      catalog_sha256: { description: Exact catalog SHA-256, required: true, type: string }
-      approval_nonce: { description: One-use future broker approval nonce, required: true, type: string }
+      catalog_sha256: { description: Exact ordered catalog SHA-256, required: true, type: string }
 permissions: { contents: read }
-concurrency: { group: "private-migration-runner-${{ inputs.operation_id }}", cancel-in-progress: false }
+concurrency: { group: private-sql-migration, cancel-in-progress: false }
 jobs:
-  authorize-and-provision:
+  readiness-guard:
     environment: database-development
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    permissions: { contents: read, id-token: write, actions: read }
+    timeout-minutes: 5
+    permissions: { contents: read }
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with: { ref: "${{ inputs.approved_source_sha }}" }
-      - name: Fail closed until the reviewed registration broker exists
+      - name: Require separately approved hosted-runner configuration
+        env:
+          RUNNER_READY: ${{ vars.PRIVATE_MIGRATION_RUNNER_READY }}
+          SOURCE_SHA: ${{ inputs.approved_source_sha }}
         run: |
-          echo '::error::Runner registration broker and provisioning-role assignment are intentionally absent.'
-          exit 1
-  independent-cleanup:
-    if: always()
-    needs: authorize-and-provision
+          set -euo pipefail
+          test "$GITHUB_REF" = refs/heads/main
+          test "$GITHUB_SHA" = "$SOURCE_SHA"
+          test "$RUNNER_READY" = 'private-sql-vnet-runner-v1'
+
+  operate:
+    needs: readiness-guard
     environment: database-development
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    permissions: { contents: read, id-token: write }
+    runs-on:
+      group: private-sql-migration-vnet
+      labels: adventures-suite-private-sql
+    timeout-minutes: 30
+    permissions: { contents: read, actions: read, attestations: read, id-token: write }
+    env:
+      SOURCE_SHA: ${{ inputs.approved_source_sha }}
+      PACKAGE_RUN_ID: ${{ inputs.package_run_id }}
+      ARTIFACT_ID: ${{ inputs.package_artifact_id }}
+      EXPECTED_PACKAGE_SHA256: ${{ inputs.package_sha256 }}
+      EXPECTED_CATALOG_SHA256: ${{ inputs.catalog_sha256 }}
+      EXPECTED_RUN_ID: ${{ inputs.package_run_id }}
+      EXPECTED_SOURCE_SHA: ${{ inputs.approved_source_sha }}
+      EXPECTED_SQL_HOST: ${{ vars.AZURE_SQL_SERVER }}.database.windows.net
+      EXPECTED_PRIVATE_IP: ${{ vars.AZURE_SQL_PRIVATE_IP }}
+      ADVENTURESSUITE_MIGRATION_OPERATION_ID: ${{ inputs.operation_id }}
+      ADVENTURESSUITE_RELEASE_SHA: ${{ inputs.approved_source_sha }}
+      ADVENTURESSUITE_MIGRATION_PACKAGE_SHA256: ${{ inputs.package_sha256 }}
+      ADVENTURESSUITE_MIGRATION_CATALOG_SHA256: ${{ inputs.catalog_sha256 }}
+      ADVENTURESSUITE_MIGRATION_TENANT_ID: ${{ vars.WORKFORCE_TENANT_ID }}
+      ADVENTURESSUITE_MIGRATION_PRINCIPAL_ID: ${{ vars.MIGRATION_EXECUTION_PRINCIPAL_ID }}
+      ADVENTURESSUITE_MIGRATION_PRINCIPAL_CLIENT_ID: ${{ vars.MIGRATION_EXECUTION_CLIENT_ID }}
+      ADVENTURESSUITE_MIGRATION_PRINCIPAL_NAME: AdventuresSuiteMigrationDev
+      ADVENTURESSUITE_MIGRATION_CREDENTIAL_MODE: github-oidc-azure-cli
+      ADVENTURESSUITE_SQL_SERVER: ${{ vars.AZURE_SQL_SERVER }}
+      ADVENTURESSUITE_SQL_DATABASE: ${{ vars.AZURE_SQL_DATABASE }}
+      ARTIFACT_DIRECTORY: ${{ runner.temp }}/migration/artifact
+      WORK_DIRECTORY: ${{ runner.temp }}/migration
+      VERIFIED_DIRECTORY: ${{ runner.temp }}/migration/verified
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with: { ref: "${{ inputs.approved_source_sha }}" }
-      - name: Fail closed until independent cleanup authority exists
+        with: { ref: "${{ inputs.approved_source_sha }}", fetch-depth: 0 }
+      - name: Require exact protected main
         run: |
-          echo '::notice::No provisioning can occur while the authorization guard is present.'
-          echo '::error::Independent cleanup identity and exact assignment are intentionally absent.'
-          exit 1
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          git fetch --quiet origin main
+          test "$(git rev-parse origin/main)" = "$SOURCE_SHA"
+      - uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac # v2
+        with:
+          client-id: ${{ vars.MIGRATION_EXECUTION_CLIENT_ID }}
+          tenant-id: ${{ vars.WORKFORCE_TENANT_ID }}
+          allow-no-subscriptions: true
+      - name: Validate exact organization federation
+        env:
+          PROOF_TARGET: database-migration
+          PROOF_ENVIRONMENT: database-development
+          EXPECTED_CLIENT_ID: ${{ vars.MIGRATION_EXECUTION_CLIENT_ID }}
+          EXPECTED_PRINCIPAL_ID: ${{ vars.MIGRATION_EXECUTION_PRINCIPAL_ID }}
+          EXPECTED_TENANT_ID: ${{ vars.WORKFORCE_TENANT_ID }}
+          EXPECTED_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          GITHUB_REPOSITORY_ID: ${{ github.repository_id }}
+          GITHUB_REPOSITORY_OWNER_ID: ${{ github.repository_owner_id }}
+        run: node .github/scripts/organization-federation-proof.mjs
+      - name: Retrieve exact package artifact
+        run: .github/scripts/retrieve-reviewed-migration-package.sh
+      - name: Verify package, locks, catalog, digest, and attestation
+        run: .github/scripts/verify-reviewed-migration-package.sh
+      - name: Prove private DNS and TCP reachability without SQL
+        run: .github/scripts/prove-private-sql-network.sh
+      - name: Stop proof-only operation before SQL
+        if: inputs.operation == 'proof-only'
+        run: echo '{"classification":"private_sql_proof_complete","sqlCommandAttempted":false}'
+      - name: Run reviewed DbUp operation exactly once
+        if: inputs.operation == 'run-migration'
+        env:
+          ADVENTURESSUITE_SQL_CONNECTION_STRING: Server=tcp:${{ vars.AZURE_SQL_SERVER }}.database.windows.net,1433;Database=${{ vars.AZURE_SQL_DATABASE }};Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;
+          ADVENTURESSUITE_MIGRATION_TIMEOUT_SECONDS: '1800'
+        run: "$VERIFIED_DIRECTORY/run-reviewed-migration-operation.sh"
+      - if: always()
+        name: Clear Azure session and temporary package
+        run: |
+          az account clear
+          if [ -d "$WORK_DIRECTORY" ]; then
+            find "$WORK_DIRECTORY" -mindepth 1 -delete
+          fi

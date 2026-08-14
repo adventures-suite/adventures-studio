@@ -1,6 +1,6 @@
 # Private Azure SQL Migration Execution
 
-**Status:** Approved architecture; runner not implemented
+**Status:** GitHub-hosted VNet runner selected; networking not configured
 
 The authoritative migration mechanism is the existing, standalone DbUp
 executable packaged as a deterministic self-contained `linux-x64` artifact.
@@ -27,19 +27,23 @@ catalog SHA-256, exact SDK and runtime identifier, hashes of every dedicated
 run ID, and GitHub build provenance attestation. The package is self-contained;
 loose scripts and local rebuilds are not release artifacts.
 
-## Future execution boundary
+## Selected execution boundary
 
-A later, separately reviewed increment may provision one ephemeral Azure VM in
-the existing development VNet as a one-job GitHub self-hosted runner. It must:
+A GitHub-hosted Ubuntu larger runner connected to a dedicated subnet in the
+existing development VNet is the selected execution boundary. Its runner group
+must be restricted to this repository and exact migration workflow, maximum
+concurrency one, and the protected `database-development` Environment.
 
-- use the existing migration user-assigned managed identity and the Azure SQL
-  private endpoint/private DNS path;
-- receive one short-lived, one-job runner registration without a client secret;
+The workflow must:
+
+- exchange GitHub OIDC through the exact organization-bound FIC and use
+  `AzureCliCredential` only in explicit hosted-runner mode;
+- use the Azure SQL private endpoint/private DNS path;
 - retrieve and verify the exact attested package bound to protected main;
 - use Microsoft Entra managed-identity authentication, never a SQL password;
 - execute once with zero automatic retry and bounded structured evidence; and
-- be deleted after every success, failure, cancellation, timeout, runner loss,
-  or inconclusive result through mandatory independent cleanup.
+- rely on GitHub's hosted-runner disposal rather than persistent customer VM
+  cleanup.
 
 The intended existing UAMI is
 `id-adventures-suite-migrate-job-dev` (object ID
@@ -48,12 +52,23 @@ The intended existing UAMI is
 not credentials; live identity and SQL-contained-user readback must still fail
 closed before any later execution.
 
-No persistent compute, ACR, container-image publication, public SQL access,
+The custom GitHub App/JIT broker and self-hosted VM path is superseded, dormant,
+and must not be deployed. No persistent compute, ACR, container-image publication, public SQL access,
 temporary firewall opening, runner provisioning, Environment configuration,
 SQL permission change, or migration execution is authorized by this ADR.
-Before the runner implementation begins, one design review must prove secure
-one-job registration delivery, artifact retrieval/attestation verification,
-private SQL reachability, and deletion after every outcome.
+The workflow remains inert until separate approval creates the exact runner
+group, label, delegated subnet, GitHub network settings, and readiness variable.
+Its proof-only operation validates OIDC, identity, package, attestation, private
+DNS, and TCP 1433 without issuing a SQL command.
+
+VNet attachment does not attach a managed identity. Hosted execution uses only
+`AzureCliCredential`; `ManagedIdentityCredential` remains only for genuine
+Azure-hosted compute. Neither mode falls back. SQL token requests use only
+`https://database.windows.net/.default`.
+
+The NSG denies inbound traffic and constrains IP protocols and ports. NSGs do
+not filter FQDNs. Azure Firewall, NAT Gateway, or any paid egress service is a
+separate option requiring approval.
 
 The separate read-only-first administrator operation is defined in
 `docs/architecture/private-sql-administrator-operation.md`. It reuses the

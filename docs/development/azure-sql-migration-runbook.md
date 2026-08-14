@@ -1,14 +1,10 @@
 # Azure SQL Bootstrap and Migration Runbook
 
-**Status:** Design-only; execution remains blocked
+**Status:** Hosted VNet runner selected; execution remains blocked
 
-The future one-job registration prerequisite is specified in
-`docs/architecture/ephemeral-runner-registration-broker.md`. Its dedicated
-scale-to-zero foundation and fictional-key custody importer are inert
-repository artifacts. They create no GitHub App, broker, runner, token,
-assignment, or
-registration; live operation and zero-residue readback require separate exact
-approvals.
+The custom GitHub App/JIT broker and self-hosted VM path is superseded and must
+remain undeployed. The selected boundary is a GitHub-hosted Linux larger runner
+connected through GitHub Azure VNet private networking.
 
 AdventuresSuite uses the non-container `AdventuresSuite.DatabaseMigrator` DbUp
 executable for ordered, forward-only private Azure SQL migrations. The
@@ -18,8 +14,10 @@ authoritative execution decision is
 ## Invariants
 
 - Azure SQL public access stays disabled; no temporary firewall rule is used.
-- Workload authentication uses Microsoft Entra managed identity, never SQL
-  passwords, access keys, or client secrets.
+- Hosted-runner authentication uses the exact organization-bound GitHub OIDC
+  FIC and Azure CLI token cache. Genuine Azure-hosted execution may use an
+  attached UAMI. Neither mode falls back, and no SQL password, key, or client
+  secret is permitted.
 - The web and API never execute migrations or receive migration DDL authority.
 - DbUp scripts, `dbo.AdventuresSuiteSchemaVersions`, the application lock,
   transaction-per-script behavior, state classification, fingerprints, and
@@ -73,14 +71,17 @@ This evidence proves authentication and expected absence of control-plane
 authority; it does not claim that the configured subscription was visible or
 authenticated.
 
-The next repository increment may define—but must not silently provision—a
-one-job ephemeral GitHub self-hosted Azure VM in the existing VNet. A separate
-Azure approval will be required for runner creation and independent cleanup; a
-separate SQL approval will be required for the migration identity's exact
-database permissions. Before implementation, review how the VM receives a
-short-lived one-job runner registration, downloads and verifies the attested
-artifact, resolves the private SQL endpoint, authenticates as the exact UAMI,
-and is deleted after every outcome.
+The manual hosted-runner workflow is inert until separately approved GitHub and
+Azure configuration supplies its exact runner group, label, delegated subnet,
+network settings, and readiness variable. Environment approval occurs before
+the job is sent to the runner. Proof-only validates federation, package,
+attestation, private DNS, and TCP 1433 without SQL. Migration is a distinct
+operation with no automatic retry.
+
+The runner group is limited to this repository and workflow, with concurrency
+one. Keep the $2 monthly Actions spending stop. The NSG denies inbound traffic
+and filters addresses and ports; it cannot filter FQDNs. NAT Gateway, Azure
+Firewall, or any paid egress service is outside this decision.
 
 The repository-defined SQL boundary separates three authorities. An Entra
 administrator creates and owns the `planning`, `auth`, and `audit` schemas,

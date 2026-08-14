@@ -12,10 +12,9 @@ internal static partial class MigrationExecutionModes
 {
     internal static Task<int> VerifyExecutionChannelAsync()
     {
-        var clientId = RequireGuid("ADVENTURESSUITE_MIGRATION_PRINCIPAL_CLIENT_ID");
-        var credential = new ManagedIdentityCredential(
-            ManagedIdentityId.FromUserAssignedClientId(clientId.ToString()));
-        return VerifyExecutionChannelAsync(credential);
+        var context = ReadContext(requireSqlTarget: false);
+        return VerifyExecutionChannelAsync(
+            MigrationCredentialFactory.Create(context.TenantId, context.ClientId).Credential);
     }
 
     internal static async Task<int> VerifyExecutionChannelAsync(TokenCredential credential)
@@ -84,13 +83,13 @@ internal static partial class MigrationExecutionModes
     private static async Task<MigrationIdentityEvidence> ValidateIdentityAsync(
         MigrationOperationContext context, string connectionString)
     {
-        var credential = new ManagedIdentityCredential(
-            ManagedIdentityId.FromUserAssignedClientId(context.ClientId.ToString()));
-        AccessToken token = await credential.GetTokenAsync(
-            new TokenRequestContext(["https://database.windows.net/.default"]));
+        var selection = MigrationCredentialFactory.Create(context.TenantId, context.ClientId);
+        AccessToken token = await selection.Credential.GetTokenAsync(
+            new TokenRequestContext(["https://database.windows.net/.default"]),
+            CancellationToken.None);
         return await MigrationIdentityValidator.ValidateAsync(
             token, connectionString, context.TenantId, context.ObjectId, context.ClientId,
-            context.PrincipalName, context.SqlServer!, context.SqlDatabase!);
+            context.PrincipalName, context.SqlServer!, context.SqlDatabase!, selection.Mode);
     }
 
     private static object SafeIdentity(MigrationIdentityEvidence identity) => new
