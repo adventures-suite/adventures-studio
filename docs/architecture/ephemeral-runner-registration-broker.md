@@ -158,6 +158,10 @@ conclusively classified `VerifiedAbsent`, and that is the sole well-formed
 Azure error code. It is never a general absence signal; an unprocessed,
 present, failed, ambiguous, external, or substituted parent leaves the child
 ambiguous. Raw Azure error messages are neither retained nor emitted.
+The bounded parser accepts one allowlisted absence code either in the bare
+structured form or following the Azure CLI's exact `ERROR: (` prefix. Altered
+prefixes, leading content, stdout contamination, multiple error records,
+unexpected or competing codes, and oversized evidence remain ambiguous.
 The assignment-plan policy rejects subscription or resource-group scope and
 any missing, additional, duplicate, nondeterministic, wrong-role, or
 wrong-principal assignment.

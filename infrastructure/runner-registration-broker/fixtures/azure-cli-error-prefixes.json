@@ -1,0 +1,14 @@
+[
+  {
+    "code": "ResourceNotFound",
+    "stderr": "ERROR: (ResourceNotFound) sanitized-resource-absence\n"
+  },
+  {
+    "code": "NotFound",
+    "stderr": "ERROR: (NotFound) sanitized-resource-absence\n"
+  },
+  {
+    "code": "ParentResourceNotFound",
+    "stderr": "ERROR: (ParentResourceNotFound) sanitized-parent-absence\n"
+  }
+]

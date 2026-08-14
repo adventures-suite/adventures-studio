@@ -1,7 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
 import {
   collectFinalResidue, collectInventory, deterministicAssignmentId, executeCleanup,
   expectedCleanupScopes, validateAssignmentPlan, validateCatalog, validateInventory
@@ -18,6 +22,7 @@ const storageAccount=catalog.resources.find(x=>x.type==='Microsoft.Storage/stora
 const storageChildren=catalog.resources.filter(x=>x.type.startsWith('Microsoft.Storage/storageAccounts/'));
 const absentResult=code=>({status:1,stdout:'',stderr:`(${code})`});
 const inventoryWith=(responseForId,calls=[])=>collectInventory(catalog,'broker-foundation-inventory-0123456789abcdef','a'.repeat(40),catalogSha,(command,args)=>{const id=args[args.indexOf('--ids')+1];calls.push(id);return responseForId(id);});
+const cliFixtures=JSON.parse(readFileSync(new URL('./fixtures/azure-cli-error-prefixes.json',import.meta.url)));
 
 test('catalog binds the complete exact 23-resource graph and thirteen cleanup parents',()=>{assert.equal(validateCatalog(catalog).resources.length,23);assert.equal(parents().length,13);assert.deepEqual(catalog.resources.map(x=>x.dependencyOrder),Array.from({length:23},(_,i)=>i+1));});
 test('empty, early, middle, and complete deployments derive only verified-present cleanup parents',()=>{const cleanupParents=parents();for(const count of [0,1,6,13]){const selected=new Set(cleanupParents.slice(0,count));const present=catalog.resources.filter(x=>selected.has(x.cleanupParentId)).map(x=>x.id);const value=inventory(present);validateInventory(catalog,value);assert.equal(expectedCleanupScopes(catalog,value).length,count);validateAssignmentPlan(catalog,value,plan(value));}});
@@ -87,4 +92,69 @@ test('existing ResourceNotFound and NotFound codes remain conclusive absence sig
     assert.equal(result.result,'Verified');
     assert.equal(result.entries.every(x=>x.state==='VerifiedAbsent'),true);
   }
+});
+
+test('exact live Azure CLI prefix fixtures preserve all three allowlisted absence classifications',()=>{
+  assert.deepEqual(cliFixtures.map(x=>x.code),['ResourceNotFound','NotFound','ParentResourceNotFound']);
+  for(const fixture of cliFixtures.slice(0,2)){
+    const result=inventoryWith(()=>({status:3,stdout:'',stderr:fixture.stderr}));
+    assert.equal(result.result,'Verified');
+    assert.equal(result.entries.every(x=>x.state==='VerifiedAbsent'),true);
+  }
+  const parentMissing=cliFixtures.find(x=>x.code==='ResourceNotFound');
+  const childMissing=cliFixtures.find(x=>x.code==='ParentResourceNotFound');
+  const result=inventoryWith(id=>storageChildren.some(x=>x.id===id)?{status:3,stdout:'',stderr:childMissing.stderr}:{status:3,stdout:'',stderr:parentMissing.stderr});
+  assert.equal(result.result,'Verified');
+  assert.equal(storageChildren.every(x=>result.entries.find(entry=>entry.id===x.id).state==='VerifiedAbsent'),true);
+});
+
+test('Azure CLI prefix parsing rejects altered prefixes, whitespace variants, multiple records, contamination, and oversized evidence',()=>{
+  const malformed=[
+    ' ERROR: (ResourceNotFound) sanitized\n',
+    'ERROR :(ResourceNotFound) sanitized\n',
+    'ERROR:  (ResourceNotFound) sanitized\n',
+    'Error: (ResourceNotFound) sanitized\n',
+    'ERROR: (ResourceNotFound) sanitized\nERROR: (NotFound) second\n',
+    `ERROR: (ResourceNotFound) ${'x'.repeat(4096)}`,
+    'ERROR: (AuthorizationFailed) sanitized\n'
+  ];
+  for(const stderr of malformed){
+    const result=inventoryWith(()=>({status:3,stdout:'',stderr}));
+    assert.equal(result.result,'Ambiguous');
+    assert.equal(result.entries.every(x=>x.state==='Ambiguous'),true);
+  }
+  for(const stdout of ['unexpected','\n']){
+    const result=inventoryWith(()=>({status:3,stdout,stderr:'ERROR: (ResourceNotFound) sanitized\n'}));
+    assert.equal(result.result,'Ambiguous');
+  }
+});
+
+test('inventory shell runner accepts the exact Azure CLI stderr shape through a stubbed az executable',()=>{
+  const directory=mkdtempSync(join(tmpdir(),'broker-azure-cli-stub-'));
+  try {
+    const stubPath=join(directory,'az');
+    writeFileSync(stubPath,`#!/usr/bin/env node
+const { readFileSync } = require('node:fs');
+const args = process.argv.slice(2);
+const idIndex = args.indexOf('--ids');
+if (args[0] !== 'resource' || args[1] !== 'show' || idIndex < 0 || args[idIndex + 1] === undefined) process.exit(64);
+const catalog = JSON.parse(readFileSync(process.env.BROKER_TEST_CATALOG,'utf8'));
+const entry = catalog.resources.find(candidate => candidate.id === args[idIndex + 1]);
+if (!entry) process.exit(65);
+const catalogIds = new Set(catalog.resources.map(candidate => candidate.id.toLowerCase()));
+const code = entry.parentId !== null && catalogIds.has(entry.parentId.toLowerCase()) ? 'ParentResourceNotFound' : 'ResourceNotFound';
+process.stderr.write('ERROR: (' + code + ') sanitized-stubbed-live-shape\\n');
+process.exit(3);
+`,{mode:0o700});
+    const runner=fileURLToPath(new URL('./inventory-foundation-residue.sh',import.meta.url));
+    const catalogPath=fileURLToPath(new URL('./foundation-resource-catalog.json',import.meta.url));
+    const execution=spawnSync('bash',[runner,catalogPath,catalogSha,'broker-foundation-inventory-0123456789abcdef','a'.repeat(40)],{encoding:'utf8',env:{...process.env,PATH:`${directory}:${process.env.PATH}`,BROKER_TEST_CATALOG:catalogPath}});
+    assert.equal(execution.status,0,execution.stderr);
+    assert.equal(execution.stderr,'');
+    const evidence=JSON.parse(execution.stdout);
+    assert.equal(evidence.result,'Verified');
+    assert.equal(evidence.entries.length,23);
+    assert.equal(evidence.entries.every(entry=>entry.state==='VerifiedAbsent'),true);
+    assert.equal(execution.stdout.includes('sanitized-stubbed-live-shape'),false);
+  } finally { rmSync(directory,{recursive:true,force:true}); }
 });

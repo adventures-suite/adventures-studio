@@ -107,12 +107,14 @@ export function validateAssignmentPlan(catalog, inventory, plan) {
 
 function extractSingleAzureErrorCode(stderr) {
   if (typeof stderr !== 'string' || Buffer.byteLength(stderr, 'utf8') > 4096 || stderr.includes('\0')) return null;
-  const value = stderr.trim();
+  const value = stderr;
   const parenthesized = [...value.matchAll(/\(([A-Za-z][A-Za-z0-9]{2,63})\)/g)];
   const jsonMarkers = [...value.matchAll(/"code"\s*:/gi)];
-  if (value.startsWith('(')) {
-    if (parenthesized.length !== 1 || parenthesized[0].index !== 0 || jsonMarkers.length !== 0) return null;
-    return parenthesized[0][1];
+  const allowed = new Set(['ResourceNotFound','NotFound','ParentResourceNotFound']);
+  const prefixLength = value.startsWith('(') ? 0 : value.startsWith('ERROR: (') ? 7 : null;
+  if (prefixLength !== null) {
+    if (parenthesized.length !== 1 || parenthesized[0].index !== prefixLength || jsonMarkers.length !== 0 || value.slice(1).includes('\nERROR: (')) return null;
+    return allowed.has(parenthesized[0][1]) ? parenthesized[0][1] : null;
   }
   if (parenthesized.length !== 0 || jsonMarkers.length !== 1) return null;
   try {
@@ -126,13 +128,14 @@ function extractSingleAzureErrorCode(stderr) {
       }
     };
     visit(parsed);
-    return codes.length === 1 && typeof codes[0] === 'string' && /^[A-Za-z][A-Za-z0-9]{2,63}$/.test(codes[0]) ? codes[0] : null;
+    return codes.length === 1 && typeof codes[0] === 'string' && allowed.has(codes[0]) ? codes[0] : null;
   } catch { return null; }
 }
 
 function classifyShow(result, expected = null, catalogById = null, states = null) {
   if (result.error || !Number.isInteger(result.status)) return 'failure';
   if (result.status === 0) return 'present';
+  if (typeof result.stdout !== 'string' || Buffer.byteLength(result.stdout, 'utf8') !== 0) return 'ambiguous';
   const code = extractSingleAzureErrorCode(result.stderr);
   if (['ResourceNotFound','NotFound'].includes(code)) return 'absent';
   if (code !== 'ParentResourceNotFound' || !expected || !catalogById || !states || expected.parentId === null) return 'ambiguous';
