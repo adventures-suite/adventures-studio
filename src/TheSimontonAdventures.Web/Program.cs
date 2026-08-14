@@ -9,6 +9,7 @@ using TheSimontonAdventures.Web.Resources;
 using TheSimontonAdventures.Web.Planning;
 using TheSimontonAdventures.Web.Planning.Persistence;
 using TheSimontonAdventures.Web.Services;
+using TheSimontonAdventures.Web.Showcase;
 using TheSimontonAdventures.Web.Validation;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +19,21 @@ builder.Services
     .AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddHttpContextAccessor();
+
+// The showcase is an isolated development surface backed only by a validated,
+// fictional JSON fixture. It never changes or bypasses private authentication.
+var showcaseRequested = builder.Configuration.GetValue<bool>("Showcase:Enabled");
+if (showcaseRequested && !builder.Environment.IsDevelopment())
+{
+    throw new InvalidOperationException(
+        "The read-only product showcase may be enabled only in Development.");
+}
+
+var showcaseEnabled = showcaseRequested && builder.Environment.IsDevelopment();
+if (showcaseEnabled)
+{
+    builder.Services.AddSingleton<IShowcaseAdventureService, JsonShowcaseAdventureService>();
+}
 
 // Bind environment-specific Creator host aliases. The resolver ignores these
 // mappings outside Development so production hosts always require an explicit
@@ -170,6 +186,20 @@ app.UseMiddleware<BrowserSecurityHeadersMiddleware>();
 // Resolve the explicitly approved request host before status-page re-execution,
 // static assets, endpoints, or shared UI can expose Creator-owned content.
 app.UseMiddleware<CreatorResolutionMiddleware>();
+
+// Keep the compiled route unreachable outside the explicit development-only
+// configuration. The route contains synthetic data, but still fails closed so
+// it cannot evolve into an accidental production preview surface.
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/showcase") && !showcaseEnabled)
+    {
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+        return;
+    }
+
+    await next(context);
+});
 
 // Redirect HTTP requests to HTTPS.
 app.UseHttpsRedirection();
