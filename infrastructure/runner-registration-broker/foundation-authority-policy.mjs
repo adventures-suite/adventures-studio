@@ -105,27 +105,69 @@ export function validateAssignmentPlan(catalog, inventory, plan) {
   return plan;
 }
 
-function classifyShow(result) {
+function extractSingleAzureErrorCode(stderr) {
+  if (typeof stderr !== 'string' || Buffer.byteLength(stderr, 'utf8') > 4096 || stderr.includes('\0')) return null;
+  const value = stderr.trim();
+  const parenthesized = [...value.matchAll(/\(([A-Za-z][A-Za-z0-9]{2,63})\)/g)];
+  const jsonMarkers = [...value.matchAll(/"code"\s*:/gi)];
+  if (value.startsWith('(')) {
+    if (parenthesized.length !== 1 || parenthesized[0].index !== 0 || jsonMarkers.length !== 0) return null;
+    return parenthesized[0][1];
+  }
+  if (parenthesized.length !== 0 || jsonMarkers.length !== 1) return null;
+  try {
+    const parsed = JSON.parse(value); const codes = [];
+    const visit = candidate => {
+      if (candidate === null || typeof candidate !== 'object') return;
+      if (Array.isArray(candidate)) { for (const item of candidate) visit(item); return; }
+      for (const [key, item] of Object.entries(candidate)) {
+        if (key.toLowerCase() === 'code') codes.push(item);
+        visit(item);
+      }
+    };
+    visit(parsed);
+    return codes.length === 1 && typeof codes[0] === 'string' && /^[A-Za-z][A-Za-z0-9]{2,63}$/.test(codes[0]) ? codes[0] : null;
+  } catch { return null; }
+}
+
+function classifyShow(result, expected = null, catalogById = null, states = null) {
   if (result.error || !Number.isInteger(result.status)) return 'failure';
   if (result.status === 0) return 'present';
-  const bounded = String(result.stderr ?? '').slice(0,4096);
-  const codes = [...bounded.matchAll(/\(([A-Za-z][A-Za-z0-9]{2,63})\)/g)].map(x=>x[1]);
-  return codes.length === 1 && ['ResourceNotFound','NotFound'].includes(codes[0]) ? 'absent' : 'ambiguous';
+  const code = extractSingleAzureErrorCode(result.stderr);
+  if (['ResourceNotFound','NotFound'].includes(code)) return 'absent';
+  if (code !== 'ParentResourceNotFound' || !expected || !catalogById || !states || expected.parentId === null) return 'ambiguous';
+  const parent = catalogById.get(expected.parentId.toLowerCase());
+  return parent && same(parent.id, expected.parentId) && states.get(parent.id.toLowerCase()) === 'VerifiedAbsent' ? 'absent' : 'ambiguous';
 }
 
 export function collectInventory(catalog, operationId, sourceSha, catalogHash, spawn = spawnSync) {
   validateCatalog(catalog);
-  const entries = catalog.resources.map(expected => {
+  const catalogById = new Map(catalog.resources.map(entry => [entry.id.toLowerCase(), entry]));
+  const states = new Map(); const evidenceById = new Map(); const visiting = new Set();
+  const inspect = expected => {
+    const key = expected.id.toLowerCase();
+    if (evidenceById.has(key)) return;
+    if (visiting.has(key)) fail('catalog-parent-cycle');
+    visiting.add(key);
+    const parent = expected.parentId === null ? null : catalogById.get(expected.parentId.toLowerCase());
+    if (parent) inspect(parent);
     const result = spawn('az',['resource','show','--ids',expected.id,'--query','{id:id,type:type}','-o','json','--only-show-errors'],{encoding:'utf8',maxBuffer:8192});
-    const classification = classifyShow(result);
-    if (classification === 'absent') return {id:expected.id,type:expected.type,state:'VerifiedAbsent'};
-    if (classification === 'failure') return {id:expected.id,type:expected.type,state:'Failure'};
-    if (classification === 'ambiguous') return {id:expected.id,type:expected.type,state:'Ambiguous'};
-    try {
-      const actual=JSON.parse(result.stdout);
-      return same(actual.id,expected.id) && same(actual.type,expected.type) ? {id:expected.id,type:expected.type,state:'VerifiedPresent'} : {id:expected.id,type:expected.type,state:'Ambiguous'};
-    } catch { return {id:expected.id,type:expected.type,state:'Ambiguous'}; }
-  });
+    const classification = classifyShow(result, expected, catalogById, states);
+    let state;
+    if (classification === 'absent') state = 'VerifiedAbsent';
+    else if (classification === 'failure') state = 'Failure';
+    else if (classification === 'ambiguous') state = 'Ambiguous';
+    else {
+      try {
+        const actual=JSON.parse(result.stdout);
+        state = same(actual.id,expected.id) && same(actual.type,expected.type) ? 'VerifiedPresent' : 'Ambiguous';
+      } catch { state = 'Ambiguous'; }
+    }
+    const evidence = {id:expected.id,type:expected.type,state};
+    states.set(key,state); evidenceById.set(key,evidence); visiting.delete(key);
+  };
+  for (const expected of catalog.resources) inspect(expected);
+  const entries = catalog.resources.map(expected => evidenceById.get(expected.id.toLowerCase()));
   return {schemaVersion:1,operationId,sourceSha,catalogSha256:catalogHash,entries,result:entries.some(x=>x.state==='Failure')?'Failure':entries.some(x=>x.state==='Ambiguous')?'Ambiguous':'Verified'};
 }
 

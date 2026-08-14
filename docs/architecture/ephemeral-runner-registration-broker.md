@@ -151,6 +151,13 @@ verified absent; failure, ambiguity, an unknown or additional ID, substitution,
 wrong type, duplicate, or inconsistent parent state stops the boundary. Only
 then may an Owner arrange exact-resource cleanup-role assignments for the
 verified-present cleanup-parent subset. Absent resources receive no assignment.
+Inventory walks catalog parents before their children. A bounded
+`ParentResourceNotFound` result proves a child absent only when the queried ID
+and type are the exact catalog child, its exact catalog parent has already been
+conclusively classified `VerifiedAbsent`, and that is the sole well-formed
+Azure error code. It is never a general absence signal; an unprocessed,
+present, failed, ambiguous, external, or substituted parent leaves the child
+ambiguous. Raw Azure error messages are neither retained nor emitted.
 The assignment-plan policy rejects subscription or resource-group scope and
 any missing, additional, duplicate, nondeterministic, wrong-role, or
 wrong-principal assignment.
