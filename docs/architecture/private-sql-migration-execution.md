@@ -57,7 +57,7 @@ and must not be deployed. No persistent compute, ACR, container-image publicatio
 temporary firewall opening, runner provisioning, Environment configuration,
 SQL permission change, or migration execution is authorized by this ADR.
 The workflow remains inert until separate approval creates the exact runner
-group, label, delegated subnet, GitHub network settings, and readiness variable.
+group and label, delegated subnet, and GitHub network settings.
 Its proof-only operation validates OIDC, identity, package, attestation, private
 DNS, and TCP 1433 without issuing a SQL command.
 
@@ -66,9 +66,22 @@ VNet attachment does not attach a managed identity. Hosted execution uses only
 Azure-hosted compute. Neither mode falls back. SQL token requests use only
 `https://database.windows.net/.default`.
 
-The NSG denies inbound traffic and constrains IP protocols and ports. NSGs do
-not filter FQDNs. Azure Firewall, NAT Gateway, or any paid egress service is a
+The dedicated NSG denies all inbound traffic, permits Azure DNS on TCP/UDP 53,
+the fixed private SQL endpoint `10.40.1.4/32` on TCP 1433, and outbound HTTPS
+on TCP 443, then denies other outbound traffic. The HTTPS rule is necessarily
+address-broad: NSGs do not filter FQDNs. GitHub now recommends DNS/domain-based
+egress control because its legacy static IP template is being retired; Azure
+Firewall, NAT Gateway, DNS filtering, or another paid egress service remains a
 separate option requiring approval.
+
+The checksum-bound Azure network definition is
+`infrastructure/github-hosted-private-migration-network/main.bicep`. It binds
+the existing `vnet-adventures-suite-dev`, dedicated subnet
+`snet-github-private-sql-migration` (`10.40.3.0/27`), dedicated NSG, immutable
+organization business ID `316268438`, and
+`GitHub.Network/networkSettings@2024-04-02` named
+`private-sql-migration-vnet`. Its `tags.GitHubId` output is the only reviewed
+network-configuration identifier for the later GitHub configuration boundary.
 
 The separate read-only-first administrator operation is defined in
 `docs/architecture/private-sql-administrator-operation.md`. It reuses the
