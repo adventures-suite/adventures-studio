@@ -52,6 +52,10 @@ resource showcaseApp 'Microsoft.Web/sites@2023-12-01' = {
           value: 'true'
         }
         {
+          name: 'ASPNETCORE_URLS'
+          value: 'http://0.0.0.0:8080'
+        }
+        {
           name: 'Authentication__Mode'
           value: 'Disabled'
         }
@@ -86,6 +90,10 @@ resource showcaseApp 'Microsoft.Web/sites@2023-12-01' = {
         {
           name: 'WEBSITES_CONTAINER_START_TIME_LIMIT'
           value: '600'
+        }
+        {
+          name: 'WEBSITES_PORT'
+          value: '8080'
         }
       ]
     }
