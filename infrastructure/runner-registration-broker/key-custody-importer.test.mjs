@@ -5,6 +5,7 @@ import { Readable } from 'node:stream';
 import { spawn, spawnSync } from 'node:child_process';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { assertAnonymousDescriptor, assertBoundedEvidence, DestinationContentType, DestinationSecretName, importFictionalOrFutureKey } from './key-custody-importer.mjs';
 
 const vaultId = '/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.KeyVault/vaults/kv-adventures-runner-dev';
@@ -25,7 +26,7 @@ test('source and aggregate buffers are zeroized after success',async()=>{const s
 const sessionScript = new URL('./key-custody-session.sh', import.meta.url).pathname;
 function executable(path, body) { writeFileSync(path, body, {mode:0o700}); chmodSync(path,0o700); }
 function lifecycle(mode='success') {
-  const root=mkdtempSync('/private/tmp/broker-key-lifecycle-');
+  const root=mkdtempSync(join(process.platform==='darwin'?'/private/tmp':tmpdir(),'broker-key-lifecycle-'));
   const fakeBin=join(root,'bin');mkdirSync(fakeBin);
   const operationId='broker-key-0123456789abcdef';
   const mountPath=join(root,`adventures-suite-key-custody-${operationId}`);mkdirSync(mountPath);
