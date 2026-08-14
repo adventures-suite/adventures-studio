@@ -2,10 +2,10 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion","operationId","sourceSha","catalogSha256","entries","assignmentEvidenceSha256","result"],
+  "required": ["schemaVersion","operationId","sourceSha","catalogSha256","entries","result"],
   "properties": {
     "schemaVersion": { "const": 1 },
-    "operationId": { "type": "string", "pattern": "^broker-foundation-cleanup-[a-z0-9]{16,64}$" },
+    "operationId": { "type": "string", "pattern": "^broker-foundation-(inventory|residue)-[a-z0-9]{16,64}$" },
     "sourceSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
     "catalogSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
     "entries": {
@@ -16,12 +16,10 @@
         "properties": {
           "id": { "type": "string", "maxLength": 512 },
           "type": { "type": "string", "maxLength": 128 },
-          "state": { "enum": ["VerifiedAbsent","SoftDeletedRetained"] }
+          "state": { "enum": ["VerifiedPresent","VerifiedAbsent","SoftDeletedRetained","Failure","Ambiguous"] }
         }
       }
     },
-    "assignmentEvidenceSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-    "result": { "const": "Clean" }
-  },
-  "maxProperties": 8
+    "result": { "enum": ["Verified","Clean","Failure","Ambiguous"] }
+  }
 }

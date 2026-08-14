@@ -1,42 +1,27 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
-import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import {
+  collectFinalResidue, collectInventory, deterministicAssignmentId, executeCleanup,
+  expectedCleanupScopes, validateAssignmentPlan, validateCatalog, validateInventory
+} from './foundation-authority-policy.mjs';
 
-const dir = new URL('.', import.meta.url).pathname;
-const cleanup = join(dir, 'foundation-cleanup.sh');
-const residue = join(dir, 'verify-foundation-residue.sh');
-const subscription = '11111111-2222-4333-8444-555555555555';
-const rg = `/subscriptions/${subscription}/resourceGroups/fictional-broker-test`;
-const resources = [
-  `${rg}/providers/Microsoft.Web/sites/func-adventures-suite-runner-broker-dev`,
-  `${rg}/providers/Microsoft.Web/serverfarms/plan-adventures-suite-runner-broker-dev`,
-  `${rg}/providers/Microsoft.Insights/components/appi-adventures-suite-runner-broker-dev`,
-  `${rg}/providers/Microsoft.OperationalInsights/workspaces/log-adventures-suite-runner-broker-dev`,
-  `${rg}/providers/Microsoft.Network/privateEndpoints/pe-adventures-runner-blob-dev`,
-  `${rg}/providers/Microsoft.Network/privateEndpoints/pe-adventures-runner-queue-dev`,
-  `${rg}/providers/Microsoft.Network/privateEndpoints/pe-adventures-runner-table-dev`,
-  `${rg}/providers/Microsoft.Network/privateEndpoints/pe-adventures-runner-kv-dev`,
-  `${rg}/providers/Microsoft.Storage/storageAccounts/stadvsrunnerbrokerdev`,
-  `${rg}/providers/Microsoft.KeyVault/vaults/kv-adventures-runner-dev`,
-  `${rg}/providers/Microsoft.Network/privateDnsZones/privatelink.queue.core.windows.net`,
-  `${rg}/providers/Microsoft.Network/privateDnsZones/privatelink.table.core.windows.net`,
-  `${rg}/providers/Microsoft.Network/virtualNetworks/fictional-vnet/subnets/snet-runner-broker-integration`
-];
-function fixture(mode='cleanup-success') {
-  const root=mkdtempSync(join(tmpdir(),'broker-authority-')); const bin=join(root,'bin'); mkdirSync(bin);
-  const binding=join(root,'binding.json'); writeFileSync(binding,JSON.stringify({operationId:'broker-foundation-cleanup-0123456789abcdef',sourceSha:'a'.repeat(40),subscriptionId:subscription,resourceGroupId:rg,resources}));
-  const checksum=createHash('sha256').update(readFileSync(binding)).digest('hex'); const log=join(root,'az.log'); const count=join(root,'count');
-  const fake=`#!/bin/sh\nprintf '%s\\n' "$*" >> "$FAKE_AZ_LOG"\ncase "$FAKE_AZ_MODE" in\n cleanup-success) exit 0 ;;\n cleanup-fail) if [ "$3" = resource ] && [ "$4" = delete ]; then n=$(cat "$FAKE_AZ_COUNT" 2>/dev/null || printf 0); n=$((n+1)); printf '%s' "$n" > "$FAKE_AZ_COUNT"; [ "$n" -eq 3 ] && exit 1; fi; exit 0 ;;\n residue-absent) exit 1 ;;\n residue-present) case "$*" in *func-adventures-suite-runner-broker-dev*) exit 0;; *) exit 1;; esac ;;\nesac\nexit 1\n`;
-  writeFileSync(join(bin,'az'),fake,{mode:0o700}); chmodSync(join(bin,'az'),0o700);
-  const assignments=join(root,'assignments.json'); writeFileSync(assignments,JSON.stringify({schemaVersion:1,roleAssignmentsRemoved:true,remainingAssignmentCount:0})); const assignmentsSha=()=>createHash('sha256').update(readFileSync(assignments)).digest('hex');
-  return {root,binding,checksum,log,assignments,assignmentsSha,env:{...process.env,PATH:`${bin}:/usr/bin:/bin`,FAKE_AZ_MODE:mode,FAKE_AZ_LOG:log,FAKE_AZ_COUNT:count},dispose:()=>rmSync(root,{recursive:true,force:true})};
-}
-test('cleanup issues the exact ordered one-shot resource operations',()=>{const f=fixture();try{const r=spawnSync('bash',[cleanup,f.binding,f.checksum],{env:f.env,encoding:'utf8'});assert.equal(r.status,0,r.stderr);const lines=readFileSync(f.log,'utf8').trim().split('\n');assert.equal(lines.length,26);assert.equal(lines.filter(x=>x.includes(' resource delete ')).length,13);for(let i=0;i<13;i++)assert.ok(lines[i*2+1].endsWith(`resource delete --ids ${resources[i]}`));}finally{f.dispose();}});
-test('cleanup stops after the first delete failure without retry',()=>{const f=fixture('cleanup-fail');try{const r=spawnSync('bash',[cleanup,f.binding,f.checksum],{env:f.env,encoding:'utf8'});assert.notEqual(r.status,0);const lines=readFileSync(f.log,'utf8').trim().split('\n');assert.equal(lines.filter(x=>x.includes(' resource delete ')).length,3);}finally{f.dispose();}});
-test('cleanup rejects checksum and resource substitution before Azure',()=>{for(const mutate of ['checksum','resource']){const f=fixture();try{if(mutate==='resource'){const value=JSON.parse(readFileSync(f.binding));value.resources[0]+='/extra';writeFileSync(f.binding,JSON.stringify(value));f.checksum=createHash('sha256').update(readFileSync(f.binding)).digest('hex');}const r=spawnSync('bash',[cleanup,f.binding,mutate==='checksum'?'0'.repeat(64):f.checksum],{env:f.env,encoding:'utf8'});assert.equal(r.status,1);assert.equal(readFileSync(f.log,{encoding:'utf8',flag:'a+'}), '');}finally{f.dispose();}}});
-test('independent residue readback accepts only complete absence and zero assignments',()=>{const f=fixture('residue-absent');try{const r=spawnSync('bash',[residue,f.binding,f.checksum,'2026-08-14T12:00:00Z',f.assignments,f.assignmentsSha()],{env:f.env,encoding:'utf8'});assert.equal(r.status,0,r.stderr);assert.match(r.stdout,/"result":"Clean"/);assert.match(r.stdout,/"vaultDisposition":"SoftDeletedRetained"/);}finally{f.dispose();}});
-test('residue or assignment ambiguity fails closed',()=>{for(const mode of ['residue-present','residue-absent']){const f=fixture(mode);try{if(mode==='residue-absent')writeFileSync(f.assignments,JSON.stringify({schemaVersion:1,roleAssignmentsRemoved:false,remainingAssignmentCount:1}));const r=spawnSync('bash',[residue,f.binding,f.checksum,'2026-08-14T12:00:00Z',f.assignments,f.assignmentsSha()],{env:f.env,encoding:'utf8'});assert.equal(r.status,1);}finally{f.dispose();}}});
+const catalog=JSON.parse(readFileSync(new URL('./foundation-resource-catalog.json',import.meta.url)));
+const catalogSha=createHash('sha256').update(readFileSync(new URL('./foundation-resource-catalog.json',import.meta.url))).digest('hex');
+const principal='11111111-2222-4333-8444-555555555555';
+const roleId=`/subscriptions/${catalog.subscriptionId}/providers/Microsoft.Authorization/roleDefinitions/927117fa-ab5d-42a2-b39e-762663171fa4`;
+const inventory=(present=[])=>({schemaVersion:1,operationId:'broker-foundation-inventory-0123456789abcdef',sourceSha:'a'.repeat(40),catalogSha256:catalogSha,entries:catalog.resources.map(x=>({id:x.id,type:x.type,state:present.includes(x.id)?'VerifiedPresent':'VerifiedAbsent'})),result:'Verified'});
+const plan=value=>{const scopes=expectedCleanupScopes(catalog,value);return {schemaVersion:1,operationId:'broker-foundation-assign-cleanup-0123456789abcdef',catalogSha256:catalogSha,inventorySha256:'b'.repeat(64),cleanupPrincipalId:principal,cleanupRoleDefinitionId:roleId,assignments:scopes.map(scope=>({scope,principalId:principal,roleDefinitionId:roleId,assignmentId:deterministicAssignmentId(scope,principal)}))};};
+const parents=()=>catalog.resources.filter(x=>x.id===x.cleanupParentId).map(x=>x.id);
+
+test('catalog binds the complete exact 23-resource graph and thirteen cleanup parents',()=>{assert.equal(validateCatalog(catalog).resources.length,23);assert.equal(parents().length,13);assert.deepEqual(catalog.resources.map(x=>x.dependencyOrder),Array.from({length:23},(_,i)=>i+1));});
+test('empty, early, middle, and complete deployments derive only verified-present cleanup parents',()=>{const cleanupParents=parents();for(const count of [0,1,6,13]){const selected=new Set(cleanupParents.slice(0,count));const present=catalog.resources.filter(x=>selected.has(x.cleanupParentId)).map(x=>x.id);const value=inventory(present);validateInventory(catalog,value);assert.equal(expectedCleanupScopes(catalog,value).length,count);validateAssignmentPlan(catalog,value,plan(value));}});
+test('inventory rejects unknown, duplicate, malformed, ambiguous, and wrong-type resources',()=>{const mutations=[v=>v.entries[0].id+='/other',v=>v.entries[1].id=v.entries[0].id,v=>v.entries[0].id='not-an-arm-id',v=>v.entries[0].state='Ambiguous',v=>v.entries[0].type='Microsoft.Network/virtualNetworks'];for(const mutate of mutations){const value=inventory();mutate(value);assert.throws(()=>validateInventory(catalog,value));}});
+test('assignment policy rejects broader scopes, absent targets, duplicate, missing, additional, and mismatched bindings',()=>{const value=inventory(parents());const mutations=[p=>p.assignments[0].scope=catalog.resourceGroupId,p=>p.assignments[0].scope=`/subscriptions/${catalog.subscriptionId}`,p=>p.assignments[0].scope=catalog.resources.find(x=>x.id!==x.cleanupParentId).id,p=>p.assignments.push(p.assignments[0]),p=>p.assignments.pop(),p=>p.assignments[0].principalId='22222222-2222-4333-8444-555555555555',p=>p.assignments[0].roleDefinitionId=p.assignments[0].roleDefinitionId.replace('9271','9272'),p=>p.assignments[0].assignmentId=p.assignments[0].assignmentId.replace(/.$/,'0')];for(const mutate of mutations){const candidate=structuredClone(plan(value));mutate(candidate);assert.throws(()=>validateAssignmentPlan(catalog,value,candidate));}});
+test('cleanup treats verified absence idempotently and deletes present parents in dependency order',()=>{const value=inventory(parents().slice(0,4));const calls=[];const deleted=new Set();const spawn=(command,args)=>{calls.push(args.join(' '));const id=args[args.indexOf('--ids')+1];if(args[1]==='delete'){deleted.add(id);return {status:0,stdout:'',stderr:''};}if(deleted.has(id))return {status:1,stdout:'',stderr:'(ResourceNotFound)'};const expected=catalog.resources.find(x=>x.id===id);return {status:0,stdout:JSON.stringify({id,type:expected.type}),stderr:''};};const result=executeCleanup(catalog,value,plan(value),spawn,()=>{});assert.equal(result.deletedScopeCount,4);assert.deepEqual(calls.filter(x=>x.includes('resource delete')).map(x=>x.split('--ids ')[1].split(' --')[0]),expectedCleanupScopes(catalog,value));});
+test('cleanup fails closed on deletion failure, timeout, and substituted pre-delete evidence',()=>{const value=inventory([parents()[0]]);for(const mode of ['delete','timeout','substitute']){const spawn=(command,args)=>{if(args[1]==='delete')return {status:mode==='delete'?1:0,stdout:'',stderr:''};const id=args[args.indexOf('--ids')+1];return {status:0,stdout:JSON.stringify({id:mode==='substitute'?`${id}/other`:id,type:'Microsoft.Web/sites'}),stderr:''};};assert.throws(()=>executeCleanup(catalog,value,plan(value),spawn,()=>{}),mode==='delete'?/cleanup-delete-failed/:mode==='timeout'?/cleanup-delete-timeout/:/cleanup-predelete-substitution/);}});
+test('final residue covers all 23 resources and retains soft-deleted Key Vault without purge',()=>{const value=inventory(parents());const spawn=()=>({status:1,stdout:'',stderr:'(ResourceNotFound)'});const final=collectFinalResidue(catalog,value,'broker-foundation-residue-0123456789abcdef','a'.repeat(40),catalogSha,spawn);assert.equal(final.entries.length,23);assert.equal(final.entries.find(x=>x.type==='Microsoft.KeyVault/vaults').state,'SoftDeletedRetained');assert.equal(final.result,'Clean');validateInventory(catalog,final,{final:true});});
+test('complete residue and retained live resources fail final verification',()=>{const value=inventory(parents());const target=catalog.resources[0];const spawn=(command,args)=>{const id=args[args.indexOf('--ids')+1];return id===target.id?{status:0,stdout:JSON.stringify({id,type:target.type}),stderr:''}:{status:1,stdout:'',stderr:'(ResourceNotFound)'};};const final=collectFinalResidue(catalog,value,'broker-foundation-residue-0123456789abcdef','a'.repeat(40),catalogSha,spawn);assert.equal(final.result,'Failure');assert.throws(()=>validateInventory(catalog,final,{final:true}));});
+test('inventory collection emits bounded ambiguous evidence rather than raw Azure errors',()=>{const huge=`(AuthorizationFailed)${'secret'.repeat(2000)}`;const result=collectInventory(catalog,'broker-foundation-inventory-0123456789abcdef','a'.repeat(40),catalogSha,()=>({status:1,stdout:'',stderr:huge}));assert.equal(result.result,'Ambiguous');assert.equal(JSON.stringify(result).includes('secret'),false);assert.equal(result.entries.every(x=>x.state==='Ambiguous'),true);});
+test('inventory distinguishes bounded process failure without retaining raw evidence',()=>{const result=collectInventory(catalog,'broker-foundation-inventory-0123456789abcdef','a'.repeat(40),catalogSha,()=>({status:null,error:new Error('sensitive')}));assert.equal(result.result,'Failure');assert.equal(JSON.stringify(result).includes('sensitive'),false);assert.equal(result.entries.every(x=>x.state==='Failure'),true);});

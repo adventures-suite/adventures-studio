@@ -2,15 +2,12 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "additionalProperties": false,
-  "required": ["operationId","sourceSha","subscriptionId","resourceGroupId","resources"],
+  "required": ["operationId","sourceSha","catalogSha256","inventorySha256","assignmentPlanSha256"],
   "properties": {
     "operationId": { "type": "string", "pattern": "^broker-foundation-cleanup-[a-z0-9]{16,64}$" },
     "sourceSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
-    "subscriptionId": { "type": "string", "format": "uuid" },
-    "resourceGroupId": { "type": "string", "pattern": "^/subscriptions/[0-9a-f-]{36}/resourceGroups/[A-Za-z0-9._()-]+$" },
-    "resources": {
-      "type": "array", "minItems": 13, "maxItems": 13, "uniqueItems": true,
-      "items": { "type": "string", "pattern": "^/subscriptions/[0-9a-f-]{36}/resourceGroups/[A-Za-z0-9._()-]+/providers/" }
-    }
+    "catalogSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "inventorySha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "assignmentPlanSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
   }
 }

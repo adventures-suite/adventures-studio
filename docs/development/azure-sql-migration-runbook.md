@@ -114,12 +114,23 @@ migration, SQL-bootstrap, application, human, or group identity. The
 provisioner receives only create/reconcile actions for reviewed foundation
 types and receives no delete or authorization authority.
 
-Independent cleanup receives its fixed cleanup role only at each exact
-post-deployment broker resource ID, never at resource-group or subscription
-scope. Cleanup is sequential, zero-retry, and stops after the first failed or
-ambiguous operation. It does not roll back or purge the protected Key Vault. A
-distinct type-limited reader and separate RBAC assignment inventory are
+Independent cleanup receives its fixed cleanup role only at the exact
+verified-present cleanup-parent resource IDs, never at resource-group or
+subscription scope. After any complete or partial deployment outcome, the
+residue reader must first classify all 23 checksum-bound resource IDs and
+types. Unknown, additional, substituted, duplicated, wrong-type, failed, or
+ambiguous evidence stops before assignment or deletion. The Owner then creates
+only the validated subset of deterministic resource-scoped assignments;
+resources proven absent receive no assignment. Cleanup is dependency ordered,
+bounded-polling, zero-retry, and stops after the first failed, timed-out, or
+ambiguous operation. It does not purge the protected Key Vault. Complete
+23-resource residue evidence and a separate RBAC assignment inventory are
 mandatory before evidence may report clean residue.
+
+This is an Owner-assisted lifecycle, not automatic or unconditional cleanup:
+inventory, exact-subset validation, resource-scoped assignment, cleanup and
+polling, full-graph residue proof, removal of every temporary assignment, and
+fresh-session denial proof are separately approved steps.
 
 The repository templates and manual workflow are inert. They do not create an
 identity, role, assignment, resource, FIC, credential, or runner. Each live

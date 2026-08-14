@@ -137,10 +137,30 @@ write, credential operation, account-key read, secret operation, or broad
 Contributor/Owner authority.
 
 Azure RBAC can enforce the independent cleanup boundary because the cleanup
-role is assigned only after foundation readback and separately at each exact
-immutable resource ID. It is never assigned at subscription or resource-group
+role is assigned separately at each exact verified-present immutable cleanup
+parent resource ID. It is never assigned at subscription or resource-group
 scope. The role contains read/delete actions only for broker resource types.
-It cannot create, update, purge, grant, or delete a sibling resource.
+It cannot create, update, purge, grant, or delete a sibling resource. A
+checksum-bound catalog defines all 23 foundation resources, their exact ARM
+IDs and types, parents, 13 cleanup parents, and dependency order.
+
+Cleanup is Owner-assisted, not unconditional or automatic. After successful
+or partially failed provisioning, the residue-reader identity first inventories
+every catalog entry. Evidence must classify each entry as verified present or
+verified absent; failure, ambiguity, an unknown or additional ID, substitution,
+wrong type, duplicate, or inconsistent parent state stops the boundary. Only
+then may an Owner arrange exact-resource cleanup-role assignments for the
+verified-present cleanup-parent subset. Absent resources receive no assignment.
+The assignment-plan policy rejects subscription or resource-group scope and
+any missing, additional, duplicate, nondeterministic, wrong-role, or
+wrong-principal assignment.
+
+Cleanup accepts only the checksum-bound inventory and validated assignment
+plan, treats previously verified absence idempotently, deletes parents in the
+catalog dependency order without retry, and polls each deletion to conclusive
+absence with a bounded deadline. A timeout, failed deletion, or ambiguous
+readback stops later deletion. The final residue pass covers all 23 catalog
+entries, not only cleanup parents.
 
 Exact-resource assignments disappear as their resources are deleted, so the
 cleanup identity cannot prove its own residue. The distinct residue reader has
@@ -152,10 +172,17 @@ evidence. Key Vault purge protection is preserved: cleanup deletes the live
 vault but classifies the recoverable object as `SoftDeletedRetained`; it never
 purges or falsely claims total object absence.
 
-Identity creation, role-definition creation, assignment, foundation
-provisioning, cleanup, assignment removal, and residue verification are
-separate approval boundaries. `broker-foundation-authority.yml` is manual and
-Environment-gated but deliberately fails before Azure login or mutation.
+Identity creation, role-definition creation, provisioner assignment,
+foundation provisioning, partial inventory, cleanup assignment, cleanup,
+assignment removal, full-graph residue verification, and fresh-session denial
+proof are separate approval boundaries. The required sequence after any
+foundation outcome is: inventory; validate the exact subset; assign cleanup
+only at verified-present cleanup parents; clean and poll; prove full-graph
+residue; remove temporary assignments; and prove denial. Human action is
+required to create assignments after the inventory, so the repository never
+claims automatic cleanup after cancellation, runner loss, or partial failure.
+`broker-foundation-authority.yml` is manual and Environment-gated but
+deliberately fails before Azure login or mutation.
 
 ## Rotation, emergency response, and cost
 

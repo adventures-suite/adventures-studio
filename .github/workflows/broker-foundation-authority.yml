@@ -5,7 +5,9 @@ on:
       approved_source_sha: { description: Exact approved protected-main SHA, required: true, type: string }
       identities_template_sha256: { description: Exact approved identity-template SHA-256, required: true, type: string }
       roles_template_sha256: { description: Exact approved role-template SHA-256, required: true, type: string }
-      assignment_manifest_sha256: { description: Exact approved separate-assignment manifest SHA-256, required: true, type: string }
+      resource_catalog_sha256: { description: Exact approved 23-resource catalog SHA-256, required: true, type: string }
+      partial_inventory_sha256: { description: Exact residue-reader inventory SHA-256, required: true, type: string }
+      cleanup_assignment_plan_sha256: { description: Exact validated subset assignment-plan SHA-256, required: true, type: string }
 permissions: { contents: read }
 concurrency: { group: broker-foundation-authority, cancel-in-progress: false }
 jobs:

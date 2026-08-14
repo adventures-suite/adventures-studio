@@ -12,6 +12,9 @@
   },
   "liveBindings": "required-checksum-bound-input-with-no-default",
   "cleanupAssignmentModel": "exact-resource-id-only",
+  "partialFailureModel": "owner-assisted-inventory-validated-subset",
+  "resourceCatalogCount": 23,
+  "cleanupParentCount": 13,
   "keyVaultDisposition": "soft-deleted-retained-no-purge",
   "automaticRetry": false,
   "automaticRollback": false
