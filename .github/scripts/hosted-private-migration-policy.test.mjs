@@ -9,7 +9,10 @@ test('hosted migration workflow preserves exact manual and identity boundaries',
   assert.match(workflow, /workflow_dispatch:/);
   assert.doesNotMatch(workflow, /^\s+(push|pull_request):/m);
   assert.match(workflow, /environment: database-development/);
-  assert.match(workflow, /group: private-sql-migration-vnet/);
+  assert.match(workflow, /RUNNER_GROUP: \$\{\{ vars\.PRIVATE_MIGRATION_RUNNER_GROUP \}\}/);
+  assert.match(workflow, /test "\$RUNNER_GROUP" = 'private-sql-migration-vnet'/);
+  assert.match(workflow, /group: \$\{\{ vars\.PRIVATE_MIGRATION_RUNNER_GROUP \}\}/);
+  assert.doesNotMatch(workflow, /^\s+group: private-sql-migration-vnet$/m);
   assert.match(workflow, /labels: adventures-suite-private-sql/);
   assert.match(workflow, /allow-no-subscriptions: true/);
   assert.match(workflow, /ADVENTURESSUITE_MIGRATION_CREDENTIAL_MODE: github-oidc-azure-cli/);
