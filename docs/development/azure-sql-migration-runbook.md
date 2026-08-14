@@ -87,9 +87,12 @@ dedicated `10.40.3.0/27` subnet, dedicated NSG, and
 `316268438`. Validate all six outputs, including the authoritative
 `tags.GitHubId` network-configuration ID, before configuring GitHub.
 
-The NSG denies inbound traffic; allows only Azure DNS TCP/UDP 53, the fixed SQL
-private endpoint on TCP 1433, and Internet TCP 443; and denies other outbound
-traffic. The HTTPS destination is broad because an NSG cannot filter FQDNs.
+The NSG denies inbound traffic; allows only the fixed SQL private endpoint on
+TCP 1433 and Internet TCP 443; and denies other ordinary outbound traffic.
+Azure's default platform DNS remains available despite an ordinary outbound
+deny rule unless it is explicitly blocked with Azure's special platform tag;
+the template contains no DNS allow or deny rule. The HTTPS destination is broad
+because an NSG cannot filter FQDNs.
 GitHub recommends separately managed DNS/domain controls and is retiring its
 legacy static-IP template. NAT Gateway, Azure Firewall, DNS filtering, or any
 other paid egress service is outside this decision and requires separate

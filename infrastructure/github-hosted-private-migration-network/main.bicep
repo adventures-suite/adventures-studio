@@ -44,32 +44,6 @@ resource networkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2024-05-0
         }
       }
       {
-        name: 'AllowAzureDnsOutboundUdp'
-        properties: {
-          protocol: 'Udp'
-          sourcePortRange: '*'
-          destinationPortRange: '53'
-          sourceAddressPrefix: '*'
-          destinationAddressPrefix: 'AzurePlatformDNS'
-          access: 'Allow'
-          priority: 200
-          direction: 'Outbound'
-        }
-      }
-      {
-        name: 'AllowAzureDnsOutboundTcp'
-        properties: {
-          protocol: 'Tcp'
-          sourcePortRange: '*'
-          destinationPortRange: '53'
-          sourceAddressPrefix: '*'
-          destinationAddressPrefix: 'AzurePlatformDNS'
-          access: 'Allow'
-          priority: 210
-          direction: 'Outbound'
-        }
-      }
-      {
         name: 'AllowPrivateSqlOutbound'
         properties: {
           protocol: 'Tcp'
