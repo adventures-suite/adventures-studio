@@ -40,7 +40,7 @@ resource showcaseApp 'Microsoft.Web/sites@2023-12-01' = {
       http20Enabled: true
       minTlsVersion: '1.2'
       healthCheckPath: '/health'
-      linuxFxVersion: ''
+      linuxFxVersion: 'DOTNETCORE|10.0'
       appCommandLine: './TheSimontonAdventures.Web'
       appSettings: [
         {
