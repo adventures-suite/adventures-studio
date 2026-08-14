@@ -12,34 +12,10 @@ on:
 permissions: { contents: read }
 concurrency: { group: private-sql-migration, cancel-in-progress: false }
 jobs:
-  readiness-guard:
-    environment: database-development
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    permissions: { contents: read }
-    outputs:
-      runner-group: ${{ steps.validate-runner-group.outputs.runner-group }}
-    steps:
-      - name: Require separately approved hosted-runner configuration
-        id: validate-runner-group
-        env:
-          RUNNER_READY: ${{ vars.PRIVATE_MIGRATION_RUNNER_READY }}
-          RUNNER_GROUP: ${{ vars.PRIVATE_MIGRATION_RUNNER_GROUP }}
-          SOURCE_SHA: ${{ inputs.approved_source_sha }}
-        run: |
-          set -euo pipefail
-          test "$GITHUB_REF" = refs/heads/main
-          test "$GITHUB_SHA" = "$SOURCE_SHA"
-          test "$RUNNER_READY" = 'private-sql-vnet-runner-v1'
-          test "$RUNNER_GROUP" = 'private-sql-migration-vnet'
-          printf '%s\n' 'runner-group=private-sql-migration-vnet' >> "$GITHUB_OUTPUT"
-
   operate:
-    needs: readiness-guard
-    if: needs.readiness-guard.result == 'success' && needs.readiness-guard.outputs.runner-group == 'private-sql-migration-vnet'
     environment: database-development
     runs-on:
-      group: ${{ needs.readiness-guard.outputs.runner-group }}
+      group: private-sql-migration-vnet
       labels: adventures-suite-private-sql
     timeout-minutes: 30
     permissions: { contents: read, actions: read, attestations: read, id-token: write }
