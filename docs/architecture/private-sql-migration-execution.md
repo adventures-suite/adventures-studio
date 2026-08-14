@@ -66,10 +66,13 @@ VNet attachment does not attach a managed identity. Hosted execution uses only
 Azure-hosted compute. Neither mode falls back. SQL token requests use only
 `https://database.windows.net/.default`.
 
-The dedicated NSG denies all inbound traffic, permits Azure DNS on TCP/UDP 53,
-the fixed private SQL endpoint `10.40.1.4/32` on TCP 1433, and outbound HTTPS
-on TCP 443, then denies other outbound traffic. The HTTPS rule is necessarily
-address-broad: NSGs do not filter FQDNs. GitHub now recommends DNS/domain-based
+The dedicated NSG denies all inbound traffic, permits the fixed private SQL
+endpoint `10.40.1.4/32` on TCP 1433 and outbound HTTPS on TCP 443, then denies
+other ordinary outbound traffic. Azure's default platform DNS remains available
+despite an ordinary outbound deny rule unless it is explicitly blocked with
+Azure's special platform tag; this design adds no DNS allow or deny rule. The
+HTTPS rule is necessarily address-broad: NSGs do not filter FQDNs. GitHub now
+recommends DNS/domain-based
 egress control because its legacy static IP template is being retired; Azure
 Firewall, NAT Gateway, DNS filtering, or another paid egress service remains a
 separate option requiring approval.

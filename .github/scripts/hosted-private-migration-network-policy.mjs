@@ -53,14 +53,17 @@ export function validateTemplate(template) {
   if (settings.name !== "[parameters('networkSettingsName')]" || settings.properties?.businessId !== "[parameters('githubBusinessId')]" || settings.properties?.subnetId !== "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('subnetName'))]") throw new Error('network_settings_binding_invalid');
 
   const rules = nsg.properties?.securityRules;
-  if (!Array.isArray(rules) || rules.length !== 6) throw new Error('nsg_rules_invalid');
+  if (!Array.isArray(rules) || rules.length !== 4) throw new Error('nsg_rules_invalid');
   const names = rules.map((rule) => rule.name);
   if (new Set(names).size !== names.length) throw new Error('nsg_rule_duplicate');
+  for (const rule of rules) {
+    const properties = rule?.properties;
+    if (!properties || typeof properties !== 'object') throw new Error('nsg_rule_invalid');
+    if (properties.destinationPortRange === '53' || properties.destinationAddressPrefix === 'AzurePlatformDNS') throw new Error('dns_rule_forbidden');
+  }
   const exactRules = new Map(rules.map((rule) => [rule.name, rule.properties]));
   const required = {
     DenyAllInbound: ['*', '*', '*', 'Deny', 'Inbound', 100],
-    AllowAzureDnsOutboundUdp: ['Udp', '53', 'AzurePlatformDNS', 'Allow', 'Outbound', 200],
-    AllowAzureDnsOutboundTcp: ['Tcp', '53', 'AzurePlatformDNS', 'Allow', 'Outbound', 210],
     AllowPrivateSqlOutbound: ['Tcp', '1433', "[variables('sqlPrivateEndpointAddress')]", 'Allow', 'Outbound', 220],
     AllowHttpsOutbound: ['Tcp', '443', 'Internet', 'Allow', 'Outbound', 230],
     DenyAllOutbound: ['*', '*', '*', 'Deny', 'Outbound', 4000],
