@@ -11,6 +11,7 @@ internal static class AzureDevelopmentBootstrapper
     private const string RuntimeRoleName = "AdventuresSuiteAuthenticationRuntime";
     private const string MembershipRuntimeRoleName = "AdventuresSuiteMembershipRuntime";
     private const string CompanionReadRuntimeRoleName = "AdventuresSuiteCompanionReadRuntime";
+    private const string PlanningRuntimeRoleName = "AdventuresSuitePlanningRuntime";
     private const string WrappingKeyName = "adventures-suite-data-protection";
     private const string CertificateName = "adventures-suite-external-id";
 
@@ -29,31 +30,59 @@ internal static class AzureDevelopmentBootstrapper
 
     /// <summary>Builds the migration-only grants for an approved contained principal alias.</summary>
     internal static string BuildMigrationGrants(string principalAlias) => $"""
-        IF DATABASE_PRINCIPAL_ID(N'{RuntimeRoleName}') IS NOT NULL
-            AND NOT EXISTS (
-                SELECT 1
-                FROM sys.database_principals
-                WHERE name = N'{RuntimeRoleName}' AND type = 'R')
-            THROW 51000, 'The authentication runtime principal name is not an approved database role.', 1;
+        IF SCHEMA_ID(N'planning') IS NULL EXEC(N'CREATE SCHEMA planning AUTHORIZATION db_ddladmin;');
+        IF SCHEMA_ID(N'auth') IS NULL EXEC(N'CREATE SCHEMA auth AUTHORIZATION db_ddladmin;');
+        IF SCHEMA_ID(N'audit') IS NULL EXEC(N'CREATE SCHEMA audit AUTHORIZATION db_ddladmin;');
+        IF EXISTS (
+            SELECT 1 FROM sys.schemas AS schemas
+            INNER JOIN sys.database_principals AS owners ON owners.principal_id = schemas.principal_id
+            WHERE schemas.name IN (N'planning', N'auth', N'audit') AND owners.name <> N'db_ddladmin')
+            THROW 51000, 'A migration schema does not have the approved administrator owner.', 1;
+
         IF DATABASE_PRINCIPAL_ID(N'{RuntimeRoleName}') IS NULL
             CREATE ROLE [{RuntimeRoleName}] AUTHORIZATION [dbo];
-        IF DATABASE_PRINCIPAL_ID(N'{MembershipRuntimeRoleName}') IS NOT NULL
-            AND NOT EXISTS (
-                SELECT 1
-                FROM sys.database_principals
-                WHERE name = N'{MembershipRuntimeRoleName}' AND type = 'R')
-            THROW 51000, 'The membership runtime principal name is not an approved database role.', 1;
         IF DATABASE_PRINCIPAL_ID(N'{MembershipRuntimeRoleName}') IS NULL
             CREATE ROLE [{MembershipRuntimeRoleName}] AUTHORIZATION [dbo];
+        IF DATABASE_PRINCIPAL_ID(N'{CompanionReadRuntimeRoleName}') IS NULL
+            CREATE ROLE [{CompanionReadRuntimeRoleName}] AUTHORIZATION [dbo];
+        IF DATABASE_PRINCIPAL_ID(N'{PlanningRuntimeRoleName}') IS NULL
+            CREATE ROLE [{PlanningRuntimeRoleName}] AUTHORIZATION [dbo];
+        IF EXISTS (
+            SELECT 1 FROM sys.database_principals AS roles
+            LEFT JOIN sys.database_principals AS owners ON owners.principal_id = roles.owning_principal_id
+            WHERE roles.name IN (N'{RuntimeRoleName}', N'{MembershipRuntimeRoleName}',
+                N'{CompanionReadRuntimeRoleName}', N'{PlanningRuntimeRoleName}')
+              AND (roles.type <> 'R' OR owners.name <> N'dbo'))
+            THROW 51000, 'A runtime principal is not an approved dbo-owned database role.', 1;
+
+        IF OBJECT_ID(N'dbo.AdventuresSuiteSchemaVersions') IS NULL
+            CREATE TABLE dbo.AdventuresSuiteSchemaVersions
+            (
+                Id int IDENTITY(1,1) NOT NULL CONSTRAINT PK_AdventuresSuiteSchemaVersions PRIMARY KEY,
+                ScriptName nvarchar(255) NOT NULL,
+                Applied datetime NOT NULL
+            );
+        IF OBJECT_ID(N'dbo.AdventuresSuiteSchemaVersions', N'U') IS NULL
+            THROW 51000, 'The migration journal name is not an approved table.', 1;
+        IF (SELECT COUNT(*) FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.AdventuresSuiteSchemaVersions')) <> 3
+            OR NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.AdventuresSuiteSchemaVersions') AND name=N'Id' AND system_type_id=56 AND is_identity=1 AND is_nullable=0)
+            OR NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.AdventuresSuiteSchemaVersions') AND name=N'ScriptName' AND system_type_id=231 AND max_length=510 AND is_nullable=0)
+            OR NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.AdventuresSuiteSchemaVersions') AND name=N'Applied' AND system_type_id=61 AND is_nullable=0)
+            THROW 51000, 'The migration journal does not match the approved DbUp shape.', 1;
 
         ALTER USER {principalAlias} WITH DEFAULT_SCHEMA = [dbo];
-        IF ISNULL(IS_ROLEMEMBER(N'db_ddladmin', @AliasParameter), 0) <> 1
-            ALTER ROLE [db_ddladmin] ADD MEMBER {principalAlias};
-        IF ISNULL(IS_ROLEMEMBER(N'db_datareader', @AliasParameter), 0) <> 1
-            ALTER ROLE [db_datareader] ADD MEMBER {principalAlias};
-        IF ISNULL(IS_ROLEMEMBER(N'db_datawriter', @AliasParameter), 0) <> 1
-            ALTER ROLE [db_datawriter] ADD MEMBER {principalAlias};
+        IF ISNULL(IS_ROLEMEMBER(N'db_owner', @AliasParameter), 0) = 1 ALTER ROLE [db_owner] DROP MEMBER {principalAlias};
+        IF ISNULL(IS_ROLEMEMBER(N'db_ddladmin', @AliasParameter), 0) = 1 ALTER ROLE [db_ddladmin] DROP MEMBER {principalAlias};
+        IF ISNULL(IS_ROLEMEMBER(N'db_datareader', @AliasParameter), 0) = 1 ALTER ROLE [db_datareader] DROP MEMBER {principalAlias};
+        IF ISNULL(IS_ROLEMEMBER(N'db_datawriter', @AliasParameter), 0) = 1 ALTER ROLE [db_datawriter] DROP MEMBER {principalAlias};
         GRANT CONNECT TO {principalAlias};
+        GRANT CREATE TABLE TO {principalAlias};
+        GRANT VIEW DEFINITION TO {principalAlias};
+        GRANT CONTROL ON SCHEMA::planning TO {principalAlias};
+        GRANT CONTROL ON SCHEMA::auth TO {principalAlias};
+        GRANT CONTROL ON SCHEMA::audit TO {principalAlias};
+        GRANT SELECT, INSERT ON OBJECT::dbo.AdventuresSuiteSchemaVersions TO {principalAlias};
+        REVOKE UPDATE, DELETE ON OBJECT::dbo.AdventuresSuiteSchemaVersions FROM {principalAlias};
         """;
 
     /// <summary>Binds the runtime principal after migrations have created the application role.</summary>
@@ -382,17 +411,34 @@ internal static class AzureDevelopmentBootstrapper
         await using var command = connection.CreateCommand();
         command.CommandText = """
             IF HAS_PERMS_BY_NAME(DB_NAME(), 'DATABASE', 'CONNECT') <> 1
-                OR IS_ROLEMEMBER('db_ddladmin') <> 1
-                OR IS_ROLEMEMBER('db_datareader') <> 1
-                OR IS_ROLEMEMBER('db_datawriter') <> 1
+                OR HAS_PERMS_BY_NAME(DB_NAME(), 'DATABASE', 'CREATE TABLE') <> 1
+                OR HAS_PERMS_BY_NAME(DB_NAME(), 'DATABASE', 'VIEW DEFINITION') <> 1
+                OR HAS_PERMS_BY_NAME(DB_NAME(), 'DATABASE', 'ALTER ANY ROLE') <> 0
+                OR HAS_PERMS_BY_NAME(DB_NAME(), 'DATABASE', 'CREATE SCHEMA') <> 0
+                OR ISNULL(IS_ROLEMEMBER('db_owner'), 0) <> 0
+                OR ISNULL(IS_ROLEMEMBER('db_ddladmin'), 0) <> 0
+                OR ISNULL(IS_ROLEMEMBER('db_datareader'), 0) <> 0
+                OR ISNULL(IS_ROLEMEMBER('db_datawriter'), 0) <> 0
+                OR EXISTS (SELECT 1 FROM sys.database_role_members WHERE member_principal_id = DATABASE_PRINCIPAL_ID())
+                OR HAS_PERMS_BY_NAME(N'planning', 'SCHEMA', 'CONTROL') <> 1
+                OR HAS_PERMS_BY_NAME(N'auth', 'SCHEMA', 'CONTROL') <> 1
+                OR HAS_PERMS_BY_NAME(N'audit', 'SCHEMA', 'CONTROL') <> 1
+                OR HAS_PERMS_BY_NAME(N'dbo', 'SCHEMA', 'CONTROL') <> 0
                 OR OBJECT_ID(N'dbo.AdventuresSuiteSchemaVersions', N'U') IS NULL
-                OR OBJECT_ID(N'auth.Users', N'U') IS NULL
-                OR OBJECT_ID(N'auth.ExternalIdentities', N'U') IS NULL
-                OR OBJECT_ID(N'auth.UserSessions', N'U') IS NULL
-                OR OBJECT_ID(N'auth.CreatorMemberships', N'U') IS NULL
-                OR OBJECT_ID(N'auth.CreatorMembershipRoles', N'U') IS NULL
-                OR OBJECT_ID(N'auth.CreatorMembershipPermissionGrants', N'U') IS NULL
-                OR OBJECT_ID(N'audit.AuditEvents', N'U') IS NULL
+                OR HAS_PERMS_BY_NAME(N'dbo.AdventuresSuiteSchemaVersions', 'OBJECT', 'SELECT') <> 1
+                OR HAS_PERMS_BY_NAME(N'dbo.AdventuresSuiteSchemaVersions', 'OBJECT', 'INSERT') <> 1
+                OR HAS_PERMS_BY_NAME(N'dbo.AdventuresSuiteSchemaVersions', 'OBJECT', 'UPDATE') <> 0
+                OR HAS_PERMS_BY_NAME(N'dbo.AdventuresSuiteSchemaVersions', 'OBJECT', 'DELETE') <> 0
+                OR (SELECT COUNT(*) FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.AdventuresSuiteSchemaVersions')) <> 3
+                OR EXISTS (
+                    SELECT 1 FROM sys.database_permissions
+                    WHERE grantee_principal_id = DATABASE_PRINCIPAL_ID()
+                      AND NOT (
+                        (class = 0 AND permission_name IN (N'CONNECT', N'CREATE TABLE', N'VIEW DEFINITION') AND state = 'G')
+                        OR (class = 3 AND permission_name = N'CONTROL' AND state = 'G'
+                            AND major_id IN (SCHEMA_ID(N'planning'), SCHEMA_ID(N'auth'), SCHEMA_ID(N'audit')))
+                        OR (class = 1 AND major_id = OBJECT_ID(N'dbo.AdventuresSuiteSchemaVersions')
+                            AND permission_name IN (N'SELECT', N'INSERT') AND state = 'G')))
                 THROW 51000, 'Migration permissions or schema are unavailable.', 1;
 
             SELECT TOP (0) ScriptName FROM dbo.AdventuresSuiteSchemaVersions;

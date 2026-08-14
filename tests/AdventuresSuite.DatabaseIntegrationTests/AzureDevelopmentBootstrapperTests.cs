@@ -20,7 +20,7 @@ public sealed class AzureDevelopmentBootstrapperTests
     }
 
     [Fact]
-    public void MigrationGrantsAssignOwnershipCapableDefaultSchema()
+    public void MigrationGrantsCreateAdministratorPrerequisitesAndExactTemporaryCatalog()
     {
         var grants = AzureDevelopmentBootstrapper.BuildMigrationGrants("[migration-principal]");
 
@@ -32,14 +32,20 @@ public sealed class AzureDevelopmentBootstrapperTests
             "CREATE ROLE [AdventuresSuiteMembershipRuntime] AUTHORIZATION [dbo];",
             grants,
             StringComparison.Ordinal);
-        Assert.Contains(
-            "The membership runtime principal name is not an approved database role.",
-            grants,
-            StringComparison.Ordinal);
+        Assert.Contains("CREATE ROLE [AdventuresSuiteCompanionReadRuntime] AUTHORIZATION [dbo];", grants, StringComparison.Ordinal);
+        Assert.Contains("CREATE ROLE [AdventuresSuitePlanningRuntime] AUTHORIZATION [dbo];", grants, StringComparison.Ordinal);
+        Assert.Contains("CREATE TABLE dbo.AdventuresSuiteSchemaVersions", grants, StringComparison.Ordinal);
         Assert.Contains(
             "ALTER USER [migration-principal] WITH DEFAULT_SCHEMA = [dbo];",
             grants,
             StringComparison.Ordinal);
+        Assert.Contains("GRANT CREATE TABLE", grants, StringComparison.Ordinal);
+        Assert.Contains("GRANT VIEW DEFINITION", grants, StringComparison.Ordinal);
+        Assert.Contains("GRANT CONTROL ON SCHEMA::planning", grants, StringComparison.Ordinal);
+        Assert.Contains("GRANT CONTROL ON SCHEMA::auth", grants, StringComparison.Ordinal);
+        Assert.Contains("GRANT CONTROL ON SCHEMA::audit", grants, StringComparison.Ordinal);
+        Assert.Contains("GRANT SELECT, INSERT ON OBJECT::dbo.AdventuresSuiteSchemaVersions", grants, StringComparison.Ordinal);
+        Assert.DoesNotContain("ADD MEMBER [migration-principal]", grants, StringComparison.Ordinal);
     }
 
     [Fact]

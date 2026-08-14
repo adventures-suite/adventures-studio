@@ -74,6 +74,17 @@ short-lived one-job runner registration, downloads and verifies the attested
 artifact, resolves the private SQL endpoint, authenticates as the exact UAMI,
 and is deleted after every outcome.
 
+The repository-defined SQL boundary separates three authorities. An Entra
+administrator creates and owns the `planning`, `auth`, and `audit` schemas,
+the four dbo-owned runtime roles, the exact DbUp journal table, and the
+contained migration user. The temporary migration principal receives only
+`CONNECT`, `CREATE TABLE`, `VIEW DEFINITION`, schema `CONTROL` on those three
+schemas, and journal `SELECT`/`INSERT`. It receives no fixed-role membership,
+schema ownership, role administration, schema creation, journal
+`UPDATE`/`DELETE`, or unrelated `dbo` authority. Runtime principals retain
+only their separately verified application DML grants and denials. Live
+bootstrap remains a later, exact approval boundary.
+
 The proposed VM uses existing UAMI `id-adventures-suite-migrate-job-dev`
 (object ID `ffc9a4bd-67c4-44af-82dc-b7f663f8bea5`, client ID
 `d0da8236-91dc-4454-8a3d-19d08a406e5d`). Repository text never substitutes for

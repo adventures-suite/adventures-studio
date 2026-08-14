@@ -162,15 +162,22 @@ Application identity:
 Migration identity:
 
 - `CONNECT` to the one application database;
-- approved development `db_ddladmin` membership;
-- read/write access to `dbo.AdventuresSuiteSchemaVersions` and migration-required
-  data changes;
+- database `CREATE TABLE` and `VIEW DEFINITION`;
+- schema-scoped `CONTROL` only on administrator-owned `planning`, `auth`, and
+  `audit` schemas;
+- `SELECT` and `INSERT` only on the administrator-created
+  `dbo.AdventuresSuiteSchemaVersions` journal;
+- no journal `UPDATE` or `DELETE`, fixed database-role membership, database
+  `ALTER ANY ROLE` or `CREATE SCHEMA`, or authority over unrelated `dbo`
+  objects;
 - no `db_owner`;
 - no server-level database, login, or security administration; and
 - no runtime application assignment.
 
-Before production, review whether a custom migration role can replace the broad
-fixed development `db_ddladmin` role.
+The administrator, not the migration identity, owns the three schemas, creates
+the exact DbUp journal shape and four dbo-owned runtime roles, and creates the
+contained migration user. The bootstrap and verifier fail closed on missing,
+additional, inherited, fixed-role, or incorrectly scoped authority.
 
 ## Infrastructure-as-Code Boundary
 
@@ -213,16 +220,18 @@ The private SQL execution path must run the database steps in this exact order:
 1. An Entra database administrator runs `--bootstrap-sql` once with
    `ADVENTURESSUITE_ADMIN_SQL_CONNECTION_STRING` and the approved migration
    principal object ID, client ID, and exact display name. This creates only
-   the migration contained user, the empty source-controlled runtime roles,
-   and its development migration grants. Runtime roles are pre-created under
+   the migration contained user, administrator-owned schemas, exact DbUp
+   journal, empty source-controlled runtime roles, and the explicit temporary
+   migration permission catalog. Runtime roles are pre-created under
    administrator authority so the migration identity never receives role
-   administration.
+   administration or schema ownership.
 2. The migration workload identity runs `--migrate` with
    `ADVENTURESSUITE_SQL_CONNECTION_STRING`.
 3. The Entra database administrator runs `--bind-runtime` only after the
    migration has created the runtime database role.
 4. The migration workload identity runs `--verify-permissions` to prove its
-   connection, DDL role, migration journal, and authentication schema access.
+   exact database, schema, and journal catalog and the absence of broader or
+   inherited authority.
 
 `--bootstrap-key-vault` is a separate, explicit control-plane/data-plane
 operation. It must not run implicitly with a database migration. It creates a
