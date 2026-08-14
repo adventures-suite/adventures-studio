@@ -14,6 +14,10 @@ const roleId=`/subscriptions/${catalog.subscriptionId}/providers/Microsoft.Autho
 const inventory=(present=[])=>({schemaVersion:1,operationId:'broker-foundation-inventory-0123456789abcdef',sourceSha:'a'.repeat(40),catalogSha256:catalogSha,entries:catalog.resources.map(x=>({id:x.id,type:x.type,state:present.includes(x.id)?'VerifiedPresent':'VerifiedAbsent'})),result:'Verified'});
 const plan=value=>{const scopes=expectedCleanupScopes(catalog,value);return {schemaVersion:1,operationId:'broker-foundation-assign-cleanup-0123456789abcdef',catalogSha256:catalogSha,inventorySha256:'b'.repeat(64),cleanupPrincipalId:principal,cleanupRoleDefinitionId:roleId,assignments:scopes.map(scope=>({scope,principalId:principal,roleDefinitionId:roleId,assignmentId:deterministicAssignmentId(scope,principal)}))};};
 const parents=()=>catalog.resources.filter(x=>x.id===x.cleanupParentId).map(x=>x.id);
+const storageAccount=catalog.resources.find(x=>x.type==='Microsoft.Storage/storageAccounts');
+const storageChildren=catalog.resources.filter(x=>x.type.startsWith('Microsoft.Storage/storageAccounts/'));
+const absentResult=code=>({status:1,stdout:'',stderr:`(${code})`});
+const inventoryWith=(responseForId,calls=[])=>collectInventory(catalog,'broker-foundation-inventory-0123456789abcdef','a'.repeat(40),catalogSha,(command,args)=>{const id=args[args.indexOf('--ids')+1];calls.push(id);return responseForId(id);});
 
 test('catalog binds the complete exact 23-resource graph and thirteen cleanup parents',()=>{assert.equal(validateCatalog(catalog).resources.length,23);assert.equal(parents().length,13);assert.deepEqual(catalog.resources.map(x=>x.dependencyOrder),Array.from({length:23},(_,i)=>i+1));});
 test('empty, early, middle, and complete deployments derive only verified-present cleanup parents',()=>{const cleanupParents=parents();for(const count of [0,1,6,13]){const selected=new Set(cleanupParents.slice(0,count));const present=catalog.resources.filter(x=>selected.has(x.cleanupParentId)).map(x=>x.id);const value=inventory(present);validateInventory(catalog,value);assert.equal(expectedCleanupScopes(catalog,value).length,count);validateAssignmentPlan(catalog,value,plan(value));}});
@@ -25,3 +29,62 @@ test('final residue covers all 23 resources and retains soft-deleted Key Vault w
 test('complete residue and retained live resources fail final verification',()=>{const value=inventory(parents());const target=catalog.resources[0];const spawn=(command,args)=>{const id=args[args.indexOf('--ids')+1];return id===target.id?{status:0,stdout:JSON.stringify({id,type:target.type}),stderr:''}:{status:1,stdout:'',stderr:'(ResourceNotFound)'};};const final=collectFinalResidue(catalog,value,'broker-foundation-residue-0123456789abcdef','a'.repeat(40),catalogSha,spawn);assert.equal(final.result,'Failure');assert.throws(()=>validateInventory(catalog,final,{final:true}));});
 test('inventory collection emits bounded ambiguous evidence rather than raw Azure errors',()=>{const huge=`(AuthorizationFailed)${'secret'.repeat(2000)}`;const result=collectInventory(catalog,'broker-foundation-inventory-0123456789abcdef','a'.repeat(40),catalogSha,()=>({status:1,stdout:'',stderr:huge}));assert.equal(result.result,'Ambiguous');assert.equal(JSON.stringify(result).includes('secret'),false);assert.equal(result.entries.every(x=>x.state==='Ambiguous'),true);});
 test('inventory distinguishes bounded process failure without retaining raw evidence',()=>{const result=collectInventory(catalog,'broker-foundation-inventory-0123456789abcdef','a'.repeat(40),catalogSha,()=>({status:null,error:new Error('sensitive')}));assert.equal(result.result,'Failure');assert.equal(JSON.stringify(result).includes('sensitive'),false);assert.equal(result.entries.every(x=>x.state==='Failure'),true);});
+
+test('absent Storage account proves the exact four-child ParentResourceNotFound chain absent in parent-first order',()=>{
+  const calls=[];
+  const result=inventoryWith(id=>storageChildren.some(x=>x.id===id)?absentResult('ParentResourceNotFound'):absentResult('ResourceNotFound'),calls);
+  assert.equal(result.result,'Verified');
+  assert.equal(result.entries.find(x=>x.id===storageAccount.id).state,'VerifiedAbsent');
+  assert.deepEqual(storageChildren.map(x=>result.entries.find(entry=>entry.id===x.id).state),Array(4).fill('VerifiedAbsent'));
+  for(const child of storageChildren) assert.ok(calls.indexOf(child.parentId)<calls.indexOf(child.id));
+});
+
+test('ParentResourceNotFound requires the exact catalog parent to be already conclusively absent',()=>{
+  const child=storageChildren.find(x=>x.parentId===storageAccount.id);
+  const cases=[
+    {name:'present',parent:{status:0,stdout:JSON.stringify({id:storageAccount.id,type:storageAccount.type}),stderr:''}},
+    {name:'ambiguous',parent:absentResult('AuthorizationFailed')},
+    {name:'failed',parent:{status:null,error:new Error('process failure')}},
+    {name:'unprocessed external parent',child:catalog.resources.find(x=>x.type==='Microsoft.Network/virtualNetworks/subnets')}
+  ];
+  for(const scenario of cases){
+    const target=scenario.child??child;
+    const result=inventoryWith(id=>id===storageAccount.id&&scenario.parent?scenario.parent:id===target.id?absentResult('ParentResourceNotFound'):absentResult('ResourceNotFound'));
+    assert.equal(result.entries.find(x=>x.id===target.id).state,'Ambiguous',scenario.name);
+  }
+});
+
+test('ParentResourceNotFound rejects substituted catalog relationships and wrong child identity or type',()=>{
+  const child=storageChildren.find(x=>x.parentId===storageAccount.id);
+  for(const field of ['id','type']){
+    const result=inventoryWith(id=>id===child.id?{status:0,stdout:JSON.stringify({id:field==='id'?`${child.id}/other`:child.id,type:field==='type'?'Microsoft.Storage/storageAccounts':child.type}),stderr:''}:absentResult('ResourceNotFound'));
+    assert.equal(result.entries.find(x=>x.id===child.id).state,'Ambiguous');
+  }
+  const substituted=structuredClone(catalog); const candidate=substituted.resources.find(x=>x.id===child.id); candidate.parentId=catalog.resources.find(x=>x.type==='Microsoft.KeyVault/vaults').id;
+  assert.throws(()=>validateCatalog(substituted),/catalog-parent/);
+});
+
+test('ParentResourceNotFound rejects malformed, nested, competing, additional, and unexpected codes without raw evidence',()=>{
+  const child=storageChildren.find(x=>x.parentId===storageAccount.id);
+  const errors=[
+    '(Parent Resource Not Found)',
+    '{"error":{"code":"ParentResourceNotFound","innererror":{"code":"ResourceNotFound"}}}',
+    '(ParentResourceNotFound) (ResourceNotFound)',
+    '(ParentResourceNotFound) {"code":"ParentResourceNotFound"}',
+    '(AuthorizationFailed)',
+    `(ParentResourceNotFound)${'sensitive'.repeat(1000)}`
+  ];
+  for(const stderr of errors){
+    const result=inventoryWith(id=>id===child.id?{status:1,stdout:'',stderr}:absentResult('ResourceNotFound'));
+    assert.equal(result.entries.find(x=>x.id===child.id).state,'Ambiguous');
+    assert.equal(JSON.stringify(result).includes('sensitive'),false);
+  }
+});
+
+test('existing ResourceNotFound and NotFound codes remain conclusive absence signals',()=>{
+  for(const code of ['ResourceNotFound','NotFound']){
+    const result=inventoryWith(()=>absentResult(code));
+    assert.equal(result.result,'Verified');
+    assert.equal(result.entries.every(x=>x.state==='VerifiedAbsent'),true);
+  }
+});
