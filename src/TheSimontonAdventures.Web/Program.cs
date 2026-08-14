@@ -422,7 +422,8 @@ static bool IsShowcaseRequest(PathString path) =>
     || path.StartsWithSegments("/images")
     || path.StartsWithSegments("/lib")
     || path == "/favicon.png"
-    || IsShowcaseStylesheet(path);
+    || IsShowcaseStylesheet(path)
+    || IsShowcaseReconnectModule(path);
 
 static bool IsShowcaseStylesheet(PathString path)
 {
@@ -433,6 +434,16 @@ static bool IsShowcaseStylesheet(PathString path)
             || value.StartsWith(
                 "/TheSimontonAdventures.Web.",
                 StringComparison.Ordinal));
+}
+
+static bool IsShowcaseReconnectModule(PathString path)
+{
+    var value = path.Value;
+    return value is not null
+        && value.StartsWith(
+            "/Components/Layout/ReconnectModal.",
+            StringComparison.Ordinal)
+        && value.EndsWith(".razor.js", StringComparison.Ordinal);
 }
 
 /// <summary>
