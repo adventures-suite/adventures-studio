@@ -497,8 +497,14 @@ internal static class AzureDevelopmentBootstrapper
 
     /// <summary>Verifies migration DDL, data, journal, and authentication-schema permissions.</summary>
     public static async Task VerifyMigrationPermissionsAsync(string migrationConnectionString)
+        => await VerifyMigrationPermissionsAsync(() => new SqlConnection(migrationConnectionString));
+
+    /// <summary>Verifies the exact migration permission catalog through the reviewed connection factory.</summary>
+    internal static async Task VerifyMigrationPermissionsAsync(
+        Func<SqlConnection> connectionFactory)
     {
-        await using var connection = new SqlConnection(migrationConnectionString);
+        ArgumentNullException.ThrowIfNull(connectionFactory);
+        await using var connection = connectionFactory();
         await connection.OpenAsync();
         await using var command = connection.CreateCommand();
         command.CommandText = """

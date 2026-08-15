@@ -2,9 +2,45 @@ using AdventuresSuite.DatabaseMigrator;
 
 namespace AdventuresSuite.DatabaseIntegrationTests;
 
+/// <summary>Serializes tests that temporarily replace process-global console writers.</summary>
+[CollectionDefinition(ConsoleCaptureCollection.Name, DisableParallelization = true)]
+public sealed class ConsoleCaptureCollection
+{
+    internal const string Name = "Console capture";
+}
+
 /// <summary>Verifies approval-gated migration outcome classification.</summary>
+[Collection(ConsoleCaptureCollection.Name)]
 public sealed class MigrationOperationRunnerTests
 {
+    [Fact]
+    public async Task PermissionRejectionEmitsOnlyBoundedEvidence()
+    {
+        const string sensitiveFailure = "sensitive-database-error-must-not-be-emitted";
+        using var writer = new StringWriter();
+        var original = Console.Out;
+        Console.SetOut(writer);
+        try
+        {
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                MigrationOperationRunner.VerifyPermissionsBeforeMigrationAsync(
+                    () => throw new InvalidOperationException(sensitiveFailure),
+                    "permission-gate-test"));
+            Assert.Equal(
+                "The exact temporary migration permission catalog is unavailable.",
+                exception.Message);
+        }
+        finally
+        {
+            Console.SetOut(original);
+        }
+
+        Assert.Equal(
+            "{\"eventName\":\"migration-permissions-rejected\",\"operationId\":\"permission-gate-test\",\"exactCatalogVerified\":false}",
+            writer.ToString().Trim());
+        Assert.DoesNotContain(sensitiveFailure, writer.ToString(), StringComparison.Ordinal);
+    }
+
     [Fact]
     public void CompleteRequires0009SchemaPermissionsAndUnchangedFingerprint()
     {

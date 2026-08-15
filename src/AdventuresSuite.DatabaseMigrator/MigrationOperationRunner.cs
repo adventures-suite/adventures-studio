@@ -74,6 +74,9 @@ internal static partial class MigrationOperationRunner
             || before.CompanionPermissions.Count != 0)
             throw new InvalidOperationException("The pre-migration database state is not the approved 0006 baseline.");
 
+        await VerifyPermissionsBeforeMigrationAsync(
+            connectionFactory.CreateConnection, operationId);
+
         Exception? migrationFailure = null;
         IReadOnlyList<string> selectedScripts = [];
         try
@@ -116,6 +119,34 @@ internal static partial class MigrationOperationRunner
                     before.ApplicationFingerprint, after.ApplicationFingerprint, StringComparison.Ordinal)
             });
         return exitCode;
+    }
+
+    /// <summary>Fails before DbUp selection when the exact temporary catalog is unavailable.</summary>
+    internal static async Task VerifyPermissionsBeforeMigrationAsync(
+        Func<Microsoft.Data.SqlClient.SqlConnection> connectionFactory,
+        string operationId)
+    {
+        try
+        {
+            await AzureDevelopmentBootstrapper.VerifyMigrationPermissionsAsync(connectionFactory);
+            WriteEvidence(new
+            {
+                eventName = "migration-permissions-verified",
+                operationId,
+                exactCatalogVerified = true
+            });
+        }
+        catch
+        {
+            WriteEvidence(new
+            {
+                eventName = "migration-permissions-rejected",
+                operationId,
+                exactCatalogVerified = false
+            });
+            throw new InvalidOperationException(
+                "The exact temporary migration permission catalog is unavailable.");
+        }
     }
 
     internal static MigrationOperationClassification ClassifyResult(
