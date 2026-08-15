@@ -181,7 +181,7 @@ public sealed class WorkspaceRootTests
                 ]
             }, canEdit: true));
         var html = await RenderAsync(ApplicationPrincipal(),
-            "/workspace/creators/creator_alpha_01/plans/plan_spain_2027",
+            "/workspace/creators/creator_alpha_01/plans/plan_spain_2027?edit=conflict&destination=conflict&day=conflict&activity=conflict&transportation=conflict&accommodation=conflict&reservation=conflict",
             services =>
             {
                 services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>();
@@ -212,6 +212,14 @@ public sealed class WorkspaceRootTests
         Assert.Contains("Add proposed transportation", html);
         Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/accommodations\"", html);
         Assert.Contains("Add proposed accommodation", html);
+        Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/reservations\"", html);
+        Assert.Contains("Add proposed reservation", html);
+        Assert.Contains("This plan changed. Review the current values and try again.", html);
+        Assert.Contains("This plan changed. Review the current route and try again.", html);
+        Assert.Contains("This plan changed. Review the current itinerary and try again.", html);
+        Assert.Contains("This plan changed. Review transportation and try again.", html);
+        Assert.Contains("This plan changed. Review accommodations and try again.", html);
+        Assert.Contains("This plan changed. Review reservations and try again.", html);
         Assert.DoesNotContain("name=\"status\"", html);
         Assert.DoesNotContain("name=\"lifecycle", html);
     }

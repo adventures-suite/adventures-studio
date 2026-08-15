@@ -292,6 +292,16 @@ button:focus-visible, select:focus-visible { outline: 3px solid var(--focus-ring
 .list-summary-card { margin: 18px 0; padding: 20px; border: 1px solid var(--border-subtle); border-radius: 20px; background: var(--paper); }
 .list-summary-card h2 { margin: 14px 0 8px; font: 500 21px Georgia, serif; }
 .list-summary-card p { margin: 0; color: var(--text-secondary); font-size: 10px; line-height: 1.6; }
+.today-panel { margin-top: 22px; }
+.today-context, .today-notice { color: var(--text-secondary); font-size: 9px; }
+.today-item { margin-top: 10px; padding: 15px; display: grid; grid-template-columns: 62px 1fr; gap: 13px; border: 1px solid var(--border-subtle); border-radius: 18px; background: var(--surface-card); }
+.today-time strong, .today-time span { display: block; }
+.today-time strong { color: var(--accent-primary); font-size: 11px; }
+.today-time span { margin-top: 3px; color: var(--text-secondary); font-size: 8px; text-transform: uppercase; }
+.today-item h3 { margin: 4px 0; color: var(--text-primary); font: 600 16px Georgia, serif; }
+.today-item p, .today-item small { margin: 3px 0; display: block; color: var(--text-secondary); font-size: 9px; line-height: 1.45; }
+.today-item .change-note { margin-top: 7px; display: block; color: var(--status-warning); font-size: 9px; }
+.next-label { margin: 20px 0 2px; color: var(--text-primary); font: 600 18px Georgia, serif; }
 .poc-error { margin: 20px; padding: 18px; border-radius: 16px; background: #fff0e4; color: #713c2d; }
 .poc-error strong { font-size: 13px; }
 .poc-error p { margin: 8px 0 0; font: 10px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }

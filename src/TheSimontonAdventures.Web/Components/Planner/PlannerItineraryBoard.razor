@@ -1,0 +1,116 @@
+@namespace TheSimontonAdventures.Web.Components
+
+<section class="planner-board" aria-labelledby="planner-board-heading">
+    <header class="planner-board__header">
+        <div>
+            <p class="planner-board__eyebrow">Itinerary board</p>
+            <h3 id="planner-board-heading">Plan the journey</h3>
+        </div>
+        <p>Authorized plan details only. Proposed items are not bookings or confirmations.</p>
+    </header>
+
+    <section class="planner-board__card planner-board__route" aria-labelledby="plan-route">
+        <h4 id="plan-route">Destinations and route</h4>
+        @Status(DestinationStatusMessage)
+        @if (Plan.Destinations.Count == 0)
+        {
+            <p class="planner-board__empty">No destinations have been added.</p>
+        }
+        else
+        {
+            <ol class="planner-board__route-list">
+                @foreach (var destination in Plan.Destinations.OrderBy(item => item.Sequence))
+                {
+                    <li>
+                        <span class="planner-board__sequence" aria-hidden="true">@destination.Sequence</span>
+                        <div><strong>@destination.Name</strong><span><time datetime="@DateValue(destination.Dates.Start)">@FormatDate(destination.Dates.Start)</time>–<time datetime="@DateValue(destination.Dates.End)">@FormatDate(destination.Dates.End)</time> · @destination.TimeZone</span></div>
+                    </li>
+                }
+            </ol>
+        }
+        @if (CanEdit)
+        {
+            <form class="planner-board__form" method="post" action="@AddDestinationPath">
+                <AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" />
+                <label>Destination name<input name="name" required maxlength="200" autocomplete="off" /></label>
+                <div class="planner-board__form-columns">
+                    <label>Arrival date<input type="date" name="startDate" min="@DateValue(Plan.Dates.Start)" max="@DateValue(Plan.Dates.End)" required /></label>
+                    <label>Departure date<input type="date" name="endDate" min="@DateValue(Plan.Dates.Start)" max="@DateValue(Plan.Dates.End)" required /></label>
+                </div>
+                <label>Destination time zone<input name="timeZoneId" required maxlength="100" placeholder="Europe/Rome" autocomplete="off" /></label>
+                <button type="submit">Add destination</button>
+            </form>
+        }
+    </section>
+
+    <section class="planner-board__card planner-board__days" aria-labelledby="plan-itinerary">
+        <h4 id="plan-itinerary">Daily itinerary</h4>
+        @Status(ActivityStatusMessage)
+        @Status(DayStatusMessage)
+        @if (Plan.Days.Count == 0)
+        {
+            <p class="planner-board__empty">No itinerary days have been added.</p>
+        }
+        else
+        {
+            <ol class="planner-board__day-list">
+                @foreach (var day in Plan.Days)
+                {
+                    <li><article class="planner-board__day">
+                        <header><p><time datetime="@DateValue(day.Date)">@day.Date.ToString("ddd, MMM d, yyyy")</time> · @day.TimeZone</p><h5>@day.Title</h5>@if (DestinationName(day) is { } destinationName){<span>@destinationName</span>}</header>
+                        @if (day.Activities.Count == 0)
+                        {
+                            <p class="planner-board__empty">No activities have been added.</p>
+                        }
+                        else
+                        {
+                            <ol class="planner-board__activity-list">
+                                @foreach (var activity in day.Activities)
+                                {
+                                    <li><span>@FormatTimeRange(activity.StartsAtLocal, activity.EndsAtLocal)</span><strong>@activity.Title</strong><small>@FormatStatus(activity.Status)</small></li>
+                                }
+                            </ol>
+                        }
+                        @if (CanEdit)
+                        {
+                            <form class="planner-board__form" method="post" action="@AddActivityPath">
+                                <AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" /><input type="hidden" name="itineraryDayId" value="@day.Id.Value" />
+                                <label>Proposed activity<input name="title" required maxlength="200" autocomplete="off" placeholder="Museum visit" /></label>
+                                <div class="planner-board__form-columns"><label>Start time <span>(optional)</span><input type="time" name="startsAtLocal" /></label><label>End time <span>(optional)</span><input type="time" name="endsAtLocal" /></label></div>
+                                <button type="submit">Add proposed activity</button>
+                            </form>
+                        }
+                    </article></li>
+                }
+            </ol>
+        }
+        @if (CanEdit && Plan.Destinations.Count > 0)
+        {
+            <form class="planner-board__form" method="post" action="@AddDayPath">
+                <AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" />
+                <label>Destination visit<select name="destinationVisitId" required>@foreach (var destination in Plan.Destinations.OrderBy(item => item.Sequence)){<option value="@destination.Id.Value">@destination.Name · @FormatDates(destination.Dates)</option>}</select></label>
+                <label>Local date<input type="date" name="date" min="@DateValue(Plan.Dates.Start)" max="@DateValue(Plan.Dates.End)" required /></label>
+                <label>Day title<input name="title" required maxlength="200" autocomplete="off" placeholder="Arrival in Rome" /></label>
+                <button type="submit">Add itinerary day</button>
+            </form>
+        }
+    </section>
+
+    <section class="planner-board__card" aria-labelledby="plan-transportation">
+        <h4 id="plan-transportation">Transportation</h4>@Status(TransportationStatusMessage)
+        @if (Plan.Transportation.Count == 0){<p class="planner-board__empty">No transportation has been added.</p>}else{<ul class="planner-board__summary-list">@foreach(var segment in Plan.Transportation){<li><strong>@segment.Mode: @segment.From to @segment.To</strong><span><time datetime="@DateValue(segment.DepartureDate)">@FormatDate(segment.DepartureDate)</time>@FormatOptionalTime(segment.DepartureTimeLocal) · @segment.DepartureTimeZone</span><span>Arrives <time datetime="@DateValue(segment.ArrivalDate)">@FormatDate(segment.ArrivalDate)</time>@FormatOptionalTime(segment.ArrivalTimeLocal) · @segment.ArrivalTimeZone</span><small>@FormatStatus(segment.Status)</small></li>}</ul>}
+        @if (CanEdit){<form class="planner-board__form" method="post" action="@AddTransportationPath"><AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" /><label>Mode<input name="mode" required maxlength="100" placeholder="Flight, rail, cruise, or car" /></label><label>From<input name="from" required maxlength="200" /></label><label>To<input name="to" required maxlength="200" /></label><div class="planner-board__form-columns"><label>Departure date<input type="date" name="departureDate" required /></label><label>Departure time <span>(optional)</span><input type="time" name="departureTimeLocal" /></label></div><label>Departure time zone<input name="departureTimeZoneId" required maxlength="100" placeholder="America/Phoenix" /></label><div class="planner-board__form-columns"><label>Arrival date<input type="date" name="arrivalDate" required /></label><label>Arrival time <span>(optional)</span><input type="time" name="arrivalTimeLocal" /></label></div><label>Arrival time zone<input name="arrivalTimeZoneId" required maxlength="100" placeholder="Europe/Rome" /></label><button type="submit">Add proposed transportation</button></form>}
+    </section>
+
+    <section class="planner-board__card" aria-labelledby="plan-accommodations">
+        <h4 id="plan-accommodations">Accommodations</h4>@Status(AccommodationStatusMessage)
+        @if (Plan.Accommodations.Count == 0){<p class="planner-board__empty">No accommodations have been added.</p>}else{<ul class="planner-board__summary-list">@foreach(var accommodation in Plan.Accommodations){<li><strong>@accommodation.Name</strong><span>@FormatDates(accommodation.Dates) · @accommodation.TimeZone</span><small>@FormatStatus(accommodation.Status)</small></li>}</ul>}
+        @if (CanEdit){<form class="planner-board__form" method="post" action="@AddAccommodationPath"><AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" /><label>Accommodation name<input name="name" required maxlength="200" /></label><div class="planner-board__form-columns"><label>Check-in date<input type="date" name="startDate" required /></label><label>Check-out date<input type="date" name="endDate" required /></label></div><label>Property time zone<input name="timeZoneId" required maxlength="100" placeholder="Europe/Rome" /></label><button type="submit">Add proposed accommodation</button></form>}
+    </section>
+
+    <section class="planner-board__card planner-board__reservations" aria-labelledby="plan-reservations">
+        <h4 id="plan-reservations">Reservation summaries</h4><p class="planner-board__boundary">Credential-free planning summaries only. A summary does not prove a booking or confirmation.</p>@Status(ReservationStatusMessage)
+        @if (Plan.Reservations.Count == 0){<p class="planner-board__empty">No reservation summaries have been added.</p>}else{<ul class="planner-board__summary-list">@foreach(var reservation in Plan.Reservations){<li><strong>@reservation.Subject</strong><small>@FormatStatus(reservation.Status)</small></li>}</ul>}
+        @if (CanEdit){<form class="planner-board__form" method="post" action="@AddReservationPath"><AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" /><label>Reservation subject<input name="subject" required maxlength="200" autocomplete="off" placeholder="Hotel, tour, or transportation hold" /></label><p>Confirmation references are added through a separate protected workflow.</p><button type="submit">Add proposed reservation</button></form>}
+    </section>
+</section>

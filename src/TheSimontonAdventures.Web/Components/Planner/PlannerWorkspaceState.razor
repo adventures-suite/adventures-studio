@@ -1,0 +1,20 @@
+@namespace TheSimontonAdventures.Web.Components
+
+<section class="planner-state planner-state--@Kind.ToCssClass()"
+         aria-labelledby="@HeadingId"
+         role="@LiveRole"
+         aria-live="@LiveSetting"
+         aria-busy="@(Kind == PlannerWorkspaceStateKind.Loading)">
+    <svg class="planner-state__icon" viewBox="0 0 24 24" role="img" aria-labelledby="@IconTitleId">
+        <title id="@IconTitleId">@Kind.ToAccessibleLabel()</title>
+        <path d="@Kind.ToIconPath()" />
+    </svg>
+    <div>
+        <h2 id="@HeadingId">@Title</h2>
+        @if (!string.IsNullOrWhiteSpace(Message))
+        {
+            <p>@Message</p>
+        }
+        @ChildContent
+    </div>
+</section>

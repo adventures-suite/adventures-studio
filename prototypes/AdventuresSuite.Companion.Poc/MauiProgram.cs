@@ -32,6 +32,7 @@ public static class MauiProgram
 				services.GetRequiredService<Services.CompanionContentService>());
 			builder.Services.AddSingleton<Services.ICompanionAdventureDetailProvider,
 				Services.DemoCompanionAdventureDetailProvider>();
+			builder.Services.AddSingleton<Services.ICompanionTodayProvider, Services.DemoCompanionTodayProvider>();
 		}
 		else
 		{
@@ -47,6 +48,11 @@ public static class MauiProgram
 				AdventuresSuite.Companion.Client.CompanionAdventureDetailService>();
 			builder.Services.AddSingleton<Services.ICompanionAdventureDetailProvider,
 				Services.ApiCompanionAdventureDetailProvider>();
+			builder.Services.AddSingleton<AdventuresSuite.Companion.Client.ICompanionTodayTransport,
+				AdventuresSuite.Companion.Client.HttpCompanionTodayTransport>();
+			builder.Services.AddSingleton<AdventuresSuite.Companion.Client.ICompanionTodayService,
+				AdventuresSuite.Companion.Client.CompanionTodayService>();
+			builder.Services.AddSingleton<Services.ICompanionTodayProvider, Services.ApiCompanionTodayProvider>();
 		}
 		builder.Services.AddSingleton<Services.PlaybookContentService>();
 		builder.Services.AddSingleton<Services.IAppearancePreferenceStore, Services.MauiAppearancePreferenceStore>();

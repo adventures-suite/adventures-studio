@@ -1,0 +1,56 @@
+.planner-sidebar {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: var(--planner-sidebar-width);
+    min-height: 100vh;
+    padding: 1.25rem .8rem 1rem;
+    background: var(--planner-shell-surface);
+    border-right: 1px solid var(--planner-shell-border);
+    box-shadow: var(--planner-shell-shadow);
+}
+
+.planner-sidebar--collapsed { width: 5.25rem; }
+.planner-sidebar__header, .planner-sidebar__brand, .planner-sidebar__controls,
+.planner-sidebar__resize-controls, .planner-sidebar__current, .planner-sidebar__controls button {
+    display: flex;
+    align-items: center;
+}
+.planner-sidebar__header { justify-content: space-between; gap: .5rem; min-height: 3rem; }
+.planner-sidebar__brand { gap: .65rem; min-width: 0; }
+.planner-sidebar__brand-mark { width: 2rem; height: 2rem; fill: none; stroke: currentColor; stroke-width: 2; }
+.planner-sidebar__brand-name { font-size: .76rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; }
+.planner-sidebar__nav { flex: 1; padding-top: .5rem; }
+.planner-sidebar__current { gap: .7rem; border-radius: .8rem; background: var(--planner-shell-hover); padding: .72rem .8rem; font-weight: 700; }
+.planner-sidebar__icon { width: 1.15rem; height: 1.15rem; min-width: 1.15rem; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.planner-sidebar__controls { display: grid; gap: .5rem; }
+.planner-sidebar__controls button { gap: .55rem; width: 100%; }
+.planner-sidebar button { min-height: 2.5rem; border: 1px solid var(--planner-shell-border); border-radius: .65rem; background: transparent; color: inherit; cursor: pointer; padding: .45rem .65rem; }
+.planner-sidebar button:hover, .planner-sidebar button:focus-visible, .planner-sidebar__separator:focus-visible { outline: 3px solid var(--planner-shell-focus); outline-offset: 2px; }
+.planner-sidebar button svg, .planner-sidebar__mobile-close svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.planner-sidebar__resize-controls { justify-content: space-between; gap: .4rem; font-size: .8rem; }
+.planner-sidebar__resize-controls button { width: 2.5rem; }
+.planner-sidebar__separator { position: absolute; top: 0; right: -.35rem; width: .7rem; height: 100%; cursor: ew-resize; }
+.planner-sidebar__mobile-close { display: none; }
+.planner-sidebar--collapsed .planner-sidebar__current, .planner-sidebar--collapsed .planner-sidebar__controls button { justify-content: center; }
+.planner-sidebar--collapsed .planner-sidebar__resize-controls { display: none; }
+
+@media (max-width: 52rem) {
+    .planner-sidebar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        z-index: 20;
+        width: min(88vw, var(--planner-sidebar-width));
+        visibility: hidden;
+        transform: translateX(-105%);
+        transition: transform 180ms ease, visibility 180ms ease;
+    }
+    .planner-sidebar--mobile-open { visibility: visible; transform: translateX(0); }
+    .planner-sidebar__mobile-close { display: inline-grid; place-items: center; }
+    .planner-sidebar__separator, .planner-sidebar__resize-controls { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .planner-sidebar { transition: none; }
+}

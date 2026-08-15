@@ -2,6 +2,7 @@
 @implements IDisposable
 @inject ICompanionContentProvider ContentProvider
 @inject ICompanionAdventureDetailProvider DetailProvider
+@inject ICompanionTodayProvider TodayProvider
 @inject PlaybookContentService PlaybookService
 @inject ICompanionAppearanceService Appearance
 @inject TransientBackNavigationService BackNavigation
@@ -106,6 +107,9 @@ else
                                                       RestoreDetailFocus="_restoreDetailFocus"
                                                       DetailFocusRestored="DetailFocusRestored" />
                                 }
+                                <TodayView IsLoading="@(_todayState?.IsLoading == true)"
+                                           Result="@_todayState?.Current"
+                                           OnRetry="RetryTodayAsync" />
                                 break;
                             case CompanionTab.Itinerary:
                                 <JourneyTab Adventure="_adventure" />
@@ -168,6 +172,7 @@ else
     private string? _errorTitle;
     private string? _supportId;
     private CompanionAdventureDetailPresentationState? _detailState;
+    private CompanionTodayPresentationState? _todayState;
     private IDisposable? _detailBackRegistration;
     private bool _restoreDetailFocus;
 
@@ -175,6 +180,7 @@ else
     {
 		Appearance.Changed += OnAppearanceChanged;
         _detailState = new CompanionAdventureDetailPresentationState(DetailProvider);
+        _todayState = new CompanionTodayPresentationState(TodayProvider);
         await LoadAsync();
         _timer = new PeriodicTimer(TimeSpan.FromMinutes(1));
         _timerCancellation = new CancellationTokenSource();
@@ -192,6 +198,10 @@ else
         _hasDetailedContent = result.HasDetailedContent;
         _errorTitle = result.ErrorTitle;
         _supportId = result.SupportId;
+        if (_adventure is not null && _todayState is not null)
+        {
+            await _todayState.LoadAsync(_adventure.Id);
+        }
     }
 
     private string StateHeading => _state switch
@@ -216,14 +226,37 @@ else
 
     private void ToggleAdventureMenu() => _adventureMenuOpen = !_adventureMenuOpen;
 
-    private void SelectAdventure(CompanionAdventure adventure)
+    private async Task SelectAdventure(CompanionAdventure adventure)
     {
         _adventure = adventure;
         _adventureMenuOpen = false;
         _selectedTab = CompanionTab.Home;
+        if (_todayState is not null)
+        {
+            var load = _todayState.LoadAsync(adventure.Id);
+            StateHasChanged();
+            await load;
+            StateHasChanged();
+        }
     }
 
-    private void SelectMemoryAdventure(CompanionAdventure adventure) => _adventure = adventure;
+    private async Task SelectMemoryAdventure(CompanionAdventure adventure)
+    {
+        _adventure = adventure;
+        if (_todayState is not null)
+        {
+            await _todayState.LoadAsync(adventure.Id);
+        }
+    }
+
+    private async Task RetryTodayAsync()
+    {
+        if (_todayState is null) return;
+        var load = _todayState.RetryAsync();
+        StateHasChanged();
+        await load;
+        StateHasChanged();
+    }
 
     private async Task OpenDetailAsync()
     {
@@ -317,6 +350,7 @@ else
 		Appearance.Changed -= OnAppearanceChanged;
         _detailBackRegistration?.Dispose();
         _detailState?.Dispose();
+        _todayState?.Dispose();
         _timerCancellation?.Cancel();
         _timerCancellation?.Dispose();
         _timer?.Dispose();
