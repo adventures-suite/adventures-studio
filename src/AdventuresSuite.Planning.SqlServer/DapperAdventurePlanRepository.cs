@@ -489,6 +489,67 @@ internal sealed class DapperAdventurePlanRepository(
         }
     }
 
+    /// <inheritdoc />
+    public async Task AddTransportationSegmentAsync(
+        CreatorId creatorId,
+        AdventurePlan plan,
+        TransportationSegment segment,
+        long expectedVersion,
+        CancellationToken cancellationToken = default)
+    {
+        RequirePlanScope(creatorId, plan);
+        ArgumentNullException.ThrowIfNull(segment);
+        if (expectedVersion < 1 || plan.Audit.Version != expectedVersion + 1
+            || !plan.Transportation.Contains(segment))
+        {
+            throw new ArgumentException(
+                "A transportation append must advance the expected version by exactly one.",
+                nameof(expectedVersion));
+        }
+
+        try
+        {
+            var updated = await connection.ExecuteAsync(Command(AdvancePlanVersionSql,
+                new
+                {
+                    CreatorId = creatorId.Value,
+                    PlanId = plan.Id.Value,
+                    Version = plan.Audit.Version,
+                    plan.Audit.UpdatedAtUtc,
+                    ExpectedVersion = expectedVersion
+                }, cancellationToken));
+            if (updated == 0)
+            {
+                throw new PlanningConcurrencyException(plan.Id, expectedVersion);
+            }
+
+            await ExecuteAsync(
+                "INSERT planning.TransportationSegments VALUES (@CreatorId,@PlanId,@Id,@Mode,@From,@To,@DepartureDate,@DepartureTime,@DepartureZone,@ArrivalDate,@ArrivalTime,@ArrivalZone,@Status);",
+                new
+                {
+                    CreatorId = creatorId.Value,
+                    PlanId = plan.Id.Value,
+                    Id = segment.Id.Value,
+                    segment.Mode,
+                    segment.From,
+                    segment.To,
+                    DepartureDate = segment.DepartureDate.ToDateTime(TimeOnly.MinValue),
+                    DepartureTime = segment.DepartureTimeLocal?.ToTimeSpan(),
+                    DepartureZone = segment.DepartureTimeZone.Value,
+                    ArrivalDate = segment.ArrivalDate.ToDateTime(TimeOnly.MinValue),
+                    ArrivalTime = segment.ArrivalTimeLocal?.ToTimeSpan(),
+                    ArrivalZone = segment.ArrivalTimeZone.Value,
+                    Status = segment.Status.ToString()
+                }, cancellationToken);
+            auditTracker.RecordMutation(plan.Id, expectedVersion, plan.Audit.Version);
+        }
+        catch
+        {
+            auditTracker.RecordFailure();
+            throw;
+        }
+    }
+
     private async Task InsertChildrenAsync(AdventurePlan plan, CancellationToken cancellationToken)
     {
         var owner = new { CreatorId = plan.CreatorId.Value, PlanId = plan.Id.Value };

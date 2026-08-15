@@ -204,6 +204,10 @@ public sealed class WorkspaceRootTests
         Assert.Contains("name=\"startsAtLocal\"", html);
         Assert.Contains("name=\"endsAtLocal\"", html);
         Assert.Contains("placeholder=\"Museum visit\"", html);
+        Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/transportation\"", html);
+        Assert.Contains("name=\"departureTimeZoneId\"", html);
+        Assert.Contains("name=\"arrivalTimeZoneId\"", html);
+        Assert.Contains("Add proposed transportation", html);
         Assert.DoesNotContain("name=\"status\"", html);
         Assert.DoesNotContain("name=\"lifecycle", html);
     }

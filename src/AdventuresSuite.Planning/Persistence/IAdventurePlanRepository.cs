@@ -113,6 +113,20 @@ public interface IAdventurePlanRepository
         PlannedActivity activity,
         long expectedVersion,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Appends one transportation segment and advances the owning plan when the
+    /// persisted version matches the expected version.
+    /// </summary>
+    /// <exception cref="PlanningConcurrencyException">
+    /// The persisted plan has changed since <paramref name="expectedVersion"/>.
+    /// </exception>
+    Task AddTransportationSegmentAsync(
+        CreatorId creatorId,
+        AdventurePlan plan,
+        TransportationSegment segment,
+        long expectedVersion,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>Contains only the authoritative facts needed to authorize one plan.</summary>

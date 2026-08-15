@@ -240,6 +240,10 @@
                 <div class="detail-columns">
                     <section aria-labelledby="plan-transportation">
                         <h3 id="plan-transportation">Transportation</h3>
+                        @if (TransportationStatusMessage is not null)
+                        {
+                            <p class="plan-create-status" role="status">@TransportationStatusMessage</p>
+                        }
                         @if (Plan.Transportation.Count == 0)
                         {
                             <p>No transportation has been added.</p>
@@ -252,6 +256,27 @@
                                     <li><strong>@segment.Mode: @segment.From to @segment.To</strong><span>@segment.DepartureDate.ToString("MMM d, yyyy") · @FormatStatus(segment.Status)</span></li>
                                 }
                             </ul>
+                        }
+                        @if (PlanCanEdit)
+                        {
+                            <form class="plan-create" method="post" action="@AddTransportationPath">
+                                <AntiforgeryToken />
+                                <input type="hidden" name="expectedVersion" value="@Plan.Version" />
+                                <label>Mode<input name="mode" required maxlength="100" placeholder="Flight, rail, cruise, or car" /></label>
+                                <label>From<input name="from" required maxlength="200" /></label>
+                                <label>To<input name="to" required maxlength="200" /></label>
+                                <div class="plan-create-dates">
+                                    <label>Departure date<input type="date" name="departureDate" required /></label>
+                                    <label>Departure time <span>(optional)</span><input type="time" name="departureTimeLocal" /></label>
+                                </div>
+                                <label>Departure time zone<input name="departureTimeZoneId" required maxlength="100" placeholder="America/Phoenix" /></label>
+                                <div class="plan-create-dates">
+                                    <label>Arrival date<input type="date" name="arrivalDate" required /></label>
+                                    <label>Arrival time <span>(optional)</span><input type="time" name="arrivalTimeLocal" /></label>
+                                </div>
+                                <label>Arrival time zone<input name="arrivalTimeZoneId" required maxlength="100" placeholder="Europe/Rome" /></label>
+                                <button type="submit">Add proposed transportation</button>
+                            </form>
                         }
                     </section>
                     <section aria-labelledby="plan-accommodations">
@@ -459,6 +484,7 @@
     private string AddDestinationPath => $"{PlanListPath}/{Plan!.Id.Value}/destinations";
     private string AddDayPath => $"{PlanListPath}/{Plan!.Id.Value}/days";
     private string AddActivityPath => $"{PlanListPath}/{Plan!.Id.Value}/activities";
+    private string AddTransportationPath => $"{PlanListPath}/{Plan!.Id.Value}/transportation";
     private string PlanPath(AdventurePlanId planId) => $"{PlanListPath}/{planId.Value}";
     private string? CreateStatusMessage =>
         HttpContextAccessor.HttpContext?.Request.Query["create"].ToString() switch
@@ -509,6 +535,16 @@
             "conflict" => "This plan changed. Review the current itinerary and try again.",
             "validation" => "Review the itinerary day, activity title, and local times.",
             "failure" => "The activity could not be added. Please try again.",
+            _ => null
+        };
+    private string? TransportationStatusMessage =>
+        HttpContextAccessor.HttpContext?.Request.Query["transportation"].ToString() switch
+        {
+            "added" => "The proposed transportation was added.",
+            "denied" => "The transportation could not be added.",
+            "conflict" => "This plan changed. Review transportation and try again.",
+            "validation" => "Review the route, local dates, times, and IANA time zones.",
+            "failure" => "The transportation could not be added. Please try again.",
             _ => null
         };
     private static string FormatDates(AdventurePlanDashboardItem plan) => FormatDates(plan.Dates);

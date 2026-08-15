@@ -242,6 +242,23 @@ public sealed class AdventurePlan
             PackingItems);
     }
 
+    /// <summary>
+    /// Creates the next validated aggregate version with one transportation segment appended.
+    /// Existing plan fields and child records are preserved.
+    /// </summary>
+    public AdventurePlan WithTransportationSegment(
+        TransportationSegment segment,
+        DateTimeOffset updatedAtUtc)
+    {
+        ArgumentNullException.ThrowIfNull(segment);
+        return new(
+            Id, CreatorId, Title, WorkingDescription, LifecycleStage, Status, Dates,
+            new PlanAudit(checked(Audit.Version + 1), Audit.CreatedAtUtc, updatedAtUtc),
+            Travelers, DestinationVisits, ItineraryDays, Activities,
+            [.. Transportation, segment], Accommodations, Reservations, Notes, Tasks,
+            BudgetItems, PackingItems);
+    }
+
     private void Validate()
     {
         ValidateUnique(Travelers, item => item.Id, "traveler");

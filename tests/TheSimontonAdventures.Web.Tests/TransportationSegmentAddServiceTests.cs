@@ -6,96 +6,82 @@ using TheSimontonAdventures.Web.Planning.Persistence;
 
 namespace TheSimontonAdventures.Web.Tests;
 
-/// <summary>Protects itinerary-day authorization, visit context, concurrency, and audit behavior.</summary>
-public sealed class ItineraryDayAddServiceTests
+/// <summary>Protects transportation authorization, validation, concurrency, and audit behavior.</summary>
+public sealed class TransportationSegmentAddServiceTests
 {
     private static readonly CreatorId Creator = new("creator_alpha_01");
     private static readonly UserId User = new("user_alpha_01");
     private static readonly AdventurePlanId PlanId = new("plan_alpha_01");
-    private static readonly DestinationVisitId VisitId = new("visit_rome_01");
     private static readonly ActorIdentity Actor = new(ActorType.Human, User.Value, User);
     private static readonly DateTimeOffset Created = new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
-    /// <summary>An authorized request derives visit time zone and commits matching audit.</summary>
+    /// <summary>An authorized segment commits as Proposed with matching audit versions.</summary>
     [Fact]
-    public async Task AddAsync_AuthorizedRequest_CommitsVisitScopedDayAndAudit()
+    public async Task AddAsync_AuthorizedSegment_CommitsProposedTransportationAndAudit()
     {
         var transaction = new RecordingTransaction(Creator, Plan());
         var result = await Service(transaction).AddAsync(Command());
 
-        Assert.Equal(AddItineraryDayOutcome.Added, result.Outcome);
+        Assert.Equal(AddTransportationSegmentOutcome.Added, result.Outcome);
         Assert.Equal(2, result.Version);
         Assert.True(transaction.Committed);
-        Assert.Equal("Europe/Rome", transaction.Repository.Day?.TimeZone.Value);
-        Assert.Equal(VisitId, transaction.Repository.Day?.DestinationVisitId);
+        Assert.Equal(PlanItemStatus.Proposed, transaction.Repository.Segment?.Status);
+        Assert.Equal("America/Phoenix", transaction.Repository.Segment?.DepartureTimeZone.Value);
+        Assert.Equal("Europe/Rome", transaction.Repository.Segment?.ArrivalTimeZone.Value);
         var audit = Assert.Single(transaction.Audits.Items);
         Assert.Equal(1, audit.PreviousVersion);
         Assert.Equal(2, audit.ResultingVersion);
     }
 
-    /// <summary>A stale plan version returns conflict before mutation.</summary>
+    /// <summary>Unknown IANA zones fail before Planning persistence.</summary>
     [Fact]
-    public async Task AddAsync_StaleVersion_ReturnsConflict()
+    public async Task AddAsync_UnknownTimeZone_FailsBeforeTransaction()
     {
-        var transaction = new RecordingTransaction(Creator, Plan(version: 2));
-        var result = await Service(transaction).AddAsync(Command());
-
-        Assert.Equal(AddItineraryDayOutcome.Conflict, result.Outcome);
-        Assert.Null(transaction.Repository.Day);
-        Assert.False(transaction.Committed);
-    }
-
-    /// <summary>A visit outside the authoritative plan cannot receive a day.</summary>
-    [Fact]
-    public async Task AddAsync_UnknownVisit_FailsValidation()
-    {
-        var transaction = new RecordingTransaction(Creator, Plan());
-        var command = new AddItineraryDayCommand(
-            Actor, Creator, PlanId, new("visit_forged_01"), 1,
-            new(2027, 1, 3), "Rome arrival");
-        var result = await Service(transaction).AddAsync(command);
-
-        Assert.Equal(AddItineraryDayOutcome.ValidationFailed, result.Outcome);
-        Assert.Null(transaction.Repository.Day);
-    }
-
-    /// <summary>A day outside its destination visit is rejected.</summary>
-    [Fact]
-    public async Task AddAsync_DateOutsideVisit_FailsValidation()
-    {
-        var transaction = new RecordingTransaction(Creator, Plan());
-        var command = new AddItineraryDayCommand(
-            Actor, Creator, PlanId, VisitId, 1, new(2027, 1, 8), "Late day");
-        var result = await Service(transaction).AddAsync(command);
-
-        Assert.Equal(AddItineraryDayOutcome.ValidationFailed, result.Outcome);
-    }
-
-    /// <summary>A duplicate local date is rejected before persistence.</summary>
-    [Fact]
-    public async Task AddAsync_DuplicateDate_FailsValidation()
-    {
-        var existing = new ItineraryDay
+        var factory = new RecordingFactory(new RecordingTransaction(Creator, Plan()));
+        var result = await Service(factory).AddAsync(Command() with
         {
-            Id = new("day_existing_01"), DestinationVisitId = VisitId,
-            Date = new(2027, 1, 3), TimeZone = new("Europe/Rome"), Title = "Existing"
-        };
-        var transaction = new RecordingTransaction(Creator, Plan(days: [existing]));
-        var result = await Service(transaction).AddAsync(Command());
+            ArrivalTimeZoneId = "Mars/Olympus"
+        });
 
-        Assert.Equal(AddItineraryDayOutcome.ValidationFailed, result.Outcome);
-        Assert.Null(transaction.Repository.Day);
+        Assert.Equal(AddTransportationSegmentOutcome.ValidationFailed, result.Outcome);
+        Assert.Equal(0, factory.BeginCount);
     }
 
-    /// <summary>Cross-Creator state fails closed without mutation.</summary>
+    /// <summary>Transportation dates outside the plan fail without mutation.</summary>
+    [Fact]
+    public async Task AddAsync_DateOutsidePlan_FailsValidation()
+    {
+        var transaction = new RecordingTransaction(Creator, Plan());
+        var result = await Service(transaction).AddAsync(Command() with
+        {
+            ArrivalDate = new(2027, 1, 11)
+        });
+
+        Assert.Equal(AddTransportationSegmentOutcome.ValidationFailed, result.Outcome);
+        Assert.Null(transaction.Repository.Segment);
+    }
+
+    /// <summary>Cross-Creator authoritative state fails closed without mutation.</summary>
     [Fact]
     public async Task AddAsync_MismatchedOwnership_IsDenied()
     {
         var transaction = new RecordingTransaction(Creator, Plan(new("creator_other_01")));
         var result = await Service(transaction).AddAsync(Command());
 
-        Assert.Equal(AddItineraryDayOutcome.Denied, result.Outcome);
+        Assert.Equal(AddTransportationSegmentOutcome.Denied, result.Outcome);
+        Assert.Null(transaction.Repository.Segment);
         Assert.False(transaction.Committed);
+    }
+
+    /// <summary>A stale rendered version returns conflict before mutation.</summary>
+    [Fact]
+    public async Task AddAsync_StaleVersion_ReturnsConflict()
+    {
+        var transaction = new RecordingTransaction(Creator, Plan(version: 2));
+        var result = await Service(transaction).AddAsync(Command());
+
+        Assert.Equal(AddTransportationSegmentOutcome.Conflict, result.Outcome);
+        Assert.Null(transaction.Repository.Segment);
     }
 
     /// <summary>Repository concurrency rolls back and becomes a safe conflict.</summary>
@@ -105,37 +91,31 @@ public sealed class ItineraryDayAddServiceTests
         var transaction = new RecordingTransaction(Creator, Plan()) { ThrowConcurrency = true };
         var result = await Service(transaction).AddAsync(Command());
 
-        Assert.Equal(AddItineraryDayOutcome.Conflict, result.Outcome);
+        Assert.Equal(AddTransportationSegmentOutcome.Conflict, result.Outcome);
         Assert.True(transaction.Disposed);
         Assert.False(transaction.Committed);
     }
 
-    private static AddItineraryDayCommand Command() => new(
-        Actor, Creator, PlanId, VisitId, 1, new(2027, 1, 3), "Rome arrival");
+    private static AddTransportationSegmentCommand Command() => new(
+        Actor, Creator, PlanId, 1, "Flight", "Phoenix", "Rome",
+        new(2027, 1, 2), new(10, 0), "America/Phoenix",
+        new(2027, 1, 3), new(9, 0), "Europe/Rome");
 
-    private static AdventurePlan Plan(
-        CreatorId? creator = null,
-        long version = 1,
-        IReadOnlyList<ItineraryDay>? days = null)
-    {
-        var visit = new DestinationVisit
-        {
-            Id = VisitId, Name = "Rome", Dates = new(new(2027, 1, 2), new(2027, 1, 5)),
-            TimeZone = new("Europe/Rome"), Sequence = 1
-        };
-        return new(
-            PlanId, creator ?? Creator, "Italy", null, AdventureLifecycleStage.Plan,
-            PlanningStatus.Draft, new(new(2027, 1, 1), new(2027, 1, 10)),
-            new(version, Created, Created), destinationVisits: [visit], itineraryDays: days);
-    }
+    private static AdventurePlan Plan(CreatorId? creator = null, long version = 1) => new(
+        PlanId, creator ?? Creator, "Italy", null, AdventureLifecycleStage.Plan,
+        PlanningStatus.Draft, new(new(2027, 1, 1), new(2027, 1, 10)),
+        new(version, Created, Created));
 
-    private static ItineraryDayAddService Service(RecordingTransaction transaction) => new(
+    private static TransportationSegmentAddService Service(RecordingTransaction transaction) =>
+        Service(new RecordingFactory(transaction));
+
+    private static TransportationSegmentAddService Service(RecordingFactory factory) => new(
         new StubMembershipProvider(new(
             new("membership_alpha_01"), User, Creator, CreatorMembershipStatus.Active,
             [CreatorRole.Owner], [], 4, Created)),
         new StubAuthorizationEvaluator(
             AuthorizationDecision.Allow(AuthorizationAuditRequirement.RequiredMutation)),
-        new RecordingFactory(transaction), new FixedIdentities(), new FixedTimeProvider());
+        factory, new FixedIdentities(), new FixedTimeProvider());
 
     private sealed class StubMembershipProvider(CreatorMembershipSnapshot? membership)
         : ICreatorMembershipProvider
@@ -155,13 +135,13 @@ public sealed class ItineraryDayAddServiceTests
 
     private sealed class FixedIdentities : IPlanningCreationIdentityGenerator
     {
-        public AdventurePlanId NewAdventurePlanId() => throw new InvalidOperationException();
-        public DestinationVisitId NewDestinationVisitId() => throw new InvalidOperationException();
-        public ItineraryDayId NewItineraryDayId() => new("day_rome_01");
-        public PlannedActivityId NewPlannedActivityId() => new("activity_fixed_01");
-        public TransportationSegmentId NewTransportationSegmentId() => new("transport_fixed_01");
-        public AuditEventId NewAuditEventId() => new("audit_day_01");
-        public CorrelationId NewCorrelationId() => new("correlation_day_01");
+        public AdventurePlanId NewAdventurePlanId() => throw new NotSupportedException();
+        public DestinationVisitId NewDestinationVisitId() => throw new NotSupportedException();
+        public ItineraryDayId NewItineraryDayId() => throw new NotSupportedException();
+        public PlannedActivityId NewPlannedActivityId() => throw new NotSupportedException();
+        public TransportationSegmentId NewTransportationSegmentId() => new("transport_flight_01");
+        public AuditEventId NewAuditEventId() => new("audit_transport_01");
+        public CorrelationId NewCorrelationId() => new("correlation_transport_01");
     }
 
     private sealed class FixedTimeProvider : TimeProvider
@@ -171,9 +151,13 @@ public sealed class ItineraryDayAddServiceTests
 
     private sealed class RecordingFactory(RecordingTransaction transaction) : IPlanningTransactionFactory
     {
+        public int BeginCount { get; private set; }
         public Task<IPlanningTransaction> BeginAsync(
-            CreatorId creatorId, CancellationToken cancellationToken = default) =>
-            Task.FromResult<IPlanningTransaction>(transaction);
+            CreatorId creatorId, CancellationToken cancellationToken = default)
+        {
+            BeginCount++;
+            return Task.FromResult<IPlanningTransaction>(transaction);
+        }
     }
 
     private sealed class RecordingTransaction(CreatorId creatorId, AdventurePlan? current)
@@ -208,16 +192,16 @@ public sealed class ItineraryDayAddServiceTests
 
     private sealed class RecordingRepository(AdventurePlan? current) : IAdventurePlanRepository
     {
-        public ItineraryDay? Day { get; private set; }
+        public TransportationSegment? Segment { get; private set; }
         public bool ThrowConcurrency { get; set; }
         public Task<AdventurePlan?> GetAsync(CreatorId creatorId, AdventurePlanId planId,
             CancellationToken cancellationToken = default) => Task.FromResult(current);
-        public Task AddItineraryDayAsync(CreatorId creatorId, AdventurePlan plan,
-            ItineraryDay itineraryDay, long expectedVersion,
+        public Task AddTransportationSegmentAsync(CreatorId creatorId, AdventurePlan plan,
+            TransportationSegment segment, long expectedVersion,
             CancellationToken cancellationToken = default)
         {
             if (ThrowConcurrency) throw new PlanningConcurrencyException(plan.Id, expectedVersion);
-            Day = itineraryDay;
+            Segment = segment;
             return Task.CompletedTask;
         }
         public Task<AdventurePlanAuthorizationFacts?> GetAuthorizationFactsAsync(CreatorId creatorId, AdventurePlanId planId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
@@ -229,7 +213,7 @@ public sealed class ItineraryDayAddServiceTests
         public Task UpdateAsync(CreatorId creatorId, AdventurePlan plan, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task UpdateOverviewAsync(CreatorId creatorId, AdventurePlan plan, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task AddDestinationVisitAsync(CreatorId creatorId, AdventurePlan plan, DestinationVisit destinationVisit, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task AddItineraryDayAsync(CreatorId creatorId, AdventurePlan plan, ItineraryDay itineraryDay, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task AddPlannedActivityAsync(CreatorId creatorId, AdventurePlan plan, PlannedActivity activity, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-        public Task AddTransportationSegmentAsync(CreatorId creatorId, AdventurePlan plan, TransportationSegment segment, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 }

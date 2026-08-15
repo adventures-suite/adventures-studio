@@ -265,6 +265,81 @@ public sealed class PlanningRepositoryIntegrationTests
         }
     }
 
+    /// <summary>Proves transportation append, version, and audit commit atomically.</summary>
+    [Fact]
+    public async Task AddTransportationSegment_RealSqlServer_IsAtomicAndConcurrent()
+    {
+        var master = Environment.GetEnvironmentVariable(ConnectionVariable);
+        Assert.False(string.IsNullOrWhiteSpace(master), $"Set {ConnectionVariable} for the SQL integration gate.");
+        var databaseName = $"AdventuresSuiteTransportationTest_{Guid.NewGuid():N}";
+        var connectionString = BuildDatabaseConnectionString(master, databaseName);
+        await ExecuteAsync(master, $"CREATE DATABASE [{databaseName}];");
+        try
+        {
+            DatabaseMigratorRunner.Migrate(connectionString);
+            var factory = new SqlPlanningTransactionFactory(connectionString);
+            var creator = new CreatorId("creator_transportation");
+            var original = CreatePlan(creator, 1, "Transportation append");
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                await transaction.AdventurePlans.AddAsync(creator, original);
+                transaction.RequiredAuditIntents.AddRequired(Audit(
+                    creator, original.Id, Permissions.AdventurePlanCreate, null, 1));
+                await transaction.CommitAsync();
+            }
+
+            var segment = new TransportationSegment
+            {
+                Id = new("transport_train"), Mode = "Rail", From = "Madrid", To = "Barcelona",
+                DepartureDate = new(2027, 10, 28), DepartureTimeLocal = new(9, 0),
+                DepartureTimeZone = new("Europe/Madrid"), ArrivalDate = new(2027, 10, 28),
+                ArrivalTimeLocal = new(12, 0), ArrivalTimeZone = new("Europe/Madrid"),
+                Status = PlanItemStatus.Proposed
+            };
+            var updated = original.WithTransportationSegment(
+                segment, original.Audit.UpdatedAtUtc.AddMinutes(1));
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                await transaction.AdventurePlans.AddTransportationSegmentAsync(
+                    creator, updated, segment, 1);
+                transaction.RequiredAuditIntents.AddRequired(Audit(
+                    creator, original.Id, Permissions.AdventurePlanEdit, 1, 2));
+                await transaction.CommitAsync();
+            }
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                var loaded = await transaction.AdventurePlans.GetAsync(creator, original.Id);
+                Assert.Equal(2, loaded!.Audit.Version);
+                Assert.Equal("Rail", loaded.Transportation.Single(item => item.Id == segment.Id).Mode);
+                await Assert.ThrowsAsync<PlanningConcurrencyException>(() =>
+                    transaction.AdventurePlans.AddTransportationSegmentAsync(
+                        creator, updated, segment, 1));
+            }
+
+            var rollbackSegment = segment with { Id = new("transport_rollback"), Mode = "Car" };
+            var rollbackPlan = updated.WithTransportationSegment(
+                rollbackSegment, updated.Audit.UpdatedAtUtc.AddMinutes(1));
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                await transaction.AdventurePlans.AddTransportationSegmentAsync(
+                    creator, rollbackPlan, rollbackSegment, 2);
+                await Assert.ThrowsAsync<InvalidOperationException>(() => transaction.CommitAsync());
+            }
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                var loaded = await transaction.AdventurePlans.GetAsync(creator, original.Id);
+                Assert.Equal(2, loaded!.Audit.Version);
+                Assert.DoesNotContain(loaded.Transportation, item => item.Id == rollbackSegment.Id);
+                await transaction.CommitAsync();
+            }
+        }
+        finally
+        {
+            await ExecuteAsync(master,
+                $"ALTER DATABASE [{databaseName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [{databaseName}];");
+        }
+    }
+
     /// <summary>Proves round trips, Creator isolation, concurrency, and rollback.</summary>
     [Fact]
     public async Task Repository_RealSqlServer_PreservesPlanningBoundaries()

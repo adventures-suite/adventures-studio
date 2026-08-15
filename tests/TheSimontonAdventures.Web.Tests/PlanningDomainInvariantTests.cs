@@ -230,8 +230,11 @@ public sealed class PlanningDomainInvariantTests
         var plan = CreatePlan(destinationVisits: [visit], itineraryDays: [day]);
         var activity = new PlannedActivity
         {
-            Id = new("activity_museum"), ItineraryDayId = day.Id,
-            Title = "Museum", StartsAtLocal = new(10, 0), EndsAtLocal = new(12, 0)
+            Id = new("activity_museum"),
+            ItineraryDayId = day.Id,
+            Title = "Museum",
+            StartsAtLocal = new(10, 0),
+            EndsAtLocal = new(12, 0)
         };
 
         var updated = plan.WithPlannedActivity(activity, Audit.UpdatedAtUtc.AddHours(1));
@@ -239,6 +242,20 @@ public sealed class PlanningDomainInvariantTests
         Assert.Equal(activity, Assert.Single(updated.Activities));
         Assert.Equal(2, updated.Audit.Version);
         Assert.Empty(plan.Activities);
+    }
+
+    /// <summary>Appending transportation preserves state and advances one plan version.</summary>
+    [Fact]
+    public void WithTransportationSegment_ValidSegment_AppendsAndAdvancesVersion()
+    {
+        var plan = CreatePlan();
+        var segment = ValidTransportation();
+
+        var updated = plan.WithTransportationSegment(segment, Audit.UpdatedAtUtc.AddHours(1));
+
+        Assert.Equal(segment, Assert.Single(updated.Transportation));
+        Assert.Equal(2, updated.Audit.Version);
+        Assert.Empty(plan.Transportation);
     }
 
     /// <summary>Two itinerary days cannot represent the same local plan date.</summary>

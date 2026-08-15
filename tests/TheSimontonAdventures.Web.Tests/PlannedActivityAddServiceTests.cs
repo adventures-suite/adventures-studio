@@ -146,6 +146,7 @@ public sealed class PlannedActivityAddServiceTests
         public DestinationVisitId NewDestinationVisitId() => throw new InvalidOperationException();
         public ItineraryDayId NewItineraryDayId() => throw new InvalidOperationException();
         public PlannedActivityId NewPlannedActivityId() => new("activity_vatican_01");
+        public TransportationSegmentId NewTransportationSegmentId() => new("transport_fixed_01");
         public AuditEventId NewAuditEventId() => new("audit_activity_01");
         public CorrelationId NewCorrelationId() => new("correlation_activity_01");
     }
@@ -216,5 +217,6 @@ public sealed class PlannedActivityAddServiceTests
         public Task UpdateOverviewAsync(CreatorId creatorId, AdventurePlan plan, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task AddDestinationVisitAsync(CreatorId creatorId, AdventurePlan plan, DestinationVisit destinationVisit, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task AddItineraryDayAsync(CreatorId creatorId, AdventurePlan plan, ItineraryDay itineraryDay, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task AddTransportationSegmentAsync(CreatorId creatorId, AdventurePlan plan, TransportationSegment segment, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 }
