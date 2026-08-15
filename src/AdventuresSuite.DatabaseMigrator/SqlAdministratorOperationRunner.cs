@@ -122,15 +122,20 @@ internal static class SqlAdministratorOperationRunner
         var principals = new List<object>();
         while (await reader.ReadAsync()) principals.Add(new
         {
-            name = reader.GetString(0), type = reader.GetString(1),
-            authenticationType = reader.GetString(2), sidSha256 = reader.GetString(4)
+            name = reader.GetString(0),
+            type = reader.GetString(1),
+            authenticationType = reader.GetString(2),
+            sidSha256 = reader.GetString(4)
         });
         await reader.NextResultAsync();
         var permissions = new List<object>();
         while (await reader.ReadAsync()) permissions.Add(new
         {
-            grantee = reader.GetString(0), state = reader.GetString(1), permission = reader.GetString(2),
-            @class = reader.GetString(3), securable = reader.IsDBNull(4) ? null : reader.GetString(4)
+            grantee = reader.GetString(0),
+            state = reader.GetString(1),
+            permission = reader.GetString(2),
+            @class = reader.GetString(3),
+            securable = reader.IsDBNull(4) ? null : reader.GetString(4)
         });
         await reader.NextResultAsync();
         await reader.ReadAsync();
@@ -145,7 +150,9 @@ internal static class SqlAdministratorOperationRunner
         var objectCounts = new List<object>();
         while (await reader.ReadAsync()) objectCounts.Add(new
         {
-            schema = reader.GetString(0), type = reader.GetString(1), count = reader.GetInt64(2)
+            schema = reader.GetString(0),
+            type = reader.GetString(1),
+            count = reader.GetInt64(2)
         });
         if (schemas.Count > 3 || roles.Length > 4 || principals.Count > 2
             || permissions.Count > 128 || scripts.Count > 9 || objectCounts.Count > 24)
@@ -203,7 +210,11 @@ internal static class SqlAdministratorOperationRunner
             },
             outcome,
             journal = new { exists = journalExists, scripts },
-            schemas, roles, principals, permissions, objectCounts,
+            schemas,
+            roles,
+            principals,
+            permissions,
+            objectCounts,
             residue = new { resourceCount = 0, registrationCount = 0, temporaryAssignmentCount = 0, guestFileCount = 0 }
         };
         var payload = JsonSerializer.Serialize(baseline);
