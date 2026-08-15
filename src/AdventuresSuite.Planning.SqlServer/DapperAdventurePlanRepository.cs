@@ -497,6 +497,69 @@ internal sealed class DapperAdventurePlanRepository(
     }
 
     /// <inheritdoc />
+    public async Task UpdatePlannedActivityAsync(
+        CreatorId creatorId,
+        AdventurePlan plan,
+        PlannedActivity activity,
+        long expectedVersion,
+        CancellationToken cancellationToken = default)
+    {
+        RequirePlanScope(creatorId, plan);
+        ArgumentNullException.ThrowIfNull(activity);
+        if (expectedVersion < 1 || plan.Audit.Version != expectedVersion + 1
+            || !plan.Activities.Contains(activity))
+        {
+            throw new ArgumentException(
+                "A planned activity update must advance the expected version by exactly one.",
+                nameof(expectedVersion));
+        }
+
+        try
+        {
+            var updated = await connection.ExecuteAsync(Command(AdvancePlanVersionSql,
+                new
+                {
+                    CreatorId = creatorId.Value,
+                    PlanId = plan.Id.Value,
+                    Version = plan.Audit.Version,
+                    plan.Audit.UpdatedAtUtc,
+                    ExpectedVersion = expectedVersion
+                }, cancellationToken));
+            if (updated == 0)
+            {
+                throw new PlanningConcurrencyException(plan.Id, expectedVersion);
+            }
+
+            var activityRows = await connection.ExecuteAsync(Command("""
+                UPDATE planning.PlannedActivities
+                   SET Title=@Title, StartsAtLocal=@Start, EndsAtLocal=@End
+                 WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId
+                   AND PlannedActivityId=@Id AND ItineraryDayId=@DayId;
+                """, new
+            {
+                CreatorId = creatorId.Value,
+                PlanId = plan.Id.Value,
+                Id = activity.Id.Value,
+                DayId = activity.ItineraryDayId.Value,
+                activity.Title,
+                Start = activity.StartsAtLocal?.ToTimeSpan(),
+                End = activity.EndsAtLocal?.ToTimeSpan()
+            }, cancellationToken));
+            if (activityRows != 1)
+            {
+                throw new PlanningConcurrencyException(plan.Id, expectedVersion);
+            }
+
+            auditTracker.RecordMutation(plan.Id, expectedVersion, plan.Audit.Version);
+        }
+        catch
+        {
+            auditTracker.RecordFailure();
+            throw;
+        }
+    }
+
+    /// <inheritdoc />
     public async Task AddTransportationSegmentAsync(
         CreatorId creatorId,
         AdventurePlan plan,

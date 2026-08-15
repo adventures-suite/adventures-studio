@@ -243,6 +243,36 @@ public sealed class AdventurePlan
     }
 
     /// <summary>
+    /// Creates the next aggregate version with one existing activity's editable details replaced.
+    /// Its identity, itinerary-day relationship, and planning status are preserved.
+    /// </summary>
+    public AdventurePlan WithEditedPlannedActivity(
+        PlannedActivityId activityId,
+        string title,
+        TimeOnly? startsAtLocal,
+        TimeOnly? endsAtLocal,
+        DateTimeOffset updatedAtUtc)
+    {
+        var existing = Activities.SingleOrDefault(item => item.Id == activityId)
+            ?? throw new ArgumentException("The planned activity must belong to this plan.", nameof(activityId));
+        var replacement = new PlannedActivity
+        {
+            Id = existing.Id,
+            ItineraryDayId = existing.ItineraryDayId,
+            Title = title,
+            StartsAtLocal = startsAtLocal,
+            EndsAtLocal = endsAtLocal,
+            Status = existing.Status
+        };
+        var activities = Activities.Select(item => item.Id == activityId ? replacement : item).ToArray();
+        return new(
+            Id, CreatorId, Title, WorkingDescription, LifecycleStage, Status, Dates,
+            new PlanAudit(checked(Audit.Version + 1), Audit.CreatedAtUtc, updatedAtUtc),
+            Travelers, DestinationVisits, ItineraryDays, activities, Transportation,
+            Accommodations, Reservations, Notes, Tasks, BudgetItems, PackingItems);
+    }
+
+    /// <summary>
     /// Creates the next validated aggregate version with one transportation segment appended.
     /// Existing plan fields and child records are preserved.
     /// </summary>

@@ -200,6 +200,12 @@ Exit gate:
 
 ## Phase 4: Minimal Creator Planning Workspace
 
+Current incremental delivery includes an authorized itinerary board with append
+workflows for destinations, days, activities, transportation, accommodations,
+and credential-free reservation summaries. Existing planned activities can be
+corrected in place without changing their day, identity, or status; broader
+item movement, lifecycle transitions, and removal remain later focused slices.
+
 Scope:
 
 - Adventure dashboard
