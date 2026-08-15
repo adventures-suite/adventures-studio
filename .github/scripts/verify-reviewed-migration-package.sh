@@ -7,7 +7,12 @@ trap 'printf '\''{"classification":"migration_package_verification_failed"}\n'\'
 mapfile -t packages < <(find "$ARTIFACT_DIRECTORY" -type f -name "adventures-suite-database-migrator-${EXPECTED_SOURCE_SHA}.tar.gz")
 test "${#packages[@]}" -eq 1
 package="${packages[0]}"
-evidence="${package}.evidence.json"
+package_suffix='.tar.gz'
+[[ "$package" == *"$package_suffix" ]]
+evidence="${package%"$package_suffix"}.evidence.json"
+mapfile -t evidence_files < <(find "$ARTIFACT_DIRECTORY" -type f -name "*.evidence.json")
+test "${#evidence_files[@]}" -eq 1
+test "${evidence_files[0]}" = "$evidence"
 test -f "$evidence"
 actual_sha="$(sha256sum "$package" | cut -d' ' -f1)"
 test "$actual_sha" = "$EXPECTED_PACKAGE_SHA256"
