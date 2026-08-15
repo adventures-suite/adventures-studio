@@ -2,7 +2,10 @@
 
 **Status:** Product Direction
 
-**Last Updated:** August 11, 2026
+**Last Updated:** August 14, 2026
+
+Experience and component decisions follow
+`docs/architecture/experience-design-system.md`.
 
 ## Product Promise
 

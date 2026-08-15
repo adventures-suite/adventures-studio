@@ -85,6 +85,31 @@
 - Implement Planning Engine phases in order and do not combine them into a
   broad rewrite.
 
+## Experience Design
+
+- Read `docs/architecture/experience-design-system.md` before changing shared
+  visual foundations, selecting a UI component dependency, or introducing a
+  reusable design-system component.
+- Keep the shared foundation small and driven by proven product needs. Do not
+  build a general-purpose component framework or choose a platform-wide vendor
+  from speculative requirements.
+- Preserve audience-specific experiences: information-rich Planner tools,
+  mobile-first traveler workflows, and visual, story-led public Creator sites.
+- Treat dark mode, accessibility, responsive behavior, and loading, empty,
+  denied, expired, offline, and failure states as part of component quality.
+- Wrap third-party controls behind narrow AdventuresSuite Razor components when
+  vendor types or conventions would otherwise spread through product code.
+- Put state, injected dependencies, lifecycle methods, event handlers, and
+  non-trivial presentation logic for stateful Razor pages and components in a
+  colocated `.razor.cs` partial class. Keep `.razor` files focused on markup and
+  component composition. Small presentation-only components with no meaningful
+  code may remain single-file.
+- Keep authorization, entitlement, consent, lifecycle, and data-integrity
+  enforcement below Razor markup and code-behind; component organization never
+  creates a security boundary.
+- Never treat UI visibility as authorization, entitlement, consent, or
+  lifecycle enforcement.
+
 ## Partner Collaboration
 
 - Read `docs/architecture/partner-collaboration-engine.md`,
@@ -322,6 +347,9 @@
 - Favor dependency injection.
 - Prefer async methods.
 - Keep components small and reusable.
+- Prefer colocated Razor code-behind for stateful pages and components; do not
+  allow a `.razor` file to accumulate injected services, lifecycle behavior,
+  event handling, and non-trivial state management.
 
 ## Deployment
 

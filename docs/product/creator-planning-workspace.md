@@ -89,7 +89,9 @@ undisclosed. Every underlying operation enforces the same applicable gates below
 the UI.
 
 See `docs/product/workspace-experience-and-value.md` and
-`docs/architecture/platform-billing-entitlements.md`.
+`docs/architecture/platform-billing-entitlements.md`. Shared component,
+accessibility, build-versus-buy, and audience-specific experience direction is
+defined in `docs/architecture/experience-design-system.md`.
 
 ### Adventure Overview
 
