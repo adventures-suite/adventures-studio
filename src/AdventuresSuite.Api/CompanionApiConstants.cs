@@ -11,6 +11,16 @@ public static class CompanionApiConstants
     public const string AuthorizationPolicy = "CompanionApiAccess";
     /// <summary>Gets the explicit deterministic-mode configuration key.</summary>
     public const string DeterministicModeKey = "Companion:DeterministicMode";
+    /// <summary>Gets the explicit Companion authentication-mode key.</summary>
+    public const string AuthenticationModeKey = "Authentication:CompanionApi:Mode";
+    /// <summary>Gets the exact configured token issuer key.</summary>
+    public const string AuthenticationIssuerKey = "Authentication:CompanionApi:Issuer";
+    /// <summary>Gets the exact configured token audience key.</summary>
+    public const string AuthenticationAudienceKey = "Authentication:CompanionApi:Audience";
+    /// <summary>Gets the closed authentication mode.</summary>
+    public const string ClosedAuthenticationMode = "Closed";
+    /// <summary>Gets the real bearer transport-authentication mode.</summary>
+    public const string BearerAuthenticationMode = "Bearer";
     /// <summary>Gets the explicit product activation-mode configuration key.</summary>
     public const string ActivationModeKey = "Companion:ActivationMode";
     /// <summary>Gets the explicit authoritative projection-provider key.</summary>
