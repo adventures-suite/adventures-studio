@@ -2,7 +2,15 @@ using AdventuresSuite.DatabaseMigrator;
 
 namespace AdventuresSuite.DatabaseIntegrationTests;
 
+/// <summary>Serializes tests that temporarily replace process-global console writers.</summary>
+[CollectionDefinition(ConsoleCaptureCollection.Name, DisableParallelization = true)]
+public sealed class ConsoleCaptureCollection
+{
+    internal const string Name = "Console capture";
+}
+
 /// <summary>Verifies approval-gated migration outcome classification.</summary>
+[Collection(ConsoleCaptureCollection.Name)]
 public sealed class MigrationOperationRunnerTests
 {
     [Fact]

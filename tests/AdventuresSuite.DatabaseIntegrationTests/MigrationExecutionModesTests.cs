@@ -5,6 +5,7 @@ using Azure.Core;
 namespace AdventuresSuite.DatabaseIntegrationTests;
 
 /// <summary>Verifies finite private SQL migration execution and evidence behavior.</summary>
+[Collection(ConsoleCaptureCollection.Name)]
 public sealed class MigrationExecutionModesTests
 {
     [Fact]
