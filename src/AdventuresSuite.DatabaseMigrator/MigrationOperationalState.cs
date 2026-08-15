@@ -8,8 +8,14 @@ namespace AdventuresSuite.DatabaseMigrator;
 internal static class MigrationOperationalState
 {
     internal static async Task<MigrationStateEvidence> CaptureAsync(string connectionString)
+        => await CaptureAsync(() => new SqlConnection(connectionString));
+
+    /// <summary>Captures state through the exact reviewed connection factory.</summary>
+    internal static async Task<MigrationStateEvidence> CaptureAsync(
+        Func<SqlConnection> connectionFactory)
     {
-        await using var connection = new SqlConnection(connectionString);
+        ArgumentNullException.ThrowIfNull(connectionFactory);
+        await using var connection = connectionFactory();
         await connection.OpenAsync();
 
         var journal = await ReadStringsAsync(connection, """
