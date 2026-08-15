@@ -228,6 +228,7 @@ public sealed class PlannedActivityAddServiceTests
         public Task AddDestinationVisitAsync(CreatorId creatorId, AdventurePlan plan, DestinationVisit destinationVisit, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task AddItineraryDayAsync(CreatorId creatorId, AdventurePlan plan, ItineraryDay itineraryDay, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task AddTransportationSegmentAsync(CreatorId creatorId, AdventurePlan plan, TransportationSegment segment, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task UpdateTransportationSegmentAsync(CreatorId creatorId, AdventurePlan plan, TransportationSegment segment, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task AddAccommodationAsync(CreatorId creatorId, AdventurePlan plan, Accommodation accommodation, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task AddReservationAsync(CreatorId creatorId, AdventurePlan plan, Reservation reservation, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }

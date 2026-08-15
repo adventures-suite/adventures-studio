@@ -20,9 +20,10 @@
 .planner-board__activity-list { display: grid; gap: .5rem; margin-top: 1rem; }
 .planner-board__activity-list li { display: grid; grid-template-columns: minmax(7rem, auto) 1fr auto; gap: .75rem; align-items: baseline; border-top: 1px solid var(--planner-shell-border); padding-top: .5rem; }
 .planner-board__activity-editor { grid-column: 1 / -1; }
-.planner-board__activity-editor summary { color: var(--planner-shell-primary); cursor: pointer; font-weight: 700; }
-.planner-board__activity-editor summary:focus-visible { outline: 3px solid var(--planner-shell-focus); outline-offset: 2px; }
-.planner-board__activity-editor .planner-board__form { margin-top: .75rem; }
+.planner-board__transportation-editor { margin-top: .35rem; }
+.planner-board__activity-editor summary, .planner-board__transportation-editor summary { color: var(--planner-shell-primary); cursor: pointer; font-weight: 700; }
+.planner-board__activity-editor summary:focus-visible, .planner-board__transportation-editor summary:focus-visible { outline: 3px solid var(--planner-shell-focus); outline-offset: 2px; }
+.planner-board__activity-editor .planner-board__form, .planner-board__transportation-editor .planner-board__form { margin-top: .75rem; }
 .planner-board__activity-list span, .planner-board__summary-list span, .planner-board__summary-list small { color: var(--planner-shell-text-muted); }
 .planner-board__activity-list small, .planner-board__summary-list small { font-weight: 700; text-transform: uppercase; }
 .planner-board__summary-list { display: grid; gap: .65rem; }
