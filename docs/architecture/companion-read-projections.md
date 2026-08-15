@@ -83,10 +83,12 @@ The SQL resolver uses the persisted exact-key hash together with binary-
 collated provider, issuer, and subject predicates. It then establishes the
 active platform user, current Creator membership, accepted traveler
 participation, Adventure ownership, and exact `AdventurePlan.View` authority
-from server-owned roles or grants. Successful results carry the user security,
-membership, participation, and information-policy versions. A separate
-projection-read contract requires those facts to be rechecked within the later
-data read rather than treating resolution as a durable authorization decision.
+from server-owned roles or grants. Successful results carry the exact external-
+identity mapping plus user security, membership, participation, and information-
+policy versions. Evaluation time comes only from an injected `TimeProvider`.
+A separate projection-read contract requires those facts to be rechecked within
+the later data read rather than treating resolution as a durable authorization
+decision.
 
 The default information policy is closed. The resolver is not registered with
 the API host, the `Bearer + Sql` startup prohibition remains in place, and no

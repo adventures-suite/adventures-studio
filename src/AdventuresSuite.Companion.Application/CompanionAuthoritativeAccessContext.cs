@@ -68,6 +68,7 @@ public enum CompanionAccessContextOutcome
 
 /// <summary>Contains server-owned authorization facts for one Adventure operation.</summary>
 public sealed record CompanionAuthoritativeAccessContext(
+    ExternalIdentityId ExternalIdentityId,
     UserId UserId,
     long UserSecurityVersion,
     CreatorId CreatorId,
@@ -159,7 +160,6 @@ public interface ICompanionAuthoritativeAccessContextResolver
     Task<CompanionAccessContextResolution> ResolveAdventureAsync(
         CompanionExternalIdentity identity,
         string adventureId,
-        DateTimeOffset evaluatedAtUtc,
         CancellationToken cancellationToken = default);
 }
 

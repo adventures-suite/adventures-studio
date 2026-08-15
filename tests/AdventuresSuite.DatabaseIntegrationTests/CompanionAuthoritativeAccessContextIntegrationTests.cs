@@ -22,7 +22,7 @@ public sealed class CompanionAuthoritativeAccessContextIntegrationTests
             await SeedAsync(connectionString);
             var resolver = Resolver(connectionString, allow: true);
 
-            var result = await resolver.ResolveAdventureAsync(Identity(), "plan_alpha", EvaluationTime);
+            var result = await resolver.ResolveAdventureAsync(Identity(), "plan_alpha");
 
             Assert.Equal(CompanionAccessContextOutcome.Resolved, result.Outcome);
             var context = Assert.IsType<CompanionAuthoritativeAccessContext>(result.Context);
@@ -34,6 +34,16 @@ public sealed class CompanionAuthoritativeAccessContextIntegrationTests
             Assert.Equal(5, context.ParticipationVersion);
             Assert.Equal("adventure_read_v1", context.InformationPolicyVersion);
             Assert.True(await resolver.IsCurrentAsync(context));
+
+            await ExecuteAsync(connectionString, """
+                UPDATE auth.ExternalIdentities SET DisabledAtUtc='2026-08-15T11:00:00+00:00'
+                WHERE ExternalIdentityId='identity_alpha';
+                """);
+            Assert.False(await resolver.IsCurrentAsync(context));
+            await ExecuteAsync(connectionString, """
+                UPDATE auth.ExternalIdentities SET DisabledAtUtc=NULL
+                WHERE ExternalIdentityId='identity_alpha';
+                """);
 
             await ExecuteAsync(connectionString, """
                 UPDATE planning.TravelerParticipations SET Version = 6
@@ -67,23 +77,23 @@ public sealed class CompanionAuthoritativeAccessContextIntegrationTests
 
             Assert.Equal(CompanionAccessContextOutcome.Unmapped,
                 (await resolver.ResolveAdventureAsync(
-                    Identity(issuer: "https://LOGIN.example.test/Tenant"), "plan_alpha", EvaluationTime)).Outcome);
+                    Identity(issuer: "https://LOGIN.example.test/Tenant"), "plan_alpha")).Outcome);
             Assert.Equal(CompanionAccessContextOutcome.Unmapped,
                 (await resolver.ResolveAdventureAsync(
-                    Identity(subject: "Subject-Alpha"), "plan_alpha", EvaluationTime)).Outcome);
+                    Identity(subject: "Subject-Alpha"), "plan_alpha")).Outcome);
             Assert.Equal(CompanionAccessContextOutcome.Unauthorized,
-                (await resolver.ResolveAdventureAsync(Identity(), "unknown_plan", EvaluationTime)).Outcome);
+                (await resolver.ResolveAdventureAsync(Identity(), "unknown_plan")).Outcome);
 
             Assert.Equal(CompanionAccessContextOutcome.InformationPolicyClosed,
                 (await Resolver(connectionString, allow: false)
-                    .ResolveAdventureAsync(Identity(), "plan_alpha", EvaluationTime)).Outcome);
+                    .ResolveAdventureAsync(Identity(), "plan_alpha")).Outcome);
 
             await ExecuteAsync(connectionString, """
                 UPDATE auth.ExternalIdentities SET DisabledAtUtc='2026-08-15T11:00:00+00:00'
                 WHERE ExternalIdentityId='identity_alpha';
                 """);
             Assert.Equal(CompanionAccessContextOutcome.Disabled,
-                (await resolver.ResolveAdventureAsync(Identity(), "plan_alpha", EvaluationTime)).Outcome);
+                (await resolver.ResolveAdventureAsync(Identity(), "plan_alpha")).Outcome);
             await ExecuteAsync(connectionString, """
                 UPDATE auth.ExternalIdentities SET DisabledAtUtc=NULL WHERE ExternalIdentityId='identity_alpha';
                 """);
@@ -93,7 +103,7 @@ public sealed class CompanionAuthoritativeAccessContextIntegrationTests
                     UpdatedAtUtc='2026-08-15T11:00:00+00:00' WHERE UserId='user_alpha';
                 """);
             Assert.Equal(CompanionAccessContextOutcome.Disabled,
-                (await resolver.ResolveAdventureAsync(Identity(), "plan_alpha", EvaluationTime)).Outcome);
+                (await resolver.ResolveAdventureAsync(Identity(), "plan_alpha")).Outcome);
             await ExecuteAsync(connectionString, """
                 UPDATE auth.Users SET Status='Active', DisabledAtUtc=NULL,
                     UpdatedAtUtc='2026-08-15T11:01:00+00:00' WHERE UserId='user_alpha';
@@ -101,10 +111,10 @@ public sealed class CompanionAuthoritativeAccessContextIntegrationTests
 
             await SetMembershipStatusAsync(connectionString, "Revoked");
             Assert.Equal(CompanionAccessContextOutcome.Revoked,
-                (await resolver.ResolveAdventureAsync(Identity(), "plan_alpha", EvaluationTime)).Outcome);
+                (await resolver.ResolveAdventureAsync(Identity(), "plan_alpha")).Outcome);
             await SetMembershipStatusAsync(connectionString, "Pending");
             Assert.Equal(CompanionAccessContextOutcome.Inactive,
-                (await resolver.ResolveAdventureAsync(Identity(), "plan_alpha", EvaluationTime)).Outcome);
+                (await resolver.ResolveAdventureAsync(Identity(), "plan_alpha")).Outcome);
             await SetMembershipStatusAsync(connectionString, "Active");
 
             await ExecuteAsync(connectionString, """
@@ -112,14 +122,14 @@ public sealed class CompanionAuthoritativeAccessContextIntegrationTests
                 WHERE CreatorId='creator_alpha' AND CreatorMembershipId='membership_alpha';
                 """);
             Assert.Equal(CompanionAccessContextOutcome.Inactive,
-                (await resolver.ResolveAdventureAsync(Identity(), "plan_alpha", EvaluationTime)).Outcome);
+                (await resolver.ResolveAdventureAsync(Identity(), "plan_alpha")).Outcome);
             await ExecuteAsync(connectionString, """
                 UPDATE auth.CreatorMemberships SET EffectiveFromUtc='2026-08-01T00:00:00+00:00',
                     ExpiresAtUtc='2026-08-15T12:00:00+00:00'
                 WHERE CreatorId='creator_alpha' AND CreatorMembershipId='membership_alpha';
                 """);
             Assert.Equal(CompanionAccessContextOutcome.Inactive,
-                (await resolver.ResolveAdventureAsync(Identity(), "plan_alpha", EvaluationTime)).Outcome);
+                (await resolver.ResolveAdventureAsync(Identity(), "plan_alpha")).Outcome);
             await ExecuteAsync(connectionString, """
                 UPDATE auth.CreatorMemberships SET ExpiresAtUtc=NULL
                 WHERE CreatorId='creator_alpha' AND CreatorMembershipId='membership_alpha';
@@ -127,10 +137,10 @@ public sealed class CompanionAuthoritativeAccessContextIntegrationTests
 
             await SetParticipationStatusAsync(connectionString, "Revoked");
             Assert.Equal(CompanionAccessContextOutcome.Revoked,
-                (await resolver.ResolveAdventureAsync(Identity(), "plan_alpha", EvaluationTime)).Outcome);
+                (await resolver.ResolveAdventureAsync(Identity(), "plan_alpha")).Outcome);
             await SetParticipationStatusAsync(connectionString, "Invited");
             Assert.Equal(CompanionAccessContextOutcome.Inactive,
-                (await resolver.ResolveAdventureAsync(Identity(), "plan_alpha", EvaluationTime)).Outcome);
+                (await resolver.ResolveAdventureAsync(Identity(), "plan_alpha")).Outcome);
             await SetParticipationStatusAsync(connectionString, "Accepted");
 
             await ExecuteAsync(connectionString, """
@@ -138,7 +148,7 @@ public sealed class CompanionAuthoritativeAccessContextIntegrationTests
                 WHERE CreatorId='creator_alpha' AND AdventurePlanId='plan_alpha' AND UserId='user_alpha';
                 """);
             Assert.Equal(CompanionAccessContextOutcome.Inactive,
-                (await resolver.ResolveAdventureAsync(Identity(), "plan_alpha", EvaluationTime)).Outcome);
+                (await resolver.ResolveAdventureAsync(Identity(), "plan_alpha")).Outcome);
             await ExecuteAsync(connectionString, """
                 UPDATE planning.TravelerParticipations SET EffectiveFromUtc='2026-08-01T00:00:00+00:00'
                 WHERE CreatorId='creator_alpha' AND AdventurePlanId='plan_alpha' AND UserId='user_alpha';
@@ -149,14 +159,14 @@ public sealed class CompanionAuthoritativeAccessContextIntegrationTests
                 WHERE CreatorId='creator_alpha' AND AdventurePlanId='plan_alpha' AND UserId='user_alpha';
                 """);
             Assert.Equal(CompanionAccessContextOutcome.Inactive,
-                (await resolver.ResolveAdventureAsync(Identity(), "plan_alpha", EvaluationTime)).Outcome);
+                (await resolver.ResolveAdventureAsync(Identity(), "plan_alpha")).Outcome);
 
             await ExecuteAsync(connectionString, """
                 DELETE planning.TravelerParticipations
                 WHERE CreatorId='creator_alpha' AND AdventurePlanId='plan_alpha' AND UserId='user_alpha';
                 """);
             Assert.Equal(CompanionAccessContextOutcome.Unauthorized,
-                (await resolver.ResolveAdventureAsync(Identity(), "plan_alpha", EvaluationTime)).Outcome);
+                (await resolver.ResolveAdventureAsync(Identity(), "plan_alpha")).Outcome);
         });
     }
 
@@ -198,7 +208,7 @@ public sealed class CompanionAuthoritativeAccessContextIntegrationTests
                 WHERE CreatorId='creator_alpha' AND CreatorMembershipId='membership_alpha';
                 """);
             Assert.Equal(CompanionAccessContextOutcome.Unauthorized,
-                (await resolver.ResolveAdventureAsync(Identity(), "plan_alpha", EvaluationTime)).Outcome);
+                (await resolver.ResolveAdventureAsync(Identity(), "plan_alpha")).Outcome);
 
             await ExecuteAsync(connectionString, """
                 INSERT auth.CreatorMembershipPermissionGrants
@@ -206,29 +216,34 @@ public sealed class CompanionAuthoritativeAccessContextIntegrationTests
                 VALUES ('creator_alpha','membership_alpha','AdventurePlan.View');
                 """);
             Assert.Equal(CompanionAccessContextOutcome.Resolved,
-                (await resolver.ResolveAdventureAsync(Identity(), "plan_alpha", EvaluationTime)).Outcome);
+                (await resolver.ResolveAdventureAsync(Identity(), "plan_alpha")).Outcome);
 
             await SeedAmbiguousAdventureAsync(connectionString);
             Assert.Equal(CompanionAccessContextOutcome.Ambiguous,
-                (await resolver.ResolveAdventureAsync(Identity(), "plan_alpha", EvaluationTime)).Outcome);
+                (await resolver.ResolveAdventureAsync(Identity(), "plan_alpha")).Outcome);
 
             using var cancellation = new CancellationTokenSource();
             cancellation.Cancel();
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-                resolver.ResolveAdventureAsync(Identity(), "plan_alpha", EvaluationTime, cancellation.Token));
+                resolver.ResolveAdventureAsync(Identity(), "plan_alpha", cancellation.Token));
         });
 
         var unavailable = Resolver(
             "Server=127.0.0.1,1;Database=unavailable;User ID=none;Password=none;" +
             "Encrypt=False;TrustServerCertificate=True;Connect Timeout=1", allow: true);
         Assert.Equal(CompanionAccessContextOutcome.OperationallyUnavailable,
-            (await unavailable.ResolveAdventureAsync(Identity(), "plan_alpha", EvaluationTime)).Outcome);
+            (await unavailable.ResolveAdventureAsync(Identity(), "plan_alpha")).Outcome);
+
+        var malformedConfiguration = Resolver("not a connection string", allow: true);
+        Assert.Equal(CompanionAccessContextOutcome.OperationallyUnavailable,
+            (await malformedConfiguration.ResolveAdventureAsync(Identity(), "plan_alpha")).Outcome);
     }
 
     private static SqlCompanionAuthoritativeAccessContextResolver Resolver(
         string connectionString, bool allow) => new(
             connectionString,
-            allow ? new AllowingPolicy() : new ClosedCompanionInformationPolicy());
+            allow ? new AllowingPolicy() : new ClosedCompanionInformationPolicy(),
+            new FixedTimeProvider(EvaluationTime));
 
     private static CompanionExternalIdentity Identity(
         string issuer = "https://login.example.test/Tenant",
@@ -348,5 +363,10 @@ public sealed class CompanionAuthoritativeAccessContextIntegrationTests
             cancellationToken.ThrowIfCancellationRequested();
             return Task.FromResult(new CompanionInformationPolicyDecision(true, "adventure_read_v1"));
         }
+    }
+
+    private sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => utcNow;
     }
 }

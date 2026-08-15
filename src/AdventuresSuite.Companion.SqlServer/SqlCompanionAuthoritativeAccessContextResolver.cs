@@ -10,27 +10,36 @@ using TheSimontonAdventures.Web.Creators;
 namespace AdventuresSuite.Companion.SqlServer;
 
 /// <summary>Resolves authoritative Companion access facts without activating an API projection.</summary>
-public sealed class SqlCompanionAuthoritativeAccessContextResolver(
-    string connectionString,
-    ICompanionInformationPolicy informationPolicy)
+public sealed class SqlCompanionAuthoritativeAccessContextResolver
     : ICompanionAuthoritativeAccessContextResolver, ICompanionProjectionAuthorizationRecheck
 {
     private const string ViewPermission = "AdventurePlan.View";
-    private readonly string connectionString = string.IsNullOrWhiteSpace(connectionString)
-        ? throw new ArgumentException("A SQL Server connection string is required.", nameof(connectionString))
-        : connectionString;
-    private readonly ICompanionInformationPolicy informationPolicy =
-        informationPolicy ?? throw new ArgumentNullException(nameof(informationPolicy));
+    private readonly string connectionString;
+    private readonly ICompanionInformationPolicy informationPolicy;
+    private readonly TimeProvider timeProvider;
+
+    /// <summary>Initializes an inert resolver with authoritative time and policy providers.</summary>
+    public SqlCompanionAuthoritativeAccessContextResolver(
+        string connectionString,
+        ICompanionInformationPolicy informationPolicy,
+        TimeProvider timeProvider)
+    {
+        this.connectionString = string.IsNullOrWhiteSpace(connectionString)
+            ? throw new ArgumentException("A SQL Server connection string is required.", nameof(connectionString))
+            : connectionString;
+        this.informationPolicy = informationPolicy ?? throw new ArgumentNullException(nameof(informationPolicy));
+        this.timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
+    }
 
     /// <inheritdoc />
     public async Task<CompanionAccessContextResolution> ResolveAdventureAsync(
         CompanionExternalIdentity identity,
         string adventureId,
-        DateTimeOffset evaluatedAtUtc,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(identity);
         ValidateAdventureId(adventureId);
+        var evaluatedAtUtc = timeProvider.GetUtcNow();
         RequireUtc(evaluatedAtUtc);
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -64,6 +73,7 @@ public sealed class SqlCompanionAuthoritativeAccessContextResolver(
                 new
                 {
                     identities[0].UserId,
+                    identities[0].ExternalIdentityId,
                     AdventureId = adventureId,
                     EvaluatedAtUtc = evaluatedAtUtc,
                     Permission = ViewPermission
@@ -75,7 +85,7 @@ public sealed class SqlCompanionAuthoritativeAccessContextResolver(
             if (candidates.Count > 1)
                 return Closed(CompanionAccessContextOutcome.Ambiguous);
 
-            var mapped = MapCandidate(candidates[0], evaluatedAtUtc);
+            var mapped = MapCandidate(candidates[0], identities[0].ExternalIdentityId, evaluatedAtUtc);
             if (mapped.Outcome.HasValue)
                 return Closed(mapped.Outcome.Value);
 
@@ -110,6 +120,14 @@ public sealed class SqlCompanionAuthoritativeAccessContextResolver(
         {
             return Closed(CompanionAccessContextOutcome.OperationallyUnavailable);
         }
+        catch (ArgumentException)
+        {
+            return Closed(CompanionAccessContextOutcome.OperationallyUnavailable);
+        }
+        catch (InvalidOperationException)
+        {
+            return Closed(CompanionAccessContextOutcome.OperationallyUnavailable);
+        }
     }
 
     /// <inheritdoc />
@@ -119,7 +137,8 @@ public sealed class SqlCompanionAuthoritativeAccessContextResolver(
     {
         ArgumentNullException.ThrowIfNull(context);
         cancellationToken.ThrowIfCancellationRequested();
-        if (context.RequiredPermission != Permissions.AdventurePlanView
+        if (context.ExternalIdentityId == default
+            || context.RequiredPermission != Permissions.AdventurePlanView
             || context.UserSecurityVersion < 1
             || context.MembershipVersion < 1
             || context.ParticipationVersion < 1
@@ -129,19 +148,22 @@ public sealed class SqlCompanionAuthoritativeAccessContextResolver(
 
         try
         {
+            var evaluatedAtUtc = timeProvider.GetUtcNow();
+            RequireUtc(evaluatedAtUtc);
             await using var connection = new SqlConnection(connectionString);
             var isCurrent = await connection.ExecuteScalarAsync<int>(new CommandDefinition(
                 RecheckSql,
                 new
                 {
                     UserId = context.UserId.Value,
+                    ExternalIdentityId = context.ExternalIdentityId.Value,
                     UserSecurityVersion = context.UserSecurityVersion,
                     CreatorId = context.CreatorId.Value,
                     context.AdventureId,
                     context.TravelerId,
                     context.MembershipVersion,
                     context.ParticipationVersion,
-                    EvaluatedAtUtc = context.EvaluatedAtUtc,
+                    EvaluatedAtUtc = evaluatedAtUtc,
                     Permission = ViewPermission
                 },
                 cancellationToken: cancellationToken)) == 1;
@@ -157,7 +179,7 @@ public sealed class SqlCompanionAuthoritativeAccessContextResolver(
                     context.MembershipVersion,
                     context.ParticipationVersion,
                     context.RequiredPermission,
-                    context.EvaluatedAtUtc),
+                    evaluatedAtUtc),
                 cancellationToken);
             return policy.IsAllowed
                 && string.Equals(policy.Version, context.InformationPolicyVersion, StringComparison.Ordinal);
@@ -202,7 +224,7 @@ public sealed class SqlCompanionAuthoritativeAccessContextResolver(
     }
 
     private static (CompanionAuthoritativeAccessContext? Context, CompanionAccessContextOutcome? Outcome)
-        MapCandidate(AccessRow row, DateTimeOffset evaluatedAtUtc)
+        MapCandidate(AccessRow row, string externalIdentityId, DateTimeOffset evaluatedAtUtc)
     {
         if (string.Equals(row.MembershipStatus, "Revoked", StringComparison.Ordinal)
             || string.Equals(row.ParticipationStatus, "Revoked", StringComparison.Ordinal))
@@ -228,6 +250,7 @@ public sealed class SqlCompanionAuthoritativeAccessContextResolver(
         try
         {
             var context = new CompanionAuthoritativeAccessContext(
+                new ExternalIdentityId(externalIdentityId),
                 new UserId(row.UserId),
                 row.UserSecurityVersion,
                 new CreatorId(row.CreatorId),
@@ -288,6 +311,7 @@ public sealed class SqlCompanionAuthoritativeAccessContextResolver(
 
     private const string IdentitySql = """
         SELECT TOP (2)
+            identityMap.ExternalIdentityId,
             identityMap.UserId,
             identityMap.Provider,
             identityMap.Issuer,
@@ -356,6 +380,10 @@ public sealed class SqlCompanionAuthoritativeAccessContextResolver(
                     'PlanningEngagement.DirectEdit', 'Audit.View', 'Support.Impersonate'))
                 THEN 1 ELSE 0 END) AS HasUnknownPermission
         FROM auth.Users AS platformUser
+        INNER JOIN auth.ExternalIdentities AS identityMap
+            ON identityMap.UserId = platformUser.UserId COLLATE Latin1_General_100_BIN2
+           AND identityMap.ExternalIdentityId = @ExternalIdentityId COLLATE Latin1_General_100_BIN2
+           AND identityMap.DisabledAtUtc IS NULL
         INNER JOIN planning.TravelerParticipations AS participation
             ON participation.UserId = platformUser.UserId COLLATE Latin1_General_100_BIN2
         INNER JOIN planning.AdventurePlans AS adventure
@@ -373,6 +401,10 @@ public sealed class SqlCompanionAuthoritativeAccessContextResolver(
     private const string RecheckSql = """
         SELECT CASE WHEN COUNT_BIG(*) = 1 THEN 1 ELSE 0 END
         FROM auth.Users AS platformUser
+        INNER JOIN auth.ExternalIdentities AS identityMap
+            ON identityMap.UserId = platformUser.UserId COLLATE Latin1_General_100_BIN2
+           AND identityMap.ExternalIdentityId = @ExternalIdentityId COLLATE Latin1_General_100_BIN2
+           AND identityMap.DisabledAtUtc IS NULL
         INNER JOIN planning.TravelerParticipations AS participation
             ON participation.UserId = platformUser.UserId COLLATE Latin1_General_100_BIN2
         INNER JOIN planning.AdventurePlans AS adventure
@@ -410,6 +442,7 @@ public sealed class SqlCompanionAuthoritativeAccessContextResolver(
         """;
 
     private sealed record IdentityRow(
+        string ExternalIdentityId,
         string UserId,
         string Provider,
         string Issuer,

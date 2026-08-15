@@ -66,6 +66,7 @@ public sealed class CompanionAuthoritativeAccessContextTests
     {
         var evaluatedAt = new DateTimeOffset(2026, 8, 15, 12, 0, 0, TimeSpan.Zero);
         var context = new CompanionAuthoritativeAccessContext(
+            new ExternalIdentityId("identity_alpha"),
             new UserId("user_alpha"), 7, new CreatorId("creator_alpha"), "plan_alpha",
             "traveler_alpha", 3, 5, Permissions.AdventurePlanView, "adventure_read_v1", evaluatedAt);
 
