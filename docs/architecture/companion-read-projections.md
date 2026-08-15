@@ -95,9 +95,47 @@ the API host, the `Bearer + Sql` startup prohibition remains in place, and no
 endpoint can consume this foundation yet. No authorization-context cache is
 permitted by this increment.
 
+### Adventure overview profile decision
+
+`companion_adventure_overview_v1` is the only code-defined profile in this
+increment. It is not a Creator default. It can be selected only by an exact,
+active, unexpired assignment to one Creator-owned Adventure/traveler
+participation at that participation's current version. Missing assignments,
+unknown profile keys, scope mismatches, stale participation versions, and
+inactive, expired, or revoked assignments fail closed without fallback.
+
+The profile permits only:
+
+- opaque Adventure and destination-visit identities;
+- the Adventure title and destination names after the authorized Creator has
+  explicitly assigned this profile to that exact participation;
+- Adventure status, local dates, primary IANA time zone, and derived countdown
+  inputs without invented times or persisted ticks; and
+- destination local dates, IANA time zones, and presentation sequence.
+
+Existing `AdventurePlans.Title` and `DestinationVisits.Name` values are not
+automatically classified as traveler-safe. The explicit assignment is the
+Creator's approval to disclose those values under this closed profile. Detail
+presentation uses generic description and readiness text, emits an empty
+capability-link collection, and omits hero Resources and next-item content.
+
+Traveler lists and names, preferences, destination notes, WorkingDescription,
+Planning notes and tasks, budgets, reservations and confirmation references,
+accommodation and private transportation detail, protected Resources and
+paths, precise or live location, sensitive readiness actions, itinerary and
+surprise content, protected documents, Playbook content, and authorization or
+persistence identifiers remain excluded.
+
+This slice defines only the catalog, assignment contract, and closed evaluator.
+The assignment provider supplied here always returns no assignment. Persistence,
+mutation authorization and audit, runtime grants, indexes, projection mapping,
+ETags, service registration, endpoints, and Bearer + SQL activation remain
+separately reviewed work.
+
 Activation remains dependent on separately reviewed work:
 
-1. approve an authoritative, versioned information-policy definition;
+1. add separately reviewed persistence for explicit profile assignments and
+   their positive versions, effective windows, and revocation state;
 2. add a forward migration granting the Companion runtime narrowly scoped
    reads of `auth.Users` and `auth.ExternalIdentities`;
 3. validate any User-first participation and Adventure lookup indexes against
