@@ -244,6 +244,36 @@ public sealed class PlanningDomainInvariantTests
         Assert.Empty(plan.Activities);
     }
 
+    /// <summary>Editing an activity preserves its identity, day, and status while advancing one version.</summary>
+    [Fact]
+    public void WithEditedPlannedActivity_ValidDetails_ReplacesOnlyEditableState()
+    {
+        var visit = ValidVisit();
+        var day = ValidDay(visit);
+        var activity = new PlannedActivity
+        {
+            Id = new("activity_museum"),
+            ItineraryDayId = day.Id,
+            Title = "Museum",
+            StartsAtLocal = new(10, 0),
+            EndsAtLocal = new(12, 0),
+            Status = PlanItemStatus.Confirmed
+        };
+        var plan = CreatePlan(
+            destinationVisits: [visit], itineraryDays: [day], activities: [activity]);
+
+        var updated = plan.WithEditedPlannedActivity(
+            activity.Id, "Gallery", new(11, 0), new(13, 0), Audit.UpdatedAtUtc.AddHours(1));
+
+        var edited = Assert.Single(updated.Activities);
+        Assert.Equal(activity.Id, edited.Id);
+        Assert.Equal(activity.ItineraryDayId, edited.ItineraryDayId);
+        Assert.Equal(activity.Status, edited.Status);
+        Assert.Equal("Gallery", edited.Title);
+        Assert.Equal(2, updated.Audit.Version);
+        Assert.Equal("Museum", Assert.Single(plan.Activities).Title);
+    }
+
     /// <summary>Appending transportation preserves state and advances one plan version.</summary>
     [Fact]
     public void WithTransportationSegment_ValidSegment_AppendsAndAdvancesVersion()

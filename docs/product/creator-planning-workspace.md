@@ -112,6 +112,8 @@ defined in `docs/architecture/experience-design-system.md`.
 
 - local day and destination context
 - activities and flexible time blocks
+- correction of an existing activity's title and optional local times without
+  changing its identity, day, or planning status
 - transportation and accommodations
 - reservation linkage
 - conflict and missing-information indicators

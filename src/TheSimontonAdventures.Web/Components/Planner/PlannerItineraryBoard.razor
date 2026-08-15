@@ -45,6 +45,7 @@
 
     <section class="planner-board__card planner-board__days" aria-labelledby="plan-itinerary">
         <h4 id="plan-itinerary">Daily itinerary</h4>
+        @Status(ActivityEditStatusMessage)
         @Status(ActivityStatusMessage)
         @Status(DayStatusMessage)
         @if (Plan.Days.Count == 0)
@@ -67,7 +68,25 @@
                             <ol class="planner-board__activity-list">
                                 @foreach (var activity in day.Activities)
                                 {
-                                    <li><span>@FormatTimeRange(activity.StartsAtLocal, activity.EndsAtLocal)</span><strong>@activity.Title</strong><small>@FormatStatus(activity.Status)</small></li>
+                                    <li>
+                                        <span>@FormatTimeRange(activity.StartsAtLocal, activity.EndsAtLocal)</span><strong>@activity.Title</strong><small>@FormatStatus(activity.Status)</small>
+                                        @if (CanEdit)
+                                        {
+                                            <details class="planner-board__activity-editor" name="activity-editor">
+                                                <summary>Edit activity: @activity.Title</summary>
+                                                <form class="planner-board__form" method="post" action="@EditActivityPath(activity.Id)">
+                                                    <AntiforgeryToken />
+                                                    <input type="hidden" name="expectedVersion" value="@Plan.Version" />
+                                                    <label>Activity title<input name="title" value="@activity.Title" required maxlength="200" autocomplete="off" /></label>
+                                                    <div class="planner-board__form-columns">
+                                                        <label>Start time <span>(optional)</span><input type="time" name="startsAtLocal" value="@TimeValue(activity.StartsAtLocal)" /></label>
+                                                        <label>End time <span>(optional)</span><input type="time" name="endsAtLocal" value="@TimeValue(activity.EndsAtLocal)" /></label>
+                                                    </div>
+                                                    <div class="planner-board__form-actions"><button type="submit">Save activity</button><a class="planner-board__secondary-button" href="@ActivityCancelPath">Cancel</a></div>
+                                                </form>
+                                            </details>
+                                        }
+                                    </li>
                                 }
                             </ol>
                         }

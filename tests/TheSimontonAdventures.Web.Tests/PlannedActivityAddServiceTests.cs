@@ -214,6 +214,9 @@ public sealed class PlannedActivityAddServiceTests
             Activity = activity;
             return Task.CompletedTask;
         }
+        public Task UpdatePlannedActivityAsync(CreatorId creatorId, AdventurePlan plan,
+            PlannedActivity activity, long expectedVersion,
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<AdventurePlanAuthorizationFacts?> GetAuthorizationFactsAsync(CreatorId creatorId, AdventurePlanId planId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<IReadOnlyList<AdventurePlanDashboardItem>> ListDashboardAsync(CreatorId creatorId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<AdventurePlanDetail?> GetDetailAsync(CreatorId creatorId, AdventurePlanId planId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
