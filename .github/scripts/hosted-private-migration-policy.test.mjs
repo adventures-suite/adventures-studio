@@ -4,6 +4,10 @@ import test from 'node:test';
 
 const read = path => readFile(new URL(`../../${path}`, import.meta.url), 'utf8');
 
+const namedStep = (workflow, name) => workflow.match(
+  new RegExp(`      - name: ${name.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}\\n(?<body>[\\s\\S]*?)(?=\\n      - (?:name:|uses:|if:)|$)`),
+)?.groups?.body;
+
 test('hosted migration workflow preserves exact manual and identity boundaries', async () => {
   const workflow = await read('.github/workflows/private-migration-runner.yml');
   assert.match(workflow, /workflow_dispatch:/);
@@ -64,4 +68,32 @@ test('proof-only path has no SQL command and package verification is exact', asy
     assert.ok(verify.includes(binding), `missing ${binding}`);
   assert.match(proof, /private_sql_network_proof_failed/);
   assert.match(proof, /sqlCommandAttempted/);
+});
+
+test('GitHub token is scoped only to the two gh-using package steps', async () => {
+  const workflow = await read('.github/workflows/private-migration-runner.yml');
+  const retrieval = namedStep(workflow, 'Retrieve exact package artifact');
+  const verification = namedStep(workflow, 'Verify package, locks, catalog, digest, and attestation');
+
+  assert.ok(retrieval, 'package retrieval step must remain present');
+  assert.ok(verification, 'package verification step must remain present');
+  assert.match(retrieval, /^        env:\n          GH_TOKEN: \$\{\{ github\.token \}\}$/m);
+  assert.match(verification, /^        env:\n          GH_TOKEN: \$\{\{ github\.token \}\}$/m);
+  assert.equal((workflow.match(/GH_TOKEN:/g) ?? []).length, 2);
+
+  const steps = workflow.split(/^      - /m).slice(1);
+  for (const step of steps) {
+    if (step.startsWith('name: Retrieve exact package artifact\n') ||
+        step.startsWith('name: Verify package, locks, catalog, digest, and attestation\n'))
+      continue;
+    assert.doesNotMatch(step, /GH_TOKEN|github\.token/,
+      'GitHub token must not reach networking, SQL, migration, cleanup, or unrelated steps');
+  }
+
+  assert.match(workflow,
+    /^    permissions: \{ contents: read, actions: read, attestations: read, id-token: write \}$/m);
+  assert.deepEqual(workflow.match(/^\s*permissions:.*$/gm), [
+    'permissions: { contents: read }',
+    '    permissions: { contents: read, actions: read, attestations: read, id-token: write }',
+  ]);
 });
