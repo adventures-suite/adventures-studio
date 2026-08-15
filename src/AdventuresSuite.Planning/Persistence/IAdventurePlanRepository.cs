@@ -58,6 +58,97 @@ public interface IAdventurePlanRepository
         AdventurePlan plan,
         long expectedVersion,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Updates only overview columns when the persisted version matches, without
+    /// replacing or rewriting any child records.
+    /// </summary>
+    /// <exception cref="PlanningConcurrencyException">
+    /// The persisted plan has changed since <paramref name="expectedVersion"/>.
+    /// </exception>
+    Task UpdateOverviewAsync(
+        CreatorId creatorId,
+        AdventurePlan plan,
+        long expectedVersion,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Appends one destination visit and advances the owning plan when the
+    /// persisted version matches the expected version.
+    /// </summary>
+    /// <exception cref="PlanningConcurrencyException">
+    /// The persisted plan has changed since <paramref name="expectedVersion"/>.
+    /// </exception>
+    Task AddDestinationVisitAsync(
+        CreatorId creatorId,
+        AdventurePlan plan,
+        DestinationVisit destinationVisit,
+        long expectedVersion,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Appends one itinerary day and advances the owning plan when the persisted
+    /// version matches the expected version.
+    /// </summary>
+    /// <exception cref="PlanningConcurrencyException">
+    /// The persisted plan has changed since <paramref name="expectedVersion"/>.
+    /// </exception>
+    Task AddItineraryDayAsync(
+        CreatorId creatorId,
+        AdventurePlan plan,
+        ItineraryDay itineraryDay,
+        long expectedVersion,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Appends one planned activity and advances the owning plan when the
+    /// persisted version matches the expected version.
+    /// </summary>
+    /// <exception cref="PlanningConcurrencyException">
+    /// The persisted plan has changed since <paramref name="expectedVersion"/>.
+    /// </exception>
+    Task AddPlannedActivityAsync(
+        CreatorId creatorId,
+        AdventurePlan plan,
+        PlannedActivity activity,
+        long expectedVersion,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Appends one transportation segment and advances the owning plan when the
+    /// persisted version matches the expected version.
+    /// </summary>
+    /// <exception cref="PlanningConcurrencyException">
+    /// The persisted plan has changed since <paramref name="expectedVersion"/>.
+    /// </exception>
+    Task AddTransportationSegmentAsync(
+        CreatorId creatorId,
+        AdventurePlan plan,
+        TransportationSegment segment,
+        long expectedVersion,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Appends one accommodation and advances the plan at the expected version.</summary>
+    /// <exception cref="PlanningConcurrencyException">
+    /// The persisted plan has changed since <paramref name="expectedVersion"/>.
+    /// </exception>
+    Task AddAccommodationAsync(
+        CreatorId creatorId,
+        AdventurePlan plan,
+        Accommodation accommodation,
+        long expectedVersion,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Appends one reservation and advances the plan at the expected version.</summary>
+    /// <exception cref="PlanningConcurrencyException">
+    /// The persisted plan has changed since <paramref name="expectedVersion"/>.
+    /// </exception>
+    Task AddReservationAsync(
+        CreatorId creatorId,
+        AdventurePlan plan,
+        Reservation reservation,
+        long expectedVersion,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>Contains only the authoritative facts needed to authorize one plan.</summary>
@@ -119,6 +210,8 @@ public sealed record AdventurePlanDetail
     public IReadOnlyList<TransportationDetail> Transportation { get; init; } = [];
     /// <summary>Gets accommodation summaries without reservation credentials.</summary>
     public IReadOnlyList<AccommodationDetail> Accommodations { get; init; } = [];
+    /// <summary>Gets reservation summaries without confirmation references.</summary>
+    public IReadOnlyList<ReservationDetail> Reservations { get; init; } = [];
 }
 
 /// <summary>Projects one ordered destination visit without private notes.</summary>
@@ -166,4 +259,10 @@ public sealed record AccommodationDetail(
     string Name,
     PlanningDateRange Dates,
     IanaTimeZone TimeZone,
+    PlanItemStatus Status);
+
+/// <summary>Projects one reservation without confirmation or booking credentials.</summary>
+public sealed record ReservationDetail(
+    ReservationId Id,
+    string Subject,
     PlanItemStatus Status);

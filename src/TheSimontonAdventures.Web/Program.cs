@@ -62,6 +62,13 @@ if (string.Equals(authenticationMode, nameof(AuthenticationMode.ExternalProvider
     builder.Services.AddScoped<IPlannerWorkspaceQueryService, PlannerWorkspaceQueryService>();
     builder.Services.AddSingleton<IPlanningCreationIdentityGenerator, GuidPlanningCreationIdentityGenerator>();
     builder.Services.AddScoped<IManualAdventurePlanCreateService, ManualAdventurePlanCreateService>();
+    builder.Services.AddScoped<IAdventurePlanOverviewEditService, AdventurePlanOverviewEditService>();
+    builder.Services.AddScoped<IDestinationVisitAddService, DestinationVisitAddService>();
+    builder.Services.AddScoped<IItineraryDayAddService, ItineraryDayAddService>();
+    builder.Services.AddScoped<IPlannedActivityAddService, PlannedActivityAddService>();
+    builder.Services.AddScoped<ITransportationSegmentAddService, TransportationSegmentAddService>();
+    builder.Services.AddScoped<IAccommodationAddService, AccommodationAddService>();
+    builder.Services.AddScoped<IReservationAddService, ReservationAddService>();
 }
 
 // Register the existing JSON-backed travel-content implementation.
@@ -228,6 +235,13 @@ if (authenticationConfiguration.Mode == AuthenticationMode.ExternalProvider)
 {
     app.MapAdventuresSuiteExternalIdEndpoints(authenticationConfiguration);
     app.MapManualAdventurePlanCreateEndpoint();
+    app.MapAdventurePlanOverviewEditEndpoint();
+    app.MapDestinationVisitAddEndpoint();
+    app.MapItineraryDayAddEndpoint();
+    app.MapPlannedActivityAddEndpoint();
+    app.MapTransportationSegmentAddEndpoint();
+    app.MapAccommodationAddEndpoint();
+    app.MapReservationAddEndpoint();
 }
 
 /// <summary>

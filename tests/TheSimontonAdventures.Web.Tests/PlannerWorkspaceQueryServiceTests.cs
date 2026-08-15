@@ -158,6 +158,28 @@ public sealed class PlannerWorkspaceQueryServiceTests
         Assert.Equal(Creator, transactions.LastCreatorId);
     }
 
+    /// <summary>Edit form visibility requires a separate required-mutation instance decision.</summary>
+    [Fact]
+    public async Task GetAsync_EditCapability_RequiresRequiredMutationDecision()
+    {
+        var detail = Detail();
+        var allowed = new PlannerWorkspaceQueryService(
+            new StubMembershipProvider(Membership()),
+            new SequencedAuthorizationEvaluator(
+                AuthorizationDecision.Allow(),
+                AuthorizationDecision.Allow(AuthorizationAuditRequirement.RequiredMutation)),
+            new StubPlanningTransactionFactory(detail));
+        var viewer = new PlannerWorkspaceQueryService(
+            new StubMembershipProvider(Membership()),
+            new SequencedAuthorizationEvaluator(
+                AuthorizationDecision.Allow(),
+                AuthorizationDecision.Deny(AuthorizationDenialReason.PermissionRequired)),
+            new StubPlanningTransactionFactory(detail));
+
+        Assert.True((await allowed.GetAsync(Actor, Creator, detail.Id)).CanEdit);
+        Assert.False((await viewer.GetAsync(Actor, Creator, detail.Id)).CanEdit);
+    }
+
     /// <summary>An absent instance membership cannot authorize or reach Planning persistence.</summary>
     [Fact]
     public async Task GetAsync_AbsentMembership_DoesNotAuthorizeOrRead()
@@ -281,6 +303,15 @@ public sealed class PlannerWorkspaceQueryServiceTests
         }
     }
 
+    private sealed class SequencedAuthorizationEvaluator(params AuthorizationDecision[] decisions)
+        : IAuthorizationPolicyEvaluator
+    {
+        private int index;
+        public Task<AuthorizationDecision> AuthorizeAsync(
+            AuthorizationRequest request, CancellationToken cancellationToken = default) =>
+            Task.FromResult(decisions[Math.Min(index++, decisions.Length - 1)]);
+    }
+
     private sealed class UnusedResourceFactsProvider : IAuthorizationResourceFactsProvider
     {
         public Task<AuthorizationResourceFacts?> GetResourceFactsAsync(
@@ -344,5 +375,12 @@ public sealed class PlannerWorkspaceQueryServiceTests
         public Task<IReadOnlyList<AdventurePlan>> ListArchivedAsync(CreatorId creatorId, CancellationToken cancellationToken = default) => Task.FromResult<IReadOnlyList<AdventurePlan>>([]);
         public Task AddAsync(CreatorId creatorId, AdventurePlan plan, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task UpdateAsync(CreatorId creatorId, AdventurePlan plan, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task UpdateOverviewAsync(CreatorId creatorId, AdventurePlan plan, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task AddDestinationVisitAsync(CreatorId creatorId, AdventurePlan plan, DestinationVisit destinationVisit, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task AddItineraryDayAsync(CreatorId creatorId, AdventurePlan plan, ItineraryDay itineraryDay, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task AddPlannedActivityAsync(CreatorId creatorId, AdventurePlan plan, PlannedActivity activity, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task AddTransportationSegmentAsync(CreatorId creatorId, AdventurePlan plan, TransportationSegment segment, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task AddAccommodationAsync(CreatorId creatorId, AdventurePlan plan, Accommodation accommodation, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task AddReservationAsync(CreatorId creatorId, AdventurePlan plan, Reservation reservation, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 }

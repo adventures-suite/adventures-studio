@@ -120,6 +120,173 @@ public sealed class AdventurePlan
     /// <summary>Gets private packing items.</summary>
     public IReadOnlyList<PackingItem> PackingItems { get; }
 
+    /// <summary>
+    /// Creates the next validated aggregate version with only overview fields changed.
+    /// All lifecycle state and child records are preserved.
+    /// </summary>
+    public AdventurePlan WithOverview(
+        string title,
+        string? workingDescription,
+        PlanningDateRange dates,
+        DateTimeOffset updatedAtUtc) => new(
+        Id,
+        CreatorId,
+        title,
+        workingDescription,
+        LifecycleStage,
+        Status,
+        dates,
+        new PlanAudit(checked(Audit.Version + 1), Audit.CreatedAtUtc, updatedAtUtc),
+        Travelers,
+        DestinationVisits,
+        ItineraryDays,
+        Activities,
+        Transportation,
+        Accommodations,
+        Reservations,
+        Notes,
+        Tasks,
+        BudgetItems,
+        PackingItems);
+
+    /// <summary>
+    /// Creates the next validated aggregate version with one destination visit appended.
+    /// Existing plan fields and child records are preserved.
+    /// </summary>
+    public AdventurePlan WithDestinationVisit(
+        DestinationVisit destinationVisit,
+        DateTimeOffset updatedAtUtc)
+    {
+        ArgumentNullException.ThrowIfNull(destinationVisit);
+        return new(
+            Id,
+            CreatorId,
+            Title,
+            WorkingDescription,
+            LifecycleStage,
+            Status,
+            Dates,
+            new PlanAudit(checked(Audit.Version + 1), Audit.CreatedAtUtc, updatedAtUtc),
+            Travelers,
+            [.. DestinationVisits, destinationVisit],
+            ItineraryDays,
+            Activities,
+            Transportation,
+            Accommodations,
+            Reservations,
+            Notes,
+            Tasks,
+            BudgetItems,
+            PackingItems);
+    }
+
+    /// <summary>
+    /// Creates the next validated aggregate version with one local itinerary day appended.
+    /// Existing plan fields and child records are preserved.
+    /// </summary>
+    public AdventurePlan WithItineraryDay(
+        ItineraryDay itineraryDay,
+        DateTimeOffset updatedAtUtc)
+    {
+        ArgumentNullException.ThrowIfNull(itineraryDay);
+        return new(
+            Id,
+            CreatorId,
+            Title,
+            WorkingDescription,
+            LifecycleStage,
+            Status,
+            Dates,
+            new PlanAudit(checked(Audit.Version + 1), Audit.CreatedAtUtc, updatedAtUtc),
+            Travelers,
+            DestinationVisits,
+            [.. ItineraryDays, itineraryDay],
+            Activities,
+            Transportation,
+            Accommodations,
+            Reservations,
+            Notes,
+            Tasks,
+            BudgetItems,
+            PackingItems);
+    }
+
+    /// <summary>
+    /// Creates the next validated aggregate version with one proposed activity appended.
+    /// Existing plan fields and child records are preserved.
+    /// </summary>
+    public AdventurePlan WithPlannedActivity(
+        PlannedActivity activity,
+        DateTimeOffset updatedAtUtc)
+    {
+        ArgumentNullException.ThrowIfNull(activity);
+        return new(
+            Id,
+            CreatorId,
+            Title,
+            WorkingDescription,
+            LifecycleStage,
+            Status,
+            Dates,
+            new PlanAudit(checked(Audit.Version + 1), Audit.CreatedAtUtc, updatedAtUtc),
+            Travelers,
+            DestinationVisits,
+            ItineraryDays,
+            [.. Activities, activity],
+            Transportation,
+            Accommodations,
+            Reservations,
+            Notes,
+            Tasks,
+            BudgetItems,
+            PackingItems);
+    }
+
+    /// <summary>
+    /// Creates the next validated aggregate version with one transportation segment appended.
+    /// Existing plan fields and child records are preserved.
+    /// </summary>
+    public AdventurePlan WithTransportationSegment(
+        TransportationSegment segment,
+        DateTimeOffset updatedAtUtc)
+    {
+        ArgumentNullException.ThrowIfNull(segment);
+        return new(
+            Id, CreatorId, Title, WorkingDescription, LifecycleStage, Status, Dates,
+            new PlanAudit(checked(Audit.Version + 1), Audit.CreatedAtUtc, updatedAtUtc),
+            Travelers, DestinationVisits, ItineraryDays, Activities,
+            [.. Transportation, segment], Accommodations, Reservations, Notes, Tasks,
+            BudgetItems, PackingItems);
+    }
+
+    /// <summary>Creates the next validated version with one proposed accommodation appended.</summary>
+    public AdventurePlan WithAccommodation(
+        Accommodation accommodation,
+        DateTimeOffset updatedAtUtc)
+    {
+        ArgumentNullException.ThrowIfNull(accommodation);
+        return new(
+            Id, CreatorId, Title, WorkingDescription, LifecycleStage, Status, Dates,
+            new PlanAudit(checked(Audit.Version + 1), Audit.CreatedAtUtc, updatedAtUtc),
+            Travelers, DestinationVisits, ItineraryDays, Activities, Transportation,
+            [.. Accommodations, accommodation], Reservations, Notes, Tasks,
+            BudgetItems, PackingItems);
+    }
+
+    /// <summary>Creates the next validated version with one proposed reservation appended.</summary>
+    public AdventurePlan WithReservation(
+        Reservation reservation,
+        DateTimeOffset updatedAtUtc)
+    {
+        ArgumentNullException.ThrowIfNull(reservation);
+        return new(
+            Id, CreatorId, Title, WorkingDescription, LifecycleStage, Status, Dates,
+            new PlanAudit(checked(Audit.Version + 1), Audit.CreatedAtUtc, updatedAtUtc),
+            Travelers, DestinationVisits, ItineraryDays, Activities, Transportation,
+            Accommodations, [.. Reservations, reservation], Notes, Tasks,
+            BudgetItems, PackingItems);
+    }
+
     private void Validate()
     {
         ValidateUnique(Travelers, item => item.Id, "traveler");
@@ -159,6 +326,11 @@ public sealed class AdventurePlan
         }
 
         var dayIds = ItineraryDays.Select(item => item.Id).ToHashSet();
+        if (ItineraryDays.Select(item => item.Date).Distinct().Count() != ItineraryDays.Count)
+        {
+            throw new ArgumentException("Itinerary day dates must be unique within a plan.");
+        }
+
         var visitsById = DestinationVisits.ToDictionary(item => item.Id);
         foreach (var day in ItineraryDays)
         {
