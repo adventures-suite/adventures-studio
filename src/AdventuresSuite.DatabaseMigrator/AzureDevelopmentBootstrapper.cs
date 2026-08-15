@@ -28,6 +28,98 @@ internal static class AzureDevelopmentBootstrapper
             migrationPrincipalName,
             BuildMigrationGrants);
 
+    /// <summary>Creates the contained migration principal through an already authenticated administrator connection.</summary>
+    public static Task BootstrapMigrationIdentityAsync(
+        SqlConnection administratorConnection,
+        string? migrationPrincipalId,
+        string? migrationPrincipalClientId,
+        string? migrationPrincipalName) =>
+        ExecutePrincipalCommandAsync(
+            administratorConnection,
+            migrationPrincipalId,
+            migrationPrincipalClientId,
+            migrationPrincipalName,
+            BuildMigrationGrants);
+
+    /// <summary>Removes only the temporary migration principal and its exact grants.</summary>
+    public static async Task CleanupMigrationIdentityAsync(
+        SqlConnection administratorConnection,
+        string? migrationPrincipalId,
+        string? migrationPrincipalClientId,
+        string? migrationPrincipalName)
+    {
+        if (!Guid.TryParse(migrationPrincipalId, out var objectId)
+            || !Guid.TryParse(migrationPrincipalClientId, out var clientId))
+            throw new InvalidOperationException("The approved workload principal object and client identities are required.");
+
+        var alias = CreatePrincipalAlias(migrationPrincipalName, objectId);
+        var quotedAlias = QuoteIdentifier(alias);
+        await using var transaction = (SqlTransaction)await administratorConnection.BeginTransactionAsync();
+        await using var command = administratorConnection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = $"""
+            SET XACT_ABORT ON;
+            IF DATABASE_PRINCIPAL_ID(@AliasParameter) IS NOT NULL
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1 FROM sys.database_principals
+                    WHERE principal_id = DATABASE_PRINCIPAL_ID(@AliasParameter)
+                      AND type = 'E' AND CAST(sid AS uniqueidentifier) = @ClientIdParameter)
+                    THROW 51000, 'The migration principal does not match the approved workload identity.', 1;
+                REVOKE CONNECT TO {quotedAlias};
+                REVOKE CREATE TABLE TO {quotedAlias};
+                REVOKE VIEW DEFINITION TO {quotedAlias};
+                REVOKE CONTROL ON SCHEMA::planning FROM {quotedAlias};
+                REVOKE CONTROL ON SCHEMA::auth FROM {quotedAlias};
+                REVOKE CONTROL ON SCHEMA::audit FROM {quotedAlias};
+                REVOKE SELECT, INSERT, UPDATE, DELETE ON OBJECT::dbo.AdventuresSuiteSchemaVersions FROM {quotedAlias};
+                DROP USER {quotedAlias};
+            END;
+            IF DATABASE_PRINCIPAL_ID(@AliasParameter) IS NOT NULL
+                THROW 51000, 'The migration principal remains after cleanup.', 1;
+            DECLARE @SchemaCount int = (SELECT COUNT(*) FROM sys.schemas
+                WHERE name IN (N'planning', N'auth', N'audit'));
+            DECLARE @RoleCount int = (SELECT COUNT(*) FROM sys.database_principals
+                WHERE type = 'R' AND name IN (N'AdventuresSuiteAuthenticationRuntime',
+                    N'AdventuresSuiteMembershipRuntime', N'AdventuresSuiteCompanionReadRuntime',
+                    N'AdventuresSuitePlanningRuntime'));
+            DECLARE @JournalCount int = CASE WHEN OBJECT_ID(N'dbo.AdventuresSuiteSchemaVersions', N'U') IS NULL THEN 0 ELSE 1 END;
+            IF NOT ((@SchemaCount = 0 AND @RoleCount = 0 AND @JournalCount = 0)
+                OR (@SchemaCount = 3 AND @RoleCount = 4 AND @JournalCount = 1))
+                THROW 51000, 'Administrator prerequisite residue is partial after cleanup.', 1;
+            IF @SchemaCount = 3 AND EXISTS (
+                SELECT 1 FROM sys.schemas AS schemas
+                INNER JOIN sys.database_principals AS owners ON owners.principal_id = schemas.principal_id
+                WHERE schemas.name IN (N'planning', N'auth', N'audit') AND owners.name <> N'db_ddladmin')
+                THROW 51000, 'A retained migration schema has the wrong owner.', 1;
+            IF @RoleCount = 4 AND EXISTS (
+                SELECT 1 FROM sys.database_principals AS roles
+                LEFT JOIN sys.database_principals AS owners ON owners.principal_id = roles.owning_principal_id
+                WHERE roles.name IN (N'AdventuresSuiteAuthenticationRuntime',
+                    N'AdventuresSuiteMembershipRuntime', N'AdventuresSuiteCompanionReadRuntime',
+                    N'AdventuresSuitePlanningRuntime') AND owners.name <> N'dbo')
+                THROW 51000, 'A retained runtime role has the wrong owner.', 1;
+            IF @JournalCount = 1 AND ((SELECT COUNT(*) FROM sys.columns
+                    WHERE object_id = OBJECT_ID(N'dbo.AdventuresSuiteSchemaVersions')) <> 3
+                OR NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.AdventuresSuiteSchemaVersions') AND name=N'Id' AND system_type_id=56 AND is_identity=1 AND is_nullable=0)
+                OR NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.AdventuresSuiteSchemaVersions') AND name=N'ScriptName' AND system_type_id=231 AND max_length=510 AND is_nullable=0)
+                OR NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.AdventuresSuiteSchemaVersions') AND name=N'Applied' AND system_type_id=61 AND is_nullable=0))
+                THROW 51000, 'The retained DbUp journal has the wrong shape.', 1;
+            """;
+        command.Parameters.AddWithValue("@AliasParameter", alias);
+        command.Parameters.AddWithValue("@ClientIdParameter", clientId);
+        try
+        {
+            await command.ExecuteNonQueryAsync();
+            await transaction.CommitAsync();
+        }
+        catch
+        {
+            if (transaction.Connection is not null) await transaction.RollbackAsync();
+            throw;
+        }
+    }
+
     /// <summary>Builds the migration-only grants for an approved contained principal alias.</summary>
     internal static string BuildMigrationGrants(string principalAlias) => $"""
         IF SCHEMA_ID(N'planning') IS NULL EXEC(N'CREATE SCHEMA planning AUTHORIZATION db_ddladmin;');
@@ -512,10 +604,26 @@ internal static class AzureDevelopmentBootstrapper
                 "The approved workload principal object and client identities are required.");
         }
 
-        var alias = CreatePrincipalAlias(principalName, objectId);
-        var quotedAlias = QuoteIdentifier(alias);
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
+        await ExecutePrincipalCommandAsync(connection, principalId, principalClientId, principalName, buildGrants);
+    }
+
+    private static async Task ExecutePrincipalCommandAsync(
+        SqlConnection connection,
+        string? principalId,
+        string? principalClientId,
+        string? principalName,
+        Func<string, string> buildGrants)
+    {
+        if (!Guid.TryParse(principalId, out var objectId)
+            || !Guid.TryParse(principalClientId, out var clientId))
+            throw new InvalidOperationException(
+                "The approved workload principal object and client identities are required.");
+        if (connection.State != System.Data.ConnectionState.Open)
+            throw new InvalidOperationException("The administrator SQL connection must already be open.");
+        var alias = CreatePrincipalAlias(principalName, objectId);
+        var quotedAlias = QuoteIdentifier(alias);
         await using var transaction = (SqlTransaction)await connection.BeginTransactionAsync();
         await using var command = connection.CreateCommand();
         command.Transaction = transaction;
@@ -524,8 +632,8 @@ internal static class AzureDevelopmentBootstrapper
             DECLARE @PrincipalId int = DATABASE_PRINCIPAL_ID(@AliasParameter);
             IF @PrincipalId IS NULL
             BEGIN
-                EXEC(N'CREATE USER {quotedAlias} FROM EXTERNAL PROVIDER WITH OBJECT_ID='''
-                    + @ObjectIdParameter + N''';');
+                DECLARE @SidLiteral varchar(34) = CONVERT(varchar(34), CONVERT(binary(16), @ClientIdParameter), 1);
+                EXEC(N'CREATE USER {quotedAlias} WITH SID = ' + @SidLiteral + N', TYPE = E;');
                 SET @PrincipalId = DATABASE_PRINCIPAL_ID(@AliasParameter);
             END;
 
@@ -539,7 +647,6 @@ internal static class AzureDevelopmentBootstrapper
 
             {buildGrants(quotedAlias)}
             """;
-        command.Parameters.AddWithValue("@ObjectIdParameter", objectId.ToString());
         command.Parameters.AddWithValue("@ClientIdParameter", clientId);
         command.Parameters.AddWithValue("@AliasParameter", alias);
         try

@@ -5,10 +5,10 @@
   "identityType": "Microsoft.ManagedIdentity/userAssignedIdentities",
   "binding": ["immutableAzureResourceId", "tenantId", "clientId", "principalId"],
   "authentication": {
-    "source": "AzureIMDS",
-    "audience": "https://database.windows.net/",
-    "delivery": "memoryOnlyProcessPipe",
-    "maximumOperationMinutes": 45
+    "source": "GitHubOidcAzureCli",
+    "audience": "https://database.windows.net/.default",
+    "delivery": "inProcessAccessToken",
+    "maximumOperationMinutes": 30
   },
   "prohibited": [
     "migrationUami",
@@ -18,7 +18,8 @@
     "clientSecret",
     "certificate",
     "durableToken",
-    "interactiveGuestLogin"
+    "interactiveGuestLogin",
+    "directoryReaders"
   ],
-  "note": "Design catalog only. The identity, SQL principal, authority, and assignments do not yet exist and are separately approved live boundaries."
+  "note": "The identity and organization-bound FIC remain separately approved live boundaries; this catalog grants no authority."
 }

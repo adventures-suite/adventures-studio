@@ -20,7 +20,7 @@ ORDER BY roles.name, member_sid_sha256;
 SELECT name, type_desc, authentication_type_desc, default_schema_name,
        CONVERT(varchar(64), HASHBYTES('SHA2_256', sid), 2) AS sid_sha256
 FROM sys.database_principals
-WHERE name IN (N'AdventuresSuiteSqlBootstrapDev', N'id-adventures-suite-migrate-job-dev')
+WHERE name = N'AdventuresSuiteMigrationDev-ffc9a'
 ORDER BY name;
 
 SELECT grantee.name AS grantee, permissions.state_desc,
@@ -30,13 +30,13 @@ SELECT grantee.name AS grantee, permissions.state_desc,
          WHEN 0 THEN DB_NAME()
          WHEN 1 THEN CASE WHEN OBJECT_SCHEMA_NAME(permissions.major_id) IN (N'dbo', N'planning', N'auth', N'audit') AND OBJECT_NAME(permissions.major_id) IN (N'AdventuresSuiteSchemaVersions', N'AuditEvents', N'CreatorMembershipPermissionGrants', N'CreatorMembershipRoles', N'CreatorMemberships', N'ExternalIdentities', N'UserSessions', N'Users', N'Accommodations', N'AdventurePlanCreateResults', N'AdventurePlans', N'BudgetItems', N'DestinationVisits', N'ItineraryDays', N'PackingItems', N'PlannedActivities', N'PlanningNotes', N'PlanningTasks', N'Reservations', N'TransportationSegments', N'TravelerParticipations', N'TravelerPreferences', N'Travelers') THEN QUOTENAME(OBJECT_SCHEMA_NAME(permissions.major_id)) + N'.' + QUOTENAME(OBJECT_NAME(permissions.major_id)) ELSE N'unexpected-redacted' END
          WHEN 3 THEN CASE WHEN SCHEMA_NAME(permissions.major_id) IN (N'dbo', N'planning', N'auth', N'audit') THEN QUOTENAME(SCHEMA_NAME(permissions.major_id)) ELSE N'unexpected-redacted' END
-         WHEN 4 THEN CASE WHEN USER_NAME(permissions.major_id) IN (N'AdventuresSuiteAuthenticationRuntime', N'AdventuresSuiteMembershipRuntime', N'AdventuresSuiteCompanionReadRuntime', N'AdventuresSuitePlanningRuntime', N'AdventuresSuiteSqlBootstrapDev', N'id-adventures-suite-migrate-job-dev') THEN QUOTENAME(USER_NAME(permissions.major_id)) ELSE N'unexpected-redacted' END
+         WHEN 4 THEN CASE WHEN USER_NAME(permissions.major_id) IN (N'AdventuresSuiteAuthenticationRuntime', N'AdventuresSuiteMembershipRuntime', N'AdventuresSuiteCompanionReadRuntime', N'AdventuresSuitePlanningRuntime', N'AdventuresSuiteMigrationDev-ffc9a') THEN QUOTENAME(USER_NAME(permissions.major_id)) ELSE N'unexpected-redacted' END
          ELSE N'unexpected-redacted'
        END AS securable
 FROM sys.database_permissions AS permissions
 INNER JOIN sys.database_principals AS grantee ON grantee.principal_id = permissions.grantee_principal_id
 WHERE grantee.name IN (
-  N'AdventuresSuiteSqlBootstrapDev', N'id-adventures-suite-migrate-job-dev',
+  N'AdventuresSuiteMigrationDev-ffc9a',
   N'AdventuresSuiteAuthenticationRuntime', N'AdventuresSuiteMembershipRuntime',
   N'AdventuresSuiteCompanionReadRuntime', N'AdventuresSuitePlanningRuntime')
 ORDER BY grantee.name, permissions.class, securable, permissions.permission_name, permissions.state;

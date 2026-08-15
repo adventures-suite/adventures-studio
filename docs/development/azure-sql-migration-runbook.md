@@ -112,14 +112,17 @@ bootstrap remains a later, exact approval boundary.
 The repository-only administrator path is documented at
 `docs/architecture/private-sql-administrator-operation.md`. Its mandatory
 first mode is a statically allowlisted metadata baseline using the dedicated
-`id-adventures-suite-sql-bootstrap-dev` UAMI and direct contained principal
-`AdventuresSuiteSqlBootstrapDev`; neither exists or has authority merely
+`id-adventures-suite-sql-bootstrap-dev` UAMI; it does not exist or have authority merely
 because the design is present. The identity is never the migration UAMI and
-never gains authority through an Entra group. The inert workflow binds exact
+never gains authority through an Entra group. The hosted-runner workflow binds exact
 repository and organization IDs, protected SHA, workflow checksum, operation
-ID, identity IDs, server, database, and private endpoint, then fails before
-Azure login. A baseline dispatch and any later bootstrap dispatch require
-separate approval packets and independent cleanup and residue proof.
+ID, identity IDs, server, database, private endpoint, attested package, and
+baseline SQL checksum. It uses GitHub OIDC with explicit `AzureCliCredential`.
+Baseline, bootstrap, cleanup, and fresh-session denial proof require separate
+approval packets. Bootstrap uses `CREATE USER ... WITH SID ..., TYPE = E`, so
+no Directory Readers grant is introduced. Cleanup revokes the exact temporary
+catalog and drops only the migration contained user; the schemas, four runtime
+roles, and DbUp journal remain.
 
 ### Broker foundation authority boundary
 

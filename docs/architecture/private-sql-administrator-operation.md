@@ -1,66 +1,63 @@
 # Private Azure SQL Administrator Operation
 
-**Status:** Inert repository design; no live authority or execution
+**Status:** Hosted-runner implementation; no live identity or SQL authority
 
-This boundary provides a read-only-first design for inspecting the development
-Azure SQL bootstrap state from the reviewed ephemeral private runner. It does
-not provision a runner or identity, grant authority, connect to SQL, or run the
-bootstrap.
+This boundary provides a read-only-first implementation for inspecting the
+development Azure SQL bootstrap state from the reviewed GitHub-hosted VNet
+runner. Repository presence does not create an identity, grant authority,
+connect to SQL, or run the bootstrap.
 
 ## Administrator actor
 
 The selected actor is one dedicated user-assigned managed identity named
 `id-adventures-suite-sql-bootstrap-dev`. Every future approval binds its exact
-Azure resource ID, tenant ID, client ID, and principal/object ID. The database
-principal alias is `AdventuresSuiteSqlBootstrapDev` and must map directly to
-that object ID. It is never a group member, human identity, server login,
-migration UAMI, application UAMI, or GitHub identity.
+Azure resource ID, tenant ID, client ID, principal/object ID, and immutable
+organization-bound GitHub FIC. It is never the migration UAMI, an application
+UAMI, a human credential, or a member of the existing administrator group.
 
-The identity is attached only to one operation-scoped VM. Guest code requests
-one short-lived token from IMDS for `https://database.windows.net/` and passes
-it in memory to the reviewed metadata reader. Passwords, client secrets,
-certificates, interactive login, token files, command-line tokens, durable
-caches, and environment evidence are prohibited. Creating this identity,
-establishing its exact database authority, and assigning it to the VM are
-separate future approvals.
+The protected `database-development` workflow runs only on runner group
+`private-sql-migration-vnet` with label `adventures-suite-private-sql`. GitHub
+OIDC populates the Azure CLI session for the exact UAMI. The executable uses
+only `AzureCliCredential` and requests
+`https://database.windows.net/.default`; the resulting token remains in process
+memory. Passwords, client secrets, certificates, interactive login, token
+files, command-line tokens, durable caches, and token evidence are prohibited.
 
-A future reviewed metadata reader must use the managed-identity SDK with the
-fixed Azure SQL audience and exact administrator client ID through an in-process
-connection callback. Shell token extraction is prohibited: no token may cross
-process arguments, environment variables, files, logs, or evidence. That
-reader does not exist in this inert increment and requires a separate
-repository approval before the workflow can progress beyond its guard.
+The administrator is established and later removed through separate Owner
+boundaries. SQL user creation uses the reviewed `WITH SID ..., TYPE = E` form
+bound to the migration application's client ID. It performs no Microsoft Graph
+lookup and requires no Directory Readers authority.
 
 ## Reused private runner boundary
 
-The administrator wrapper calls the reviewed runner Bicep module. It therefore
-inherits the dedicated `10.40.3.0/27` operation subnet, private SQL
-`10.40.1.4:1433` route, pinned Ubuntu image and VM size, no public IP, deny-all
-inbound NSG, guest HTTPS allowlist, delete-with-VM NIC and OS disk, 45-minute
-deadline, zero automatic retry, and independent cleanup/residue contract. The
-wrapper requires the administrator and migration UAMI resource IDs to differ.
-It never uses `snet-devtools` or the retired SQL administration VM.
+The administrator operation reuses the proven GitHub-hosted larger runner,
+private DNS, `10.40.1.4:1433` route, restricted runner group and workflow, and
+the attested migration package. It provisions no VM, NIC, disk, public IP,
+broker, or registration. Every operation is capped at 30 minutes with zero
+automatic retry.
 
 ## Modes and sequence
 
-`baseline` and `bootstrap` are distinct operation modes. Baseline requires an
-empty bootstrap-approval digest and contains only the statically allowlisted
-metadata query. Bootstrap requires a separate 64-character approval-packet
-digest, but no bootstrap invocation exists in this increment. The workflow
-remains deliberately inert and fails before Azure login, provisioning, or SQL.
+`baseline`, `bootstrap`, `cleanup`, and `denial-proof` are separately
+dispatchable modes. Baseline requires an empty operation-approval digest.
+Every other mode requires its own checksum-bound approval record. No mode
+automatically invokes another.
 
 A future authorized sequence is:
 
 1. match repository/organization IDs, current protected-main SHA, workflow
    checksum, operation ID, package run/artifact IDs and checksums, every
    immutable identity/resource ID, SQL server, database, and private endpoint;
-2. separately establish runner registration, provisioning, cleanup, and SQL
-   administrator authorities;
-3. provision the reviewed one-job private runner;
-4. execute baseline only and validate its bounded evidence schema;
-5. clean up independently and prove zero residue;
-6. review baseline evidence and prepare a new exact bootstrap packet; and
-7. only under that later approval, execute a separate bootstrap operation.
+2. separately create the dedicated UAMI/FIC and establish its temporary SQL
+   administrator authority;
+3. execute baseline only and validate its bounded evidence schema;
+4. review baseline evidence and approve bootstrap separately;
+5. create only the schemas, roles, journal, migration contained user, and exact
+   temporary migration catalog;
+6. after migration, revoke that catalog and drop only the contained migration
+   user while retaining schemas, roles, and journal; and
+7. remove administrator authority and use a fresh OIDC/Azure CLI token to prove
+   SQL authorization is denied.
 
 Readback never falls through to bootstrap. Failure, timeout, cancellation,
 runner loss, ambiguous output, schema mismatch, protected-main advance, or
@@ -84,9 +81,6 @@ content, and unapproved identifiers are prohibited.
 
 ## Separate future approvals
 
-The registration broker; runner provisioning role; independent cleanup role;
-dedicated UAMI creation and VM attachment; direct contained-user creation and
-administrator SQL permissions; private DNS/reachability proof; baseline
-dispatch; bootstrap dispatch; migration authority; artifact transfer; DbUp
-execution; and final cleanup each remain independently reviewed live
-boundaries.
+Dedicated UAMI/FIC creation, temporary administrator establishment, baseline,
+bootstrap, migration, SQL cleanup, administrator restoration, and denial proof
+remain independently reviewed live boundaries.

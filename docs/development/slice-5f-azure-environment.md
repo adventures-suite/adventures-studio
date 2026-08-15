@@ -256,16 +256,16 @@ enable broad public networking merely to make a hosted workflow pass.
 The chosen path, cost, operator identity, artifact flow, and cleanup evidence
 must be documented before SQL bootstrap or the first migration.
 
-The selected future administrator actor is a dedicated database-scoped UAMI,
-`id-adventures-suite-sql-bootstrap-dev`, represented by direct contained
-principal `AdventuresSuiteSqlBootstrapDev`. Exact Azure resource, tenant,
-client, and principal IDs must be resolved and approved before use. It is not
-the migration UAMI, a human, or a group member. The read-only-first operation
-in `docs/architecture/private-sql-administrator-operation.md` reuses the
-reviewed ephemeral runner boundary but remains inert until runner registration,
-provisioning, cleanup, SQL authority, and baseline execution are separately
-approved. Bootstrap is a different later mode and cannot follow baseline
-implicitly.
+The selected future administrator actor is the dedicated UAMI
+`id-adventures-suite-sql-bootstrap-dev`. Exact Azure resource, tenant, client,
+principal, and organization-bound FIC identifiers must be resolved and
+approved before use. It is not the migration UAMI, a human credential, or a
+group member. The read-only-first operation in
+`docs/architecture/private-sql-administrator-operation.md` reuses the proven
+GitHub-hosted VNet runner with explicit `AzureCliCredential`; it provisions no
+custom runner. Baseline, bootstrap, cleanup, and denial proof are separate
+manual approvals. Migration-user creation is client-ID-bound with `WITH SID`,
+`TYPE = E` and requires no Directory Readers authority.
 
 ## Reconciliation Gate
 

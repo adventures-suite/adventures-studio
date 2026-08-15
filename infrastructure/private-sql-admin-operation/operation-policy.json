@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "deadlineMinutes": 45,
+  "deadlineMinutes": 30,
   "automaticRetryCount": 0,
   "baselineMustPrecedeBootstrap": true,
   "baselineCanInvokeBootstrap": false,
@@ -11,6 +11,7 @@
     "requiredAfter": ["success", "failure", "timeout", "cancelled", "runnerLost", "ambiguous"],
     "successRequiresZero": ["resourceCount", "registrationCount", "temporaryAssignmentCount", "guestFileCount"]
   },
-  "authorityBoundaries": ["runnerRegistration", "runnerProvisioning", "independentCleanup", "sqlAdministrator"],
+  "operations": ["baseline", "bootstrap", "cleanup", "denial-proof"],
+  "authorityBoundaries": ["administratorIdentityAndFic", "temporarySqlAdministrator", "sqlBootstrap", "sqlCleanupAndDenialProof"],
   "prohibitedNetworkChanges": ["publicSql", "firewallException", "publicIp", "inboundSsh", "inboundRdp", "legacyAdministrationVm", "snet-devtools"]
 }
