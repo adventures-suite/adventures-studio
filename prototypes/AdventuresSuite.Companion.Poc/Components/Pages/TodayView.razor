@@ -1,0 +1,79 @@
+@using AdventuresSuite.Companion.Client
+
+<section class="section-block today-panel" aria-labelledby="today-heading" aria-busy="@IsLoading">
+    @if (IsLoading)
+    {
+        <div role="status" aria-live="polite"><span class="eyebrow">Today &amp; Next</span><h2 id="today-heading">Loading schedule…</h2></div>
+    }
+    else if (Result?.State == CompanionTodayResultState.Success && Result.Today is not null)
+    {
+        var today = Result.Today;
+        <div class="section-heading">
+            <div><span class="eyebrow">Today &amp; Next</span><h2 id="today-heading">@today.LocalDate.ToString("dddd, MMM d")</h2></div>
+            <span class="status-pill">@today.State</span>
+        </div>
+        <p class="today-context">@today.TimeZone@if (today.FreshUntilUtc is not null){<text> · @(today.FreshUntilUtc < DateTimeOffset.UtcNow ? "Stale" : "Fresh")</text>}</p>
+        @if (today.TodayItems.Count == 0)
+        {
+            <p role="status">No scheduled items are visible for this local day.</p>
+        }
+        @foreach (var item in today.TodayItems)
+        {
+            @ScheduleItem(item, "Today")
+        }
+        @if (today.NextItem is not null)
+        {
+            <h3 class="next-label">Next</h3>
+            @ScheduleItem(today.NextItem, "Next")
+        }
+        @if (!string.IsNullOrWhiteSpace(today.Notice)) { <p class="today-notice">@today.Notice</p> }
+    }
+    else
+    {
+        <div role="alert" aria-live="assertive">
+            <span class="eyebrow">Today &amp; Next</span><h2 id="today-heading">@FailureHeading</h2>
+            <p>@FailureMessage</p>
+            @if (!string.IsNullOrWhiteSpace(Result?.SupportId)) { <small>Support ID: @Result.SupportId</small> }
+            <button class="primary-action" type="button" @onclick="OnRetry">Try again</button>
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public CompanionTodayPresentationResult? Result { get; set; }
+    [Parameter] public EventCallback OnRetry { get; set; }
+
+    private string FailureHeading => Result?.State switch
+    {
+        CompanionTodayResultState.NotFound => "Schedule not found",
+        CompanionTodayResultState.Unauthorized => "Access is required",
+        CompanionTodayResultState.Unavailable => "Schedule unavailable",
+        CompanionTodayResultState.MalformedOrUnsupported => "Schedule unsupported",
+        _ => Result?.ErrorTitle ?? "Today is unavailable"
+    };
+    private string FailureMessage => Result?.State switch
+    {
+        CompanionTodayResultState.NotFound => "Today is no longer available for this Adventure.",
+        CompanionTodayResultState.Unauthorized => "The configured API session cannot access this schedule.",
+        CompanionTodayResultState.Unavailable => "Check the connection and retry with the configured provider.",
+        CompanionTodayResultState.MalformedOrUnsupported => "The response could not be presented safely.",
+        _ => "Try again later."
+    };
+
+    private RenderFragment ScheduleItem(CompanionScheduleItemPresentation item, string context) => @<article class="today-item">
+        <div class="today-time"><strong>@TimeLabel(item)</strong><span>@context</span></div>
+        <div><span class="item-type">@item.Type · @item.OperationalStatus</span><h3>@item.Title</h3>
+            @if (!string.IsNullOrWhiteSpace(item.Summary)) { <p>@item.Summary</p> }
+            <small>@item.LocalDate.ToString("MMM d") · @item.TimeZone</small>
+            @if (item.RequiresAcknowledgment) { <strong class="change-note">@item.ActionLabel</strong> }
+            @foreach (var resource in item.Resources) { <small class="resource-reference">@resource.Title · @resource.Availability — metadata only</small> }
+        </div>
+    </article>;
+
+    private static string TimeLabel(CompanionScheduleItemPresentation item) => item.TimeStatus switch
+    {
+        "All day" => "All day", "Time to be confirmed" => "TBC", "Cancelled" => "Cancelled",
+        _ => item.StartLocalTime?.ToString("h:mm tt") ?? item.TimeStatus
+    };
+}

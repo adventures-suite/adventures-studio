@@ -39,25 +39,6 @@
     View Adventure details
 </button>
 
-@if (Adventure.Segments.Count > 0)
-{
-<section class="section-block today-block">
-    <div class="section-heading">
-        <div><span class="eyebrow">@(Adventure.IsCurrent ? "Today" : "First up")</span><h2>@TodayHeading</h2></div>
-        <button class="text-button" @onclick="OnOpenJourney">View all</button>
-    </div>
-    <article class="next-card">
-        <div class="date-tile"><strong>@FeaturedDay</strong><span>@FeaturedMonth</span></div>
-        <div class="next-copy">
-            <span class="item-type">@FeaturedMode · @(Adventure.IsCurrent ? "Today" : "Planned")</span>
-            <h3>@FeaturedSegment.From to @FeaturedSegment.To</h3>
-            <p>@FeaturedSegment.TravelDescription</p>
-            <small>@FeaturedSegment.TimeZone</small>
-        </div>
-    </article>
-</section>
-}
-
 <section class="adventure-tools" aria-label="Adventure tools">
     <button @onclick='() => FeedbackAsync("Calendar preview opened — no device write was performed.")'>
         <span aria-hidden="true">▣</span><strong>Calendar</strong>
@@ -106,12 +87,6 @@
 
     private ElementReference _detailButton;
 
-    private CompanionSegment FeaturedSegment => Adventure.Segments[Adventure.IsCurrent ? Math.Min(6, Adventure.Segments.Count - 1) : 0];
-    private DateOnly FeaturedDate => DateOnly.ParseExact(FeaturedSegment.ArrivalDate, "MMMM d, yyyy", System.Globalization.CultureInfo.InvariantCulture);
-    private string FeaturedDay => FeaturedDate.Day.ToString(System.Globalization.CultureInfo.InvariantCulture);
-    private string FeaturedMonth => FeaturedDate.ToString("MMM", System.Globalization.CultureInfo.InvariantCulture).ToUpperInvariant();
-    private string FeaturedMode => FeaturedSegment.TravelMode == "Flight" ? "✈ Flight" : FeaturedSegment.TravelMode;
-    private string TodayHeading => Adventure.IsCurrent ? $"Today in {FeaturedSegment.To}" : $"Your journey starts in {FeaturedSegment.From}";
     private int CountdownValue => Math.Max(0, Adventure.StartDate.DayNumber - DateOnly.FromDateTime(DateTime.Now).DayNumber);
     private string CountdownUnit => CountdownValue == 1 ? "day" : "days";
     private string CountdownAccessibleText => $"{CountdownValue} {CountdownUnit} until {Adventure.Title} begins on {Adventure.StartDate:MMMM d, yyyy}";
