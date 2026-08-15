@@ -1,0 +1,5 @@
+.planner-state { display: flex; align-items: flex-start; gap: 1rem; border: 1px solid var(--planner-shell-border); border-radius: .85rem; background: var(--planner-shell-surface-muted); color: var(--planner-shell-text); padding: 1.25rem; }
+.planner-state__icon { width: 1.5rem; height: 1.5rem; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.planner-state h2 { margin: 0; font-size: 1.25rem; }
+.planner-state p { margin: .35rem 0 0; color: var(--planner-shell-text-muted); }
+.planner-state--conflict, .planner-state--failure { border-color: var(--planner-shell-warning); }

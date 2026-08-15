@@ -144,6 +144,8 @@ public partial class WorkspaceRoot
             "failure" => "The plan overview could not be updated. Please try again.",
             _ => null
         };
+    private bool IsEditConflict =>
+        HttpContextAccessor.HttpContext?.Request.Query["edit"].ToString() == "conflict";
     private string? DestinationStatusMessage =>
         HttpContextAccessor.HttpContext?.Request.Query["destination"].ToString() switch
         {

@@ -1,0 +1,82 @@
+@namespace TheSimontonAdventures.Web.Components
+
+<aside id="planner-workspace-sidebar"
+       class="@SidebarClasses"
+       aria-label="Planner navigation"
+       data-collapsed="@IsCollapsed"
+       data-mobile-open="@IsMobileOpen">
+    <div class="planner-sidebar__header">
+        <div class="planner-sidebar__brand">
+            <svg class="planner-sidebar__brand-mark" viewBox="0 0 32 32" role="img" aria-labelledby="planner-brand-title">
+                <title id="planner-brand-title">AdventuresSuite Planner</title>
+                <path d="M5 26 16 5l11 21M10 18h12" />
+            </svg>
+            @if (!IsCollapsed)
+            {
+                <span class="planner-sidebar__brand-name">AdventuresSuite</span>
+            }
+        </div>
+
+        <button type="button"
+                class="planner-sidebar__mobile-close"
+                aria-label="Close Planner navigation"
+                @onclick="OnMobileCloseRequested">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 6 12 12M18 6 6 18" /></svg>
+        </button>
+    </div>
+
+    <nav class="planner-sidebar__nav" aria-label="Planner navigation">
+        <div class="planner-sidebar__current" aria-current="page" title="Current Planner workspace">
+            <svg class="planner-sidebar__icon" viewBox="0 0 24 24" role="img" aria-labelledby="planner-overview-title">
+                <title id="planner-overview-title">Planner overview</title>
+                <path d="M3 12.5 12 4l9 8.5v7.5a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z" />
+            </svg>
+            @if (!IsCollapsed)
+            {
+                <span>Planner workspace</span>
+            }
+        </div>
+    </nav>
+
+    <div class="planner-sidebar__controls" aria-label="Navigation panel controls">
+        <button type="button"
+                aria-label="@(IsCollapsed ? "Expand Planner navigation" : "Collapse Planner navigation")"
+                aria-expanded="@(!IsCollapsed ? "true" : "false")"
+                @onclick="OnCollapseRequested">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="@(IsCollapsed ? "m9 5 7 7-7 7" : "m15 5-7 7 7 7")" /></svg>
+            @if (!IsCollapsed)
+            {
+                <span>Collapse</span>
+            }
+        </button>
+        <button type="button" aria-label="Hide Planner navigation" @onclick="OnHideRequested">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 12h18M7 8l-4 4 4 4" /></svg>
+            @if (!IsCollapsed)
+            {
+                <span>Hide</span>
+            }
+        </button>
+    </div>
+
+    <div class="planner-sidebar__resize-controls" aria-label="Navigation width controls">
+        <button type="button"
+                aria-label="Narrow Planner navigation"
+                disabled="@(WidthPixels <= MinimumWidthPixels)"
+                @onclick="DecreaseWidthAsync">−</button>
+        <span aria-hidden="true">Width</span>
+        <button type="button"
+                aria-label="Widen Planner navigation"
+                disabled="@(WidthPixels >= MaximumWidthPixels)"
+                @onclick="IncreaseWidthAsync">+</button>
+    </div>
+
+    <div class="planner-sidebar__separator"
+         role="separator"
+         aria-label="Resize Planner navigation"
+         aria-orientation="vertical"
+         aria-valuemin="@MinimumWidthPixels"
+         aria-valuemax="@MaximumWidthPixels"
+         aria-valuenow="@WidthPixels"
+         tabindex="0"
+         @onkeydown="HandleResizeKeyAsync"></div>
+</aside>
