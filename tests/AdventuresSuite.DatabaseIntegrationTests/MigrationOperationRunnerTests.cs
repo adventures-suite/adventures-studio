@@ -179,6 +179,44 @@ public sealed class MigrationOperationRunnerTests
             MigrationOperationalState.Classify(["x"]));
     }
 
+    [Fact]
+    public void Bootstrapped0006RequiresExactEmptyDboOwnedFutureRoles()
+    {
+        var state = State(MigrationJournalOutcome.At0006, fingerprint: "SAME") with
+        {
+            CompanionRoleExists = true,
+            CompanionRoleOwner = "dbo",
+            PlanningRoleExists = true,
+            PlanningRoleOwner = "dbo"
+        };
+
+        MigrationOperationRunner.ValidatePreMigrationState(
+            state, MigrationJournalOutcome.At0006);
+
+        foreach (var malformed in new[]
+                 {
+                     state with { CompanionRoleExists = false, CompanionRoleOwner = string.Empty },
+                     state with { PlanningRoleExists = false, PlanningRoleOwner = string.Empty },
+                     state with { CompanionRoleOwner = "substituted_owner" },
+                     state with { PlanningRoleOwner = "substituted_owner" },
+                     state with { CompanionRoleMemberCount = 1 },
+                     state with { PlanningRoleMemberCount = 1 },
+                     state with { CompanionParentRoleCount = 1 },
+                     state with { PlanningParentRoleCount = 1 },
+                     state with { CompanionPermissions = ["GRANT|SELECT|planning|AdventurePlans"] },
+                     state with { PlanningPermissions = ["GRANT|SELECT|planning|AdventurePlanCreateResults"] }
+                 })
+        {
+            Assert.Throws<InvalidOperationException>(() =>
+                MigrationOperationRunner.ValidatePreMigrationState(
+                    malformed, MigrationJournalOutcome.At0006));
+        }
+
+        Assert.Throws<InvalidOperationException>(() =>
+            MigrationOperationRunner.ValidatePreMigrationState(
+                state, MigrationJournalOutcome.At0007));
+    }
+
     private static MigrationStateEvidence State(
         MigrationJournalOutcome outcome,
         string fingerprint,
