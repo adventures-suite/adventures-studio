@@ -147,8 +147,14 @@ public sealed class CompanionBearerAuthenticationTests : IDisposable
     public async Task InvalidIssuerIdentityIsUnauthorized(string variation)
     {
         var claims = variation == "duplicate"
-            ? new Dictionary<string, object> { ["iss"] = new[]
-                { BearerCompanionApiFactory.Issuer, BearerCompanionApiFactory.Issuer } }
+            ? new Dictionary<string, object>
+            {
+                ["iss"] = new[]
+                {
+                    BearerCompanionApiFactory.Issuer,
+                    BearerCompanionApiFactory.Issuer
+                }
+            }
             : null;
         var issuer = variation switch
         {
