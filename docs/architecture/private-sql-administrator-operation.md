@@ -76,6 +76,11 @@ and counts of required objects by approved schema and type. It never selects
 application rows.
 
 Evidence follows `infrastructure/private-sql-admin-operation/evidence.schema.json`.
+The baseline accepts only three reviewed states: absent, canonical `At0006`,
+and complete through 0009. DbUp journal records must use the exact
+`AdventuresSuite.DatabaseMigrator.Database.Migrations.` prefix. That prefix is
+removed only for comparison and bounded evidence against the authoritative
+ordered catalog; every other partial state fails closed.
 It is size-bounded, rejects additional fields, hashes immutable Azure resource
 IDs and database SIDs, and allows only documented names, counts, permissions,
 outcomes, and zero-residue fields. Tokens, connection strings, package URLs,

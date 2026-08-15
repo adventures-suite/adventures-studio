@@ -11,6 +11,48 @@ namespace AdventuresSuite.DatabaseMigrator;
 internal static class SqlAdministratorOperationRunner
 {
     private const string SqlScope = "https://database.windows.net/.default";
+    private const string DbUpJournalPrefix = "AdventuresSuite.DatabaseMigrator.Database.Migrations.";
+
+    private static readonly string[] ApprovedScripts =
+    [
+        "0001_create_planning_schema.sql", "0002_create_adventure_plans.sql",
+        "0003_create_planning_children.sql", "0004_create_authentication_persistence.sql",
+        "0005_bind_sessions_to_external_identities.sql", "0006_create_creator_memberships.sql",
+        "0007_create_traveler_participations.sql", "0008_create_companion_read_role.sql",
+        "0009_create_adventure_plan_create_results.sql"
+    ];
+
+    private static readonly string[] At0006PermissionSignatures =
+    [
+        "AdventuresSuiteAuthenticationRuntime|DENY|ALTER|SCHEMA|[auth]",
+        "AdventuresSuiteAuthenticationRuntime|GRANT|INSERT|SCHEMA|[auth]",
+        "AdventuresSuiteAuthenticationRuntime|GRANT|SELECT|SCHEMA|[auth]",
+        "AdventuresSuiteAuthenticationRuntime|GRANT|UPDATE|SCHEMA|[auth]",
+        "AdventuresSuiteMembershipRuntime|DENY|DELETE|OBJECT_OR_COLUMN|[audit].[AuditEvents]",
+        "AdventuresSuiteMembershipRuntime|GRANT|INSERT|OBJECT_OR_COLUMN|[audit].[AuditEvents]",
+        "AdventuresSuiteMembershipRuntime|GRANT|SELECT|OBJECT_OR_COLUMN|[audit].[AuditEvents]",
+        "AdventuresSuiteMembershipRuntime|DENY|UPDATE|OBJECT_OR_COLUMN|[audit].[AuditEvents]",
+        "AdventuresSuiteMembershipRuntime|GRANT|DELETE|OBJECT_OR_COLUMN|[auth].[CreatorMembershipPermissionGrants]",
+        "AdventuresSuiteMembershipRuntime|GRANT|INSERT|OBJECT_OR_COLUMN|[auth].[CreatorMembershipPermissionGrants]",
+        "AdventuresSuiteMembershipRuntime|GRANT|SELECT|OBJECT_OR_COLUMN|[auth].[CreatorMembershipPermissionGrants]",
+        "AdventuresSuiteMembershipRuntime|GRANT|DELETE|OBJECT_OR_COLUMN|[auth].[CreatorMembershipRoles]",
+        "AdventuresSuiteMembershipRuntime|GRANT|INSERT|OBJECT_OR_COLUMN|[auth].[CreatorMembershipRoles]",
+        "AdventuresSuiteMembershipRuntime|GRANT|SELECT|OBJECT_OR_COLUMN|[auth].[CreatorMembershipRoles]",
+        "AdventuresSuiteMembershipRuntime|DENY|DELETE|OBJECT_OR_COLUMN|[auth].[CreatorMemberships]",
+        "AdventuresSuiteMembershipRuntime|GRANT|INSERT|OBJECT_OR_COLUMN|[auth].[CreatorMemberships]",
+        "AdventuresSuiteMembershipRuntime|GRANT|SELECT|OBJECT_OR_COLUMN|[auth].[CreatorMemberships]",
+        "AdventuresSuiteMembershipRuntime|GRANT|UPDATE|OBJECT_OR_COLUMN|[auth].[CreatorMemberships]",
+        "AdventuresSuiteMembershipRuntime|DENY|ALTER|SCHEMA|[audit]",
+        "AdventuresSuiteMembershipRuntime|DENY|ALTER|SCHEMA|[auth]"
+    ];
+
+    private static readonly string[] At0006ObjectCountSignatures =
+    [
+        "audit|USER_TABLE|1",
+        "auth|USER_TABLE|6",
+        "dbo|USER_TABLE|1",
+        "planning|USER_TABLE|13"
+    ];
 
     internal static async Task<int> RunAsync(string operation)
     {
@@ -92,7 +134,10 @@ internal static class SqlAdministratorOperationRunner
         throw new InvalidOperationException("Fresh administrator credentials unexpectedly retained SQL access.");
     }
 
-    internal static async Task<int> CaptureBaselineAsync(SqlConnection connection, Context context)
+    internal static async Task<int> CaptureBaselineAsync(
+        SqlConnection connection,
+        Context context,
+        TextWriter? evidenceWriter = null)
     {
         var path = Path.GetFullPath(Require("ADVENTURESSUITE_ADMIN_BASELINE_SQL_PATH"));
         if (!path.EndsWith("/infrastructure/private-sql-admin-operation/baseline.sql", StringComparison.Ordinal)
@@ -129,49 +174,61 @@ internal static class SqlAdministratorOperationRunner
         });
         await reader.NextResultAsync();
         var permissions = new List<object>();
-        while (await reader.ReadAsync()) permissions.Add(new
+        var permissionSignatures = new List<string>();
+        while (await reader.ReadAsync())
         {
-            grantee = reader.GetString(0),
-            state = reader.GetString(1),
-            permission = reader.GetString(2),
-            @class = reader.GetString(3),
-            securable = reader.IsDBNull(4) ? null : reader.GetString(4)
-        });
+            var grantee = reader.GetString(0);
+            var state = reader.GetString(1);
+            var permission = reader.GetString(2);
+            var permissionClass = reader.GetString(3);
+            var securable = reader.IsDBNull(4) ? null : reader.GetString(4);
+            permissions.Add(new { grantee, state, permission, @class = permissionClass, securable });
+            permissionSignatures.Add(
+                $"{grantee}|{state}|{permission}|{permissionClass}|{securable ?? string.Empty}");
+        }
         await reader.NextResultAsync();
         await reader.ReadAsync();
         var journalExists = reader.GetBoolean(0);
-        var scripts = new List<string>();
+        var rawScripts = new List<string>();
         await reader.NextResultAsync();
         if (journalExists)
         {
-            while (await reader.ReadAsync()) scripts.Add(reader.GetString(0));
+            while (await reader.ReadAsync()) rawScripts.Add(reader.GetString(0));
             await reader.NextResultAsync();
         }
         var objectCounts = new List<object>();
-        while (await reader.ReadAsync()) objectCounts.Add(new
+        var objectCountSignatures = new List<string>();
+        while (await reader.ReadAsync())
         {
-            schema = reader.GetString(0),
-            type = reader.GetString(1),
-            count = reader.GetInt64(2)
-        });
+            var schema = reader.GetString(0);
+            var type = reader.GetString(1);
+            var count = reader.GetInt64(2);
+            objectCounts.Add(new { schema, type, count });
+            objectCountSignatures.Add($"{schema}|{type}|{count}");
+        }
         if (schemas.Count > 3 || roles.Length > 4 || principals.Count > 2
-            || permissions.Count > 128 || scripts.Count > 9 || objectCounts.Count > 24)
+            || permissions.Count > 128 || rawScripts.Count > 9 || objectCounts.Count > 24)
             throw new InvalidOperationException("The SQL administrator baseline evidence exceeded its bounds.");
 
+        var journalIsValid = TryNormalizeJournal(rawScripts, out var scripts);
         var schemaJson = JsonSerializer.Serialize(schemas);
         var roleNames = roleMap.Keys.ToArray();
         var principalJson = JsonSerializer.Serialize(principals);
         var permissionJson = JsonSerializer.Serialize(permissions);
-        var approvedScripts = new[]
-        {
-            "0001_create_planning_schema.sql", "0002_create_adventure_plans.sql",
-            "0003_create_planning_children.sql", "0004_create_authentication_persistence.sql",
-            "0005_bind_sessions_to_external_identities.sql", "0006_create_creator_memberships.sql",
-            "0007_create_traveler_participations.sql", "0008_create_companion_read_role.sql",
-            "0009_create_adventure_plan_create_results.sql"
-        };
         var absent = schemas.Count == 0 && roles.Length == 0 && principals.Count == 0
-            && permissions.Count == 0 && !journalExists && scripts.Count == 0 && objectCounts.Count == 0;
+            && permissions.Count == 0 && !journalExists && rawScripts.Count == 0 && objectCounts.Count == 0;
+        var at0006 = journalIsValid
+            && journalExists
+            && scripts.SequenceEqual(ApprovedScripts.Take(6), StringComparer.Ordinal)
+            && schemaJson == "[{\"name\":\"audit\",\"owner\":\"db_ddladmin\"},{\"name\":\"auth\",\"owner\":\"db_ddladmin\"},{\"name\":\"planning\",\"owner\":\"db_ddladmin\"}]"
+            && roleNames.SequenceEqual(new[]
+            {
+                "AdventuresSuiteAuthenticationRuntime", "AdventuresSuiteMembershipRuntime"
+            }, StringComparer.Ordinal)
+            && roles.All(role => !JsonSerializer.Serialize(role).Contains("unexpected-redacted", StringComparison.Ordinal))
+            && principals.Count == 0
+            && permissionSignatures.SequenceEqual(At0006PermissionSignatures, StringComparer.Ordinal)
+            && objectCountSignatures.SequenceEqual(At0006ObjectCountSignatures, StringComparer.Ordinal);
         var complete = schemas.Count == 3
             && schemaJson.Contains("\"planning\",\"owner\":\"db_ddladmin\"", StringComparison.Ordinal)
             && schemaJson.Contains("\"auth\",\"owner\":\"db_ddladmin\"", StringComparison.Ordinal)
@@ -186,9 +243,10 @@ internal static class SqlAdministratorOperationRunner
             && principalJson.Contains("\"name\":\"AdventuresSuiteMigrationDev-ffc9a\"", StringComparison.Ordinal)
             && !principalJson.Contains("unexpected-redacted", StringComparison.Ordinal)
             && !permissionJson.Contains("unexpected-redacted", StringComparison.Ordinal)
-            && journalExists && scripts.Distinct(StringComparer.Ordinal).Count() == scripts.Count
-            && scripts.SequenceEqual(approvedScripts.Take(scripts.Count), StringComparer.Ordinal);
-        var outcome = absent ? "absent" : complete ? "complete" : "unexpected";
+            && journalExists && journalIsValid
+            && scripts.SequenceEqual(ApprovedScripts, StringComparer.Ordinal);
+        var outcome = absent ? "absent" : at0006 ? nameof(MigrationJournalOutcome.At0006)
+            : complete ? "complete" : "unexpected";
         var baseline = new
         {
             schemaVersion = 1,
@@ -220,8 +278,36 @@ internal static class SqlAdministratorOperationRunner
         var payload = JsonSerializer.Serialize(baseline);
         if (Encoding.UTF8.GetByteCount(payload) > 65536)
             throw new InvalidOperationException("The SQL administrator evidence exceeded its size bound.");
-        Console.WriteLine(payload);
+        await (evidenceWriter ?? Console.Out).WriteLineAsync(payload);
         return outcome == "unexpected" ? 1 : 0;
+    }
+
+    private static bool TryNormalizeJournal(
+        IReadOnlyList<string> rawScripts,
+        out IReadOnlyList<string> normalizedScripts)
+    {
+        var normalized = new List<string>(rawScripts.Count);
+        var valid = true;
+        foreach (var rawScript in rawScripts)
+        {
+            if (!rawScript.StartsWith(DbUpJournalPrefix, StringComparison.Ordinal))
+            {
+                valid = false;
+                continue;
+            }
+
+            var script = rawScript[DbUpJournalPrefix.Length..];
+            if (!ApprovedScripts.Contains(script, StringComparer.Ordinal))
+            {
+                valid = false;
+                continue;
+            }
+
+            normalized.Add(script);
+        }
+
+        normalizedScripts = normalized.AsReadOnly();
+        return valid && normalized.Count == rawScripts.Count;
     }
 
     private static string ConnectionString(Context context) =>
