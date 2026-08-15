@@ -69,3 +69,38 @@ The authoritative SQL gate creates a disposable real SQL Server database and
 verifies list/detail behavior, lifecycle handling, isolation, stale versions,
 bounds, deterministic ordering, revocation, the required index, and absence of
 a missing-index recommendation for the scoped access path.
+
+## Authoritative Bearer Access Context Foundation
+
+The inert authoritative access-context foundation accepts only a configured
+identity-provider identifier and the issuer and subject already validated by
+the bearer transport. Issuer and subject remain exact, ordinal,
+case-sensitive values. Creator, traveler, membership, role, permission,
+ownership, information-policy, and revocation claims are never authorization
+inputs.
+
+The SQL resolver uses the persisted exact-key hash together with binary-
+collated provider, issuer, and subject predicates. It then establishes the
+active platform user, current Creator membership, accepted traveler
+participation, Adventure ownership, and exact `AdventurePlan.View` authority
+from server-owned roles or grants. Successful results carry the user security,
+membership, participation, and information-policy versions. A separate
+projection-read contract requires those facts to be rechecked within the later
+data read rather than treating resolution as a durable authorization decision.
+
+The default information policy is closed. The resolver is not registered with
+the API host, the `Bearer + Sql` startup prohibition remains in place, and no
+endpoint can consume this foundation yet. No authorization-context cache is
+permitted by this increment.
+
+Activation remains dependent on separately reviewed work:
+
+1. approve an authoritative, versioned information-policy definition;
+2. add a forward migration granting the Companion runtime narrowly scoped
+   reads of `auth.Users` and `auth.ExternalIdentities`;
+3. validate any User-first participation and Adventure lookup indexes against
+   real disposable-SQL execution plans before adding them in that migration;
+4. integrate the recheck into projection reads and bind the security,
+   membership, participation, and policy versions into ETags; and
+5. enable `Bearer + Sql` only after the migration is proven and deployment
+   identity and configuration are separately approved.
