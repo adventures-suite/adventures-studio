@@ -1,258 +1,180 @@
 # Azure SQL Bootstrap and Migration Runbook
 
-**Status:** Slice 5F Operational Runbook
+**Status:** Hosted VNet runner selected; execution remains blocked
 
-**Last Updated:** August 10, 2026
+The custom GitHub App/JIT broker and self-hosted VM path is superseded and must
+remain undeployed. The selected boundary is a GitHub-hosted Linux larger runner
+connected through GitHub Azure VNet private networking.
 
-## Scope
+AdventuresSuite uses the non-container `AdventuresSuite.DatabaseMigrator` DbUp
+executable for ordered, forward-only private Azure SQL migrations. The
+authoritative execution decision is
+`docs/architecture/private-sql-migration-execution.md`.
 
-Bootstrap least-privilege contained users and execute AdventuresSuite DbUp
-migrations against the private development Azure SQL database without granting
-the web application DDL authority.
+## Invariants
 
-## Target
+- Azure SQL public access stays disabled; no temporary firewall rule is used.
+- Hosted-runner authentication uses the exact organization-bound GitHub OIDC
+  FIC and Azure CLI token cache. Genuine Azure-hosted execution may use an
+  attached UAMI. Neither mode falls back, and no SQL password, key, or client
+  secret is permitted. Both modes request
+  `https://database.windows.net/.default`, while token validation requires the
+  selected mode's exact emitted audience: `https://database.windows.net` for
+  Azure CLI or `https://database.windows.net/` for managed identity.
+- The web and API never execute migrations or receive migration DDL authority.
+- DbUp scripts, `dbo.AdventuresSuiteSchemaVersions`, the application lock,
+  transaction-per-script behavior, state classification, fingerprints, and
+  verification remain authoritative.
+- A failed or ambiguous run is not retried automatically. Preserve evidence,
+  classify the journal, and obtain a new repair-forward approval.
+- Already-applied immutable migrations are not destructively rolled back and
+  the journal is never edited to manufacture success.
 
-- Server: `adventures-suite-dev-sql`
-- Database: `AdventuresSuiteDevelopment`
-- Authentication: Microsoft Entra only
-- Public network access: disabled
-- Private DNS: `privatelink.database.windows.net`
+## Release package gate
 
-Use the standard logical server hostname. Never configure `10.40.1.4` directly.
+The `Validate SQL Migrations` protected-main run produces the only release
+package. Retained evidence must contain and match:
 
-## Required Identities
+1. full protected-main source SHA;
+2. self-contained package SHA-256;
+3. ordered embedded migration-catalog SHA-256;
+4. exact .NET SDK/toolchain and `linux-x64` runtime identifier;
+5. SHA-256 for every dedicated `packages.linux-x64.lock.json` in the migrator
+   project graph;
+6. GitHub build run ID; and
+7. GitHub artifact provenance attestation.
 
-### Container Apps migration identities
+The package must contain the evidence-capable migrator and
+`run-reviewed-migration-operation.sh`. Reject mutable references, loose scripts,
+unattested artifacts, lock drift, a source-SHA mismatch, or an unexpected
+catalog.
 
-The development bootstrap operation completed from
-`2026-08-11T00:44:40Z` through `2026-08-11T00:46:50Z` for PR #18 SHA
-`3beb6bb1c84ecb011b2816b3ab6bf2da2e34024d`. These identifiers are operational
-metadata, not credentials:
+## Future one-job procedure
 
-| User-assigned identity | Principal/object ID | Client ID |
-| --- | --- | --- |
-| `id-adventures-suite-migration-foundation-deployer-dev` | `b77b6201-ad26-4f77-8f88-6d0d43f7dbb8` | `223af00d-69e5-4302-9ac5-6b338f3ea2e5` |
-| `id-adventures-suite-migration-rbac-bootstrap-dev` | `822c1c0c-39e1-400f-b9fc-9532a11bae5d` | `d678e2ad-ada2-4cde-bb79-44630acf1cc8` |
-| `id-adventures-suite-migrate-job-dev` | `ffc9a4bd-67c4-44af-82dc-b7f663f8bea5` | `d0da8236-91dc-4454-8a3d-19d08a406e5d` |
-| `id-adventures-suite-migrate-pull-dev` | `0edcc370-888d-416a-bd7d-4566e6eecc7e` | `76e739bd-bbab-4cd3-a299-f30573f5c5d8` |
-| `id-adventures-suite-migrate-publisher-dev` | `b93a06e5-fea5-4fda-a04e-6982f34820b6` | `12bb5798-81b9-4f21-ad12-aaa9521a5a78` |
-| `id-adventures-suite-migrate-starter-dev` | `c0cb4841-95f4-4fa0-afd1-9b0b13aad740` | `f1b5a068-7467-4971-97fe-ae09b91f9a60` |
+Organization-bound GitHub federation is proven through the manual-only
+`Prove Organization Federation` workflow before any personal-owner federated
+credential is removed. The proof is independently Environment-gated, validates
+the immutable organization/repository subject plus exact Azure workload
+identity, and performs only account/token introspection. It never connects to
+SQL, deploys resources, changes RBAC, executes migrations, or rebuilds the
+migration package. Raw GitHub and Azure tokens, headers, request URLs, and
+environment dumps are never retained. The `database-development` Environment
+is protected-branch-only, requires reviewer `ssimonton007` (user ID
+`55812276`), disables administrator bypass, contains only the four reviewed
+non-secret identity/subscription variables, and contains zero secrets.
 
-All six are in tenant `d7add2bb-ac03-49a8-9377-d0bf6a012f2f`, resource group
-`rg-adventures-suite-dev`, and region `westus2`. Creation evidence proved unique
-principal/client IDs, zero direct or inherited Azure roles, zero federated
-credentials, zero password/certificate credentials, and zero Azure-resource
-attachments. Identity creation is complete. Deployer OIDC federation completed
-and was proven on 2026-08-11 at protected-main SHA
-`fe4fe542909343540d207609b7b5a181922420ae`; publisher and starter federation
-remain prohibited until their later reviewed boundary.
+Federation proof distinguishes token exchange from subscription visibility.
+The Web and Companion deployment identities must see exactly the configured
+development subscription. The intentionally unassigned foundation, RBAC, and
+database-migration identities authenticate at tenant scope with Azure CLI
+`allow-no-subscriptions`, must see no Azure subscription, and emit
+`subscriptionConfigured: true` with `subscriptionVisibility: none_expected`.
+Any subscription visible to those zero-authority identities fails the proof.
+This evidence proves authentication and expected absence of control-plane
+authority; it does not claim that the configured subscription was visible or
+authenticated.
 
-The foundation proof was GitHub Actions run `31495613312`, approval
-`fedproof-fe4fe542-foundation-01`; the RBAC proof was run `31495747556`, approval
-`fedproof-fe4fe542-rbac-01`. Each emitted one bounded envelope with
-`stage=complete`, `classification=complete`, and `exitCode=0`. Each authenticated
-as its exact reviewed principal and received the required structured ARM denial
-for both probes: HTTP 403 with JSON `error.code=AuthorizationFailed`.
+The manual hosted-runner workflow is inert until separately approved GitHub and
+Azure configuration supplies its exact runner group, label, delegated subnet,
+and network settings. Environment approval occurs before
+the job is sent to the runner. Proof-only validates federation, package,
+attestation, private DNS, and TCP 1433 without SQL. Migration is a distinct
+operation with no automatic retry.
 
-Post-operation readback proved both exact immutable-subject FICs, zero direct or
-inherited roles, zero Azure-resource attachments, no pending Environment
-deployment, and absent publisher/starter federation. The operation-window Azure
-activity record contained only the two approved successful FIC writes. It
-contained no role, resource, deployment, network, or SQL mutation. Retain the
-FICs; temporary Azure authority requires a new exact-SHA approval, immediate
-removal afterward, and fresh-session loss-of-access verification.
+The runner group is limited to this repository and workflow, with concurrency
+one. Keep the $2 monthly Actions spending stop. Deploy the checksum-bound
+`infrastructure/github-hosted-private-migration-network/main.bicep` only under
+a separate exact-SHA approval. Its exact existing-VNet binding creates only the
+dedicated `10.40.3.0/27` subnet, dedicated NSG, and
+`GitHub.Network/networkSettings@2024-04-02` for organization business ID
+`316268438`. Validate all six outputs, including the authoritative
+`tags.GitHubId` network-configuration ID, before configuring GitHub.
 
-### Existing application identities
+The NSG denies inbound traffic; allows only the fixed SQL private endpoint on
+TCP 1433 and Internet TCP 443; and denies other ordinary outbound traffic.
+Azure's default platform DNS remains available despite an ordinary outbound
+deny rule unless it is explicitly blocked with Azure's special platform tag;
+the template contains no DNS allow or deny rule. The HTTPS destination is broad
+because an NSG cannot filter FQDNs.
+GitHub recommends separately managed DNS/domain controls and is retiring its
+legacy static-IP template. NAT Gateway, Azure Firewall, DNS filtering, or any
+other paid egress service is outside this decision and requires separate
+approval.
 
-- Application principal/object ID:
-  `43f88b68-e853-4ece-9379-bd2079af8ec0`
-- Application principal/client ID:
-  `21c95c0f-4855-433b-b835-9b14446276db`
-- Application principal/display name: `adventures-suite-dev`
-- Migration principal/object ID:
-  `ce76a652-2741-4324-8a1c-18f25409dee0`
-- Migration principal/client ID:
-  `74fdf34f-9299-47fc-a114-099bf3d80cec`
-- Migration principal/display name: `adventures-suite-migrate-dev`
-- One-time operator: approved SQL Microsoft Entra administrator
+The repository-defined SQL boundary separates three authorities. An Entra
+administrator creates and owns the `planning`, `auth`, and `audit` schemas,
+the four dbo-owned runtime roles, the exact DbUp journal table, and the
+contained migration user. The temporary migration principal receives only
+`CONNECT`, `CREATE TABLE`, `VIEW DEFINITION`, schema `CONTROL` on those three
+schemas, and journal `SELECT`/`INSERT`. It receives no fixed-role membership,
+schema ownership, role administration, schema creation, journal
+`UPDATE`/`DELETE`, or unrelated `dbo` authority. Runtime principals retain
+only their separately verified application DML grants and denials. Live
+bootstrap remains a later, exact approval boundary.
 
-Generated IDs are verified against live Azure resource identities immediately
-before bootstrap. Names and object IDs must agree; scripts do not trust copied
-IDs alone.
+The repository-only administrator path is documented at
+`docs/architecture/private-sql-administrator-operation.md`. Its mandatory
+first mode is a statically allowlisted metadata baseline using the dedicated
+`id-adventures-suite-sql-bootstrap-dev` UAMI; it does not exist or have authority merely
+because the design is present. The identity is never the migration UAMI and
+never gains authority through an Entra group. The hosted-runner workflow binds exact
+repository and organization IDs, protected SHA, workflow checksum, operation
+ID, identity IDs, server, database, private endpoint, attested package, and
+baseline SQL checksum. It uses GitHub OIDC with explicit `AzureCliCredential`.
+Baseline, bootstrap, cleanup, and fresh-session denial proof require separate
+approval packets. Bootstrap uses `CREATE USER ... WITH SID ..., TYPE = E`, so
+no Directory Readers grant is introduced. Cleanup revokes the exact temporary
+catalog and drops only the migration contained user; the schemas, four runtime
+roles, and DbUp journal remain.
 
-Supply the verified values only to the matching one-time operation:
+### Broker foundation authority boundary
 
-- migration: `ADVENTURESSUITE_MIGRATION_PRINCIPAL_ID`,
-  `ADVENTURESSUITE_MIGRATION_PRINCIPAL_CLIENT_ID`, and
-  `ADVENTURESSUITE_MIGRATION_PRINCIPAL_NAME`;
-- runtime: `ADVENTURESSUITE_APP_PRINCIPAL_ID`,
-  `ADVENTURESSUITE_APP_PRINCIPAL_CLIENT_ID`, and
-  `ADVENTURESSUITE_APP_PRINCIPAL_NAME`.
+The broker foundation uses dedicated future provisioner, cleanup, and residue
+reader identities documented in
+`docs/architecture/ephemeral-runner-registration-broker.md`. Do not reuse any
+migration, SQL-bootstrap, application, human, or group identity. The
+provisioner receives only create/reconcile actions for reviewed foundation
+types and receives no delete or authorization authority.
 
-## Private Execution Path Gate
+Independent cleanup receives its fixed cleanup role only at the exact
+verified-present cleanup-parent resource IDs, never at resource-group or
+subscription scope. After any complete or partial deployment outcome, the
+residue reader must first classify all 23 checksum-bound resource IDs and
+types. Unknown, additional, substituted, duplicated, wrong-type, failed, or
+ambiguous evidence stops before assignment or deletion. The Owner then creates
+only the validated subset of deterministic resource-scoped assignments;
+resources proven absent receive no assignment. Cleanup is dependency ordered,
+bounded-polling, zero-retry, and stops after the first failed, timed-out, or
+ambiguous operation. It does not purge the protected Key Vault. Complete
+23-resource residue evidence and a separate RBAC assignment inventory are
+mandatory before evidence may report clean residue.
 
-The permanent path is the manual Azure Container Apps migration Job documented
-in `docs/architecture/database-migration-job.md`. The App Service/Kudu/VM bridge
-is superseded and must not receive new operational approvals. It remains
-unchanged until the replacement passes a separately approved SQL-free channel
-proof and reviewed migration. The new user-assigned identity requires a later
-administrator bootstrap because a system-assigned App Service identity cannot
-be transferred.
+This is an Owner-assisted lifecycle, not automatic or unconditional cleanup:
+inventory, exact-subset validation, resource-scoped assignment, cleanup and
+polling, full-graph residue proof, removal of every temporary assignment, and
+fresh-session denial proof are separately approved steps.
 
-Before that Job can exist, follow the separately approved sequence in
-`container-apps-migration-permissions.md`: deployer federation, foundation
-resources, publisher/starter identity access, foundation access, immutable image
-publication, digest-bound Job resource, and exact-Job access. Infrastructure
-and RBAC deployers are temporary and mutually separated; no approval or
-workflow may combine boundaries. None of those control-plane
-steps authorizes SQL access.
+The repository templates and manual workflow are inert. They do not create an
+identity, role, assignment, resource, FIC, credential, or runner. Each live
+step requires its own exact-SHA/checksum approval and post-operation readback.
 
-No bootstrap or migration begins until an approved execution environment can:
+The proposed VM uses existing UAMI `id-adventures-suite-migrate-job-dev`
+(object ID `ffc9a4bd-67c4-44af-82dc-b7f663f8bea5`, client ID
+`d0da8236-91dc-4454-8a3d-19d08a406e5d`). Repository text never substitutes for
+fresh Azure and database identity readback.
 
-- resolve the SQL logical hostname to the VNet private endpoint;
-- authenticate the intended human or workload through Microsoft Entra;
-- retrieve the immutable migration package without a shared key or public Blob;
-- emit access-controlled logs and exit evidence; and
-- be disabled or removed after the operation.
+An approved run will capture pre-state, acquire the zero-wait application lock,
+execute the exact operation once through migration 0009, capture post-state,
+classify `Complete`, `Migration0008Committed`, `Migration0007Committed`,
+`NoScriptCommitted`, or `Unexpected`, and retain
+bounded logs. Independent VM cleanup is mandatory even if GitHub loses the
+runner. None of those operations is implemented or authorized here.
 
-A normal GitHub-hosted runner is not assumed to meet this gate. Select and
-document a private self-hosted/ephemeral runner or another reviewed Azure-native
-execution mechanism. Do not temporarily open SQL public networking as an
-undocumented shortcut.
+## Inert runner lifecycle definition
 
-## Ordered Bootstrap and Migration
-
-The approved private execution path performs four separate operations. Do not
-combine them or run DbUp using administrator authority.
-
-1. The approved Entra administrator confirms the exact target, supplies
-   `ADVENTURESSUITE_ADMIN_SQL_CONNECTION_STRING` and the verified migration
-   principal object ID, client ID, and exact display name, and runs
-   `--bootstrap-sql`. This creates the migration contained user and the empty
-   `AdventuresSuiteAuthenticationRuntime` and
-   `AdventuresSuiteMembershipRuntime` database roles, and grants `CONNECT`,
-   `db_ddladmin`, `db_datareader`, and `db_datawriter` for development
-   migrations. Pre-creating runtime roles under administrator authority keeps
-   role administration away from the migration identity. The bootstrap also
-   assigns the migration user an explicit `dbo` default schema so Microsoft
-   Entra workload authentication can create the source-controlled schemas
-   without implicit-user or group-default-schema behavior. No runtime identity
-   is added to either empty role at this stage.
-2. The migration workload identity supplies
-   `ADVENTURESSUITE_SQL_CONNECTION_STRING` and runs `--migrate`. No
-   administrator connection string is present for this operation.
-3. After migrations grant the intended permissions to the authentication and
-   membership runtime roles, the Entra administrator supplies the verified
-   application principal object ID, client ID, and exact display name and runs
-   `--bind-runtime`. This creates the runtime contained user, adds it only to
-   the precreated roles, and grants `CONNECT`.
-4. The migration workload identity runs `--verify-permissions`. The bounded
-   verification proves its development migration roles, journal access, and
-   required authentication schema without changing application data.
-
-No operation grants `db_owner`, user/role administration to a workload,
-server-level roles, or cross-database authority. Record sanitized effective
-grants and current principal IDs, then remove temporary operator or
-execution-path elevation.
-
-Bootstrap SQL is source-controlled, parameterized by resolved identity, reviewed,
-idempotent where safe, and never contains a password or access token.
-The generated contained-user alias begins with the exact Entra display name and
-appends the first five object-ID characters, as Azure SQL requires. An existing
-alias must have the approved client ID in its database SID or the operation
-fails closed. Principal creation and grants commit in one transaction.
-
-## Migration Artifact
-
-Use the exact published `AdventuresSuite.DatabaseMigrator` artifact produced for
-the intended full commit SHA. Do not rebuild an old revision, use `latest`, or
-copy loose migration scripts manually.
-
-Before execution verify:
-
-- artifact name, full SHA, workflow run, and checksum;
-- ordered embedded migration catalog;
-- expected previous and target journal state;
-- database and environment identity;
-- migration app Managed Identity;
-- package retention and rollback/recovery evidence; and
-- no secrets or connection passwords in the package.
-
-## Migration App Procedure
-
-1. Confirm the migration app is stopped.
-2. Confirm its public ingress remains disabled and VNet/DNS resolution passes.
-3. Deploy the exact immutable, self-contained `linux-x64` migrator package
-   through the approved private or Azure-native package path. The package must
-   include `run-reviewed-migration-operation.sh` and the evidence-capable
-   executable under one reviewed SHA-256 checksum.
-4. Configure only non-secret target server/database and release identity.
-5. Use a unique operation ID and a bounded 60-to-1800-second timeout. Invoke the
-   reviewed wrapper only through the private migration App Service execution
-   path; do not depend on the App Service web-startup probe to infer completion.
-6. Acquire an Azure SQL token using the migration app's own system-assigned
-   Managed Identity. Before DbUp, validate safe token tenant, audience,
-   object/client identity metadata and require SQL to confirm the expected
-   contained migration principal. Never print or retain the token.
-7. Acquire the zero-wait `AdventuresSuite.DatabaseMigrator` application lock
-   and hold it across pre-state capture, DbUp, and post-state capture. Reject a
-   second active operation and stop if the journal is not exactly the approved
-   pre-state.
-8. Run the reviewed operation once using per-script transaction and
-   `dbo.AdventuresSuiteSchemaVersions` journal behavior.
-   Source-controlled application schemas are owned by the stable
-   `db_ddladmin` database role. The migration principal is already a member of
-   that role, so schema creation does not require the unsafe
-   `IMPERSONATE dbo` permission or bind ownership to a rotating workload user.
-9. Record process start/completion, real wrapper and migrator exit status,
-   operation ID, script identifiers, safe outcome, duration, target version,
-   release SHA, package checksum, identity evidence, schema/permission evidence,
-   and before/after application fingerprints without SQL text containing data
-   or credentials. A committed `0007` followed by failed `0008` is a recoverable
-   stopped state, not an all-or-nothing rollback and not permission to rerun.
-10. Complete administrator `--bind-runtime`, then run workload
-    `--verify-permissions` as separate operations.
-11. Stop the migration app even when migration or validation fails.
-12. Verify stopped state, revoke temporary package access, and retain evidence.
-
-The wrapper's exit trap records the original process exit code and attempts
-cleanup without replacing that code. Do not automatically rerun an operation
-that remains at `0006` or stops at `0007`; retain evidence and obtain a new
-approval after diagnosis.
-
-The migration app must not host a customer endpoint or remain continuously
-running.
-
-## Failure and Recovery
-
-- Failure before script commit leaves the per-script transaction rolled back.
-- A successful forward-only script is not automatically reversed.
-- Recovery uses backup/restore, point-in-time recovery, or an approved corrective
-  forward migration; never edit the DbUp journal to pretend success.
-- Do not run the web application against a schema outside its supported range.
-- Stop promotion and application enablement when journal, schema validation,
-  permissions, or migration evidence is ambiguous.
-- Preserve the failed artifact, journal snapshot, safe diagnostics, operator,
-  workload identity, and timestamps for investigation.
-
-## Verification Matrix
-
-- application identity can perform approved repository DML;
-- application identity cannot create/alter/drop schema objects or modify the
-  DbUp journal;
-- migration identity can execute the ordered catalog and journal it;
-- migration identity is not `db_owner` and has no application runtime role;
-- clean migration, repeated migration, and upgrade from the previous schema
-  pass;
-- exact case-sensitive external identity constraints pass;
-- transaction, concurrency, rollback, archive/session, and permission tests
-  pass;
-- public SQL networking remains disabled; and
-- migration app returns to stopped-by-default state.
-
-## Identity Rotation
-
-When an App Service or system-assigned identity is recreated, its principal
-changes. Treat this as a controlled database-access migration: resolve the new
-identity, create and verify the new contained user, deploy/test, then revoke the
-old user. Never assume a resource name preserves a system-assigned identity.
+The repository-only design is documented in
+`docs/architecture/ephemeral-private-migration-runner.md` and under
+`infrastructure/private-migration-runner`. Its manual Environment-gated
+workflow deliberately fails before login or provisioning until an OIDC
+registration broker and exact temporary provisioning/cleanup assignments pass
+separate reviews. This is not runner, SQL, or migration approval.

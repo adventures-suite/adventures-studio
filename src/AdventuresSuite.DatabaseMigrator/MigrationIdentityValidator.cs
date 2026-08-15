@@ -7,6 +7,9 @@ namespace AdventuresSuite.DatabaseMigrator;
 /// <summary>Validates the exact migration workload token and contained SQL principal.</summary>
 internal static class MigrationIdentityValidator
 {
+    internal const string AzureCliSqlAudience = "https://database.windows.net";
+    internal const string ManagedIdentitySqlAudience = "https://database.windows.net/";
+
     internal static MigrationWorkloadIdentityEvidence ValidateWorkloadToken(
         AccessToken token,
         Guid expectedTenantId,
@@ -17,13 +20,30 @@ internal static class MigrationIdentityValidator
         var claims = ReadClaims(token.Token);
         RequireClaim(claims, "tid", expectedTenantId.ToString());
         RequireClaim(claims, "oid", expectedObjectId.ToString());
-        RequireClaim(claims, "aud", expectedAudience);
+        RequireExactClaim(claims, "aud", expectedAudience);
         var clientClaim = claims.TryGetValue("appid", out var appId) ? appId
             : claims.TryGetValue("azp", out var authorizedParty) ? authorizedParty : null;
         if (!string.Equals(clientClaim, expectedClientId.ToString(), StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("The migration token client identity is not approved.");
 
         return new(expectedTenantId, expectedObjectId, expectedClientId, expectedAudience);
+    }
+
+    internal static MigrationWorkloadIdentityEvidence ValidateSqlWorkloadToken(
+        AccessToken token,
+        Guid expectedTenantId,
+        Guid expectedObjectId,
+        Guid expectedClientId,
+        MigrationCredentialMode credentialMode)
+    {
+        var expectedAudience = credentialMode switch
+        {
+            MigrationCredentialMode.GitHubOidcAzureCli => AzureCliSqlAudience,
+            MigrationCredentialMode.AzureManagedIdentity => ManagedIdentitySqlAudience,
+            _ => throw new InvalidOperationException("The migration credential mode is not approved.")
+        };
+        return ValidateWorkloadToken(
+            token, expectedTenantId, expectedObjectId, expectedClientId, expectedAudience);
     }
 
     internal static async Task<MigrationIdentityEvidence> ValidateAsync(
@@ -34,14 +54,25 @@ internal static class MigrationIdentityValidator
         Guid expectedClientId,
         string expectedPrincipalName,
         string expectedServer,
-        string expectedDatabase)
+        string expectedDatabase,
+        MigrationCredentialMode credentialMode = MigrationCredentialMode.AzureManagedIdentity)
     {
-        _ = ValidateWorkloadToken(token, expectedTenantId, expectedObjectId, expectedClientId,
-            "https://database.windows.net/");
+        _ = ValidateSqlWorkloadToken(
+            token, expectedTenantId, expectedObjectId, expectedClientId, credentialMode);
 
         var builder = new SqlConnectionStringBuilder(connectionString);
-        if (builder.Authentication != SqlAuthenticationMethod.ActiveDirectoryManagedIdentity
-            || !string.Equals(builder.UserID, expectedClientId.ToString(), StringComparison.OrdinalIgnoreCase)
+        var connectionIdentityValid = credentialMode switch
+        {
+            MigrationCredentialMode.AzureManagedIdentity =>
+                builder.Authentication == SqlAuthenticationMethod.ActiveDirectoryManagedIdentity
+                && string.Equals(builder.UserID, expectedClientId.ToString(), StringComparison.OrdinalIgnoreCase),
+            MigrationCredentialMode.GitHubOidcAzureCli =>
+                builder.Authentication == SqlAuthenticationMethod.NotSpecified
+                && string.IsNullOrEmpty(builder.UserID)
+                && string.IsNullOrEmpty(builder.Password),
+            _ => false
+        };
+        if (!connectionIdentityValid
             || !string.Equals(builder.InitialCatalog, expectedDatabase, StringComparison.Ordinal)
             || !ServerMatches(builder.DataSource, expectedServer))
             throw new InvalidOperationException("The migration connection target or identity is not approved.");
@@ -95,6 +126,14 @@ internal static class MigrationIdentityValidator
     {
         if (!claims.TryGetValue(name, out var actual)
             || !string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException($"The migration token {name} claim is not approved.");
+    }
+
+    private static void RequireExactClaim(
+        IReadOnlyDictionary<string, string> claims, string name, string expected)
+    {
+        if (!claims.TryGetValue(name, out var actual)
+            || !string.Equals(actual, expected, StringComparison.Ordinal))
             throw new InvalidOperationException($"The migration token {name} claim is not approved.");
     }
 

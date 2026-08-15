@@ -14,6 +14,14 @@ try
 {
     switch (args)
     {
+        case ["--admin-baseline"]:
+            return await SqlAdministratorOperationRunner.RunAsync("baseline");
+        case ["--admin-bootstrap"]:
+            return await SqlAdministratorOperationRunner.RunAsync("bootstrap");
+        case ["--admin-cleanup"]:
+            return await SqlAdministratorOperationRunner.RunAsync("cleanup");
+        case ["--admin-denial-proof"]:
+            return await SqlAdministratorOperationRunner.RunAsync("denial-proof");
         case ["--bootstrap-sql"]:
             await AzureDevelopmentBootstrapper.BootstrapMigrationIdentityAsync(
                 RequireEnvironment(administratorConnectionVariable),
@@ -39,12 +47,12 @@ try
             return await MigrationOperationRunner.RunAsync(
                 RequireEnvironment(migrationConnectionVariable));
         case ["--verify-execution-channel"]:
-            return await MigrationContainerModes.VerifyExecutionChannelAsync();
+            return await MigrationExecutionModes.VerifyExecutionChannelAsync();
         case ["--capture-migration-state"]:
-            return await MigrationContainerModes.CaptureMigrationStateAsync(
+            return await MigrationExecutionModes.CaptureMigrationStateAsync(
                 RequireEnvironment(migrationConnectionVariable));
         case ["--verify-migration-state"]:
-            return await MigrationContainerModes.VerifyMigrationStateAsync(
+            return await MigrationExecutionModes.VerifyMigrationStateAsync(
                 RequireEnvironment(migrationConnectionVariable));
         case ["--bind-companion-read-runtime"]:
             await AzureDevelopmentBootstrapper.BindCompanionReadIdentityAsync(

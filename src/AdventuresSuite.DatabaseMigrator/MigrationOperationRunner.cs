@@ -14,7 +14,12 @@ internal static partial class MigrationOperationRunner
         if (!OperationIdPattern().IsMatch(operationId))
             throw new InvalidOperationException("The migration operation identifier is invalid.");
         var releaseSha = RequireHex("ADVENTURESSUITE_RELEASE_SHA", 40);
-        var imageDigest = RequireImageDigest("ADVENTURESSUITE_IMAGE_DIGEST");
+        var packageSha256 = RequireHex("ADVENTURESSUITE_MIGRATION_PACKAGE_SHA256", 64);
+        var catalogSha256 = RequireHex("ADVENTURESSUITE_MIGRATION_CATALOG_SHA256", 64);
+        if (!string.Equals(catalogSha256,
+            MigrationCatalog.CalculateOrderedCatalogSha256(typeof(MigrationCatalog).Assembly),
+            StringComparison.Ordinal))
+            throw new InvalidOperationException("The migration catalog checksum does not match the embedded catalog.");
         var tenantId = RequireGuid("ADVENTURESSUITE_MIGRATION_TENANT_ID");
         var objectId = RequireGuid("ADVENTURESSUITE_MIGRATION_PRINCIPAL_ID");
         var clientId = RequireGuid("ADVENTURESSUITE_MIGRATION_PRINCIPAL_CLIENT_ID");
@@ -29,16 +34,18 @@ internal static partial class MigrationOperationRunner
             operationId,
             startedAt,
             releaseSha,
-            imageDigest,
+            packageSha256,
+            orderedMigrationCatalogSha256 = catalogSha256,
             orderedCatalog = MigrationCatalog.GetOrderedResourceNames(typeof(MigrationCatalog).Assembly)
         });
 
-        var credential = new ManagedIdentityCredential(
-            ManagedIdentityId.FromUserAssignedClientId(clientId.ToString()));
-        var token = await credential.GetTokenAsync(
-            new TokenRequestContext(["https://database.windows.net/.default"]));
+        var selection = MigrationCredentialFactory.Create(tenantId, clientId);
+        var token = await selection.Credential.GetTokenAsync(
+            new TokenRequestContext(["https://database.windows.net/.default"]),
+            CancellationToken.None);
         var identity = await MigrationIdentityValidator.ValidateAsync(
-            token, connectionString, tenantId, objectId, clientId, principalName, server, database);
+            token, connectionString, tenantId, objectId, clientId, principalName, server, database,
+            selection.Mode);
         WriteEvidence(new
         {
             eventName = "migration-identity-verified",
@@ -67,10 +74,10 @@ internal static partial class MigrationOperationRunner
         IReadOnlyList<string> selectedScripts = [];
         try
         {
-            // This operational command remains pinned to its separately reviewed 0006 -> 0008 scope.
+            // This operation is explicitly bounded to the reviewed 0006 -> 0009 transition.
             selectedScripts = DatabaseMigratorRunner.MigrateWithLockHeld(
                 connectionString,
-                maximumMigrationNumber: "0008");
+                maximumMigrationNumber: "0009");
         }
         catch (Exception exception)
         {
@@ -88,13 +95,14 @@ internal static partial class MigrationOperationRunner
             operationId,
             completedAt = DateTimeOffset.UtcNow,
             releaseSha,
-            imageDigest,
+            packageSha256,
+            orderedMigrationCatalogSha256 = catalogSha256,
             selectedScripts,
             classification = classification.ToString(),
             exitCode
         });
-        MigrationContainerModes.WriteCompletionEnvelope(
-            operationId, releaseSha, imageDigest, startedAt,
+        MigrationExecutionModes.WriteCompletionEnvelope(
+            operationId, releaseSha, packageSha256, catalogSha256, startedAt,
             classification.ToString(), exitCode, new
             {
                 journalClassification = afterOutcome.ToString(),
@@ -113,9 +121,12 @@ internal static partial class MigrationOperationRunner
     {
         if (!string.Equals(before.ApplicationFingerprint, after.ApplicationFingerprint, StringComparison.Ordinal))
             return MigrationOperationClassification.Unexpected;
-        if (migrationFailure is null && afterOutcome == MigrationJournalOutcome.At0008
+        if (migrationFailure is null && afterOutcome == MigrationJournalOutcome.At0009
             && VerifyExpectedPostState(after))
             return MigrationOperationClassification.Complete;
+        if (migrationFailure is not null && afterOutcome == MigrationJournalOutcome.At0008
+            && VerifyExpected0008State(after))
+            return MigrationOperationClassification.Migration0008Committed;
         if (migrationFailure is not null && afterOutcome == MigrationJournalOutcome.At0007
             && VerifyExpected0007State(after))
             return MigrationOperationClassification.Migration0007Committed;
@@ -134,8 +145,16 @@ internal static partial class MigrationOperationRunner
             || state.CompanionRoleMemberCount != 0
             || state.CompanionParentRoleCount != 0
             || !string.Equals(state.CompanionRoleOwner, "dbo", StringComparison.Ordinal)
+            || !state.AdventurePlanCreateResultsExists
+            || !state.PlanningRoleExists
+            || state.PlanningRoleMemberCount != 0
+            || state.PlanningParentRoleCount != 0
+            || !string.Equals(state.PlanningRoleOwner, "dbo", StringComparison.Ordinal)
+            || state.AdventurePlanCreateResultConstraintCount != 7
+            || !state.AdventurePlanCreateResultExpiryIndexExists
             || !state.RelevantObjects.SequenceEqual(
-                ["planning.TravelerParticipations|USER_TABLE"], StringComparer.Ordinal))
+                ["planning.AdventurePlanCreateResults|USER_TABLE",
+                 "planning.TravelerParticipations|USER_TABLE"], StringComparer.Ordinal))
             return false;
 
         var expectedPermissions = new HashSet<string>(StringComparer.Ordinal);
@@ -153,23 +172,72 @@ internal static partial class MigrationOperationRunner
         }
         expectedPermissions.Add("DENY|ALTER|auth|");
         expectedPermissions.Add("DENY|ALTER|planning|");
-        return expectedPermissions.SetEquals(state.CompanionPermissions);
+        return expectedPermissions.SetEquals(state.CompanionPermissions)
+            && new HashSet<string>(StringComparer.Ordinal)
+            {
+                "GRANT|INSERT|planning|AdventurePlanCreateResults",
+                "GRANT|SELECT|planning|AdventurePlanCreateResults",
+                "DENY|UPDATE|planning|AdventurePlanCreateResults",
+                "DENY|DELETE|planning|AdventurePlanCreateResults",
+                "DENY|ALTER|planning|"
+            }.SetEquals(state.PlanningPermissions);
     }
 
     private static bool VerifyExpected0006State(MigrationStateEvidence state) =>
         !state.TravelerParticipationsExists
         && !state.CompanionRoleExists
+        && !state.AdventurePlanCreateResultsExists
+        && !state.PlanningRoleExists
         && state.RelevantObjects.Count == 0
-        && state.CompanionPermissions.Count == 0;
+        && state.CompanionPermissions.Count == 0
+        && state.PlanningPermissions.Count == 0;
 
     private static bool VerifyExpected0007State(MigrationStateEvidence state) =>
         state.TravelerParticipationsExists
         && state.TravelerConstraintCount == 7
         && state.TravelerAuthorizedListIndexExists
         && !state.CompanionRoleExists
+        && !state.AdventurePlanCreateResultsExists
+        && !state.PlanningRoleExists
         && state.CompanionPermissions.Count == 0
+        && state.PlanningPermissions.Count == 0
         && state.RelevantObjects.SequenceEqual(
             ["planning.TravelerParticipations|USER_TABLE"], StringComparer.Ordinal);
+
+    private static bool VerifyExpected0008State(MigrationStateEvidence state) =>
+        state.TravelerParticipationsExists
+        && state.TravelerConstraintCount == 7
+        && state.TravelerAuthorizedListIndexExists
+        && state.CompanionRoleExists
+        && state.CompanionRoleMemberCount == 0
+        && state.CompanionParentRoleCount == 0
+        && string.Equals(state.CompanionRoleOwner, "dbo", StringComparison.Ordinal)
+        && !state.AdventurePlanCreateResultsExists
+        && !state.PlanningRoleExists
+        && state.PlanningPermissions.Count == 0
+        && state.RelevantObjects.SequenceEqual(
+            ["planning.TravelerParticipations|USER_TABLE"], StringComparer.Ordinal)
+        && VerifyCompanionPermissions(state.CompanionPermissions);
+
+    private static bool VerifyCompanionPermissions(IReadOnlyList<string> actual)
+    {
+        var expected = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var target in new[]
+        {
+            "planning|AdventurePlans", "planning|TravelerParticipations", "planning|DestinationVisits",
+            "auth|CreatorMemberships", "auth|CreatorMembershipRoles",
+            "auth|CreatorMembershipPermissionGrants"
+        })
+        {
+            var parts = target.Split('|');
+            expected.Add($"GRANT|SELECT|{parts[0]}|{parts[1]}");
+            foreach (var permission in new[] { "INSERT", "UPDATE", "DELETE" })
+                expected.Add($"DENY|{permission}|{parts[0]}|{parts[1]}");
+        }
+        expected.Add("DENY|ALTER|auth|");
+        expected.Add("DENY|ALTER|planning|");
+        return expected.SetEquals(actual);
+    }
 
     private static void WriteState(
         string operationId, string eventName, MigrationStateEvidence state, MigrationJournalOutcome outcome) =>
@@ -181,6 +249,7 @@ internal static partial class MigrationOperationRunner
             state.Journal,
             state.RelevantObjects,
             state.CompanionPermissions,
+            state.PlanningPermissions,
             state.ApplicationDataSignatures,
             state.ApplicationFingerprint,
             state.TravelerParticipationsExists,
@@ -189,7 +258,14 @@ internal static partial class MigrationOperationRunner
             state.CompanionParentRoleCount,
             state.CompanionRoleOwner,
             state.TravelerConstraintCount,
-            state.TravelerAuthorizedListIndexExists
+            state.TravelerAuthorizedListIndexExists,
+            state.AdventurePlanCreateResultsExists,
+            state.PlanningRoleExists,
+            state.PlanningRoleMemberCount,
+            state.PlanningParentRoleCount,
+            state.PlanningRoleOwner,
+            state.AdventurePlanCreateResultConstraintCount,
+            state.AdventurePlanCreateResultExpiryIndexExists
         });
 
     private static void WriteEvidence(object value) =>
@@ -212,23 +288,15 @@ internal static partial class MigrationOperationRunner
             : throw new InvalidOperationException($"Set a valid {name} value.");
     }
 
-    private static string RequireImageDigest(string name)
-    {
-        var value = Require(name);
-        return ImageDigestPattern().IsMatch(value)
-            ? value : throw new InvalidOperationException($"Set a valid immutable {name} value.");
-    }
-
     [GeneratedRegex("^[a-z0-9][a-z0-9-]{7,63}$", RegexOptions.CultureInvariant)]
     private static partial Regex OperationIdPattern();
 
-    [GeneratedRegex("^sha256:[0-9a-f]{64}$", RegexOptions.CultureInvariant)]
-    private static partial Regex ImageDigestPattern();
 }
 
 internal enum MigrationOperationClassification
 {
     Complete,
+    Migration0008Committed,
     Migration0007Committed,
     NoScriptCommitted,
     Unexpected

@@ -20,7 +20,7 @@ public sealed class AzureDevelopmentBootstrapperTests
     }
 
     [Fact]
-    public void MigrationGrantsAssignOwnershipCapableDefaultSchema()
+    public void MigrationGrantsCreateAdministratorPrerequisitesAndExactTemporaryCatalog()
     {
         var grants = AzureDevelopmentBootstrapper.BuildMigrationGrants("[migration-principal]");
 
@@ -32,14 +32,50 @@ public sealed class AzureDevelopmentBootstrapperTests
             "CREATE ROLE [AdventuresSuiteMembershipRuntime] AUTHORIZATION [dbo];",
             grants,
             StringComparison.Ordinal);
-        Assert.Contains(
-            "The membership runtime principal name is not an approved database role.",
-            grants,
-            StringComparison.Ordinal);
+        Assert.Contains("CREATE ROLE [AdventuresSuiteCompanionReadRuntime] AUTHORIZATION [dbo];", grants, StringComparison.Ordinal);
+        Assert.Contains("CREATE ROLE [AdventuresSuitePlanningRuntime] AUTHORIZATION [dbo];", grants, StringComparison.Ordinal);
+        Assert.Contains("CREATE TABLE dbo.AdventuresSuiteSchemaVersions", grants, StringComparison.Ordinal);
         Assert.Contains(
             "ALTER USER [migration-principal] WITH DEFAULT_SCHEMA = [dbo];",
             grants,
             StringComparison.Ordinal);
+        Assert.Contains("GRANT CREATE TABLE", grants, StringComparison.Ordinal);
+        Assert.Contains("GRANT VIEW DEFINITION", grants, StringComparison.Ordinal);
+        Assert.Contains("GRANT CONTROL ON SCHEMA::planning", grants, StringComparison.Ordinal);
+        Assert.Contains("GRANT CONTROL ON SCHEMA::auth", grants, StringComparison.Ordinal);
+        Assert.Contains("GRANT CONTROL ON SCHEMA::audit", grants, StringComparison.Ordinal);
+        Assert.Contains("GRANT SELECT, INSERT ON OBJECT::dbo.AdventuresSuiteSchemaVersions", grants, StringComparison.Ordinal);
+        Assert.DoesNotContain("ADD MEMBER [migration-principal]", grants, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void BootstrapUsesExactSidWithoutDirectoryLookup()
+    {
+        var source = File.ReadAllText(Path.Combine(
+            FindRepositoryRoot(), "src/AdventuresSuite.DatabaseMigrator/AzureDevelopmentBootstrapper.cs"));
+
+        Assert.Contains("CREATE USER {quotedAlias} WITH SID = ", source, StringComparison.Ordinal);
+        Assert.Contains("TYPE = E", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("FROM EXTERNAL PROVIDER", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("WITH OBJECT_ID", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void CleanupRevokesOnlyTemporaryCatalogDropsUserAndRetainsPrerequisites()
+    {
+        var source = File.ReadAllText(Path.Combine(
+            FindRepositoryRoot(), "src/AdventuresSuite.DatabaseMigrator/AzureDevelopmentBootstrapper.cs"));
+
+        foreach (var expected in new[]
+        {
+            "REVOKE CONNECT", "REVOKE CREATE TABLE", "REVOKE VIEW DEFINITION",
+            "REVOKE CONTROL ON SCHEMA::planning", "REVOKE CONTROL ON SCHEMA::auth",
+            "REVOKE CONTROL ON SCHEMA::audit", "REVOKE SELECT, INSERT, UPDATE, DELETE",
+            "DROP USER"
+        }) Assert.Contains(expected, source, StringComparison.Ordinal);
+        Assert.DoesNotContain("DROP SCHEMA", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("DROP ROLE", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("DROP TABLE", source, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -73,5 +109,13 @@ public sealed class AzureDevelopmentBootstrapperTests
     {
         Assert.Throws<InvalidOperationException>(() =>
             AzureDevelopmentBootstrapper.CreatePrincipalAlias(new string('a', 123), Guid.NewGuid()));
+    }
+
+    private static string FindRepositoryRoot()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "TheSimontonAdventures.slnx")))
+            directory = directory.Parent;
+        return directory?.FullName ?? throw new InvalidOperationException("Repository root not found.");
     }
 }

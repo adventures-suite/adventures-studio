@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "workloadName": "id-adventures-suite-sql-bootstrap-dev",
+  "databasePrincipalAlias": "AdventuresSuiteSqlBootstrapDev",
+  "identityType": "Microsoft.ManagedIdentity/userAssignedIdentities",
+  "binding": ["immutableAzureResourceId", "tenantId", "clientId", "principalId"],
+  "authentication": {
+    "source": "GitHubOidcAzureCli",
+    "audience": "https://database.windows.net/.default",
+    "delivery": "inProcessAccessToken",
+    "maximumOperationMinutes": 30
+  },
+  "prohibited": [
+    "migrationUami",
+    "humanIdentity",
+    "EntraGroupMembership",
+    "password",
+    "clientSecret",
+    "certificate",
+    "durableToken",
+    "interactiveGuestLogin",
+    "directoryReaders"
+  ],
+  "note": "The identity and organization-bound FIC remain separately approved live boundaries; this catalog grants no authority."
+}

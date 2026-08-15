@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "identities": {
+    "provisioner": "id-adventures-suite-runner-broker-foundation-deployer-dev",
+    "cleanup": "id-adventures-suite-runner-broker-foundation-cleanup-dev",
+    "residueReader": "id-adventures-suite-runner-broker-foundation-residue-reader-dev"
+  },
+  "roles": {
+    "provisioner": "36895920-b36b-4b0c-8a6a-6762164de71e",
+    "cleanup": "927117fa-ab5d-42a2-b39e-762663171fa4",
+    "residueReader": "eff3d13d-aeac-4b96-94f8-9c03a1ceee69"
+  },
+  "liveBindings": "required-checksum-bound-input-with-no-default",
+  "cleanupAssignmentModel": "exact-resource-id-only",
+  "partialFailureModel": "owner-assisted-inventory-validated-subset",
+  "resourceCatalogCount": 23,
+  "cleanupParentCount": 13,
+  "keyVaultDisposition": "soft-deleted-retained-no-purge",
+  "automaticRetry": false,
+  "automaticRollback": false
+}

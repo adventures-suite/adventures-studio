@@ -7,9 +7,6 @@ namespace AdventuresSuite.DatabaseMigrator;
 /// <summary>Captures and classifies bounded migration evidence without changing database state.</summary>
 internal static class MigrationOperationalState
 {
-    private const string MigrationPrefix =
-        "AdventuresSuite.DatabaseMigrator.Database.Migrations.";
-
     internal static async Task<MigrationStateEvidence> CaptureAsync(string connectionString)
     {
         await using var connection = new SqlConnection(connectionString);
@@ -26,7 +23,8 @@ internal static class MigrationOperationalState
                           objects.type_desc COLLATE DATABASE_DEFAULT)
             FROM sys.objects AS objects
             INNER JOIN sys.schemas AS schemas ON schemas.schema_id = objects.schema_id
-            WHERE (schemas.name = N'planning' AND objects.name = N'TravelerParticipations')
+            WHERE (schemas.name = N'planning' AND objects.name IN
+                  (N'TravelerParticipations', N'AdventurePlanCreateResults'))
                OR objects.name LIKE N'%Companion%'
             ORDER BY schemas.name, objects.name, objects.type_desc;
             """);
@@ -44,6 +42,22 @@ internal static class MigrationOperationalState
                 ON (permissions.class = 1 AND schemas.schema_id = objects.schema_id)
                 OR (permissions.class = 3 AND schemas.schema_id = permissions.major_id)
             WHERE principals.name = N'AdventuresSuiteCompanionReadRuntime'
+            ORDER BY permissions.class, schemas.name, objects.name, permissions.permission_name;
+            """);
+        var planningPermissions = await ReadStringsAsync(connection, """
+            SELECT CONCAT(permissions.state_desc COLLATE DATABASE_DEFAULT, N'|',
+                          permissions.permission_name COLLATE DATABASE_DEFAULT, N'|',
+                          COALESCE(schemas.name COLLATE DATABASE_DEFAULT, N''), N'|',
+                          COALESCE(objects.name COLLATE DATABASE_DEFAULT, N''))
+            FROM sys.database_permissions AS permissions
+            INNER JOIN sys.database_principals AS principals
+                ON principals.principal_id = permissions.grantee_principal_id
+            LEFT JOIN sys.objects AS objects
+                ON permissions.class = 1 AND objects.object_id = permissions.major_id
+            LEFT JOIN sys.schemas AS schemas
+                ON (permissions.class = 1 AND schemas.schema_id = objects.schema_id)
+                OR (permissions.class = 3 AND schemas.schema_id = permissions.major_id)
+            WHERE principals.name = N'AdventuresSuitePlanningRuntime'
             ORDER BY permissions.class, schemas.name, objects.name, permissions.permission_name;
             """);
         var fingerprints = await ReadStringsAsync(connection, """
@@ -73,6 +87,7 @@ internal static class MigrationOperationalState
             journal,
             objects,
             permissions,
+            planningPermissions,
             fingerprints,
             Hash(fingerprints),
             await ObjectExistsAsync(connection, "planning.TravelerParticipations"),
@@ -107,21 +122,47 @@ internal static class MigrationOperationalState
                 SELECT COUNT(*) FROM sys.indexes
                 WHERE object_id = OBJECT_ID(N'planning.TravelerParticipations')
                   AND name = N'IX_TravelerParticipations_AuthorizedList';
+                """) == 1,
+            await ObjectExistsAsync(connection, "planning.AdventurePlanCreateResults"),
+            await PrincipalExistsAsync(connection, "AdventuresSuitePlanningRuntime"),
+            await ScalarAsync(connection, """
+                SELECT COUNT(*) FROM sys.database_role_members AS memberships
+                INNER JOIN sys.database_principals AS roles
+                    ON roles.principal_id = memberships.role_principal_id
+                WHERE roles.name = N'AdventuresSuitePlanningRuntime';
+                """),
+            await ScalarAsync(connection, """
+                SELECT COUNT(*) FROM sys.database_role_members AS memberships
+                INNER JOIN sys.database_principals AS members
+                    ON members.principal_id = memberships.member_principal_id
+                WHERE members.name = N'AdventuresSuitePlanningRuntime';
+                """),
+            await ScalarStringAsync(connection, """
+                SELECT COALESCE(owners.name, N'') FROM sys.database_principals AS roles
+                LEFT JOIN sys.database_principals AS owners
+                    ON owners.principal_id = roles.owning_principal_id
+                WHERE roles.name = N'AdventuresSuitePlanningRuntime';
+                """),
+            await ScalarAsync(connection, """
+                SELECT COUNT(*) FROM sys.objects
+                WHERE parent_object_id = OBJECT_ID(N'planning.AdventurePlanCreateResults')
+                  AND type IN (N'PK', N'UQ', N'F', N'C');
+                """),
+            await ScalarAsync(connection, """
+                SELECT COUNT(*) FROM sys.indexes
+                WHERE object_id = OBJECT_ID(N'planning.AdventurePlanCreateResults')
+                  AND name = N'IX_AdventurePlanCreateResults_Expiry';
                 """) == 1);
     }
 
     internal static MigrationJournalOutcome Classify(IReadOnlyList<string> journal)
     {
-        var migrationNumbers = journal
-            .Where(name => name.StartsWith(MigrationPrefix, StringComparison.Ordinal))
-            .Select(name => name[MigrationPrefix.Length..])
-            .Select(name => name[..4])
-            .ToArray();
-        var expectedThroughSix = Enumerable.Range(1, 6).Select(number => number.ToString("0000")).ToArray();
-        if (migrationNumbers.SequenceEqual(expectedThroughSix)) return MigrationJournalOutcome.At0006;
-        if (migrationNumbers.SequenceEqual(expectedThroughSix.Append("0007"))) return MigrationJournalOutcome.At0007;
-        if (migrationNumbers.SequenceEqual(expectedThroughSix.Append("0007").Append("0008")))
-            return MigrationJournalOutcome.At0008;
+        ArgumentNullException.ThrowIfNull(journal);
+        var catalog = MigrationCatalog.GetOrderedResourceNames(typeof(MigrationCatalog).Assembly);
+        if (journal.SequenceEqual(catalog.Take(6), StringComparer.Ordinal)) return MigrationJournalOutcome.At0006;
+        if (journal.SequenceEqual(catalog.Take(7), StringComparer.Ordinal)) return MigrationJournalOutcome.At0007;
+        if (journal.SequenceEqual(catalog.Take(8), StringComparer.Ordinal)) return MigrationJournalOutcome.At0008;
+        if (journal.SequenceEqual(catalog.Take(9), StringComparer.Ordinal)) return MigrationJournalOutcome.At0009;
         return MigrationJournalOutcome.Unexpected;
     }
 
@@ -170,6 +211,7 @@ internal sealed record MigrationStateEvidence(
     IReadOnlyList<string> Journal,
     IReadOnlyList<string> RelevantObjects,
     IReadOnlyList<string> CompanionPermissions,
+    IReadOnlyList<string> PlanningPermissions,
     IReadOnlyList<string> ApplicationDataSignatures,
     string ApplicationFingerprint,
     bool TravelerParticipationsExists,
@@ -178,12 +220,20 @@ internal sealed record MigrationStateEvidence(
     int CompanionParentRoleCount,
     string CompanionRoleOwner,
     int TravelerConstraintCount,
-    bool TravelerAuthorizedListIndexExists);
+    bool TravelerAuthorizedListIndexExists,
+    bool AdventurePlanCreateResultsExists,
+    bool PlanningRoleExists,
+    int PlanningRoleMemberCount,
+    int PlanningParentRoleCount,
+    string PlanningRoleOwner,
+    int AdventurePlanCreateResultConstraintCount,
+    bool AdventurePlanCreateResultExpiryIndexExists);
 
 internal enum MigrationJournalOutcome
 {
     At0006,
     At0007,
     At0008,
+    At0009,
     Unexpected
 }

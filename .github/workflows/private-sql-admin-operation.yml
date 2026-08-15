@@ -1,0 +1,138 @@
+name: Operate Private SQL Administrator Boundary
+on:
+  workflow_dispatch:
+    inputs:
+      operation_mode: { description: Exact separately approved operation, required: true, type: choice, options: [baseline, bootstrap, cleanup, denial-proof] }
+      approved_source_sha: { description: Exact approved protected-main SHA, required: true, type: string }
+      workflow_sha256: { description: Exact reviewed workflow SHA-256, required: true, type: string }
+      baseline_sql_sha256: { description: Exact reviewed baseline SQL SHA-256, required: true, type: string }
+      operation_id: { description: Unique reviewed operation ID, required: true, type: string }
+      package_run_id: { description: Exact protected-main package workflow run ID, required: true, type: string }
+      package_artifact_id: { description: Exact package artifact ID, required: true, type: string }
+      package_sha256: { description: Exact attested package SHA-256, required: true, type: string }
+      catalog_sha256: { description: Exact ordered migration catalog SHA-256, required: true, type: string }
+      administrator_identity_resource_id: { description: Exact immutable dedicated administrator UAMI resource ID, required: true, type: string }
+      administrator_client_id: { description: Exact dedicated administrator UAMI client ID, required: true, type: string }
+      administrator_principal_id: { description: Exact dedicated administrator UAMI principal ID, required: true, type: string }
+      migration_identity_resource_id: { description: Exact migration UAMI resource ID, required: true, type: string }
+      sql_server_resource_id: { description: Exact Azure SQL server resource ID, required: true, type: string }
+      sql_database_name: { description: Exact database name, required: true, type: string }
+      sql_private_endpoint_resource_id: { description: Exact private endpoint resource ID, required: true, type: string }
+      operation_approval_sha256: { description: Separate packet SHA-256; empty only for baseline, required: false, type: string }
+permissions: { contents: read }
+concurrency: { group: private-sql-administrator, cancel-in-progress: false }
+jobs:
+  operate:
+    environment: database-development
+    runs-on:
+      group: private-sql-migration-vnet
+      labels: adventures-suite-private-sql
+    timeout-minutes: 30
+    permissions: { contents: read, actions: read, attestations: read, id-token: write }
+    env:
+      SOURCE_SHA: ${{ inputs.approved_source_sha }}
+      PACKAGE_RUN_ID: ${{ inputs.package_run_id }}
+      ARTIFACT_ID: ${{ inputs.package_artifact_id }}
+      EXPECTED_PACKAGE_SHA256: ${{ inputs.package_sha256 }}
+      EXPECTED_CATALOG_SHA256: ${{ inputs.catalog_sha256 }}
+      EXPECTED_RUN_ID: ${{ inputs.package_run_id }}
+      EXPECTED_SOURCE_SHA: ${{ inputs.approved_source_sha }}
+      EXPECTED_SQL_HOST: ${{ vars.AZURE_SQL_SERVER }}.database.windows.net
+      EXPECTED_PRIVATE_IP: ${{ vars.AZURE_SQL_PRIVATE_IP }}
+      ADVENTURESSUITE_ADMIN_TENANT_ID: ${{ vars.WORKFORCE_TENANT_ID }}
+      ADVENTURESSUITE_ADMIN_CLIENT_ID: ${{ inputs.administrator_client_id }}
+      ADVENTURESSUITE_ADMIN_PRINCIPAL_ID: ${{ inputs.administrator_principal_id }}
+      ADVENTURESSUITE_ADMIN_OPERATION_ID: ${{ inputs.operation_id }}
+      ADVENTURESSUITE_ADMIN_WORKFLOW_SHA256: ${{ inputs.workflow_sha256 }}
+      ADVENTURESSUITE_ADMIN_BASELINE_SQL_SHA256: ${{ inputs.baseline_sql_sha256 }}
+      ADVENTURESSUITE_ADMIN_IDENTITY_RESOURCE_ID: ${{ inputs.administrator_identity_resource_id }}
+      ADVENTURESSUITE_SQL_SERVER_RESOURCE_ID: ${{ inputs.sql_server_resource_id }}
+      ADVENTURESSUITE_SQL_PRIVATE_ENDPOINT_RESOURCE_ID: ${{ inputs.sql_private_endpoint_resource_id }}
+      ADVENTURESSUITE_PACKAGE_RUN_ID: ${{ inputs.package_run_id }}
+      ADVENTURESSUITE_PACKAGE_ARTIFACT_ID: ${{ inputs.package_artifact_id }}
+      ADVENTURESSUITE_PACKAGE_SHA256: ${{ inputs.package_sha256 }}
+      ADVENTURESSUITE_CATALOG_SHA256: ${{ inputs.catalog_sha256 }}
+      ADVENTURESSUITE_MIGRATION_PRINCIPAL_ID: ${{ vars.MIGRATION_EXECUTION_PRINCIPAL_ID }}
+      ADVENTURESSUITE_MIGRATION_PRINCIPAL_CLIENT_ID: ${{ vars.MIGRATION_EXECUTION_CLIENT_ID }}
+      ADVENTURESSUITE_MIGRATION_PRINCIPAL_NAME: AdventuresSuiteMigrationDev
+      ADVENTURESSUITE_SQL_SERVER: ${{ vars.AZURE_SQL_SERVER }}
+      ADVENTURESSUITE_SQL_DATABASE: ${{ inputs.sql_database_name }}
+      ADVENTURESSUITE_RELEASE_SHA: ${{ inputs.approved_source_sha }}
+    steps:
+      - name: Initialize trusted runner-temporary paths
+        run: |
+          set -euo pipefail
+          test -n "${RUNNER_TEMP:-}" && test "${RUNNER_TEMP#/}" != "$RUNNER_TEMP" && test "$RUNNER_TEMP" != "/"
+          {
+            printf 'ARTIFACT_DIRECTORY=%s/sql-admin/artifact\n' "$RUNNER_TEMP"
+            printf 'WORK_DIRECTORY=%s/sql-admin\n' "$RUNNER_TEMP"
+            printf 'VERIFIED_DIRECTORY=%s/sql-admin/verified\n' "$RUNNER_TEMP"
+            printf 'ADVENTURESSUITE_ADMIN_BASELINE_SQL_PATH=%s/infrastructure/private-sql-admin-operation/baseline.sql\n' "$GITHUB_WORKSPACE"
+          } >> "$GITHUB_ENV"
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: "${{ inputs.approved_source_sha }}", fetch-depth: 0 }
+      - name: Validate immutable operation binding
+        env:
+          OPERATION_MODE: "${{ inputs.operation_mode }}"
+          REPOSITORY_ID: "${{ github.repository_id }}"
+          ORGANIZATION_ID: "${{ github.repository_owner_id }}"
+          SOURCE_SHA: "${{ inputs.approved_source_sha }}"
+          CURRENT_PROTECTED_MAIN_SHA: "${{ github.sha }}"
+          WORKFLOW_SHA256: "${{ inputs.workflow_sha256 }}"
+          BASELINE_SQL_SHA256: "${{ inputs.baseline_sql_sha256 }}"
+          OPERATION_ID: "${{ inputs.operation_id }}"
+          PACKAGE_RUN_ID: "${{ inputs.package_run_id }}"
+          PACKAGE_ARTIFACT_ID: "${{ inputs.package_artifact_id }}"
+          PACKAGE_SHA256: "${{ inputs.package_sha256 }}"
+          CATALOG_SHA256: "${{ inputs.catalog_sha256 }}"
+          ADMINISTRATOR_IDENTITY_RESOURCE_ID: "${{ inputs.administrator_identity_resource_id }}"
+          ADMINISTRATOR_CLIENT_ID: "${{ inputs.administrator_client_id }}"
+          ADMINISTRATOR_PRINCIPAL_ID: "${{ inputs.administrator_principal_id }}"
+          MIGRATION_IDENTITY_RESOURCE_ID: "${{ inputs.migration_identity_resource_id }}"
+          MIGRATION_PRINCIPAL_ID: "${{ vars.MIGRATION_EXECUTION_PRINCIPAL_ID }}"
+          MIGRATION_CLIENT_ID: "${{ vars.MIGRATION_EXECUTION_CLIENT_ID }}"
+          SQL_SERVER_RESOURCE_ID: "${{ inputs.sql_server_resource_id }}"
+          SQL_DATABASE_NAME: "${{ inputs.sql_database_name }}"
+          SQL_PRIVATE_ENDPOINT_RESOURCE_ID: "${{ inputs.sql_private_endpoint_resource_id }}"
+          OPERATION_APPROVAL_SHA256: "${{ inputs.operation_approval_sha256 }}"
+        run: infrastructure/private-sql-admin-operation/validate-operation.sh
+      - name: Require exact protected main and checksums
+        env: { EXPECTED_WORKFLOW_SHA256: "${{ inputs.workflow_sha256 }}" }
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          git fetch --quiet origin main
+          test "$(git rev-parse origin/main)" = "$SOURCE_SHA"
+          test "$(sha256sum .github/workflows/private-sql-admin-operation.yml | cut -d' ' -f1)" = "$EXPECTED_WORKFLOW_SHA256"
+          test "$(sha256sum infrastructure/private-sql-admin-operation/baseline.sql | cut -d' ' -f1)" = "$ADVENTURESSUITE_ADMIN_BASELINE_SQL_SHA256"
+      - uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac # v2
+        with:
+          client-id: ${{ inputs.administrator_client_id }}
+          tenant-id: ${{ vars.WORKFORCE_TENANT_ID }}
+          allow-no-subscriptions: true
+      - name: Retrieve exact package artifact
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: .github/scripts/retrieve-reviewed-migration-package.sh
+      - name: Verify package, locks, catalog, digest, and attestation
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: .github/scripts/verify-reviewed-migration-package.sh
+      - name: Prove private DNS and TCP reachability without SQL
+        run: .github/scripts/prove-private-sql-network.sh
+      - name: Execute exactly one approved administrator operation
+        env: { OPERATION_MODE: "${{ inputs.operation_mode }}" }
+        run: |
+          set -euo pipefail
+          case "$OPERATION_MODE" in
+            baseline) exec "$VERIFIED_DIRECTORY/AdventuresSuite.DatabaseMigrator" --admin-baseline ;;
+            bootstrap) exec "$VERIFIED_DIRECTORY/AdventuresSuite.DatabaseMigrator" --admin-bootstrap ;;
+            cleanup) exec "$VERIFIED_DIRECTORY/AdventuresSuite.DatabaseMigrator" --admin-cleanup ;;
+            denial-proof) exec "$VERIFIED_DIRECTORY/AdventuresSuite.DatabaseMigrator" --admin-denial-proof ;;
+            *) exit 1 ;;
+          esac
+      - if: always()
+        name: Clear Azure session and temporary package
+        run: |
+          az account clear
+          if [ -n "${WORK_DIRECTORY:-}" ] && [ -d "$WORK_DIRECTORY" ]; then
+            find "$WORK_DIRECTORY" -mindepth 1 -delete
+          fi

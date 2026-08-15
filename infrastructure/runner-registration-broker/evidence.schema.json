@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "repositoryId", "ownerId", "sourceSha", "operationHash", "purpose", "labelHash", "state", "deleteAttempts", "exactResidueCount", "deadlineUtc", "result"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "repositoryId": { "const": 1317655952 },
+    "ownerId": { "const": 316268438 },
+    "sourceSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "operationHash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "purpose": { "enum": ["private-migration", "sql-administrator-baseline"] },
+    "labelHash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "runnerId": { "type": ["integer", "null"], "minimum": 1 },
+    "runnerNameHash": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+    "appId": { "type": ["integer", "null"], "minimum": 1 },
+    "installationId": { "type": ["integer", "null"], "minimum": 1 },
+    "state": { "enum": ["Approved", "Issuing", "Issued", "Cleaning", "Closed", "Failed"] },
+    "deleteAttempts": { "type": "integer", "minimum": 0, "maximum": 1 },
+    "exactResidueCount": { "type": "integer", "minimum": 0, "maximum": 2 },
+    "deadlineUtc": { "type": "string", "format": "date-time", "maxLength": 32 },
+    "result": { "enum": ["pending", "success", "failed", "ambiguous", "expired", "cancelled", "runnerLost", "responseLost"] }
+  }
+}

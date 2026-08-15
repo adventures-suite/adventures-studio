@@ -11,6 +11,7 @@ internal static class AzureDevelopmentBootstrapper
     private const string RuntimeRoleName = "AdventuresSuiteAuthenticationRuntime";
     private const string MembershipRuntimeRoleName = "AdventuresSuiteMembershipRuntime";
     private const string CompanionReadRuntimeRoleName = "AdventuresSuiteCompanionReadRuntime";
+    private const string PlanningRuntimeRoleName = "AdventuresSuitePlanningRuntime";
     private const string WrappingKeyName = "adventures-suite-data-protection";
     private const string CertificateName = "adventures-suite-external-id";
 
@@ -27,33 +28,153 @@ internal static class AzureDevelopmentBootstrapper
             migrationPrincipalName,
             BuildMigrationGrants);
 
+    /// <summary>Creates the contained migration principal through an already authenticated administrator connection.</summary>
+    public static Task BootstrapMigrationIdentityAsync(
+        SqlConnection administratorConnection,
+        string? migrationPrincipalId,
+        string? migrationPrincipalClientId,
+        string? migrationPrincipalName) =>
+        ExecutePrincipalCommandAsync(
+            administratorConnection,
+            migrationPrincipalId,
+            migrationPrincipalClientId,
+            migrationPrincipalName,
+            BuildMigrationGrants);
+
+    /// <summary>Removes only the temporary migration principal and its exact grants.</summary>
+    public static async Task CleanupMigrationIdentityAsync(
+        SqlConnection administratorConnection,
+        string? migrationPrincipalId,
+        string? migrationPrincipalClientId,
+        string? migrationPrincipalName)
+    {
+        if (!Guid.TryParse(migrationPrincipalId, out var objectId)
+            || !Guid.TryParse(migrationPrincipalClientId, out var clientId))
+            throw new InvalidOperationException("The approved workload principal object and client identities are required.");
+
+        var alias = CreatePrincipalAlias(migrationPrincipalName, objectId);
+        var quotedAlias = QuoteIdentifier(alias);
+        await using var transaction = (SqlTransaction)await administratorConnection.BeginTransactionAsync();
+        await using var command = administratorConnection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = $"""
+            SET XACT_ABORT ON;
+            IF DATABASE_PRINCIPAL_ID(@AliasParameter) IS NOT NULL
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1 FROM sys.database_principals
+                    WHERE principal_id = DATABASE_PRINCIPAL_ID(@AliasParameter)
+                      AND type = 'E' AND CAST(sid AS uniqueidentifier) = @ClientIdParameter)
+                    THROW 51000, 'The migration principal does not match the approved workload identity.', 1;
+                REVOKE CONNECT TO {quotedAlias};
+                REVOKE CREATE TABLE TO {quotedAlias};
+                REVOKE VIEW DEFINITION TO {quotedAlias};
+                REVOKE CONTROL ON SCHEMA::planning FROM {quotedAlias};
+                REVOKE CONTROL ON SCHEMA::auth FROM {quotedAlias};
+                REVOKE CONTROL ON SCHEMA::audit FROM {quotedAlias};
+                REVOKE SELECT, INSERT, UPDATE, DELETE ON OBJECT::dbo.AdventuresSuiteSchemaVersions FROM {quotedAlias};
+                DROP USER {quotedAlias};
+            END;
+            IF DATABASE_PRINCIPAL_ID(@AliasParameter) IS NOT NULL
+                THROW 51000, 'The migration principal remains after cleanup.', 1;
+            DECLARE @SchemaCount int = (SELECT COUNT(*) FROM sys.schemas
+                WHERE name IN (N'planning', N'auth', N'audit'));
+            DECLARE @RoleCount int = (SELECT COUNT(*) FROM sys.database_principals
+                WHERE type = 'R' AND name IN (N'AdventuresSuiteAuthenticationRuntime',
+                    N'AdventuresSuiteMembershipRuntime', N'AdventuresSuiteCompanionReadRuntime',
+                    N'AdventuresSuitePlanningRuntime'));
+            DECLARE @JournalCount int = CASE WHEN OBJECT_ID(N'dbo.AdventuresSuiteSchemaVersions', N'U') IS NULL THEN 0 ELSE 1 END;
+            IF NOT ((@SchemaCount = 0 AND @RoleCount = 0 AND @JournalCount = 0)
+                OR (@SchemaCount = 3 AND @RoleCount = 4 AND @JournalCount = 1))
+                THROW 51000, 'Administrator prerequisite residue is partial after cleanup.', 1;
+            IF @SchemaCount = 3 AND EXISTS (
+                SELECT 1 FROM sys.schemas AS schemas
+                INNER JOIN sys.database_principals AS owners ON owners.principal_id = schemas.principal_id
+                WHERE schemas.name IN (N'planning', N'auth', N'audit') AND owners.name <> N'db_ddladmin')
+                THROW 51000, 'A retained migration schema has the wrong owner.', 1;
+            IF @RoleCount = 4 AND EXISTS (
+                SELECT 1 FROM sys.database_principals AS roles
+                LEFT JOIN sys.database_principals AS owners ON owners.principal_id = roles.owning_principal_id
+                WHERE roles.name IN (N'AdventuresSuiteAuthenticationRuntime',
+                    N'AdventuresSuiteMembershipRuntime', N'AdventuresSuiteCompanionReadRuntime',
+                    N'AdventuresSuitePlanningRuntime') AND owners.name <> N'dbo')
+                THROW 51000, 'A retained runtime role has the wrong owner.', 1;
+            IF @JournalCount = 1 AND ((SELECT COUNT(*) FROM sys.columns
+                    WHERE object_id = OBJECT_ID(N'dbo.AdventuresSuiteSchemaVersions')) <> 3
+                OR NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.AdventuresSuiteSchemaVersions') AND name=N'Id' AND system_type_id=56 AND is_identity=1 AND is_nullable=0)
+                OR NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.AdventuresSuiteSchemaVersions') AND name=N'ScriptName' AND system_type_id=231 AND max_length=510 AND is_nullable=0)
+                OR NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.AdventuresSuiteSchemaVersions') AND name=N'Applied' AND system_type_id=61 AND is_nullable=0))
+                THROW 51000, 'The retained DbUp journal has the wrong shape.', 1;
+            """;
+        command.Parameters.AddWithValue("@AliasParameter", alias);
+        command.Parameters.AddWithValue("@ClientIdParameter", clientId);
+        try
+        {
+            await command.ExecuteNonQueryAsync();
+            await transaction.CommitAsync();
+        }
+        catch
+        {
+            if (transaction.Connection is not null) await transaction.RollbackAsync();
+            throw;
+        }
+    }
+
     /// <summary>Builds the migration-only grants for an approved contained principal alias.</summary>
     internal static string BuildMigrationGrants(string principalAlias) => $"""
-        IF DATABASE_PRINCIPAL_ID(N'{RuntimeRoleName}') IS NOT NULL
-            AND NOT EXISTS (
-                SELECT 1
-                FROM sys.database_principals
-                WHERE name = N'{RuntimeRoleName}' AND type = 'R')
-            THROW 51000, 'The authentication runtime principal name is not an approved database role.', 1;
+        IF SCHEMA_ID(N'planning') IS NULL EXEC(N'CREATE SCHEMA planning AUTHORIZATION db_ddladmin;');
+        IF SCHEMA_ID(N'auth') IS NULL EXEC(N'CREATE SCHEMA auth AUTHORIZATION db_ddladmin;');
+        IF SCHEMA_ID(N'audit') IS NULL EXEC(N'CREATE SCHEMA audit AUTHORIZATION db_ddladmin;');
+        IF EXISTS (
+            SELECT 1 FROM sys.schemas AS schemas
+            INNER JOIN sys.database_principals AS owners ON owners.principal_id = schemas.principal_id
+            WHERE schemas.name IN (N'planning', N'auth', N'audit') AND owners.name <> N'db_ddladmin')
+            THROW 51000, 'A migration schema does not have the approved administrator owner.', 1;
+
         IF DATABASE_PRINCIPAL_ID(N'{RuntimeRoleName}') IS NULL
             CREATE ROLE [{RuntimeRoleName}] AUTHORIZATION [dbo];
-        IF DATABASE_PRINCIPAL_ID(N'{MembershipRuntimeRoleName}') IS NOT NULL
-            AND NOT EXISTS (
-                SELECT 1
-                FROM sys.database_principals
-                WHERE name = N'{MembershipRuntimeRoleName}' AND type = 'R')
-            THROW 51000, 'The membership runtime principal name is not an approved database role.', 1;
         IF DATABASE_PRINCIPAL_ID(N'{MembershipRuntimeRoleName}') IS NULL
             CREATE ROLE [{MembershipRuntimeRoleName}] AUTHORIZATION [dbo];
+        IF DATABASE_PRINCIPAL_ID(N'{CompanionReadRuntimeRoleName}') IS NULL
+            CREATE ROLE [{CompanionReadRuntimeRoleName}] AUTHORIZATION [dbo];
+        IF DATABASE_PRINCIPAL_ID(N'{PlanningRuntimeRoleName}') IS NULL
+            CREATE ROLE [{PlanningRuntimeRoleName}] AUTHORIZATION [dbo];
+        IF EXISTS (
+            SELECT 1 FROM sys.database_principals AS roles
+            LEFT JOIN sys.database_principals AS owners ON owners.principal_id = roles.owning_principal_id
+            WHERE roles.name IN (N'{RuntimeRoleName}', N'{MembershipRuntimeRoleName}',
+                N'{CompanionReadRuntimeRoleName}', N'{PlanningRuntimeRoleName}')
+              AND (roles.type <> 'R' OR owners.name <> N'dbo'))
+            THROW 51000, 'A runtime principal is not an approved dbo-owned database role.', 1;
+
+        IF OBJECT_ID(N'dbo.AdventuresSuiteSchemaVersions') IS NULL
+            CREATE TABLE dbo.AdventuresSuiteSchemaVersions
+            (
+                Id int IDENTITY(1,1) NOT NULL CONSTRAINT PK_AdventuresSuiteSchemaVersions PRIMARY KEY,
+                ScriptName nvarchar(255) NOT NULL,
+                Applied datetime NOT NULL
+            );
+        IF OBJECT_ID(N'dbo.AdventuresSuiteSchemaVersions', N'U') IS NULL
+            THROW 51000, 'The migration journal name is not an approved table.', 1;
+        IF (SELECT COUNT(*) FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.AdventuresSuiteSchemaVersions')) <> 3
+            OR NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.AdventuresSuiteSchemaVersions') AND name=N'Id' AND system_type_id=56 AND is_identity=1 AND is_nullable=0)
+            OR NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.AdventuresSuiteSchemaVersions') AND name=N'ScriptName' AND system_type_id=231 AND max_length=510 AND is_nullable=0)
+            OR NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.AdventuresSuiteSchemaVersions') AND name=N'Applied' AND system_type_id=61 AND is_nullable=0)
+            THROW 51000, 'The migration journal does not match the approved DbUp shape.', 1;
 
         ALTER USER {principalAlias} WITH DEFAULT_SCHEMA = [dbo];
-        IF ISNULL(IS_ROLEMEMBER(N'db_ddladmin', @AliasParameter), 0) <> 1
-            ALTER ROLE [db_ddladmin] ADD MEMBER {principalAlias};
-        IF ISNULL(IS_ROLEMEMBER(N'db_datareader', @AliasParameter), 0) <> 1
-            ALTER ROLE [db_datareader] ADD MEMBER {principalAlias};
-        IF ISNULL(IS_ROLEMEMBER(N'db_datawriter', @AliasParameter), 0) <> 1
-            ALTER ROLE [db_datawriter] ADD MEMBER {principalAlias};
+        IF ISNULL(IS_ROLEMEMBER(N'db_owner', @AliasParameter), 0) = 1 ALTER ROLE [db_owner] DROP MEMBER {principalAlias};
+        IF ISNULL(IS_ROLEMEMBER(N'db_ddladmin', @AliasParameter), 0) = 1 ALTER ROLE [db_ddladmin] DROP MEMBER {principalAlias};
+        IF ISNULL(IS_ROLEMEMBER(N'db_datareader', @AliasParameter), 0) = 1 ALTER ROLE [db_datareader] DROP MEMBER {principalAlias};
+        IF ISNULL(IS_ROLEMEMBER(N'db_datawriter', @AliasParameter), 0) = 1 ALTER ROLE [db_datawriter] DROP MEMBER {principalAlias};
         GRANT CONNECT TO {principalAlias};
+        GRANT CREATE TABLE TO {principalAlias};
+        GRANT VIEW DEFINITION TO {principalAlias};
+        GRANT CONTROL ON SCHEMA::planning TO {principalAlias};
+        GRANT CONTROL ON SCHEMA::auth TO {principalAlias};
+        GRANT CONTROL ON SCHEMA::audit TO {principalAlias};
+        GRANT SELECT, INSERT ON OBJECT::dbo.AdventuresSuiteSchemaVersions TO {principalAlias};
+        REVOKE UPDATE, DELETE ON OBJECT::dbo.AdventuresSuiteSchemaVersions FROM {principalAlias};
         """;
 
     /// <summary>Binds the runtime principal after migrations have created the application role.</summary>
@@ -382,17 +503,34 @@ internal static class AzureDevelopmentBootstrapper
         await using var command = connection.CreateCommand();
         command.CommandText = """
             IF HAS_PERMS_BY_NAME(DB_NAME(), 'DATABASE', 'CONNECT') <> 1
-                OR IS_ROLEMEMBER('db_ddladmin') <> 1
-                OR IS_ROLEMEMBER('db_datareader') <> 1
-                OR IS_ROLEMEMBER('db_datawriter') <> 1
+                OR HAS_PERMS_BY_NAME(DB_NAME(), 'DATABASE', 'CREATE TABLE') <> 1
+                OR HAS_PERMS_BY_NAME(DB_NAME(), 'DATABASE', 'VIEW DEFINITION') <> 1
+                OR HAS_PERMS_BY_NAME(DB_NAME(), 'DATABASE', 'ALTER ANY ROLE') <> 0
+                OR HAS_PERMS_BY_NAME(DB_NAME(), 'DATABASE', 'CREATE SCHEMA') <> 0
+                OR ISNULL(IS_ROLEMEMBER('db_owner'), 0) <> 0
+                OR ISNULL(IS_ROLEMEMBER('db_ddladmin'), 0) <> 0
+                OR ISNULL(IS_ROLEMEMBER('db_datareader'), 0) <> 0
+                OR ISNULL(IS_ROLEMEMBER('db_datawriter'), 0) <> 0
+                OR EXISTS (SELECT 1 FROM sys.database_role_members WHERE member_principal_id = DATABASE_PRINCIPAL_ID())
+                OR HAS_PERMS_BY_NAME(N'planning', 'SCHEMA', 'CONTROL') <> 1
+                OR HAS_PERMS_BY_NAME(N'auth', 'SCHEMA', 'CONTROL') <> 1
+                OR HAS_PERMS_BY_NAME(N'audit', 'SCHEMA', 'CONTROL') <> 1
+                OR HAS_PERMS_BY_NAME(N'dbo', 'SCHEMA', 'CONTROL') <> 0
                 OR OBJECT_ID(N'dbo.AdventuresSuiteSchemaVersions', N'U') IS NULL
-                OR OBJECT_ID(N'auth.Users', N'U') IS NULL
-                OR OBJECT_ID(N'auth.ExternalIdentities', N'U') IS NULL
-                OR OBJECT_ID(N'auth.UserSessions', N'U') IS NULL
-                OR OBJECT_ID(N'auth.CreatorMemberships', N'U') IS NULL
-                OR OBJECT_ID(N'auth.CreatorMembershipRoles', N'U') IS NULL
-                OR OBJECT_ID(N'auth.CreatorMembershipPermissionGrants', N'U') IS NULL
-                OR OBJECT_ID(N'audit.AuditEvents', N'U') IS NULL
+                OR HAS_PERMS_BY_NAME(N'dbo.AdventuresSuiteSchemaVersions', 'OBJECT', 'SELECT') <> 1
+                OR HAS_PERMS_BY_NAME(N'dbo.AdventuresSuiteSchemaVersions', 'OBJECT', 'INSERT') <> 1
+                OR HAS_PERMS_BY_NAME(N'dbo.AdventuresSuiteSchemaVersions', 'OBJECT', 'UPDATE') <> 0
+                OR HAS_PERMS_BY_NAME(N'dbo.AdventuresSuiteSchemaVersions', 'OBJECT', 'DELETE') <> 0
+                OR (SELECT COUNT(*) FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.AdventuresSuiteSchemaVersions')) <> 3
+                OR EXISTS (
+                    SELECT 1 FROM sys.database_permissions
+                    WHERE grantee_principal_id = DATABASE_PRINCIPAL_ID()
+                      AND NOT (
+                        (class = 0 AND permission_name IN (N'CONNECT', N'CREATE TABLE', N'VIEW DEFINITION') AND state = 'G')
+                        OR (class = 3 AND permission_name = N'CONTROL' AND state = 'G'
+                            AND major_id IN (SCHEMA_ID(N'planning'), SCHEMA_ID(N'auth'), SCHEMA_ID(N'audit')))
+                        OR (class = 1 AND major_id = OBJECT_ID(N'dbo.AdventuresSuiteSchemaVersions')
+                            AND permission_name IN (N'SELECT', N'INSERT') AND state = 'G')))
                 THROW 51000, 'Migration permissions or schema are unavailable.', 1;
 
             SELECT TOP (0) ScriptName FROM dbo.AdventuresSuiteSchemaVersions;
@@ -466,10 +604,26 @@ internal static class AzureDevelopmentBootstrapper
                 "The approved workload principal object and client identities are required.");
         }
 
-        var alias = CreatePrincipalAlias(principalName, objectId);
-        var quotedAlias = QuoteIdentifier(alias);
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
+        await ExecutePrincipalCommandAsync(connection, principalId, principalClientId, principalName, buildGrants);
+    }
+
+    private static async Task ExecutePrincipalCommandAsync(
+        SqlConnection connection,
+        string? principalId,
+        string? principalClientId,
+        string? principalName,
+        Func<string, string> buildGrants)
+    {
+        if (!Guid.TryParse(principalId, out var objectId)
+            || !Guid.TryParse(principalClientId, out var clientId))
+            throw new InvalidOperationException(
+                "The approved workload principal object and client identities are required.");
+        if (connection.State != System.Data.ConnectionState.Open)
+            throw new InvalidOperationException("The administrator SQL connection must already be open.");
+        var alias = CreatePrincipalAlias(principalName, objectId);
+        var quotedAlias = QuoteIdentifier(alias);
         await using var transaction = (SqlTransaction)await connection.BeginTransactionAsync();
         await using var command = connection.CreateCommand();
         command.Transaction = transaction;
@@ -478,8 +632,8 @@ internal static class AzureDevelopmentBootstrapper
             DECLARE @PrincipalId int = DATABASE_PRINCIPAL_ID(@AliasParameter);
             IF @PrincipalId IS NULL
             BEGIN
-                EXEC(N'CREATE USER {quotedAlias} FROM EXTERNAL PROVIDER WITH OBJECT_ID='''
-                    + @ObjectIdParameter + N''';');
+                DECLARE @SidLiteral varchar(34) = CONVERT(varchar(34), CONVERT(binary(16), @ClientIdParameter), 1);
+                EXEC(N'CREATE USER {quotedAlias} WITH SID = ' + @SidLiteral + N', TYPE = E;');
                 SET @PrincipalId = DATABASE_PRINCIPAL_ID(@AliasParameter);
             END;
 
@@ -493,7 +647,6 @@ internal static class AzureDevelopmentBootstrapper
 
             {buildGrants(quotedAlias)}
             """;
-        command.Parameters.AddWithValue("@ObjectIdParameter", objectId.ToString());
         command.Parameters.AddWithValue("@ClientIdParameter", clientId);
         command.Parameters.AddWithValue("@AliasParameter", alias);
         try

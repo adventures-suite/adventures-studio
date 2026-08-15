@@ -37,7 +37,9 @@ SQL grants must be reviewed before deployment integration is enabled.
 
 ## Deployment Networking
 
-Deployment integration is intentionally blocked until private runner access, an
-Azure-hosted migration job, or a tightly bounded temporary dev firewall rule is
-approved and documented. Azure SQL must not remain open to the public internet
-for GitHub-hosted migrations.
+Deployment integration is intentionally blocked until the separately reviewed
+one-job ephemeral Azure VM runner exists in the development VNet. It must use
+the attested self-contained package, migration managed identity, private DNS,
+and the Azure SQL private endpoint, then be independently deleted. Public SQL,
+temporary firewall rules, persistent runners, and GitHub-hosted runners
+connecting directly to private SQL are prohibited.

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion","operationId","sourceSha","catalogSha256","entries","result"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "operationId": { "type": "string", "pattern": "^broker-foundation-(inventory|residue)-[a-z0-9]{16,64}$" },
+    "sourceSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "catalogSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "entries": {
+      "type": "array", "minItems": 23, "maxItems": 23,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id","type","state"],
+        "properties": {
+          "id": { "type": "string", "maxLength": 512 },
+          "type": { "type": "string", "maxLength": 128 },
+          "state": { "enum": ["VerifiedPresent","VerifiedAbsent","SoftDeletedRetained","Failure","Ambiguous"] }
+        }
+      }
+    },
+    "result": { "enum": ["Verified","Clean","Failure","Ambiguous"] }
+  }
+}

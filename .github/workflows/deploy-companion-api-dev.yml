@@ -140,13 +140,41 @@ jobs:
           done
 
           jq -e '
+            def exact_problem_response:
+              ((.content | keys) == ["application/problem+json"]) and
+              (.content["application/problem+json"].schema["$ref"] == "#/components/schemas/CompanionProblemDto");
+            def exact_read_operation($operationId; $successSchema):
+              (.operationId == $operationId) and
+              (.tags == ["AdventuresCompanion"]) and
+              ((.responses | keys) == ["200", "304", "400", "401", "403", "404", "500"]) and
+              ((.responses["200"].content | keys) == ["application/json"]) and
+              (.responses["200"].content["application/json"].schema["$ref"] == $successSchema) and
+              (.responses["304"] | has("content") | not) and
+              (.responses["400"] | exact_problem_response) and
+              (.responses["401"] | exact_problem_response) and
+              (.responses["403"] | exact_problem_response) and
+              (.responses["404"] | exact_problem_response) and
+              (.responses["500"] | exact_problem_response);
             (.openapi | startswith("3.1")) and
             ((.paths | keys) == [
               "/v1/companion/adventures",
-              "/v1/companion/adventures/{adventureId}"
+              "/v1/companion/adventures/{adventureId}",
+              "/v1/companion/adventures/{adventureId}/today"
             ]) and
-            (.paths["/v1/companion/adventures"].get.operationId == "ListCompanionAdventures") and
-            (.paths["/v1/companion/adventures/{adventureId}"].get.operationId == "GetCompanionAdventure")
+            (.security == [{"companionOAuth": ["Companion.Access"]}]) and
+            (.components.securitySchemes | keys == ["companionOAuth"]) and
+            (.components.securitySchemes.companionOAuth.type == "oauth2") and
+            (.components.securitySchemes.companionOAuth.flows | keys == ["authorizationCode"]) and
+            (.components.securitySchemes.companionOAuth.flows.authorizationCode.scopes | keys == ["Companion.Access"]) and
+            (.paths["/v1/companion/adventures"] | keys == ["get"]) and
+            (.paths["/v1/companion/adventures/{adventureId}"] | keys == ["get"]) and
+            (.paths["/v1/companion/adventures/{adventureId}/today"] | keys == ["get"]) and
+            (.paths["/v1/companion/adventures"].get |
+              exact_read_operation("ListCompanionAdventures"; "#/components/schemas/CompanionAdventureCollectionDto")) and
+            (.paths["/v1/companion/adventures/{adventureId}"].get |
+              exact_read_operation("GetCompanionAdventure"; "#/components/schemas/CompanionAdventureDto")) and
+            (.paths["/v1/companion/adventures/{adventureId}/today"].get |
+              exact_read_operation("GetCompanionToday"; "#/components/schemas/CompanionTodayDto"))
           ' "${{ env.EVIDENCE_DIR }}/companion-v1.openapi.json" >/dev/null
           kill "$api_pid"
           wait "$api_pid" || true

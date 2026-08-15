@@ -31,8 +31,11 @@ public sealed class CompanionOpenApiTests(CompanionApiFactory factory)
                 "/v1/companion/adventures/{adventureId}/today"
             },
             paths.EnumerateObject().Select(value => value.Name).Order(StringComparer.Ordinal));
+        AssertExactAuthorization(document.RootElement);
         var operation = paths.GetProperty("/v1/companion/adventures").GetProperty("get");
+        AssertGetOnly(paths.GetProperty("/v1/companion/adventures"));
         Assert.Equal("ListCompanionAdventures", operation.GetProperty("operationId").GetString());
+        AssertExactReadResponses(operation, "CompanionAdventureCollectionDto");
         Assert.False(string.IsNullOrWhiteSpace(operation.GetProperty("summary").GetString()));
         Assert.False(string.IsNullOrWhiteSpace(operation.GetProperty("description").GetString()));
         var responses = operation.GetProperty("responses");
@@ -46,7 +49,9 @@ public sealed class CompanionOpenApiTests(CompanionApiFactory factory)
             Assert.False(string.IsNullOrWhiteSpace(parameter.GetProperty("description").GetString())));
 
         var detail = paths.GetProperty("/v1/companion/adventures/{adventureId}").GetProperty("get");
+        AssertGetOnly(paths.GetProperty("/v1/companion/adventures/{adventureId}"));
         Assert.Equal("GetCompanionAdventure", detail.GetProperty("operationId").GetString());
+        AssertExactReadResponses(detail, "CompanionAdventureDto");
         Assert.False(string.IsNullOrWhiteSpace(detail.GetProperty("summary").GetString()));
         Assert.False(string.IsNullOrWhiteSpace(detail.GetProperty("description").GetString()));
         var detailResponses = detail.GetProperty("responses");
@@ -59,7 +64,9 @@ public sealed class CompanionOpenApiTests(CompanionApiFactory factory)
         Assert.False(string.IsNullOrWhiteSpace(detailParameter.GetProperty("description").GetString()));
 
         var today = paths.GetProperty("/v1/companion/adventures/{adventureId}/today").GetProperty("get");
+        AssertGetOnly(paths.GetProperty("/v1/companion/adventures/{adventureId}/today"));
         Assert.Equal("GetCompanionToday", today.GetProperty("operationId").GetString());
+        AssertExactReadResponses(today, "CompanionTodayDto");
         Assert.False(string.IsNullOrWhiteSpace(today.GetProperty("summary").GetString()));
         Assert.Contains("does not establish a booking", today.GetProperty("description").GetString(),
             StringComparison.Ordinal);
@@ -71,6 +78,49 @@ public sealed class CompanionOpenApiTests(CompanionApiFactory factory)
         Assert.Equal("path", todayParameter.GetProperty("in").GetString());
         Assert.True(todayParameter.GetProperty("required").GetBoolean());
         Assert.False(string.IsNullOrWhiteSpace(todayParameter.GetProperty("description").GetString()));
+    }
+
+    private static void AssertExactAuthorization(JsonElement document)
+    {
+        var requirement = Assert.Single(document.GetProperty("security").EnumerateArray());
+        var scheme = Assert.Single(requirement.EnumerateObject());
+        Assert.Equal("companionOAuth", scheme.Name);
+        Assert.Equal(["Companion.Access"], scheme.Value.EnumerateArray().Select(value => value.GetString()));
+
+        var schemes = document.GetProperty("components").GetProperty("securitySchemes");
+        var companionOAuth = Assert.Single(schemes.EnumerateObject());
+        Assert.Equal("companionOAuth", companionOAuth.Name);
+        Assert.Equal("oauth2", companionOAuth.Value.GetProperty("type").GetString());
+        var flows = companionOAuth.Value.GetProperty("flows");
+        Assert.Equal(["authorizationCode"], flows.EnumerateObject().Select(value => value.Name));
+        Assert.Equal(
+            ["Companion.Access"],
+            flows.GetProperty("authorizationCode").GetProperty("scopes").EnumerateObject().Select(value => value.Name));
+    }
+
+    private static void AssertGetOnly(JsonElement path) =>
+        Assert.Equal(["get"], path.EnumerateObject().Select(value => value.Name));
+
+    private static void AssertExactReadResponses(JsonElement operation, string successSchema)
+    {
+        Assert.Equal(["AdventuresCompanion"], operation.GetProperty("tags").EnumerateArray().Select(value => value.GetString()));
+        var responses = operation.GetProperty("responses");
+        Assert.Equal(
+            ["200", "304", "400", "401", "403", "404", "500"],
+            responses.EnumerateObject().Select(value => value.Name).Order(StringComparer.Ordinal));
+        AssertSchemaReference(responses.GetProperty("200"), "application/json", successSchema);
+        Assert.False(responses.GetProperty("304").TryGetProperty("content", out _));
+        foreach (var status in new[] { "400", "401", "403", "404", "500" })
+            AssertSchemaReference(responses.GetProperty(status), "application/problem+json", "CompanionProblemDto");
+    }
+
+    private static void AssertSchemaReference(JsonElement response, string mediaType, string schema)
+    {
+        var content = response.GetProperty("content");
+        Assert.Equal([mediaType], content.EnumerateObject().Select(value => value.Name));
+        Assert.Equal(
+            $"#/components/schemas/{schema}",
+            content.GetProperty(mediaType).GetProperty("schema").GetProperty("$ref").GetString());
     }
 
     /// <summary>Ensures Scalar consumes the generated contract in Test.</summary>

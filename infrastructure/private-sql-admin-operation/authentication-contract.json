@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "credential": "Azure.Identity.AzureCliCredential",
+  "identitySelector": "exactAdministratorClientId",
+  "tokenScope": "https://database.windows.net/.default",
+  "delivery": "Microsoft.Data.SqlClient.SqlConnection.AccessToken",
+  "lifetime": "providerBoundedAndOperationDeadlineCapped",
+  "operationLimitMinutes": 30,
+  "processReuse": false,
+  "prohibitedSurfaces": ["shell", "arguments", "environment", "files", "logs", "evidence", "interactiveLogin"],
+  "implementationState": "hostedVnetRunnerImplemented",
+  "note": "Azure CLI is populated only by GitHub OIDC login; the SQL token remains in process memory and is never emitted."
+}

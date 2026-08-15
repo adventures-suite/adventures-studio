@@ -32,19 +32,13 @@ deployment. Resource deployment authority is separated from Azure RBAC write
 authority, is temporary, and is removed and independently verified after each
 template boundary. Role-assignment authority is scoped to the exact target and
 conditioned to the reviewed role/principal pair. The starter receives only
-exact-Job start/read access and built-in Log Analytics Reader on the dedicated
-migration workspace; it cannot read other workspaces.
-All six migration identities are Owner-created with zero initial role
-assignments. The resource-group infrastructure role contains no Managed Identity
-write. Operational identity reads are exact-resource grants, and publisher or
-starter federation writes are temporary exact-identity grants, preventing the
-deployer from attaching itself to another privileged identity in the group.
-The migration Job identity can connect only as its reviewed contained database
-principal and cannot publish/pull images through registry credentials. The pull
-identity can only pull from the migration repository. Mutable tags, automatic
-retries, duplicate executions, identity confusion, public ingress, leaked
-tokens/configuration, and missing terminal evidence all fail closed. Full
-controls are defined in `database-migration-job.md`.
+Database migration uses the attested self-contained DbUp package and remains
+separate from application startup. The future one-job ephemeral runner must use
+the exact migration UAMI, private SQL DNS/endpoint, zero automatic retry, and
+independent cleanup. Public SQL, firewall openings, passwords, client secrets,
+persistent runner compute, ACR, mutable artifacts, duplicate execution, identity
+confusion, and missing terminal evidence fail closed. Full controls are defined
+in `private-sql-migration-execution.md`.
 
 ```text
 Browser or API client

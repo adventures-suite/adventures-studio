@@ -126,14 +126,14 @@ remove that elevation after creation and verification.
 
 ## Workload Identities
 
-### Proposed permanent migration runner (not provisioned)
+### Proposed one-job migration runner (not provisioned)
 
-PR #18 defines a manual Azure Container Apps Job, Basic ACR, Consumption
-environment, dedicated `10.40.3.0/27` subnet, Log Analytics workspace, dedicated
-user-assigned migration identity, and separate ACR pull identity. None exists as
-a result of this repository increment. Live network ranges must be checked
-before deployment. The current migration App Service and temporary VM remain
-unchanged and may be retired only after successful replacement proofs.
+The approved architecture is one ephemeral GitHub self-hosted Azure VM in the
+existing VNet, using the existing migration UAMI and Azure SQL private endpoint.
+It has no ACR, persistent compute, automatic retry, public SQL, or temporary
+firewall rule. Before implementation, a separate design review must prove
+short-lived one-job registration delivery, attested package retrieval, private
+DNS/SQL reachability, and independent deletion after every outcome.
 
 | Workload | Observed principal/object ID | Boundary |
 | --- | --- | --- |
@@ -144,17 +144,9 @@ These generated IDs are recorded for bootstrap verification and audit. IaC,
 deployment, and bootstrap scripts resolve current identities from Azure resource
 outputs rather than embedding principal IDs in application code.
 
-The migration app:
-
-- shares the existing B1 App Service plan;
-- is stopped by default;
-- is HTTPS-only;
-- has public ingress disabled;
-- uses the development VNet integration subnet; and
-- has no application runtime assignment.
-
-Starting, deploying, invoking, and stopping it are protected operational actions
-with retained evidence.
+Existing identities are not deleted by this architecture change and remain
+unauthorized unless separately assigned. The former migration App Service path
+must not receive a new execution approval.
 
 ## SQL Permission Boundary
 
@@ -170,15 +162,22 @@ Application identity:
 Migration identity:
 
 - `CONNECT` to the one application database;
-- approved development `db_ddladmin` membership;
-- read/write access to `dbo.AdventuresSuiteSchemaVersions` and migration-required
-  data changes;
+- database `CREATE TABLE` and `VIEW DEFINITION`;
+- schema-scoped `CONTROL` only on administrator-owned `planning`, `auth`, and
+  `audit` schemas;
+- `SELECT` and `INSERT` only on the administrator-created
+  `dbo.AdventuresSuiteSchemaVersions` journal;
+- no journal `UPDATE` or `DELETE`, fixed database-role membership, database
+  `ALTER ANY ROLE` or `CREATE SCHEMA`, or authority over unrelated `dbo`
+  objects;
 - no `db_owner`;
 - no server-level database, login, or security administration; and
 - no runtime application assignment.
 
-Before production, review whether a custom migration role can replace the broad
-fixed development `db_ddladmin` role.
+The administrator, not the migration identity, owns the three schemas, creates
+the exact DbUp journal shape and four dbo-owned runtime roles, and creates the
+contained migration user. The bootstrap and verifier fail closed on missing,
+additional, inherited, fixed-role, or incorrectly scoped authority.
 
 ## Infrastructure-as-Code Boundary
 
@@ -221,16 +220,18 @@ The private SQL execution path must run the database steps in this exact order:
 1. An Entra database administrator runs `--bootstrap-sql` once with
    `ADVENTURESSUITE_ADMIN_SQL_CONNECTION_STRING` and the approved migration
    principal object ID, client ID, and exact display name. This creates only
-   the migration contained user, the empty source-controlled runtime roles,
-   and its development migration grants. Runtime roles are pre-created under
+   the migration contained user, administrator-owned schemas, exact DbUp
+   journal, empty source-controlled runtime roles, and the explicit temporary
+   migration permission catalog. Runtime roles are pre-created under
    administrator authority so the migration identity never receives role
-   administration.
+   administration or schema ownership.
 2. The migration workload identity runs `--migrate` with
    `ADVENTURESSUITE_SQL_CONNECTION_STRING`.
 3. The Entra database administrator runs `--bind-runtime` only after the
    migration has created the runtime database role.
 4. The migration workload identity runs `--verify-permissions` to prove its
-   connection, DDL role, migration journal, and authentication schema access.
+   exact database, schema, and journal catalog and the absence of broader or
+   inherited authority.
 
 `--bootstrap-key-vault` is a separate, explicit control-plane/data-plane
 operation. It must not run implicitly with a database migration. It creates a
@@ -244,7 +245,7 @@ GitHub-hosted runner cannot be assumed to:
 
 - connect to Azure SQL for contained-user bootstrap or migrations;
 - reach Key Vault or Blob data-plane endpoints; or
-- deploy through a migration app's publicly disabled SCM endpoint.
+- rely on a public deployment endpoint for migration execution.
 
 Before those operations, approve and prove a private execution path. Acceptable
 directions include a tightly controlled ephemeral or self-hosted runner in the
@@ -254,6 +255,17 @@ enable broad public networking merely to make a hosted workflow pass.
 
 The chosen path, cost, operator identity, artifact flow, and cleanup evidence
 must be documented before SQL bootstrap or the first migration.
+
+The selected future administrator actor is the dedicated UAMI
+`id-adventures-suite-sql-bootstrap-dev`. Exact Azure resource, tenant, client,
+principal, and organization-bound FIC identifiers must be resolved and
+approved before use. It is not the migration UAMI, a human credential, or a
+group member. The read-only-first operation in
+`docs/architecture/private-sql-administrator-operation.md` reuses the proven
+GitHub-hosted VNet runner with explicit `AzureCliCredential`; it provisions no
+custom runner. Baseline, bootstrap, cleanup, and denial proof are separate
+manual approvals. Migration-user creation is client-ID-bound with `WITH SID`,
+`TYPE = E` and requires no Directory Readers authority.
 
 ## Reconciliation Gate
 
@@ -265,7 +277,7 @@ Before application configuration:
 3. record currently unresolved resource names and object URIs;
 4. run DNS resolution from each VNet-integrated workload;
 5. prove public data-plane access is denied;
-6. confirm the migration app is stopped;
+6. confirm no persistent migration runner is active;
 7. estimate actual monthly cost and configure budget visibility; and
 8. retain sanitized evidence without keys, tokens, connection strings, or
    private customer data.
@@ -278,7 +290,7 @@ Any material drift blocks Slice 5F until reconciled or explicitly approved.
 - IaC deployment/reconciliation passes;
 - External ID registration and certificate readiness pass;
 - SQL contained users and least-privilege grants are verified;
-- exact migrator package runs once and the migration app returns to stopped;
+- exact attested migrator package runs once and the ephemeral runner is deleted;
 - application reaches SQL, Key Vault, and Blob only over approved paths;
 - shared Data Protection keys survive restart and multiple instances;
 - first sign-in maps exact `iss`/`sub` and creates one atomic session;
