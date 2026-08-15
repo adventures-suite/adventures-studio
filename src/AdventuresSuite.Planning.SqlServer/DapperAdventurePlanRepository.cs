@@ -277,6 +277,7 @@ internal sealed class DapperAdventurePlanRepository(
         }
     }
 
+    /// <inheritdoc />
     public async Task UpdateOverviewAsync(
         CreatorId creatorId,
         AdventurePlan plan,
