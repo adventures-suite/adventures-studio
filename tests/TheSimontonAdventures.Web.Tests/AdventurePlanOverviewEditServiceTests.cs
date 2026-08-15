@@ -424,6 +424,7 @@ public sealed class AdventurePlanOverviewEditServiceTests
     private sealed class FixedIdentities : IPlanningCreationIdentityGenerator
     {
         public AdventurePlanId NewAdventurePlanId() => throw new InvalidOperationException();
+        public DestinationVisitId NewDestinationVisitId() => throw new InvalidOperationException();
         public AuditEventId NewAuditEventId() => new("audit_edit_01");
         public CorrelationId NewCorrelationId() => new("correlation_edit_01");
     }
@@ -508,6 +509,9 @@ public sealed class AdventurePlanOverviewEditServiceTests
             ExpectedVersion = expectedVersion;
             return Task.CompletedTask;
         }
+        public Task AddDestinationVisitAsync(CreatorId creatorId, AdventurePlan plan,
+            DestinationVisit destinationVisit, long expectedVersion,
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<AdventurePlanAuthorizationFacts?> GetAuthorizationFactsAsync(CreatorId creatorId, AdventurePlanId planId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<IReadOnlyList<AdventurePlanDashboardItem>> ListDashboardAsync(CreatorId creatorId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<AdventurePlanDetail?> GetDetailAsync(CreatorId creatorId, AdventurePlanId planId, CancellationToken cancellationToken = default) => throw new NotSupportedException();

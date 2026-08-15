@@ -149,6 +149,37 @@ public sealed class AdventurePlan
         BudgetItems,
         PackingItems);
 
+    /// <summary>
+    /// Creates the next validated aggregate version with one destination visit appended.
+    /// Existing plan fields and child records are preserved.
+    /// </summary>
+    public AdventurePlan WithDestinationVisit(
+        DestinationVisit destinationVisit,
+        DateTimeOffset updatedAtUtc)
+    {
+        ArgumentNullException.ThrowIfNull(destinationVisit);
+        return new(
+            Id,
+            CreatorId,
+            Title,
+            WorkingDescription,
+            LifecycleStage,
+            Status,
+            Dates,
+            new PlanAudit(checked(Audit.Version + 1), Audit.CreatedAtUtc, updatedAtUtc),
+            Travelers,
+            [.. DestinationVisits, destinationVisit],
+            ItineraryDays,
+            Activities,
+            Transportation,
+            Accommodations,
+            Reservations,
+            Notes,
+            Tasks,
+            BudgetItems,
+            PackingItems);
+    }
+
     private void Validate()
     {
         ValidateUnique(Travelers, item => item.Id, "traveler");

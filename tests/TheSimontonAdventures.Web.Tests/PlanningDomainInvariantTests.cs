@@ -189,6 +189,23 @@ public sealed class PlanningDomainInvariantTests
             destinationVisits: [first, second]));
     }
 
+    /// <summary>Appending a visit preserves existing state and advances exactly one version.</summary>
+    [Fact]
+    public void WithDestinationVisit_ValidVisit_AppendsAndAdvancesVersion()
+    {
+        var plan = CreatePlan();
+        var visit = ValidVisit();
+        var updatedAt = Audit.UpdatedAtUtc.AddHours(1);
+
+        var updated = plan.WithDestinationVisit(visit, updatedAt);
+
+        Assert.Single(updated.DestinationVisits);
+        Assert.Equal(visit, updated.DestinationVisits[0]);
+        Assert.Equal(plan.Audit.Version + 1, updated.Audit.Version);
+        Assert.Equal(updatedAt, updated.Audit.UpdatedAtUtc);
+        Assert.Empty(plan.DestinationVisits);
+    }
+
     /// <summary>Ensures transportation range and status are valid.</summary>
     [Fact]
     public void Constructor_InvalidTransportation_Throws()

@@ -181,6 +181,9 @@ public sealed class WorkspaceRootTests
         Assert.Contains("name=\"description\"", html);
         Assert.Contains("name=\"startDate\" value=\"2027-10-25\"", html);
         Assert.Contains("name=\"endDate\" value=\"2027-11-15\"", html);
+        Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/destinations\"", html);
+        Assert.Contains("name=\"timeZoneId\"", html);
+        Assert.Contains("placeholder=\"Europe/Rome\"", html);
         Assert.DoesNotContain("name=\"status\"", html);
         Assert.DoesNotContain("name=\"lifecycle", html);
     }

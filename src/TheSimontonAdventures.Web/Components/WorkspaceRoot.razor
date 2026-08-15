@@ -104,6 +104,10 @@
 
                 <section aria-labelledby="plan-route">
                     <h3 id="plan-route">Destinations and route</h3>
+                    @if (DestinationStatusMessage is not null)
+                    {
+                        <p class="plan-create-status" role="status">@DestinationStatusMessage</p>
+                    }
                     @if (Plan.Destinations.Count == 0)
                     {
                         <p>No destinations have been added.</p>
@@ -119,6 +123,32 @@
                                 </li>
                             }
                         </ol>
+                    }
+                    @if (PlanCanEdit)
+                    {
+                        <form class="plan-create" method="post" action="@AddDestinationPath">
+                            <AntiforgeryToken />
+                            <input type="hidden" name="expectedVersion" value="@Plan.Version" />
+                            <label>
+                                Destination name
+                                <input name="name" required maxlength="200" autocomplete="off" />
+                            </label>
+                            <div class="plan-create-dates">
+                                <label>
+                                    Arrival date
+                                    <input type="date" name="startDate" min="@Plan.Dates.Start.ToString("yyyy-MM-dd")" max="@Plan.Dates.End.ToString("yyyy-MM-dd")" required />
+                                </label>
+                                <label>
+                                    Departure date
+                                    <input type="date" name="endDate" min="@Plan.Dates.Start.ToString("yyyy-MM-dd")" max="@Plan.Dates.End.ToString("yyyy-MM-dd")" required />
+                                </label>
+                            </div>
+                            <label>
+                                Destination time zone
+                                <input name="timeZoneId" required maxlength="100" placeholder="Europe/Rome" autocomplete="off" />
+                            </label>
+                            <button type="submit">Add destination</button>
+                        </form>
                     }
                 </section>
 
@@ -370,6 +400,7 @@
     private string PlanListPath => $"/workspace/creators/{AddressedCreatorId.Value}/plans";
     private string CreatePlanPath => $"{PlanListPath}/create";
     private string EditPlanPath => $"{PlanListPath}/{Plan!.Id.Value}/overview";
+    private string AddDestinationPath => $"{PlanListPath}/{Plan!.Id.Value}/destinations";
     private string PlanPath(AdventurePlanId planId) => $"{PlanListPath}/{planId.Value}";
     private string? CreateStatusMessage =>
         HttpContextAccessor.HttpContext?.Request.Query["create"].ToString() switch
@@ -390,6 +421,16 @@
             "validation" => "Review the overview fields and try again.",
             "date-blocked" => "Plan dates cannot change while dated itinerary records exist.",
             "failure" => "The plan overview could not be updated. Please try again.",
+            _ => null
+        };
+    private string? DestinationStatusMessage =>
+        HttpContextAccessor.HttpContext?.Request.Query["destination"].ToString() switch
+        {
+            "added" => "The destination was added to the route.",
+            "denied" => "The destination could not be added.",
+            "conflict" => "This plan changed. Review the current route and try again.",
+            "validation" => "Review the destination name, dates, and IANA time zone.",
+            "failure" => "The destination could not be added. Please try again.",
             _ => null
         };
     private static string FormatDates(AdventurePlanDashboardItem plan) => FormatDates(plan.Dates);

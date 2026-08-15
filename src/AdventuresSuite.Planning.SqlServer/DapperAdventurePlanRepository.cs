@@ -321,6 +321,63 @@ internal sealed class DapperAdventurePlanRepository(
         }
     }
 
+    /// <inheritdoc />
+    public async Task AddDestinationVisitAsync(
+        CreatorId creatorId,
+        AdventurePlan plan,
+        DestinationVisit destinationVisit,
+        long expectedVersion,
+        CancellationToken cancellationToken = default)
+    {
+        RequirePlanScope(creatorId, plan);
+        ArgumentNullException.ThrowIfNull(destinationVisit);
+        if (expectedVersion < 1 || plan.Audit.Version != expectedVersion + 1
+            || !plan.DestinationVisits.Contains(destinationVisit))
+        {
+            throw new ArgumentException(
+                "A destination visit append must advance the expected version by exactly one.",
+                nameof(expectedVersion));
+        }
+
+        try
+        {
+            var updated = await connection.ExecuteAsync(Command(AdvancePlanVersionSql,
+                new
+                {
+                    CreatorId = creatorId.Value,
+                    PlanId = plan.Id.Value,
+                    Version = plan.Audit.Version,
+                    plan.Audit.UpdatedAtUtc,
+                    ExpectedVersion = expectedVersion
+                }, cancellationToken));
+            if (updated == 0)
+            {
+                throw new PlanningConcurrencyException(plan.Id, expectedVersion);
+            }
+
+            await ExecuteAsync(
+                "INSERT planning.DestinationVisits VALUES (@CreatorId,@PlanId,@Id,@Name,@Start,@End,@Zone,@Sequence,@Notes);",
+                new
+                {
+                    CreatorId = creatorId.Value,
+                    PlanId = plan.Id.Value,
+                    Id = destinationVisit.Id.Value,
+                    destinationVisit.Name,
+                    Start = destinationVisit.Dates.Start.ToDateTime(TimeOnly.MinValue),
+                    End = destinationVisit.Dates.End.ToDateTime(TimeOnly.MinValue),
+                    Zone = destinationVisit.TimeZone.Value,
+                    destinationVisit.Sequence,
+                    destinationVisit.Notes
+                }, cancellationToken);
+            auditTracker.RecordMutation(plan.Id, expectedVersion, plan.Audit.Version);
+        }
+        catch
+        {
+            auditTracker.RecordFailure();
+            throw;
+        }
+    }
+
     private async Task InsertChildrenAsync(AdventurePlan plan, CancellationToken cancellationToken)
     {
         var owner = new { CreatorId = plan.CreatorId.Value, PlanId = plan.Id.Value };
@@ -487,6 +544,11 @@ internal sealed class DapperAdventurePlanRepository(
            SET Title=@Title,WorkingDescription=@WorkingDescription,
                StartDate=@StartDate,EndDate=@EndDate,
                Version=@Version,UpdatedAtUtc=@UpdatedAtUtc
+         WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId AND Version=@ExpectedVersion;
+        """;
+    private const string AdvancePlanVersionSql = """
+        UPDATE planning.AdventurePlans
+           SET Version=@Version,UpdatedAtUtc=@UpdatedAtUtc
          WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId AND Version=@ExpectedVersion;
         """;
     private const string DeleteChildrenSql = """

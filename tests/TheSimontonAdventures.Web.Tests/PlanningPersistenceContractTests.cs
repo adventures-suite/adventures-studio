@@ -80,7 +80,8 @@ public sealed class PlanningPersistenceContractTests
             typeof(IAdventurePlanCreateIdempotencyStore),
             typeof(IManualAdventurePlanCreateService),
             typeof(IPlanningCreationIdentityGenerator),
-            typeof(IAdventurePlanOverviewEditService)
+            typeof(IAdventurePlanOverviewEditService),
+            typeof(IDestinationVisitAddService)
         ];
 
         var exposedTypes = contracts

@@ -14,6 +14,89 @@ public sealed class PlanningRepositoryIntegrationTests
 {
     private const string ConnectionVariable = "ADVENTURESSUITE_SQL_TEST_CONNECTION_STRING";
 
+    /// <summary>Proves a destination append, plan version, and audit commit atomically.</summary>
+    [Fact]
+    public async Task AddDestinationVisit_RealSqlServer_IsAtomicAndConcurrent()
+    {
+        var masterConnectionString = Environment.GetEnvironmentVariable(ConnectionVariable);
+        Assert.False(string.IsNullOrWhiteSpace(masterConnectionString),
+            $"Set {ConnectionVariable} for the SQL integration gate.");
+        var databaseName = $"AdventuresSuiteDestinationTest_{Guid.NewGuid():N}";
+        var databaseConnectionString = BuildDatabaseConnectionString(masterConnectionString, databaseName);
+        await ExecuteAsync(masterConnectionString, $"CREATE DATABASE [{databaseName}];");
+
+        try
+        {
+            DatabaseMigratorRunner.Migrate(databaseConnectionString);
+            var factory = new SqlPlanningTransactionFactory(databaseConnectionString);
+            var creator = new CreatorId("creator_destination");
+            var original = CreatePlan(creator, 1, "Destination append");
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                await transaction.AdventurePlans.AddAsync(creator, original);
+                transaction.RequiredAuditIntents.AddRequired(Audit(
+                    creator, original.Id, Permissions.AdventurePlanCreate, null, 1));
+                await transaction.CommitAsync();
+            }
+
+            var visit = new DestinationVisit
+            {
+                Id = new("visit_barcelona"),
+                Name = "Barcelona",
+                Dates = new(new(2027, 10, 29), new(2027, 10, 30)),
+                TimeZone = new("Europe/Madrid"),
+                Sequence = 2
+            };
+            var updated = original.WithDestinationVisit(
+                visit, original.Audit.UpdatedAtUtc.AddMinutes(1));
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                await transaction.AdventurePlans.AddDestinationVisitAsync(
+                    creator, updated, visit, 1);
+                transaction.RequiredAuditIntents.AddRequired(Audit(
+                    creator, original.Id, Permissions.AdventurePlanEdit, 1, 2));
+                await transaction.CommitAsync();
+            }
+
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                var loaded = await transaction.AdventurePlans.GetAsync(creator, original.Id);
+                Assert.Equal(2, loaded!.Audit.Version);
+                Assert.Equal("Barcelona", loaded.DestinationVisits.Single(item => item.Sequence == 2).Name);
+                await Assert.ThrowsAsync<PlanningConcurrencyException>(() =>
+                    transaction.AdventurePlans.AddDestinationVisitAsync(
+                        creator, updated, visit, 1));
+            }
+
+            var rollbackVisit = visit with
+            {
+                Id = new("visit_rollback"),
+                Name = "Valencia",
+                Sequence = 3
+            };
+            var current = updated.WithDestinationVisit(
+                rollbackVisit, updated.Audit.UpdatedAtUtc.AddMinutes(1));
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                await transaction.AdventurePlans.AddDestinationVisitAsync(
+                    creator, current, rollbackVisit, 2);
+                await Assert.ThrowsAsync<InvalidOperationException>(() => transaction.CommitAsync());
+            }
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                var loaded = await transaction.AdventurePlans.GetAsync(creator, original.Id);
+                Assert.Equal(2, loaded!.Audit.Version);
+                Assert.DoesNotContain(loaded.DestinationVisits, item => item.Id == rollbackVisit.Id);
+                await transaction.CommitAsync();
+            }
+        }
+        finally
+        {
+            await ExecuteAsync(masterConnectionString,
+                $"ALTER DATABASE [{databaseName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [{databaseName}];");
+        }
+    }
+
     /// <summary>Proves round trips, Creator isolation, concurrency, and rollback.</summary>
     [Fact]
     public async Task Repository_RealSqlServer_PreservesPlanningBoundaries()
