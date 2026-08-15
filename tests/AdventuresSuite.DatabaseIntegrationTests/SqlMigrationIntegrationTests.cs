@@ -362,6 +362,19 @@ public sealed class SqlMigrationIntegrationTests
             await ExecuteParameterizedAsync(administratorConnection,
                 AzureDevelopmentBootstrapper.BuildMigrationGrants($"[{userName}]"), userName);
 
+            var assembly = typeof(MigrationCatalog).Assembly;
+            var baseline = DeployChanges.To.SqlDatabase(administratorConnection)
+                .WithScriptsEmbeddedInAssembly(assembly, name =>
+                    MigrationCatalog.IsMigrationResource(assembly, name)
+                    && !name.EndsWith("0007_create_traveler_participations.sql", StringComparison.Ordinal)
+                    && !name.EndsWith("0008_create_companion_read_role.sql", StringComparison.Ordinal)
+                    && !name.EndsWith("0009_create_adventure_plan_create_results.sql", StringComparison.Ordinal))
+                .JournalToSqlTable("dbo", "AdventuresSuiteSchemaVersions")
+                .WithTransactionPerScript()
+                .Build()
+                .PerformUpgrade();
+            Assert.True(baseline.Successful, baseline.Error?.Message);
+
             var restricted = new SqlConnectionStringBuilder(masterConnectionString)
             {
                 InitialCatalog = databaseName,
@@ -369,13 +382,16 @@ public sealed class SqlMigrationIntegrationTests
                 UserID = loginName,
                 Password = password
             }.ConnectionString;
-            await AzureDevelopmentBootstrapper.VerifyMigrationPermissionsAsync(restricted);
-            Assert.Equal(9, DatabaseMigratorRunner.Migrate(restricted).Count);
-            Assert.Empty(DatabaseMigratorRunner.Migrate(restricted));
-            await AzureDevelopmentBootstrapper.VerifyMigrationPermissionsAsync(restricted);
-            var state = await MigrationOperationalState.CaptureAsync(restricted);
-            Assert.Equal(MigrationJournalOutcome.At0009, MigrationOperationalState.Classify(state.Journal));
-            Assert.True(MigrationOperationRunner.VerifyExpectedPostState(state));
+            async Task AssertRejectedBeforeSelectionAsync()
+            {
+                await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                    MigrationOperationRunner.VerifyPermissionsBeforeMigrationAsync(
+                        () => new SqlConnection(restricted), "permission-gate-test"));
+                var rejectedState = await MigrationOperationalState.CaptureAsync(administratorConnection);
+                Assert.Equal(MigrationJournalOutcome.At0006,
+                    MigrationOperationalState.Classify(rejectedState.Journal));
+                Assert.Empty(rejectedState.RelevantObjects);
+            }
 
             var permissions = await ReadPermissionProbeAsync(restricted);
             Assert.Equal(
@@ -390,24 +406,62 @@ public sealed class SqlMigrationIntegrationTests
             await AssertSqlRejectedAsync(restricted, "CREATE TABLE dbo.Prohibited (Id int);");
 
             await ExecuteAsync(administratorConnection, $"GRANT ALTER ANY ROLE TO [{userName}];");
-            await Assert.ThrowsAsync<SqlException>(() =>
-                AzureDevelopmentBootstrapper.VerifyMigrationPermissionsAsync(restricted));
+            await AssertRejectedBeforeSelectionAsync();
             await ExecuteAsync(administratorConnection, $"REVOKE ALTER ANY ROLE FROM [{userName}];");
 
             await ExecuteAsync(administratorConnection,
                 $"REVOKE SELECT ON dbo.AdventuresSuiteSchemaVersions FROM [{userName}];");
-            await Assert.ThrowsAsync<SqlException>(() =>
-                AzureDevelopmentBootstrapper.VerifyMigrationPermissionsAsync(restricted));
+            await AssertRejectedBeforeSelectionAsync();
             await ExecuteAsync(administratorConnection,
                 $"GRANT SELECT ON dbo.AdventuresSuiteSchemaVersions TO [{userName}];");
 
             await ExecuteAsync(administratorConnection,
                 $"CREATE ROLE [unexpected_{suffix}]; ALTER ROLE [unexpected_{suffix}] ADD MEMBER [{userName}];");
-            await Assert.ThrowsAsync<SqlException>(() =>
-                AzureDevelopmentBootstrapper.VerifyMigrationPermissionsAsync(restricted));
+            await AssertRejectedBeforeSelectionAsync();
             await ExecuteAsync(administratorConnection,
                 $"ALTER ROLE [unexpected_{suffix}] DROP MEMBER [{userName}]; DROP ROLE [unexpected_{suffix}];");
+
+            await ExecuteAsync(administratorConnection,
+                $"GRANT CONTROL ON SCHEMA::dbo TO [{userName}];");
+            await AssertRejectedBeforeSelectionAsync();
+            await ExecuteAsync(administratorConnection,
+                $"REVOKE CONTROL ON SCHEMA::dbo FROM [{userName}];");
+
+            await ExecuteAsync(administratorConnection,
+                $"ALTER ROLE db_datareader ADD MEMBER [{userName}];");
+            await AssertRejectedBeforeSelectionAsync();
+            await ExecuteAsync(administratorConnection,
+                $"ALTER ROLE db_datareader DROP MEMBER [{userName}];");
+
+            using (DatabaseMigratorRunner.AcquireMigrationLock(restricted))
+            {
+                var before = await MigrationOperationalState.CaptureAsync(restricted);
+                Assert.Equal(MigrationJournalOutcome.At0006,
+                    MigrationOperationalState.Classify(before.Journal));
+                await MigrationOperationRunner.VerifyPermissionsBeforeMigrationAsync(
+                    () => new SqlConnection(restricted), "permission-gate-test");
+                Assert.Equal(3, DatabaseMigratorRunner.MigrateWithLockHeld(
+                    restricted, maximumMigrationNumber: "0009").Count);
+                var after = await MigrationOperationalState.CaptureAsync(restricted);
+                Assert.Equal(MigrationJournalOutcome.At0009,
+                    MigrationOperationalState.Classify(after.Journal));
+                Assert.Equal(before.ApplicationFingerprint, after.ApplicationFingerprint);
+                Assert.True(MigrationOperationRunner.VerifyExpectedPostState(after));
+
+                await ExecuteAsync(administratorConnection, ValidSecondCreatorPlanSql);
+                var changedApplicationData = await MigrationOperationalState.CaptureAsync(restricted);
+                Assert.NotEqual(before.ApplicationFingerprint,
+                    changedApplicationData.ApplicationFingerprint);
+                Assert.Equal(MigrationOperationClassification.Unexpected,
+                    MigrationOperationRunner.ClassifyResult(
+                        before, changedApplicationData, MigrationJournalOutcome.At0009, null));
+            }
+
+            Assert.Empty(DatabaseMigratorRunner.Migrate(restricted));
             await AzureDevelopmentBootstrapper.VerifyMigrationPermissionsAsync(restricted);
+            var state = await MigrationOperationalState.CaptureAsync(restricted);
+            Assert.Equal(MigrationJournalOutcome.At0009, MigrationOperationalState.Classify(state.Journal));
+            Assert.True(MigrationOperationRunner.VerifyExpectedPostState(state));
 
             using (DatabaseMigratorRunner.AcquireMigrationLock(restricted))
             {
