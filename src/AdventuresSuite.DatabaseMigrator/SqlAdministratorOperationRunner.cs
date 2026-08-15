@@ -21,9 +21,9 @@ internal static class SqlAdministratorOperationRunner
         });
         AccessToken token = await credential.GetTokenAsync(
             new TokenRequestContext([SqlScope]), CancellationToken.None);
-        _ = MigrationIdentityValidator.ValidateWorkloadToken(
+        _ = MigrationIdentityValidator.ValidateSqlWorkloadToken(
             token, context.TenantId, context.AdministratorPrincipalId,
-            context.AdministratorClientId, "https://database.windows.net/");
+            context.AdministratorClientId, MigrationCredentialMode.GitHubOidcAzureCli);
 
         if (operation == "denial-proof")
             return await ProveDeniedAsync(context, token);

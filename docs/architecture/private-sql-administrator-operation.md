@@ -20,8 +20,11 @@ The protected `database-development` workflow runs only on runner group
 OIDC populates the Azure CLI session for the exact UAMI. The executable uses
 only `AzureCliCredential` and requests
 `https://database.windows.net/.default`; the resulting token remains in process
-memory. Passwords, client secrets, certificates, interactive login, token
-files, command-line tokens, durable caches, and token evidence are prohibited.
+memory. The live Azure CLI token's audience is required to equal exactly
+`https://database.windows.net`; it is not normalized or treated as equivalent
+to the managed-identity audience ending in `/`. Passwords, client secrets,
+certificates, interactive login, token files, command-line tokens, durable
+caches, and token evidence are prohibited.
 
 The administrator is established and later removed through separate Owner
 boundaries. SQL user creation uses the reviewed `WITH SID ..., TYPE = E` form

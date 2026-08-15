@@ -17,6 +17,9 @@ require '--admin-baseline' "$workflow"; require '--admin-bootstrap' "$workflow";
 reject "az deployment" "$workflow"; reject "sqlcmd" "$workflow"; reject "--bootstrap-sql" "$workflow"; reject "continue-on-error" "$workflow"
 reject "metadata/identity/oauth2/token" "$workflow"; reject "SQL_TOKEN" "$workflow"; reject "Bearer " "$workflow"
 reject "publicIPAddress" "$workflow"; reject "firewallRules" "$workflow"; reject "retry" "$workflow"; reject "ManagedIdentityCredential" "$workflow"
+require "MigrationCredentialMode.GitHubOidcAzureCli" "$root/src/AdventuresSuite.DatabaseMigrator/SqlAdministratorOperationRunner.cs"
+require 'AzureCliSqlAudience = "https://database.windows.net"' "$root/src/AdventuresSuite.DatabaseMigrator/MigrationIdentityValidator.cs"
+require 'ManagedIdentitySqlAudience = "https://database.windows.net/"' "$root/src/AdventuresSuite.DatabaseMigrator/MigrationIdentityValidator.cs"
 test "$(rg -c '^\s*- uses:' "$workflow")" = 2
 test "$(rg -c 'actions/checkout@11d5960a326750d5838078e36cf38b85af677262' "$workflow")" = 1
 require "WHERE name = N'AdventuresSuiteMigrationDev-ffc9a'" "$dir/baseline.sql"

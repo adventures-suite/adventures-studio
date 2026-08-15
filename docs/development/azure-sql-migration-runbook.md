@@ -17,7 +17,10 @@ authoritative execution decision is
 - Hosted-runner authentication uses the exact organization-bound GitHub OIDC
   FIC and Azure CLI token cache. Genuine Azure-hosted execution may use an
   attached UAMI. Neither mode falls back, and no SQL password, key, or client
-  secret is permitted.
+  secret is permitted. Both modes request
+  `https://database.windows.net/.default`, while token validation requires the
+  selected mode's exact emitted audience: `https://database.windows.net` for
+  Azure CLI or `https://database.windows.net/` for managed identity.
 - The web and API never execute migrations or receive migration DDL authority.
 - DbUp scripts, `dbo.AdventuresSuiteSchemaVersions`, the application lock,
   transaction-per-script behavior, state classification, fingerprints, and

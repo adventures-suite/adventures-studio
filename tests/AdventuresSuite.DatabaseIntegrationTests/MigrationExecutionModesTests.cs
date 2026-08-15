@@ -105,6 +105,84 @@ public sealed class MigrationExecutionModesTests
     }
 
     [Theory]
+    [InlineData("github-oidc-azure-cli", "https://database.windows.net", "https://database.windows.net/")]
+    [InlineData("azure-managed-identity", "https://database.windows.net/", "https://database.windows.net")]
+    public void SqlTokenAudienceIsExactForCredentialMode(
+        string credentialModeName, string expectedAudience, string otherModeAudience)
+    {
+        var credentialMode = CredentialMode(credentialModeName);
+        var claims = ValidSqlClaims(expectedAudience);
+        var evidence = MigrationIdentityValidator.ValidateSqlWorkloadToken(
+            Token(claims),
+            Guid.Parse("00000000-0000-0000-0000-000000000001"),
+            Guid.Parse("00000000-0000-0000-0000-000000000002"),
+            Guid.Parse("00000000-0000-0000-0000-000000000003"),
+            credentialMode);
+        Assert.Equal(expectedAudience, evidence.Audience);
+
+        claims["aud"] = otherModeAudience;
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            MigrationIdentityValidator.ValidateSqlWorkloadToken(
+                Token(claims), evidence.TenantId, evidence.ObjectId, evidence.ClientId, credentialMode));
+        Assert.Equal("The migration token aud claim is not approved.", exception.Message);
+    }
+
+    [Theory]
+    [InlineData("github-oidc-azure-cli", null)]
+    [InlineData("github-oidc-azure-cli", "https://database.windows.net/.default")]
+    [InlineData("github-oidc-azure-cli", "https://DATABASE.windows.net")]
+    [InlineData("github-oidc-azure-cli", "https://database.windows.net//")]
+    [InlineData("azure-managed-identity", null)]
+    [InlineData("azure-managed-identity", "https://database.windows.net/.default")]
+    [InlineData("azure-managed-identity", "https://DATABASE.windows.net/")]
+    [InlineData("azure-managed-identity", "https://management.azure.com/")]
+    public void SqlTokenAudienceRejectsMissingSubstitutedOrUnrelatedClaims(
+        string credentialModeName, string? audience)
+    {
+        var credentialMode = CredentialMode(credentialModeName);
+        var claims = ValidSqlClaims(MigrationIdentityValidator.AzureCliSqlAudience);
+        if (audience is null) claims.Remove("aud"); else claims["aud"] = audience;
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            MigrationIdentityValidator.ValidateSqlWorkloadToken(
+                Token(claims),
+                Guid.Parse("00000000-0000-0000-0000-000000000001"),
+                Guid.Parse("00000000-0000-0000-0000-000000000002"),
+                Guid.Parse("00000000-0000-0000-0000-000000000003"),
+                credentialMode));
+        Assert.Equal("The migration token aud claim is not approved.", exception.Message);
+    }
+
+    [Theory]
+    [InlineData("github-oidc-azure-cli", "tid", "The migration token tid claim is not approved.")]
+    [InlineData("github-oidc-azure-cli", "oid", "The migration token oid claim is not approved.")]
+    [InlineData("github-oidc-azure-cli", "appid", "The migration token client identity is not approved.")]
+    [InlineData("github-oidc-azure-cli", "aud", "The migration token aud claim is not approved.")]
+    [InlineData("azure-managed-identity", "tid", "The migration token tid claim is not approved.")]
+    [InlineData("azure-managed-identity", "oid", "The migration token oid claim is not approved.")]
+    [InlineData("azure-managed-identity", "appid", "The migration token client identity is not approved.")]
+    [InlineData("azure-managed-identity", "aud", "The migration token aud claim is not approved.")]
+    public void SqlTokenValidationRejectsEveryMissingRequiredClaim(
+        string credentialModeName, string missingClaim, string expectedMessage)
+    {
+        var credentialMode = CredentialMode(credentialModeName);
+        var audience = credentialMode == MigrationCredentialMode.GitHubOidcAzureCli
+            ? MigrationIdentityValidator.AzureCliSqlAudience
+            : MigrationIdentityValidator.ManagedIdentitySqlAudience;
+        var claims = ValidSqlClaims(audience);
+        claims.Remove(missingClaim);
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            MigrationIdentityValidator.ValidateSqlWorkloadToken(
+                Token(claims),
+                Guid.Parse("00000000-0000-0000-0000-000000000001"),
+                Guid.Parse("00000000-0000-0000-0000-000000000002"),
+                Guid.Parse("00000000-0000-0000-0000-000000000003"),
+                credentialMode));
+        Assert.Equal(expectedMessage, exception.Message);
+    }
+
+    [Theory]
     [InlineData("oid", "00000000-0000-0000-0000-000000000099", "The migration token oid claim is not approved.")]
     [InlineData("appid", "00000000-0000-0000-0000-000000000099", "The migration token client identity is not approved.")]
     [InlineData("aud", "https://database.windows.net/", "The migration token aud claim is not approved.")]
@@ -136,6 +214,21 @@ public sealed class MigrationExecutionModesTests
             $"{Encode("{\"alg\":\"none\"}")}.{Encode(JsonSerializer.Serialize(claims))}.",
             DateTimeOffset.UtcNow.AddMinutes(5));
     }
+
+    private static Dictionary<string, string> ValidSqlClaims(string audience) => new()
+    {
+        ["tid"] = "00000000-0000-0000-0000-000000000001",
+        ["oid"] = "00000000-0000-0000-0000-000000000002",
+        ["appid"] = "00000000-0000-0000-0000-000000000003",
+        ["aud"] = audience
+    };
+
+    private static MigrationCredentialMode CredentialMode(string name) => name switch
+    {
+        "github-oidc-azure-cli" => MigrationCredentialMode.GitHubOidcAzureCli,
+        "azure-managed-identity" => MigrationCredentialMode.AzureManagedIdentity,
+        _ => throw new ArgumentOutOfRangeException(nameof(name))
+    };
 
     private static EnvironmentScope ValidEnvironment()
     {
