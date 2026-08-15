@@ -18,18 +18,26 @@ public static class DatabaseMigratorRunner
             throw new ArgumentException("A database connection string is required.", nameof(connectionString));
         }
 
-        using var migrationLock = AcquireMigrationLock(connectionString);
-        return MigrateWithLockHeld(connectionString);
+        Func<SqlConnection> connectionFactory = () => new SqlConnection(connectionString);
+        using var migrationLock = AcquireMigrationLock(connectionFactory);
+        return MigrateWithLockHeld(connectionFactory);
     }
 
     /// <summary>Applies pending migrations while an approved caller holds the migration lock.</summary>
     internal static IReadOnlyList<string> MigrateWithLockHeld(
         string connectionString,
+        string? maximumMigrationNumber = null) =>
+        MigrateWithLockHeld(() => new SqlConnection(connectionString), maximumMigrationNumber);
+
+    /// <summary>Applies pending migrations through the exact reviewed connection factory.</summary>
+    internal static IReadOnlyList<string> MigrateWithLockHeld(
+        Func<SqlConnection> connectionFactory,
         string? maximumMigrationNumber = null)
     {
+        ArgumentNullException.ThrowIfNull(connectionFactory);
         var assembly = typeof(MigrationCatalog).Assembly;
         _ = MigrationCatalog.GetOrderedResourceNames(assembly);
-        var upgrader = BuildUpgradeEngine(connectionString, assembly, maximumMigrationNumber);
+        var upgrader = BuildUpgradeEngine(connectionFactory, assembly, maximumMigrationNumber);
         var pendingScripts = upgrader.GetScriptsToExecute()
             .Select(script => script.Name)
             .ToArray();
@@ -45,8 +53,13 @@ public static class DatabaseMigratorRunner
 
     /// <summary>Acquires the database-scoped, session-owned exclusive migrator lock.</summary>
     internal static IDisposable AcquireMigrationLock(string connectionString)
+        => AcquireMigrationLock(() => new SqlConnection(connectionString));
+
+    /// <summary>Acquires the migration lock through the exact reviewed connection factory.</summary>
+    internal static IDisposable AcquireMigrationLock(Func<SqlConnection> connectionFactory)
     {
-        var connection = new SqlConnection(connectionString);
+        ArgumentNullException.ThrowIfNull(connectionFactory);
+        var connection = connectionFactory();
         try
         {
             connection.Open();
@@ -77,11 +90,11 @@ public static class DatabaseMigratorRunner
     }
 
     private static DbUp.Engine.UpgradeEngine BuildUpgradeEngine(
-        string connectionString,
+        Func<SqlConnection> connectionFactory,
         Assembly assembly,
         string? maximumMigrationNumber) =>
         DeployChanges.To
-            .SqlDatabase(connectionString)
+            .SqlDatabase(connectionFactory)
             .WithScriptsEmbeddedInAssembly(
                 assembly,
                 resourceName => MigrationCatalog.IsMigrationResource(assembly, resourceName)

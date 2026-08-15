@@ -8,6 +8,46 @@ namespace AdventuresSuite.DatabaseIntegrationTests;
 public sealed class MigrationExecutionModesTests
 {
     [Fact]
+    public void SqlConnectionFactoryCarriesOnlyTheExplicitCredentialMode()
+    {
+        const string connectionString =
+            "Server=approved.database.windows.net;Database=Approved;Encrypt=True";
+        const string sensitiveToken = "reviewed-token-must-not-be-emitted";
+        var token = new AccessToken(sensitiveToken, DateTimeOffset.UtcNow.AddMinutes(5));
+
+        using var writer = new StringWriter();
+        using var errorWriter = new StringWriter();
+        var original = Console.Out;
+        var originalError = Console.Error;
+        Console.SetOut(writer);
+        Console.SetError(errorWriter);
+        try
+        {
+            var azureCliFactory = MigrationSqlConnectionFactory.Create(
+                connectionString, MigrationCredentialMode.GitHubOidcAzureCli, token);
+            using var azureCliConnection = azureCliFactory.CreateConnection();
+            Assert.Equal(sensitiveToken, azureCliConnection.AccessToken);
+
+            var managedIdentityFactory = MigrationSqlConnectionFactory.Create(
+                connectionString, MigrationCredentialMode.AzureManagedIdentity, token);
+            using var managedIdentityConnection = managedIdentityFactory.CreateConnection();
+            Assert.Null(managedIdentityConnection.AccessToken);
+        }
+        finally
+        {
+            Console.SetOut(original);
+            Console.SetError(originalError);
+        }
+
+        Assert.DoesNotContain(sensitiveToken, writer.ToString(), StringComparison.Ordinal);
+        Assert.DoesNotContain(sensitiveToken, errorWriter.ToString(), StringComparison.Ordinal);
+        Assert.Throws<InvalidOperationException>(() => MigrationSqlConnectionFactory.Create(
+            connectionString,
+            MigrationCredentialMode.GitHubOidcAzureCli,
+            default));
+    }
+
+    [Fact]
     public void CredentialModesAreExplicitAndNeverFallBack()
     {
         using var environment = ValidEnvironment();

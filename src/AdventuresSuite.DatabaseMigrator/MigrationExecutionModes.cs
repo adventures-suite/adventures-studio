@@ -44,11 +44,12 @@ internal static partial class MigrationExecutionModes
     internal static async Task<int> CaptureMigrationStateAsync(string connectionString)
     {
         var context = ReadContext(requireSqlTarget: true);
-        var identity = await ValidateIdentityAsync(context, connectionString);
-        var state = await MigrationOperationalState.CaptureAsync(connectionString);
+        var validated = await ValidateIdentityAsync(context, connectionString);
+        var state = await MigrationOperationalState.CaptureAsync(
+            validated.ConnectionFactory.CreateConnection);
         WriteEnvelope(context, "StateCaptured", 0, new
         {
-            identity = SafeIdentity(identity),
+            identity = SafeIdentity(validated.Identity),
             journalClassification = MigrationOperationalState.Classify(state.Journal).ToString(),
             state.Journal,
             state.RelevantObjects,
@@ -62,8 +63,9 @@ internal static partial class MigrationExecutionModes
     internal static async Task<int> VerifyMigrationStateAsync(string connectionString)
     {
         var context = ReadContext(requireSqlTarget: true);
-        var identity = await ValidateIdentityAsync(context, connectionString);
-        var state = await MigrationOperationalState.CaptureAsync(connectionString);
+        var validated = await ValidateIdentityAsync(context, connectionString);
+        var state = await MigrationOperationalState.CaptureAsync(
+            validated.ConnectionFactory.CreateConnection);
         var expectedFingerprint = Require("ADVENTURESSUITE_EXPECTED_APPLICATION_FINGERPRINT");
         var journal = MigrationOperationalState.Classify(state.Journal);
         var verified = journal == MigrationJournalOutcome.At0009
@@ -72,7 +74,7 @@ internal static partial class MigrationExecutionModes
         var exitCode = verified ? 0 : 1;
         WriteEnvelope(context, verified ? "Complete" : "Unexpected", exitCode, new
         {
-            identity = SafeIdentity(identity),
+            identity = SafeIdentity(validated.Identity),
             journalClassification = journal.ToString(),
             schemaAndPermissionsVerified = MigrationOperationRunner.VerifyExpectedPostState(state),
             fingerprintMatched = string.Equals(expectedFingerprint, state.ApplicationFingerprint, StringComparison.Ordinal)
@@ -80,16 +82,18 @@ internal static partial class MigrationExecutionModes
         return exitCode;
     }
 
-    private static async Task<MigrationIdentityEvidence> ValidateIdentityAsync(
+    private static async Task<ValidatedMigrationSqlContext> ValidateIdentityAsync(
         MigrationOperationContext context, string connectionString)
     {
         var selection = MigrationCredentialFactory.Create(context.TenantId, context.ClientId);
         AccessToken token = await selection.Credential.GetTokenAsync(
             new TokenRequestContext(["https://database.windows.net/.default"]),
             CancellationToken.None);
-        return await MigrationIdentityValidator.ValidateAsync(
+        var identity = await MigrationIdentityValidator.ValidateAsync(
             token, connectionString, context.TenantId, context.ObjectId, context.ClientId,
             context.PrincipalName, context.SqlServer!, context.SqlDatabase!, selection.Mode);
+        return new(identity, MigrationSqlConnectionFactory.Create(
+            connectionString, selection.Mode, token));
     }
 
     private static object SafeIdentity(MigrationIdentityEvidence identity) => new
@@ -199,3 +203,7 @@ internal sealed record MigrationOperationContext(
     string PrincipalName,
     string? SqlServer,
     string? SqlDatabase);
+
+internal sealed record ValidatedMigrationSqlContext(
+    MigrationIdentityEvidence Identity,
+    MigrationSqlConnectionFactory ConnectionFactory);

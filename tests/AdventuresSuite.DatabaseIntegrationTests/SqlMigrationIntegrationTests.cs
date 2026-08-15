@@ -229,6 +229,116 @@ public sealed class SqlMigrationIntegrationTests
         }
     }
 
+    /// <summary>Runs the real reviewed factory path from exact 0006 through only 0007-0009.</summary>
+    [Fact]
+    public async Task ReviewedConnectionFactoryPath_AdvancesExactlyFrom0006To0009()
+    {
+        var masterConnectionString = Environment.GetEnvironmentVariable(ConnectionVariable);
+        Assert.False(string.IsNullOrWhiteSpace(masterConnectionString),
+            $"Set {ConnectionVariable} for the SQL integration gate.");
+        var databaseName = $"AdventuresSuiteFactoryMigration_{Guid.NewGuid():N}";
+        var connectionString = BuildDatabaseConnectionString(masterConnectionString, databaseName);
+        await CreateDatabaseAsync(masterConnectionString, databaseName);
+        try
+        {
+            var assembly = typeof(MigrationCatalog).Assembly;
+            var baseline = DeployChanges.To.SqlDatabase(connectionString)
+                .WithScriptsEmbeddedInAssembly(assembly, name =>
+                    MigrationCatalog.IsMigrationResource(assembly, name)
+                    && !name.EndsWith("0007_create_traveler_participations.sql", StringComparison.Ordinal)
+                    && !name.EndsWith("0008_create_companion_read_role.sql", StringComparison.Ordinal)
+                    && !name.EndsWith("0009_create_adventure_plan_create_results.sql", StringComparison.Ordinal))
+                .JournalToSqlTable("dbo", "AdventuresSuiteSchemaVersions")
+                .WithTransactionPerScript()
+                .Build()
+                .PerformUpgrade();
+            Assert.True(baseline.Successful, baseline.Error?.Message);
+
+            var connectionCount = 0;
+            SqlConnection CreateConnection()
+            {
+                Interlocked.Increment(ref connectionCount);
+                return new SqlConnection(connectionString);
+            }
+
+            using var migrationLock = DatabaseMigratorRunner.AcquireMigrationLock(CreateConnection);
+            var before = await MigrationOperationalState.CaptureAsync(CreateConnection);
+            Assert.Equal(MigrationJournalOutcome.At0006,
+                MigrationOperationalState.Classify(before.Journal));
+
+            var selected = DatabaseMigratorRunner.MigrateWithLockHeld(
+                CreateConnection, maximumMigrationNumber: "0009");
+            var after = await MigrationOperationalState.CaptureAsync(CreateConnection);
+
+            Assert.Equal(
+                [
+                    "AdventuresSuite.DatabaseMigrator.Database.Migrations.0007_create_traveler_participations.sql",
+                    "AdventuresSuite.DatabaseMigrator.Database.Migrations.0008_create_companion_read_role.sql",
+                    "AdventuresSuite.DatabaseMigrator.Database.Migrations.0009_create_adventure_plan_create_results.sql"
+                ],
+                selected);
+            Assert.Equal(MigrationJournalOutcome.At0009,
+                MigrationOperationalState.Classify(after.Journal));
+            Assert.Equal(before.ApplicationFingerprint, after.ApplicationFingerprint);
+            Assert.True(MigrationOperationRunner.VerifyExpectedPostState(after));
+            Assert.True(connectionCount >= 4);
+        }
+        finally
+        {
+            await DropDatabaseAsync(masterConnectionString, databaseName);
+        }
+    }
+
+    /// <summary>Proves authentication failure occurs before state selection or script commitment.</summary>
+    [Fact]
+    public async Task ReviewedConnectionFactoryPath_AuthenticationFailureCommitsNoScript()
+    {
+        var masterConnectionString = Environment.GetEnvironmentVariable(ConnectionVariable);
+        Assert.False(string.IsNullOrWhiteSpace(masterConnectionString),
+            $"Set {ConnectionVariable} for the SQL integration gate.");
+        var databaseName = $"AdventuresSuiteFactoryAuthFailure_{Guid.NewGuid():N}";
+        var connectionString = BuildDatabaseConnectionString(masterConnectionString, databaseName);
+        await CreateDatabaseAsync(masterConnectionString, databaseName);
+        try
+        {
+            var assembly = typeof(MigrationCatalog).Assembly;
+            var baseline = DeployChanges.To.SqlDatabase(connectionString)
+                .WithScriptsEmbeddedInAssembly(assembly, name =>
+                    MigrationCatalog.IsMigrationResource(assembly, name)
+                    && !name.EndsWith("0007_create_traveler_participations.sql", StringComparison.Ordinal)
+                    && !name.EndsWith("0008_create_companion_read_role.sql", StringComparison.Ordinal)
+                    && !name.EndsWith("0009_create_adventure_plan_create_results.sql", StringComparison.Ordinal))
+                .JournalToSqlTable("dbo", "AdventuresSuiteSchemaVersions")
+                .WithTransactionPerScript()
+                .Build()
+                .PerformUpgrade();
+            Assert.True(baseline.Successful, baseline.Error?.Message);
+            var before = await MigrationOperationalState.CaptureAsync(connectionString);
+
+            var rejected = new SqlConnectionStringBuilder(connectionString)
+            {
+                IntegratedSecurity = false,
+                UserID = $"invalid_{Guid.NewGuid():N}",
+                Password = $"Invalid-{Guid.NewGuid():N}!aA9"
+            }.ConnectionString;
+            Assert.Throws<SqlException>(() => DatabaseMigratorRunner.AcquireMigrationLock(
+                () => new SqlConnection(rejected)));
+
+            var after = await MigrationOperationalState.CaptureAsync(connectionString);
+            Assert.Equal(MigrationJournalOutcome.At0006,
+                MigrationOperationalState.Classify(after.Journal));
+            Assert.Equal(before.Journal, after.Journal);
+            Assert.Empty(after.RelevantObjects);
+            Assert.Empty(after.CompanionPermissions);
+            Assert.Empty(after.PlanningPermissions);
+            Assert.Equal(before.ApplicationFingerprint, after.ApplicationFingerprint);
+        }
+        finally
+        {
+            await DropDatabaseAsync(masterConnectionString, databaseName);
+        }
+    }
+
     /// <summary>Runs the real DbUp pipeline with only the explicit temporary migration catalog.</summary>
     [Fact]
     public async Task RestrictedMigrationPrincipal_RunsThrough0009AndRejectsBroaderAuthority()

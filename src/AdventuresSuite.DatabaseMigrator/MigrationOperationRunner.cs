@@ -59,8 +59,12 @@ internal static partial class MigrationOperationRunner
             tokenExpiresAt = token.ExpiresOn
         });
 
-        using var migrationLock = DatabaseMigratorRunner.AcquireMigrationLock(connectionString);
-        var before = await MigrationOperationalState.CaptureAsync(connectionString);
+        var connectionFactory = MigrationSqlConnectionFactory.Create(
+            connectionString, selection.Mode, token);
+        using var migrationLock = DatabaseMigratorRunner.AcquireMigrationLock(
+            connectionFactory.CreateConnection);
+        var before = await MigrationOperationalState.CaptureAsync(
+            connectionFactory.CreateConnection);
         var beforeOutcome = MigrationOperationalState.Classify(before.Journal);
         WriteState(operationId, "pre-migration-state", before, beforeOutcome);
         if (beforeOutcome != MigrationJournalOutcome.At0006
@@ -76,7 +80,7 @@ internal static partial class MigrationOperationRunner
         {
             // This operation is explicitly bounded to the reviewed 0006 -> 0009 transition.
             selectedScripts = DatabaseMigratorRunner.MigrateWithLockHeld(
-                connectionString,
+                connectionFactory.CreateConnection,
                 maximumMigrationNumber: "0009");
         }
         catch (Exception exception)
@@ -84,7 +88,8 @@ internal static partial class MigrationOperationRunner
             migrationFailure = exception;
         }
 
-        var after = await MigrationOperationalState.CaptureAsync(connectionString);
+        var after = await MigrationOperationalState.CaptureAsync(
+            connectionFactory.CreateConnection);
         var afterOutcome = MigrationOperationalState.Classify(after.Journal);
         WriteState(operationId, "post-migration-state", after, afterOutcome);
         var classification = ClassifyResult(before, after, afterOutcome, migrationFailure);
