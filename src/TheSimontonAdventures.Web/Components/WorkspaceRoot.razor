@@ -154,6 +154,10 @@
 
                 <section aria-labelledby="plan-itinerary">
                     <h3 id="plan-itinerary">Daily itinerary</h3>
+                    @if (ActivityStatusMessage is not null)
+                    {
+                        <p class="plan-create-status" role="status">@ActivityStatusMessage</p>
+                    }
                     @if (DayStatusMessage is not null)
                     {
                         <p class="plan-create-status" role="status">@DayStatusMessage</p>
@@ -178,6 +182,29 @@
                                                 <li><span>@FormatTimeRange(activity.StartsAtLocal, activity.EndsAtLocal)</span> @activity.Title <small>@FormatStatus(activity.Status)</small></li>
                                             }
                                         </ul>
+                                    }
+                                    @if (PlanCanEdit)
+                                    {
+                                        <form class="plan-create" method="post" action="@AddActivityPath">
+                                            <AntiforgeryToken />
+                                            <input type="hidden" name="expectedVersion" value="@Plan.Version" />
+                                            <input type="hidden" name="itineraryDayId" value="@day.Id.Value" />
+                                            <label>
+                                                Proposed activity
+                                                <input name="title" required maxlength="200" autocomplete="off" placeholder="Museum visit" />
+                                            </label>
+                                            <div class="plan-create-dates">
+                                                <label>
+                                                    Start time <span>(optional)</span>
+                                                    <input type="time" name="startsAtLocal" />
+                                                </label>
+                                                <label>
+                                                    End time <span>(optional)</span>
+                                                    <input type="time" name="endsAtLocal" />
+                                                </label>
+                                            </div>
+                                            <button type="submit">Add proposed activity</button>
+                                        </form>
                                     }
                                 </article>
                             }
@@ -431,6 +458,7 @@
     private string EditPlanPath => $"{PlanListPath}/{Plan!.Id.Value}/overview";
     private string AddDestinationPath => $"{PlanListPath}/{Plan!.Id.Value}/destinations";
     private string AddDayPath => $"{PlanListPath}/{Plan!.Id.Value}/days";
+    private string AddActivityPath => $"{PlanListPath}/{Plan!.Id.Value}/activities";
     private string PlanPath(AdventurePlanId planId) => $"{PlanListPath}/{planId.Value}";
     private string? CreateStatusMessage =>
         HttpContextAccessor.HttpContext?.Request.Query["create"].ToString() switch
@@ -471,6 +499,16 @@
             "conflict" => "This plan changed. Review the current itinerary and try again.",
             "validation" => "Review the destination visit, local date, and day title.",
             "failure" => "The itinerary day could not be added. Please try again.",
+            _ => null
+        };
+    private string? ActivityStatusMessage =>
+        HttpContextAccessor.HttpContext?.Request.Query["activity"].ToString() switch
+        {
+            "added" => "The proposed activity was added.",
+            "denied" => "The activity could not be added.",
+            "conflict" => "This plan changed. Review the current itinerary and try again.",
+            "validation" => "Review the itinerary day, activity title, and local times.",
+            "failure" => "The activity could not be added. Please try again.",
             _ => null
         };
     private static string FormatDates(AdventurePlanDashboardItem plan) => FormatDates(plan.Dates);

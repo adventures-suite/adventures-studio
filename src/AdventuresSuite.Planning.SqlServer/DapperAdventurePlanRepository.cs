@@ -433,6 +433,62 @@ internal sealed class DapperAdventurePlanRepository(
         }
     }
 
+    /// <inheritdoc />
+    public async Task AddPlannedActivityAsync(
+        CreatorId creatorId,
+        AdventurePlan plan,
+        PlannedActivity activity,
+        long expectedVersion,
+        CancellationToken cancellationToken = default)
+    {
+        RequirePlanScope(creatorId, plan);
+        ArgumentNullException.ThrowIfNull(activity);
+        if (expectedVersion < 1 || plan.Audit.Version != expectedVersion + 1
+            || !plan.Activities.Contains(activity))
+        {
+            throw new ArgumentException(
+                "A planned activity append must advance the expected version by exactly one.",
+                nameof(expectedVersion));
+        }
+
+        try
+        {
+            var updated = await connection.ExecuteAsync(Command(AdvancePlanVersionSql,
+                new
+                {
+                    CreatorId = creatorId.Value,
+                    PlanId = plan.Id.Value,
+                    Version = plan.Audit.Version,
+                    plan.Audit.UpdatedAtUtc,
+                    ExpectedVersion = expectedVersion
+                }, cancellationToken));
+            if (updated == 0)
+            {
+                throw new PlanningConcurrencyException(plan.Id, expectedVersion);
+            }
+
+            await ExecuteAsync(
+                "INSERT planning.PlannedActivities VALUES (@CreatorId,@PlanId,@Id,@DayId,@Title,@Start,@End,@Status);",
+                new
+                {
+                    CreatorId = creatorId.Value,
+                    PlanId = plan.Id.Value,
+                    Id = activity.Id.Value,
+                    DayId = activity.ItineraryDayId.Value,
+                    activity.Title,
+                    Start = activity.StartsAtLocal?.ToTimeSpan(),
+                    End = activity.EndsAtLocal?.ToTimeSpan(),
+                    Status = activity.Status.ToString()
+                }, cancellationToken);
+            auditTracker.RecordMutation(plan.Id, expectedVersion, plan.Audit.Version);
+        }
+        catch
+        {
+            auditTracker.RecordFailure();
+            throw;
+        }
+    }
+
     private async Task InsertChildrenAsync(AdventurePlan plan, CancellationToken cancellationToken)
     {
         var owner = new { CreatorId = plan.CreatorId.Value, PlanId = plan.Id.Value };

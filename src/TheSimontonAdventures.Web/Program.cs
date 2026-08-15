@@ -65,6 +65,7 @@ if (string.Equals(authenticationMode, nameof(AuthenticationMode.ExternalProvider
     builder.Services.AddScoped<IAdventurePlanOverviewEditService, AdventurePlanOverviewEditService>();
     builder.Services.AddScoped<IDestinationVisitAddService, DestinationVisitAddService>();
     builder.Services.AddScoped<IItineraryDayAddService, ItineraryDayAddService>();
+    builder.Services.AddScoped<IPlannedActivityAddService, PlannedActivityAddService>();
 }
 
 // Register the existing JSON-backed travel-content implementation.
@@ -234,6 +235,7 @@ if (authenticationConfiguration.Mode == AuthenticationMode.ExternalProvider)
     app.MapAdventurePlanOverviewEditEndpoint();
     app.MapDestinationVisitAddEndpoint();
     app.MapItineraryDayAddEndpoint();
+    app.MapPlannedActivityAddEndpoint();
 }
 
 /// <summary>

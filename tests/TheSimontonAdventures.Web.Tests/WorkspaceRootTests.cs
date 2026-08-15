@@ -171,6 +171,11 @@ public sealed class WorkspaceRootTests
                     new(new("visit_madrid_01"), "Madrid",
                         new(new(2027, 10, 25), new(2027, 10, 28)),
                         new("Europe/Madrid"), 1)
+                ],
+                Days =
+                [
+                    new(new("day_madrid_01"), new DestinationVisitId("visit_madrid_01"),
+                        new(2027, 10, 26), new("Europe/Madrid"), "Madrid arrival", [])
                 ]
             }, canEdit: true));
         var html = await RenderAsync(ApplicationPrincipal(),
@@ -194,6 +199,11 @@ public sealed class WorkspaceRootTests
         Assert.Contains("name=\"destinationVisitId\"", html);
         Assert.Contains("name=\"date\"", html);
         Assert.Contains("placeholder=\"Arrival in Rome\"", html);
+        Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/activities\"", html);
+        Assert.Contains("name=\"itineraryDayId\" value=\"day_madrid_01\"", html);
+        Assert.Contains("name=\"startsAtLocal\"", html);
+        Assert.Contains("name=\"endsAtLocal\"", html);
+        Assert.Contains("placeholder=\"Museum visit\"", html);
         Assert.DoesNotContain("name=\"status\"", html);
         Assert.DoesNotContain("name=\"lifecycle", html);
     }

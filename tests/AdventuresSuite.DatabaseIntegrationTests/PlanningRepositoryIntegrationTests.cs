@@ -181,6 +181,90 @@ public sealed class PlanningRepositoryIntegrationTests
         }
     }
 
+    /// <summary>Proves an activity append, version, and audit commit atomically.</summary>
+    [Fact]
+    public async Task AddPlannedActivity_RealSqlServer_IsAtomicAndConcurrent()
+    {
+        var masterConnectionString = Environment.GetEnvironmentVariable(ConnectionVariable);
+        Assert.False(string.IsNullOrWhiteSpace(masterConnectionString),
+            $"Set {ConnectionVariable} for the SQL integration gate.");
+        var databaseName = $"AdventuresSuiteActivityTest_{Guid.NewGuid():N}";
+        var databaseConnectionString = BuildDatabaseConnectionString(masterConnectionString, databaseName);
+        await ExecuteAsync(masterConnectionString, $"CREATE DATABASE [{databaseName}];");
+
+        try
+        {
+            DatabaseMigratorRunner.Migrate(databaseConnectionString);
+            var factory = new SqlPlanningTransactionFactory(databaseConnectionString);
+            var creator = new CreatorId("creator_activity");
+            var original = CreatePlan(creator, 1, "Activity append");
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                await transaction.AdventurePlans.AddAsync(creator, original);
+                transaction.RequiredAuditIntents.AddRequired(Audit(
+                    creator, original.Id, Permissions.AdventurePlanCreate, null, 1));
+                await transaction.CommitAsync();
+            }
+
+            var activity = new PlannedActivity
+            {
+                Id = new("activity_reina_sofia"),
+                ItineraryDayId = new("day_madrid"),
+                Title = "Reina Sofía Museum",
+                StartsAtLocal = new(14, 0),
+                EndsAtLocal = new(16, 0),
+                Status = PlanItemStatus.Proposed
+            };
+            var updated = original.WithPlannedActivity(
+                activity, original.Audit.UpdatedAtUtc.AddMinutes(1));
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                await transaction.AdventurePlans.AddPlannedActivityAsync(
+                    creator, updated, activity, 1);
+                transaction.RequiredAuditIntents.AddRequired(Audit(
+                    creator, original.Id, Permissions.AdventurePlanEdit, 1, 2));
+                await transaction.CommitAsync();
+            }
+
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                var loaded = await transaction.AdventurePlans.GetAsync(creator, original.Id);
+                Assert.Equal(2, loaded!.Audit.Version);
+                Assert.Equal("Reina Sofía Museum",
+                    loaded.Activities.Single(item => item.Id == activity.Id).Title);
+                await Assert.ThrowsAsync<PlanningConcurrencyException>(() =>
+                    transaction.AdventurePlans.AddPlannedActivityAsync(
+                        creator, updated, activity, 1));
+            }
+
+            var rollbackActivity = activity with
+            {
+                Id = new("activity_rollback"),
+                Title = "Must roll back"
+            };
+            var rollbackPlan = updated.WithPlannedActivity(
+                rollbackActivity, updated.Audit.UpdatedAtUtc.AddMinutes(1));
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                await transaction.AdventurePlans.AddPlannedActivityAsync(
+                    creator, rollbackPlan, rollbackActivity, 2);
+                await Assert.ThrowsAsync<InvalidOperationException>(() => transaction.CommitAsync());
+            }
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                var loaded = await transaction.AdventurePlans.GetAsync(creator, original.Id);
+                Assert.Equal(2, loaded!.Audit.Version);
+                Assert.DoesNotContain(loaded.Activities, item => item.Id == rollbackActivity.Id);
+                await transaction.CommitAsync();
+            }
+        }
+        finally
+        {
+            await ExecuteAsync(masterConnectionString,
+                $"ALTER DATABASE [{databaseName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [{databaseName}];");
+        }
+    }
+
     /// <summary>Proves round trips, Creator isolation, concurrency, and rollback.</summary>
     [Fact]
     public async Task Repository_RealSqlServer_PreservesPlanningBoundaries()
