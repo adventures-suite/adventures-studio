@@ -80,13 +80,13 @@ dotnet run -f net10.0-maccatalyst
 Android and iOS can be selected through the normal MAUI tooling after their
 respective simulator/emulator prerequisites are configured.
 
-## TestFlight
+## TestFlight transition
 
-The manual `Publish AdventuresCompanion TestFlight` GitHub Actions workflow
-builds the iOS application with a unique GitHub run number, retains the signed
-IPA, and uploads it to App Store Connect. The workflow uses the protected
-`testflight` GitHub Environment and never stores Apple signing material in the
-repository.
+This POC is preserved as a reference and is no longer the TestFlight build
+target. The manual `Publish AdventuresCompanion TestFlight` workflow now builds
+`src/AdventuresSuite.Companion.Mobile`, which carries the proven experience
+forward in the production mobile boundary while retaining the existing bundle
+identifier and protected signing process.
 
 Required environment variables:
 
@@ -104,5 +104,6 @@ Required environment secrets:
 - `APPLE_PROVISIONING_PROFILE_BASE64`
 - `APP_STORE_CONNECT_API_PRIVATE_KEY`
 
-Keep the workflow manual until the POC, store disclosures, and tester-release
-process have been reviewed. App Store submission is a separate operation.
+Keep the workflow manual until the production mobile shell, store disclosures,
+and tester-release process have been reviewed. App Store submission is a
+separate operation.

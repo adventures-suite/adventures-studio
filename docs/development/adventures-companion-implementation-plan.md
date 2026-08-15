@@ -32,6 +32,24 @@ This plan records the direction now. Do not add MAUI projects, mobile identity
 registration, location permissions, mobile APIs, notification providers, or
 breadcrumb persistence during the current Phase 3 browser-security work.
 
+## Current implementation status
+
+The isolated MAUI POC remains under
+`prototypes/AdventuresSuite.Companion.Poc` as a preserved experience reference.
+The production transition has begun in
+`src/AdventuresSuite.Companion.Mobile`, carrying forward the proven shell,
+appearance behavior, Adventure selection, explicit Demo/API composition, and
+API-backed Adventure list, detail, and Today presentation.
+
+The manual TestFlight workflow builds the production mobile project and keeps
+the existing application bundle identity. Demo publication remains an explicit
+internal-beta configuration; it is not authoritative Planning data or a
+fallback for API failures. API publication remains fail closed until the mobile
+PKCE and authoritative traveler-access gates are complete.
+
+New Companion product slices should be implemented in the production mobile
+project. The POC is not extended or referenced by production projects.
+
 ## M0: Product, Privacy, and Threat Model
 
 Define supported traveler scenarios, minimum OS versions, accessibility,

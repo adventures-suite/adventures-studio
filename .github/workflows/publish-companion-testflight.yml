@@ -12,7 +12,8 @@ concurrency:
 
 env:
   DOTNET_VERSION: "10.0.x"
-  PROJECT: prototypes/AdventuresSuite.Companion.Poc/AdventuresSuite.Companion.Poc.csproj
+  PROJECT: src/AdventuresSuite.Companion.Mobile/AdventuresSuite.Companion.Mobile.csproj
+  TEST_PROJECT: tests/AdventuresSuite.Companion.Mobile.Tests/AdventuresSuite.Companion.Mobile.Tests.csproj
   TARGET_FRAMEWORK: net10.0-ios
   RUNTIME_IDENTIFIER: ios-arm64
 
@@ -91,6 +92,14 @@ jobs:
 
       - name: Install .NET MAUI iOS workload
         run: dotnet workload install maui-ios
+
+      - name: Test production Companion presentation
+        run: >
+          dotnet test
+          "${{ env.TEST_PROJECT }}"
+          --configuration Release
+          --nologo
+          --verbosity minimal
 
       - name: Install signing material
         id: signing
