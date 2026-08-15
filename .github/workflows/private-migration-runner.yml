@@ -80,8 +80,12 @@ jobs:
           GITHUB_REPOSITORY_OWNER_ID: ${{ github.repository_owner_id }}
         run: node .github/scripts/organization-federation-proof.mjs
       - name: Retrieve exact package artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: .github/scripts/retrieve-reviewed-migration-package.sh
       - name: Verify package, locks, catalog, digest, and attestation
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: .github/scripts/verify-reviewed-migration-package.sh
       - name: Prove private DNS and TCP reachability without SQL
         run: .github/scripts/prove-private-sql-network.sh
