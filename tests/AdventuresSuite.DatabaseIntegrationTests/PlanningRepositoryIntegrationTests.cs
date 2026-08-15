@@ -237,24 +237,47 @@ public sealed class PlanningRepositoryIntegrationTests
                         creator, updated, activity, 1));
             }
 
-            var rollbackActivity = activity with
-            {
-                Id = new("activity_rollback"),
-                Title = "Must roll back"
-            };
-            var rollbackPlan = updated.WithPlannedActivity(
-                rollbackActivity, updated.Audit.UpdatedAtUtc.AddMinutes(1));
+            var editedPlan = updated.WithEditedPlannedActivity(
+                activity.Id, "Reina Sofía afternoon", new(15, 0), new(17, 0),
+                updated.Audit.UpdatedAtUtc.AddMinutes(1));
+            var editedActivity = editedPlan.Activities.Single(item => item.Id == activity.Id);
             await using (var transaction = await factory.BeginAsync(creator))
             {
-                await transaction.AdventurePlans.AddPlannedActivityAsync(
-                    creator, rollbackPlan, rollbackActivity, 2);
+                await transaction.AdventurePlans.UpdatePlannedActivityAsync(
+                    creator, editedPlan, editedActivity, 2);
+                transaction.RequiredAuditIntents.AddRequired(Audit(
+                    creator, original.Id, Permissions.AdventurePlanEdit, 2, 3));
+                await transaction.CommitAsync();
+            }
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                var loaded = await transaction.AdventurePlans.GetAsync(creator, original.Id);
+                var persisted = loaded!.Activities.Single(item => item.Id == activity.Id);
+                Assert.Equal(3, loaded.Audit.Version);
+                Assert.Equal("Reina Sofía afternoon", persisted.Title);
+                Assert.Equal(activity.ItineraryDayId, persisted.ItineraryDayId);
+                Assert.Equal(activity.Status, persisted.Status);
+                await Assert.ThrowsAsync<PlanningConcurrencyException>(() =>
+                    transaction.AdventurePlans.UpdatePlannedActivityAsync(
+                        creator, editedPlan, editedActivity, 2));
+            }
+
+            var rollbackPlan = editedPlan.WithEditedPlannedActivity(
+                activity.Id, "Must roll back", new(16, 0), new(18, 0),
+                editedPlan.Audit.UpdatedAtUtc.AddMinutes(1));
+            var rollbackActivity = rollbackPlan.Activities.Single(item => item.Id == activity.Id);
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                await transaction.AdventurePlans.UpdatePlannedActivityAsync(
+                    creator, rollbackPlan, rollbackActivity, 3);
                 await Assert.ThrowsAsync<InvalidOperationException>(() => transaction.CommitAsync());
             }
             await using (var transaction = await factory.BeginAsync(creator))
             {
                 var loaded = await transaction.AdventurePlans.GetAsync(creator, original.Id);
-                Assert.Equal(2, loaded!.Audit.Version);
-                Assert.DoesNotContain(loaded.Activities, item => item.Id == rollbackActivity.Id);
+                Assert.Equal(3, loaded!.Audit.Version);
+                Assert.Equal("Reina Sofía afternoon",
+                    loaded.Activities.Single(item => item.Id == activity.Id).Title);
                 await transaction.CommitAsync();
             }
         }

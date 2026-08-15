@@ -43,7 +43,12 @@ public sealed class PlannerItineraryBoardTests
         {
             Assert.Contains($"action=\"{path}\"", html, StringComparison.Ordinal);
         }
-        Assert.Equal(6, Count(html, "name=\"expectedVersion\" value=\"17\""));
+        Assert.Equal(7, Count(html, "name=\"expectedVersion\" value=\"17\""));
+        Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/activities/activity_prado_01/edit\"", html);
+        Assert.Contains("Edit activity: Prado Museum", html);
+        Assert.Contains("href=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027\"", html);
+        Assert.Contains(">Cancel</a>", html);
+        Assert.Contains("name=\"title\" value=\"Prado Museum\"", html);
         Assert.Contains("name=\"itineraryDayId\" value=\"day_madrid_01\"", html);
         Assert.Contains("name=\"destinationVisitId\"", html);
         Assert.Contains("name=\"departureTimeZoneId\"", html);
@@ -61,10 +66,11 @@ public sealed class PlannerItineraryBoardTests
         Assert.Contains("Destination status", html);
         Assert.Contains("Day status", html);
         Assert.Contains("Activity status", html);
+        Assert.Contains("Activity edit status", html);
         Assert.Contains("Transportation status", html);
         Assert.Contains("Accommodation status", html);
         Assert.Contains("Reservation status", html);
-        Assert.Equal(6, Count(html, "role=\"status\""));
+        Assert.Equal(7, Count(html, "role=\"status\""));
         Assert.DoesNotContain("PRIVATE-QUERY-VALUE", html, StringComparison.Ordinal);
     }
 
@@ -127,6 +133,9 @@ public sealed class PlannerItineraryBoardTests
                 [nameof(PlannerItineraryBoard.AddDestinationPath)] = Paths["destination"],
                 [nameof(PlannerItineraryBoard.AddDayPath)] = Paths["day"],
                 [nameof(PlannerItineraryBoard.AddActivityPath)] = Paths["activity"],
+                [nameof(PlannerItineraryBoard.EditActivityPathPrefix)] = Paths["activity"],
+                [nameof(PlannerItineraryBoard.ActivityCancelPath)] =
+                    "/workspace/creators/creator_alpha_01/plans/plan_spain_2027",
                 [nameof(PlannerItineraryBoard.AddTransportationPath)] = Paths["transportation"],
                 [nameof(PlannerItineraryBoard.AddAccommodationPath)] = Paths["accommodation"],
                 [nameof(PlannerItineraryBoard.AddReservationPath)] = Paths["reservation"]
@@ -136,6 +145,7 @@ public sealed class PlannerItineraryBoardTests
                 parameters[nameof(PlannerItineraryBoard.DestinationStatusMessage)] = "Destination status";
                 parameters[nameof(PlannerItineraryBoard.DayStatusMessage)] = "Day status";
                 parameters[nameof(PlannerItineraryBoard.ActivityStatusMessage)] = "Activity status";
+                parameters[nameof(PlannerItineraryBoard.ActivityEditStatusMessage)] = "Activity edit status";
                 parameters[nameof(PlannerItineraryBoard.TransportationStatusMessage)] = "Transportation status";
                 parameters[nameof(PlannerItineraryBoard.AccommodationStatusMessage)] = "Accommodation status";
                 parameters[nameof(PlannerItineraryBoard.ReservationStatusMessage)] = "Reservation status";
