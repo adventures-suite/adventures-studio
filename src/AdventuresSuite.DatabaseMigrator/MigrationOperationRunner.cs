@@ -67,12 +67,7 @@ internal static partial class MigrationOperationRunner
             connectionFactory.CreateConnection);
         var beforeOutcome = MigrationOperationalState.Classify(before.Journal);
         WriteState(operationId, "pre-migration-state", before, beforeOutcome);
-        if (beforeOutcome != MigrationJournalOutcome.At0006
-            || before.TravelerParticipationsExists
-            || before.CompanionRoleExists
-            || before.RelevantObjects.Count != 0
-            || before.CompanionPermissions.Count != 0)
-            throw new InvalidOperationException("The pre-migration database state is not the approved 0006 baseline.");
+        ValidatePreMigrationState(before, beforeOutcome);
 
         await VerifyPermissionsBeforeMigrationAsync(
             connectionFactory.CreateConnection, operationId);
@@ -171,6 +166,36 @@ internal static partial class MigrationOperationRunner
             return MigrationOperationClassification.NoScriptCommitted;
         return MigrationOperationClassification.Unexpected;
     }
+
+    /// <summary>Requires the exact administrator-bootstrapped 0006 state before DbUp selection.</summary>
+    internal static void ValidatePreMigrationState(
+        MigrationStateEvidence state,
+        MigrationJournalOutcome outcome)
+    {
+        if (outcome != MigrationJournalOutcome.At0006
+            || !VerifyExpectedBootstrapped0006State(state))
+            throw new InvalidOperationException(
+                "The pre-migration database state is not the approved bootstrapped 0006 baseline.");
+    }
+
+    internal static bool VerifyExpectedBootstrapped0006State(MigrationStateEvidence state) =>
+        !state.TravelerParticipationsExists
+        && state.TravelerConstraintCount == 0
+        && !state.TravelerAuthorizedListIndexExists
+        && !state.AdventurePlanCreateResultsExists
+        && state.AdventurePlanCreateResultConstraintCount == 0
+        && !state.AdventurePlanCreateResultExpiryIndexExists
+        && state.CompanionRoleExists
+        && state.CompanionRoleMemberCount == 0
+        && state.CompanionParentRoleCount == 0
+        && string.Equals(state.CompanionRoleOwner, "dbo", StringComparison.Ordinal)
+        && state.PlanningRoleExists
+        && state.PlanningRoleMemberCount == 0
+        && state.PlanningParentRoleCount == 0
+        && string.Equals(state.PlanningRoleOwner, "dbo", StringComparison.Ordinal)
+        && state.RelevantObjects.Count == 0
+        && state.CompanionPermissions.Count == 0
+        && state.PlanningPermissions.Count == 0;
 
     internal static bool VerifyExpectedPostState(MigrationStateEvidence state)
     {
