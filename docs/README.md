@@ -24,13 +24,16 @@ Read these documents together and in this order:
 2. `architecture/adventure-templates.md`
 3. `architecture/adventure-map-experience.md`
 4. `architecture/itinerary-ingestion.md`
-5. `architecture/group-travel-collaboration.md`
-6. `architecture/adventure-travel-playbook.md`
-7. `architecture/adventure-calendar-integration.md`
-8. `architecture/adventure-readiness-and-change-management.md`
-9. `architecture/ai-planning-copilot.md`
-10. `product/creator-planning-workspace.md`
-11. `development/planning-engine-implementation-plan.md`
+5. `architecture/published-cruise-itinerary-import.md`
+6. `architecture/group-travel-collaboration.md`
+7. `architecture/traveler-profile-and-preference-resolution.md`
+8. `architecture/adventure-travel-playbook.md`
+9. `architecture/adventure-calendar-integration.md`
+10. `architecture/adventure-readiness-and-change-management.md`
+11. `architecture/ai-planning-copilot.md`
+12. `product/creator-planning-workspace.md`
+13. `product/workspace-experience-and-value.md`
+14. `development/planning-engine-implementation-plan.md`
 
 The governing principle is:
 
@@ -49,8 +52,14 @@ The governing principle is:
 > Uploaded itineraries produce reviewable Journey Stop proposals. OCR and AI
 > never silently create authoritative or public travel records.
 
+> Licensed published cruise schedules use the same proposal and review
+> boundary. No live catalog is enabled before commercial-use approval.
+
 > Group conversation exists to support Adventure decisions. Travelers express
 > preferences; authorized planners commit Planning changes.
+
+> Traveler profiles remain private and reusable. Adventure-specific constraints
+> and scoped decision authority resolve group choices without ranking people.
 
 ## Identity and Authorization
 
@@ -96,10 +105,14 @@ The governing principle is:
 ## Travel Professional Partnerships
 
 1. `architecture/partner-collaboration-engine.md`
-2. `product/travel-professional-partnership.md`
-3. `development/partner-collaboration-implementation-plan.md`
+2. `architecture/travel-booking-companion.md`
+3. `product/travel-professional-partnership.md`
+4. `development/partner-collaboration-implementation-plan.md`
 
 > The customer owns the Adventure. The travel professional improves it.
+
+> AdventuresSuite supports the experience around externally fulfilled travel.
+> Direct selling, ticketing, and merchant-of-record responsibility are deferred.
 
 ## AdventuresCompanion Mobile
 
@@ -138,9 +151,10 @@ The governing principle is:
 
 1. `architecture/platform-billing-entitlements.md`
 2. `product/pricing-model.md`
-3. `business/business-model.md`
-4. `development/platform-billing-entitlements-implementation-plan.md`
-5. `architecture/commerce-engine.md`
+3. `product/workspace-experience-and-value.md`
+4. `business/business-model.md`
+5. `development/platform-billing-entitlements-implementation-plan.md`
+6. `architecture/commerce-engine.md`
 
 > Authorization decides what a user may do. Platform entitlement decides what
 > the Creator has purchased or been granted.

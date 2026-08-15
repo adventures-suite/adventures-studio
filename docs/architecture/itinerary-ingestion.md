@@ -55,6 +55,10 @@ Initial input types may include:
 - office documents only after the protected Resource pipeline explicitly
   supports and safely converts them.
 
+A separately licensed published-cruise catalog may provide another input lane.
+It normalizes into the same reviewable proposal boundary and never bypasses
+Creator review. See `published-cruise-itinerary-import.md`.
+
 Every uploaded file is registered as a protected Resource outside `wwwroot`.
 The Resource record retains Creator, uploader, checksum, media type, size,
 received time, malware-scan state, extraction state, retention, supersession,

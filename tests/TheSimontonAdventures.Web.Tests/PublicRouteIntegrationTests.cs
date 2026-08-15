@@ -56,6 +56,26 @@ public sealed class PublicRouteIntegrationTests : IClassFixture<PublicRouteInteg
         Assert.Contains("\"creatorContentValidated\":true", payload);
     }
 
+    /// <summary>
+    /// Ensures Development exposes only the fictional read-only showcase and
+    /// does not require or imitate private workspace authorization.
+    /// </summary>
+    [Fact]
+    public async Task DevelopmentShowcase_RendersFictionalReadOnlyAdventure()
+    {
+        using var response = await SendAsync("localhost", "/showcase");
+        var html = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("Mediterranean Grand Journey", html);
+        Assert.Contains("Fictional Adventure", html);
+        Assert.Contains("No booking or private customer data", html);
+        Assert.Contains("noindex,nofollow,noarchive", html);
+        Assert.DoesNotContain("/authentication/sign-in", html);
+        Assert.DoesNotContain("Create private plan", html);
+        Assert.DoesNotContain("method=\"post\"", html);
+    }
+
     /// <summary>Ensures a draft Creator-owned volume is not served publicly.</summary>
     [Fact]
     public async Task DraftVolume_ReturnsNotFound()

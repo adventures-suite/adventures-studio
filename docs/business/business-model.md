@@ -1,10 +1,10 @@
 # Business Model
 
-**Version:** 1.1
+**Version:** 1.2
 
 **Status:** Vision
 
-**Last Updated:** August 2026
+**Last Updated:** August 11, 2026
 
 ---
 
@@ -71,12 +71,11 @@ More importantly, it helps them preserve experiences that matter.
 
 Recurring subscriptions remain the primary revenue source.
 
-Subscription tiers may include:
+AdventuresSuite intends to keep ordinary subscription choices simple:
 
+- Free
 - Explorer
-- Creator
-- Professional
-- Enterprise
+- Navigator
 
 Recurring revenue supports:
 
@@ -120,7 +119,8 @@ Every published adventure increases the value of the ecosystem.
 
 Purpose
 
-Allow customers to experience Adventures Studio before subscribing.
+Give customers a genuinely useful, bounded way to plan a real Adventure and
+experience AdventuresSuite before paying.
 
 Potential limitations:
 
@@ -131,9 +131,8 @@ Potential limitations:
 - No publishing
 - No custom domains
 
-The goal is to demonstrate value.
-
-Not frustrate users.
+The goal is to demonstrate value, not frustrate users or hold their work
+hostage. Free is an explicit versioned subscription, not the absence of billing.
 
 Free limits, trials, grace periods, downgrade, cancellation, retention, and
 export behavior require explicit commercial policy before enforcement.
@@ -142,7 +141,7 @@ export behavior require explicit commercial policy before enforcement.
 
 # Explorer
 
-Designed for hobby travelers.
+Designed as the complete and affordable choice for most travelers.
 
 Examples:
 
@@ -151,7 +150,7 @@ Examples:
 - Vacation travelers
 - Cruise travelers
 
-Potential features:
+Potential value:
 
 - Unlimited Adventures
 - Planning
@@ -164,73 +163,39 @@ Potential features:
 
 ---
 
-# Creator
+# Navigator
 
-Designed for:
+Designed for customers who want greater planning intelligence, coordination,
+readiness, output quality, or capacity.
 
-- Photographers
-- Bloggers
-- Authors
-- Independent creators
+Potential additions include:
 
-Everything in Explorer plus:
+- AI planning and review
+- group collaboration
+- advanced readiness and change management
+- richer Playbook, calendar, and offline outputs
+- additional capacity where a clear customer need and cost justify it
 
-- Book publishing
-- EPUB generation
-- PDF generation
-- Print preparation
-- Custom domains
-- Advanced AI
-- Larger storage
-- Priority publishing
+Navigator adds meaningful convenience and advanced value. It should not make
+Explorer deliberately incomplete.
 
-Creators become the foundation of the marketplace.
-
----
-
-# Professional
-
-Designed for organizations.
-
-Examples:
-
-- Schools
-- Churches
-- Mission organizations
-- Tour operators
-- Photography businesses
-- Travel companies
-
-Features may include:
-
-- Multiple users
-- Shared Adventures
-- Permissions
-- Branding
-- Analytics
-- Administration
+Professional, organizational, publishing, and enterprise use cases remain
+possible customer relationships and capability families; they do not require a
+confusing public tier for every customer type. Future commercial exceptions or
+contracts require explicit product approval and still use stable capabilities
+rather than plan-name authorization.
 
 ---
 
-# Enterprise
+# Promotions and Trials
 
-Designed for large organizations.
+Promotions, previews, trials, launch offers, and support remedies layer
+time-bounded capability grants over Free, Explorer, or Navigator. They do not
+create additional hidden tiers.
 
-Examples:
-
-- Universities
-- Museums
-- Historical organizations
-- Large travel companies
-
-Enterprise capabilities may include:
-
-- Single Sign-On
-- Advanced permissions
-- Private AI
-- Custom integrations
-- Dedicated support
-- Custom hosting
+Every offer explains what is granted, when it expires, and what remains
+afterward. Subscription and promotion expiry never silently deletes customer
+work, revokes Creator membership, or changes an Adventure lifecycle state.
 
 ---
 
@@ -350,6 +315,9 @@ Customers should never think about hosting.
 
 Growth comes from customer delight.
 
+The desired response is: "I cannot believe I get all of this value for this
+small monthly cost."
+
 Word of mouth should remain the primary marketing channel.
 
 Every published Adventure becomes marketing for Adventures Studio.
@@ -399,6 +367,10 @@ Not:
 
 We measure meaningful outcomes.
 
+For product prioritization, ask whether AdventuresSuite made an Adventure
+easier to plan, calmer to manage, or richer to remember. The connected customer
+experience matters more than the length of the feature list.
+
 ---
 
 # Guiding Principle
@@ -410,3 +382,6 @@ Communities follow trust.
 Platforms endure when creators succeed.
 
 If Adventures Studio helps people preserve meaningful adventures and empowers them to inspire others, a sustainable business will naturally follow.
+
+See `docs/product/workspace-experience-and-value.md` for the workspace,
+packaging, temporary-access, and customer-protection direction.
