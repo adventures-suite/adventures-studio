@@ -13,6 +13,7 @@ concurrency:
 env:
   DOTNET_VERSION: "10.0.x"
   PROJECT: src/AdventuresSuite.Companion.Mobile/AdventuresSuite.Companion.Mobile.csproj
+  CLIENT_PROJECT: src/AdventuresSuite.Companion.Client/AdventuresSuite.Companion.Client.csproj
   TEST_PROJECT: tests/AdventuresSuite.Companion.Mobile.Tests/AdventuresSuite.Companion.Mobile.Tests.csproj
   TARGET_FRAMEWORK: net10.0-ios
   RUNTIME_IDENTIFIER: ios-arm64
@@ -191,6 +192,11 @@ jobs:
           "${{ env.PROJECT }}"
           --runtime "${{ env.RUNTIME_IDENTIFIER }}"
           -p:TargetFramework="${{ env.TARGET_FRAMEWORK }}"
+
+      - name: Restore production Companion dependencies
+        run: >
+          dotnet restore
+          "${{ env.CLIENT_PROJECT }}"
 
       - name: Build signed IPA
         env:
