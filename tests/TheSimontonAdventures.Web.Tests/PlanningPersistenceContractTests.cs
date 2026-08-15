@@ -85,7 +85,8 @@ public sealed class PlanningPersistenceContractTests
             typeof(IItineraryDayAddService),
             typeof(IPlannedActivityAddService),
             typeof(ITransportationSegmentAddService),
-            typeof(IAccommodationAddService)
+            typeof(IAccommodationAddService),
+            typeof(IReservationAddService)
         ];
 
         var exposedTypes = contracts

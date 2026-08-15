@@ -101,6 +101,9 @@ public interface IPlanningCreationIdentityGenerator
     /// <summary>Generates a new private accommodation identity.</summary>
     AccommodationId NewAccommodationId();
 
+    /// <summary>Generates a new private reservation identity.</summary>
+    ReservationId NewReservationId();
+
     /// <summary>Generates a new required audit-event identity.</summary>
     AuditEventId NewAuditEventId();
 
@@ -128,6 +131,9 @@ public sealed class GuidPlanningCreationIdentityGenerator : IPlanningCreationIde
 
     /// <inheritdoc />
     public AccommodationId NewAccommodationId() => new($"accommodation_{Guid.NewGuid():N}");
+
+    /// <inheritdoc />
+    public ReservationId NewReservationId() => new($"reservation_{Guid.NewGuid():N}");
 
     /// <inheritdoc />
     public AuditEventId NewAuditEventId() => new($"audit_{Guid.NewGuid():N}");

@@ -121,6 +121,7 @@ public partial class WorkspaceRoot
     private string AddActivityPath => $"{PlanListPath}/{Plan!.Id.Value}/activities";
     private string AddTransportationPath => $"{PlanListPath}/{Plan!.Id.Value}/transportation";
     private string AddAccommodationPath => $"{PlanListPath}/{Plan!.Id.Value}/accommodations";
+    private string AddReservationPath => $"{PlanListPath}/{Plan!.Id.Value}/reservations";
     private string PlanPath(AdventurePlanId planId) => $"{PlanListPath}/{planId.Value}";
     private string? CreateStatusMessage =>
         HttpContextAccessor.HttpContext?.Request.Query["create"].ToString() switch
@@ -191,6 +192,16 @@ public partial class WorkspaceRoot
             "conflict" => "This plan changed. Review accommodations and try again.",
             "validation" => "Review the accommodation name, dates, and IANA time zone.",
             "failure" => "The accommodation could not be added. Please try again.",
+            _ => null
+        };
+    private string? ReservationStatusMessage =>
+        HttpContextAccessor.HttpContext?.Request.Query["reservation"].ToString() switch
+        {
+            "added" => "The proposed reservation was added.",
+            "denied" => "The reservation could not be added.",
+            "conflict" => "This plan changed. Review reservations and try again.",
+            "validation" => "Review the reservation subject and try again.",
+            "failure" => "The reservation could not be added. Please try again.",
             _ => null
         };
     private static string FormatDates(AdventurePlanDashboardItem plan) => FormatDates(plan.Dates);

@@ -138,6 +138,17 @@ public interface IAdventurePlanRepository
         Accommodation accommodation,
         long expectedVersion,
         CancellationToken cancellationToken = default);
+
+    /// <summary>Appends one reservation and advances the plan at the expected version.</summary>
+    /// <exception cref="PlanningConcurrencyException">
+    /// The persisted plan has changed since <paramref name="expectedVersion"/>.
+    /// </exception>
+    Task AddReservationAsync(
+        CreatorId creatorId,
+        AdventurePlan plan,
+        Reservation reservation,
+        long expectedVersion,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>Contains only the authoritative facts needed to authorize one plan.</summary>
@@ -199,6 +210,8 @@ public sealed record AdventurePlanDetail
     public IReadOnlyList<TransportationDetail> Transportation { get; init; } = [];
     /// <summary>Gets accommodation summaries without reservation credentials.</summary>
     public IReadOnlyList<AccommodationDetail> Accommodations { get; init; } = [];
+    /// <summary>Gets reservation summaries without confirmation references.</summary>
+    public IReadOnlyList<ReservationDetail> Reservations { get; init; } = [];
 }
 
 /// <summary>Projects one ordered destination visit without private notes.</summary>
@@ -246,4 +259,10 @@ public sealed record AccommodationDetail(
     string Name,
     PlanningDateRange Dates,
     IanaTimeZone TimeZone,
+    PlanItemStatus Status);
+
+/// <summary>Projects one reservation without confirmation or booking credentials.</summary>
+public sealed record ReservationDetail(
+    ReservationId Id,
+    string Subject,
     PlanItemStatus Status);

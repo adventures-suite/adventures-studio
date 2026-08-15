@@ -131,7 +131,8 @@ public sealed class WorkspaceRootTests
                 Version = 7,
                 TravelerCount = 2,
                 Destinations = [new(new("visit_madrid"), "Madrid",
-                    new(new(2027, 10, 26), new(2027, 10, 29)), new("Europe/Madrid"), 1)]
+                    new(new(2027, 10, 26), new(2027, 10, 29)), new("Europe/Madrid"), 1)],
+                Reservations = [new(new("reservation_prado"), "Prado Museum", PlanItemStatus.Proposed)]
             }));
         var html = await RenderAsync(ApplicationPrincipal(),
             "/workspace/creators/creator_alpha_01/plans/plan_spain_2027",
@@ -143,7 +144,8 @@ public sealed class WorkspaceRootTests
 
         Assert.Contains("Spain and Atlantic", html);
         Assert.Contains("Madrid", html);
-        Assert.Contains("Sensitive reservation references", html);
+        Assert.Contains("Prado Museum", html);
+        Assert.Contains("Sensitive confirmation references", html);
         Assert.DoesNotContain("RESERVATION-SECRET-123", html, StringComparison.Ordinal);
         Assert.DoesNotContain("Traveler Private Name", html, StringComparison.Ordinal);
         Assert.DoesNotContain("/overview", html, StringComparison.Ordinal);

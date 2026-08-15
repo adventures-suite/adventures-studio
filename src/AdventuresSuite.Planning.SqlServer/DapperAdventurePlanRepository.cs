@@ -91,6 +91,9 @@ internal sealed class DapperAdventurePlanRepository(
             SELECT AccommodationId,Name,StartDate,EndDate,TimeZone,Status
               FROM planning.Accommodations
              WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY StartDate,AccommodationId;
+            SELECT ReservationId,Subject,Status
+              FROM planning.Reservations
+             WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY ReservationId;
             """;
         using var results = await connection.QueryMultipleAsync(Command(
             sql, new { CreatorId = creatorId.Value, PlanId = planId.Value }, cancellationToken));
@@ -100,6 +103,7 @@ internal sealed class DapperAdventurePlanRepository(
         var activities = (await results.ReadAsync<ActivityRow>()).ToArray();
         var transportation = (await results.ReadAsync<TransportationRow>()).ToArray();
         var accommodations = (await results.ReadAsync<AccommodationRow>()).ToArray();
+        var reservations = (await results.ReadAsync<ReservationSummaryRow>()).ToArray();
         if (root is null)
         {
             return null;
@@ -135,7 +139,10 @@ internal sealed class DapperAdventurePlanRepository(
                 Enum.Parse<PlanItemStatus>(row.Status))).ToArray(),
             Accommodations = accommodations.Select(row => new AccommodationDetail(
                 new(row.AccommodationId), row.Name, Range(row.StartDate, row.EndDate),
-                new(row.TimeZone), Enum.Parse<PlanItemStatus>(row.Status))).ToArray()
+                new(row.TimeZone), Enum.Parse<PlanItemStatus>(row.Status))).ToArray(),
+            Reservations = reservations.Select(row => new ReservationDetail(
+                new(row.ReservationId), row.Subject,
+                Enum.Parse<PlanItemStatus>(row.Status))).ToArray()
         };
     }
 
@@ -606,6 +613,60 @@ internal sealed class DapperAdventurePlanRepository(
         }
     }
 
+    /// <inheritdoc />
+    public async Task AddReservationAsync(
+        CreatorId creatorId,
+        AdventurePlan plan,
+        Reservation reservation,
+        long expectedVersion,
+        CancellationToken cancellationToken = default)
+    {
+        RequirePlanScope(creatorId, plan);
+        ArgumentNullException.ThrowIfNull(reservation);
+        if (expectedVersion < 1 || plan.Audit.Version != expectedVersion + 1
+            || !plan.Reservations.Contains(reservation)
+            || reservation.ConfirmationReference is not null)
+        {
+            throw new ArgumentException(
+                "A proposed reservation append must advance the expected version and omit confirmation credentials.",
+                nameof(expectedVersion));
+        }
+
+        try
+        {
+            var updated = await connection.ExecuteAsync(Command(AdvancePlanVersionSql,
+                new
+                {
+                    CreatorId = creatorId.Value,
+                    PlanId = plan.Id.Value,
+                    Version = plan.Audit.Version,
+                    plan.Audit.UpdatedAtUtc,
+                    ExpectedVersion = expectedVersion
+                }, cancellationToken));
+            if (updated == 0)
+            {
+                throw new PlanningConcurrencyException(plan.Id, expectedVersion);
+            }
+
+            await ExecuteAsync(
+                "INSERT planning.Reservations VALUES (@CreatorId,@PlanId,@Id,@Subject,NULL,@Status);",
+                new
+                {
+                    CreatorId = creatorId.Value,
+                    PlanId = plan.Id.Value,
+                    Id = reservation.Id.Value,
+                    reservation.Subject,
+                    Status = reservation.Status.ToString()
+                }, cancellationToken);
+            auditTracker.RecordMutation(plan.Id, expectedVersion, plan.Audit.Version);
+        }
+        catch
+        {
+            auditTracker.RecordFailure();
+            throw;
+        }
+    }
+
     private async Task InsertChildrenAsync(AdventurePlan plan, CancellationToken cancellationToken)
     {
         var owner = new { CreatorId = plan.CreatorId.Value, PlanId = plan.Id.Value };
@@ -802,6 +863,7 @@ internal sealed class DapperAdventurePlanRepository(
     private sealed record ActivityRow(string PlannedActivityId, string ItineraryDayId, string Title, TimeSpan? StartsAtLocal, TimeSpan? EndsAtLocal, string Status);
     private sealed record TransportationRow(string TransportationSegmentId, string Mode, string Origin, string Destination, DateTime DepartureDate, TimeSpan? DepartureTimeLocal, string DepartureTimeZone, DateTime ArrivalDate, TimeSpan? ArrivalTimeLocal, string ArrivalTimeZone, string Status);
     private sealed record AccommodationRow(string AccommodationId, string Name, DateTime StartDate, DateTime EndDate, string TimeZone, string Status);
+    private sealed record ReservationSummaryRow(string ReservationId, string Subject, string Status);
     private sealed record ReservationRow(string ReservationId, string Subject, string? ConfirmationReference, string Status);
     private sealed record DashboardRow(
         string AdventurePlanId,

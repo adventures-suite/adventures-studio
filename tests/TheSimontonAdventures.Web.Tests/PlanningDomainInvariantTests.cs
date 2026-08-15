@@ -275,6 +275,22 @@ public sealed class PlanningDomainInvariantTests
         Assert.Equal(2, updated.Audit.Version);
     }
 
+    /// <summary>Appending a reservation preserves state and advances one version.</summary>
+    [Fact]
+    public void WithReservation_ValidReservation_AppendsAndAdvancesVersion()
+    {
+        var plan = CreatePlan();
+        var reservation = new Reservation
+        {
+            Id = new("reservation_prado_01"),
+            Subject = "Prado Museum",
+            Status = PlanItemStatus.Proposed
+        };
+        var updated = plan.WithReservation(reservation, Audit.UpdatedAtUtc.AddHours(1));
+        Assert.Equal(reservation, Assert.Single(updated.Reservations));
+        Assert.Equal(2, updated.Audit.Version);
+    }
+
     /// <summary>Two itinerary days cannot represent the same local plan date.</summary>
     [Fact]
     public void Constructor_DuplicateItineraryDates_Throws()

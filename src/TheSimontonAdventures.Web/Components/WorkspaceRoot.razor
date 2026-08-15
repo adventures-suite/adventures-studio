@@ -311,7 +311,40 @@
                         }
                     </section>
                 </div>
-                <p class="workspace-private">Sensitive reservation references, private notes, budgets, packing lists, and traveler identities are not included in this view.</p>
+                <section aria-labelledby="plan-reservations">
+                    <h3 id="plan-reservations">Reservations</h3>
+                    @if (ReservationStatusMessage is not null)
+                    {
+                        <p class="plan-create-status" role="status">@ReservationStatusMessage</p>
+                    }
+                    @if (Plan.Reservations.Count == 0)
+                    {
+                        <p>No reservation summaries have been added.</p>
+                    }
+                    else
+                    {
+                        <ul class="detail-list">
+                            @foreach (var reservation in Plan.Reservations)
+                            {
+                                <li><strong>@reservation.Subject</strong><span>@FormatStatus(reservation.Status)</span></li>
+                            }
+                        </ul>
+                    }
+                    @if (PlanCanEdit)
+                    {
+                        <form class="plan-create" method="post" action="@AddReservationPath">
+                            <AntiforgeryToken />
+                            <input type="hidden" name="expectedVersion" value="@Plan.Version" />
+                            <label>
+                                Reservation subject
+                                <input name="subject" required maxlength="200" autocomplete="off" placeholder="Hotel, tour, or transportation hold" />
+                            </label>
+                            <p>Confirmation references are added through a separate protected workflow.</p>
+                            <button type="submit">Add proposed reservation</button>
+                        </form>
+                    }
+                </section>
+                <p class="workspace-private">Sensitive confirmation references, private notes, budgets, packing lists, and traveler identities are not included in this view.</p>
             </article>
         }
         else
