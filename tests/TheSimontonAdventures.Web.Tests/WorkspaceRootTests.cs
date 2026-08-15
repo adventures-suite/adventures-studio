@@ -165,7 +165,13 @@ public sealed class WorkspaceRootTests
                 Status = PlanningStatus.Draft,
                 Dates = new(new(2027, 10, 25), new(2027, 11, 15)),
                 Version = 7,
-                TravelerCount = 0
+                TravelerCount = 0,
+                Destinations =
+                [
+                    new(new("visit_madrid_01"), "Madrid",
+                        new(new(2027, 10, 25), new(2027, 10, 28)),
+                        new("Europe/Madrid"), 1)
+                ]
             }, canEdit: true));
         var html = await RenderAsync(ApplicationPrincipal(),
             "/workspace/creators/creator_alpha_01/plans/plan_spain_2027",
@@ -184,6 +190,10 @@ public sealed class WorkspaceRootTests
         Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/destinations\"", html);
         Assert.Contains("name=\"timeZoneId\"", html);
         Assert.Contains("placeholder=\"Europe/Rome\"", html);
+        Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/days\"", html);
+        Assert.Contains("name=\"destinationVisitId\"", html);
+        Assert.Contains("name=\"date\"", html);
+        Assert.Contains("placeholder=\"Arrival in Rome\"", html);
         Assert.DoesNotContain("name=\"status\"", html);
         Assert.DoesNotContain("name=\"lifecycle", html);
     }

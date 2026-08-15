@@ -154,6 +154,10 @@
 
                 <section aria-labelledby="plan-itinerary">
                     <h3 id="plan-itinerary">Daily itinerary</h3>
+                    @if (DayStatusMessage is not null)
+                    {
+                        <p class="plan-create-status" role="status">@DayStatusMessage</p>
+                    }
                     @if (Plan.Days.Count == 0)
                     {
                         <p>No itinerary days have been added.</p>
@@ -178,6 +182,31 @@
                                 </article>
                             }
                         </div>
+                    }
+                    @if (PlanCanEdit && Plan.Destinations.Count > 0)
+                    {
+                        <form class="plan-create" method="post" action="@AddDayPath">
+                            <AntiforgeryToken />
+                            <input type="hidden" name="expectedVersion" value="@Plan.Version" />
+                            <label>
+                                Destination visit
+                                <select name="destinationVisitId" required>
+                                    @foreach (var destination in Plan.Destinations)
+                                    {
+                                        <option value="@destination.Id.Value">@destination.Name · @FormatDates(destination.Dates)</option>
+                                    }
+                                </select>
+                            </label>
+                            <label>
+                                Local date
+                                <input type="date" name="date" min="@Plan.Dates.Start.ToString("yyyy-MM-dd")" max="@Plan.Dates.End.ToString("yyyy-MM-dd")" required />
+                            </label>
+                            <label>
+                                Day title
+                                <input name="title" required maxlength="200" autocomplete="off" placeholder="Arrival in Rome" />
+                            </label>
+                            <button type="submit">Add itinerary day</button>
+                        </form>
                     }
                 </section>
 
@@ -401,6 +430,7 @@
     private string CreatePlanPath => $"{PlanListPath}/create";
     private string EditPlanPath => $"{PlanListPath}/{Plan!.Id.Value}/overview";
     private string AddDestinationPath => $"{PlanListPath}/{Plan!.Id.Value}/destinations";
+    private string AddDayPath => $"{PlanListPath}/{Plan!.Id.Value}/days";
     private string PlanPath(AdventurePlanId planId) => $"{PlanListPath}/{planId.Value}";
     private string? CreateStatusMessage =>
         HttpContextAccessor.HttpContext?.Request.Query["create"].ToString() switch
@@ -431,6 +461,16 @@
             "conflict" => "This plan changed. Review the current route and try again.",
             "validation" => "Review the destination name, dates, and IANA time zone.",
             "failure" => "The destination could not be added. Please try again.",
+            _ => null
+        };
+    private string? DayStatusMessage =>
+        HttpContextAccessor.HttpContext?.Request.Query["day"].ToString() switch
+        {
+            "added" => "The itinerary day was added.",
+            "denied" => "The itinerary day could not be added.",
+            "conflict" => "This plan changed. Review the current itinerary and try again.",
+            "validation" => "Review the destination visit, local date, and day title.",
+            "failure" => "The itinerary day could not be added. Please try again.",
             _ => null
         };
     private static string FormatDates(AdventurePlanDashboardItem plan) => FormatDates(plan.Dates);

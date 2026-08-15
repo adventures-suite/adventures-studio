@@ -206,6 +206,33 @@ public sealed class PlanningDomainInvariantTests
         Assert.Empty(plan.DestinationVisits);
     }
 
+    /// <summary>Appending a day preserves state and advances exactly one plan version.</summary>
+    [Fact]
+    public void WithItineraryDay_ValidDay_AppendsAndAdvancesVersion()
+    {
+        var visit = ValidVisit();
+        var plan = CreatePlan(destinationVisits: [visit]);
+        var day = ValidDay(visit);
+
+        var updated = plan.WithItineraryDay(day, Audit.UpdatedAtUtc.AddHours(1));
+
+        Assert.Equal(day, Assert.Single(updated.ItineraryDays));
+        Assert.Equal(2, updated.Audit.Version);
+        Assert.Empty(plan.ItineraryDays);
+    }
+
+    /// <summary>Two itinerary days cannot represent the same local plan date.</summary>
+    [Fact]
+    public void Constructor_DuplicateItineraryDates_Throws()
+    {
+        var visit = ValidVisit();
+        var first = ValidDay(visit);
+        var second = first with { Id = new("day_duplicate_date") };
+
+        Assert.Throws<ArgumentException>(() => CreatePlan(
+            destinationVisits: [visit], itineraryDays: [first, second]));
+    }
+
     /// <summary>Ensures transportation range and status are valid.</summary>
     [Fact]
     public void Constructor_InvalidTransportation_Throws()

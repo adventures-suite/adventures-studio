@@ -425,6 +425,7 @@ public sealed class AdventurePlanOverviewEditServiceTests
     {
         public AdventurePlanId NewAdventurePlanId() => throw new InvalidOperationException();
         public DestinationVisitId NewDestinationVisitId() => throw new InvalidOperationException();
+        public ItineraryDayId NewItineraryDayId() => throw new InvalidOperationException();
         public AuditEventId NewAuditEventId() => new("audit_edit_01");
         public CorrelationId NewCorrelationId() => new("correlation_edit_01");
     }
@@ -511,6 +512,9 @@ public sealed class AdventurePlanOverviewEditServiceTests
         }
         public Task AddDestinationVisitAsync(CreatorId creatorId, AdventurePlan plan,
             DestinationVisit destinationVisit, long expectedVersion,
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task AddItineraryDayAsync(CreatorId creatorId, AdventurePlan plan,
+            ItineraryDay itineraryDay, long expectedVersion,
             CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<AdventurePlanAuthorizationFacts?> GetAuthorizationFactsAsync(CreatorId creatorId, AdventurePlanId planId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<IReadOnlyList<AdventurePlanDashboardItem>> ListDashboardAsync(CreatorId creatorId, CancellationToken cancellationToken = default) => throw new NotSupportedException();

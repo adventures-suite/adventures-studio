@@ -180,6 +180,37 @@ public sealed class AdventurePlan
             PackingItems);
     }
 
+    /// <summary>
+    /// Creates the next validated aggregate version with one local itinerary day appended.
+    /// Existing plan fields and child records are preserved.
+    /// </summary>
+    public AdventurePlan WithItineraryDay(
+        ItineraryDay itineraryDay,
+        DateTimeOffset updatedAtUtc)
+    {
+        ArgumentNullException.ThrowIfNull(itineraryDay);
+        return new(
+            Id,
+            CreatorId,
+            Title,
+            WorkingDescription,
+            LifecycleStage,
+            Status,
+            Dates,
+            new PlanAudit(checked(Audit.Version + 1), Audit.CreatedAtUtc, updatedAtUtc),
+            Travelers,
+            DestinationVisits,
+            [.. ItineraryDays, itineraryDay],
+            Activities,
+            Transportation,
+            Accommodations,
+            Reservations,
+            Notes,
+            Tasks,
+            BudgetItems,
+            PackingItems);
+    }
+
     private void Validate()
     {
         ValidateUnique(Travelers, item => item.Id, "traveler");
@@ -219,6 +250,11 @@ public sealed class AdventurePlan
         }
 
         var dayIds = ItineraryDays.Select(item => item.Id).ToHashSet();
+        if (ItineraryDays.Select(item => item.Date).Distinct().Count() != ItineraryDays.Count)
+        {
+            throw new ArgumentException("Itinerary day dates must be unique within a plan.");
+        }
+
         var visitsById = DestinationVisits.ToDictionary(item => item.Id);
         foreach (var day in ItineraryDays)
         {

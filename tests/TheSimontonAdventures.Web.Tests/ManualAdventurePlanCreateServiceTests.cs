@@ -224,6 +224,7 @@ public sealed class ManualAdventurePlanCreateServiceTests
     {
         public AdventurePlanId NewAdventurePlanId() => new(planId);
         public DestinationVisitId NewDestinationVisitId() => new("visit_fixed_01");
+        public ItineraryDayId NewItineraryDayId() => new("day_fixed_01");
         public AuditEventId NewAuditEventId() => new("audit_created_01");
         public CorrelationId NewCorrelationId() => new("correlation_created_01");
     }
@@ -313,5 +314,6 @@ public sealed class ManualAdventurePlanCreateServiceTests
         public Task UpdateAsync(CreatorId creatorId, AdventurePlan plan, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task UpdateOverviewAsync(CreatorId creatorId, AdventurePlan plan, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task AddDestinationVisitAsync(CreatorId creatorId, AdventurePlan plan, DestinationVisit destinationVisit, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task AddItineraryDayAsync(CreatorId creatorId, AdventurePlan plan, ItineraryDay itineraryDay, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 }

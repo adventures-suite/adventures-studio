@@ -89,6 +89,9 @@ public interface IPlanningCreationIdentityGenerator
     /// <summary>Generates a new private destination-visit identity.</summary>
     DestinationVisitId NewDestinationVisitId();
 
+    /// <summary>Generates a new private itinerary-day identity.</summary>
+    ItineraryDayId NewItineraryDayId();
+
     /// <summary>Generates a new required audit-event identity.</summary>
     AuditEventId NewAuditEventId();
 
@@ -104,6 +107,9 @@ public sealed class GuidPlanningCreationIdentityGenerator : IPlanningCreationIde
 
     /// <inheritdoc />
     public DestinationVisitId NewDestinationVisitId() => new($"visit_{Guid.NewGuid():N}");
+
+    /// <inheritdoc />
+    public ItineraryDayId NewItineraryDayId() => new($"day_{Guid.NewGuid():N}");
 
     /// <inheritdoc />
     public AuditEventId NewAuditEventId() => new($"audit_{Guid.NewGuid():N}");
