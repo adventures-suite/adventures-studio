@@ -15,5 +15,9 @@ public sealed class CompanionDependencyBoundaryTests
         Assert.DoesNotContain("AdventuresSuite.Companion.Poc", apiReferences);
         Assert.DoesNotContain(applicationReferences, value => value?.Contains("SqlServer", StringComparison.Ordinal) == true);
         Assert.DoesNotContain(applicationReferences, value => value?.StartsWith("Azure.", StringComparison.Ordinal) == true);
+        Assert.DoesNotContain("Dapper", applicationReferences);
+        Assert.DoesNotContain("Microsoft.Data.SqlClient", applicationReferences);
+        Assert.DoesNotContain(applicationReferences,
+            value => value?.StartsWith("Microsoft.AspNetCore", StringComparison.Ordinal) == true);
     }
 }
