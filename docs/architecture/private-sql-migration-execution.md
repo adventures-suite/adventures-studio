@@ -64,7 +64,10 @@ DNS, and TCP 1433 without issuing a SQL command.
 VNet attachment does not attach a managed identity. Hosted execution uses only
 `AzureCliCredential`; `ManagedIdentityCredential` remains only for genuine
 Azure-hosted compute. Neither mode falls back. SQL token requests use only
-`https://database.windows.net/.default`.
+`https://database.windows.net/.default`. Validation requires the exact emitted
+audience for the selected mode: `https://database.windows.net` for Azure CLI
+and `https://database.windows.net/` for managed identity. The two values are
+not normalized or accepted interchangeably.
 
 The dedicated NSG denies all inbound traffic, permits the fixed private SQL
 endpoint `10.40.1.4/32` on TCP 1433 and outbound HTTPS on TCP 443, then denies
