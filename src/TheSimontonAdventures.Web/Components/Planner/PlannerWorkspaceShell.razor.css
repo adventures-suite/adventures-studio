@@ -1,0 +1,84 @@
+.planner-shell {
+    --planner-shell-bg: #f4f3ef;
+    --planner-shell-surface: #fff;
+    --planner-shell-surface-muted: #f4f7f5;
+    --planner-shell-border: rgb(22 35 31 / 14%);
+    --planner-shell-text: #1d261f;
+    --planner-shell-text-muted: #586460;
+    --planner-shell-primary: #203a33;
+    --planner-shell-accent: #8a5f2d;
+    --planner-shell-hover: rgb(32 58 51 / 9%);
+    --planner-shell-focus: #87602e;
+    --planner-shell-warning: #9b5c13;
+    --planner-shell-shadow: 0 1rem 2rem rgb(16 22 21 / 8%);
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    min-height: 100vh;
+    background: var(--planner-shell-bg);
+    color: var(--planner-shell-text);
+    color-scheme: light;
+}
+
+.planner-shell[data-theme='dark'] {
+    --planner-shell-bg: #10181b;
+    --planner-shell-surface: #162127;
+    --planner-shell-surface-muted: #1d2a30;
+    --planner-shell-border: rgb(177 206 208 / 18%);
+    --planner-shell-text: #edf4f4;
+    --planner-shell-text-muted: #bdcacc;
+    --planner-shell-primary: #d9ecf0;
+    --planner-shell-accent: #f2be7b;
+    --planner-shell-hover: rgb(255 255 255 / 8%);
+    --planner-shell-focus: #f2be7b;
+    --planner-shell-warning: #ffc777;
+    --planner-shell-shadow: 0 1rem 2rem rgb(0 0 0 / 32%);
+    color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+    .planner-shell[data-theme='system'] {
+        --planner-shell-bg: #10181b;
+        --planner-shell-surface: #162127;
+        --planner-shell-surface-muted: #1d2a30;
+        --planner-shell-border: rgb(177 206 208 / 18%);
+        --planner-shell-text: #edf4f4;
+        --planner-shell-text-muted: #bdcacc;
+        --planner-shell-primary: #d9ecf0;
+        --planner-shell-accent: #f2be7b;
+        --planner-shell-hover: rgb(255 255 255 / 8%);
+        --planner-shell-focus: #f2be7b;
+        --planner-shell-warning: #ffc777;
+        --planner-shell-shadow: 0 1rem 2rem rgb(0 0 0 / 32%);
+        color-scheme: dark;
+    }
+}
+
+.planner-shell--sidebar-hidden { grid-template-columns: minmax(0, 1fr); }
+.planner-shell__workspace { min-width: 0; }
+.planner-shell__toolbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 1.5rem; border-bottom: 1px solid var(--planner-shell-border); background: var(--planner-shell-surface); padding: 1.25rem 1.5rem; }
+.planner-shell__heading h1 { margin: 0; font: 700 clamp(1.6rem, 3vw, 2.5rem)/1.1 Georgia, serif; }
+.planner-shell__eyebrow { margin: 0 0 .35rem; color: var(--planner-shell-accent); font-size: .72rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.planner-shell__description { margin: .4rem 0 0; color: var(--planner-shell-text-muted); }
+.planner-shell__actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: .75rem; }
+.planner-shell__actions button, .planner-shell__theme select { min-height: 2.6rem; border: 1px solid var(--planner-shell-border); border-radius: .65rem; background: var(--planner-shell-surface); color: var(--planner-shell-text); font: inherit; padding: .5rem .75rem; }
+.planner-shell__actions button:focus-visible, .planner-shell__theme select:focus-visible, .planner-shell__skip:focus { outline: 3px solid var(--planner-shell-focus); outline-offset: 2px; }
+.planner-shell__theme { display: grid; gap: .2rem; color: var(--planner-shell-text-muted); font-size: .75rem; font-weight: 700; }
+.planner-shell__content { min-width: 0; max-width: 82rem; margin: 0 auto; padding: 2rem 1.5rem 3rem; }
+.planner-shell__skip { position: fixed; z-index: 100; top: .5rem; left: .5rem; transform: translateY(-150%); border-radius: .4rem; background: var(--planner-shell-surface); color: var(--planner-shell-text); padding: .65rem .85rem; }
+.planner-shell__skip:focus { transform: translateY(0); }
+.planner-shell__mobile-toggle { display: none; align-items: center; gap: .4rem; }
+.planner-shell__mobile-toggle svg { width: 1.1rem; height: 1.1rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+
+@media (max-width: 52rem) {
+    .planner-shell { display: block; }
+    .planner-shell::after { content: ''; position: fixed; z-index: 10; inset: 0; visibility: hidden; background: rgb(0 0 0 / 45%); opacity: 0; transition: opacity 180ms ease, visibility 180ms ease; }
+    .planner-shell--mobile-open::after { visibility: visible; opacity: 1; }
+    .planner-shell__mobile-toggle { display: inline-flex; }
+    .planner-shell__toolbar { align-items: stretch; flex-direction: column; padding: 1rem; }
+    .planner-shell__actions { justify-content: flex-start; }
+    .planner-shell__content { padding: 1.25rem 1rem 2.5rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .planner-shell::after { transition: none; }
+}

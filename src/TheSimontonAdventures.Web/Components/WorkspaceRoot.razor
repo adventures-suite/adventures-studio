@@ -4,12 +4,8 @@
 @using TheSimontonAdventures.Web.Planning.Persistence
 @using TheSimontonAdventures.Web.Creators
 
-<main class="workspace-root">
-    <header class="workspace-header">
-        <div>
-            <p class="workspace-eyebrow">AdventuresSuite</p>
-            <h1>Planner workspace</h1>
-        </div>
+<PlannerWorkspaceShell Title="Planner workspace" Description="Private workspace and itinerary planning.">
+    <ToolbarContent>
         @if (IsAuthenticated)
         {
             <form method="post" action="@ExternalIdBrowserEndpoints.SignOutPath">
@@ -17,34 +13,34 @@
                 <button class="workspace-signout" type="submit">Sign out</button>
             </form>
         }
-    </header>
+    </ToolbarContent>
+    <ChildContent>
+    <div class="workspace-root">
     @if (IsAuthenticated)
     {
         <p class="workspace-private">You are signed in to the private workspace. Authorization is checked before plan data is read.</p>
         @if (LoadState == WorkspaceLoadState.Loading)
         {
-            <p role="status">Loading your Adventure Plans…</p>
+            <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Loading"
+                                   Title="Loading your Adventure Plans…" />
         }
         else if (LoadState == WorkspaceLoadState.Unavailable)
         {
-            <section class="workspace-message" aria-labelledby="workspace-unavailable">
-                <h2 id="workspace-unavailable">Workspace unavailable</h2>
-                <p>Your account does not currently have access to this Planner workspace.</p>
-            </section>
+            <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Unavailable"
+                                   Title="Workspace unavailable"
+                                   Message="Your account does not currently have access to this Planner workspace." />
         }
         else if (LoadState == WorkspaceLoadState.Failure)
         {
-            <section class="workspace-message" aria-labelledby="workspace-failure">
-                <h2 id="workspace-failure">Planner temporarily unavailable</h2>
-                <p>The private workspace could not be loaded. Please try again later.</p>
-            </section>
+            <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Failure"
+                                   Title="Planner temporarily unavailable"
+                                   Message="The private workspace could not be loaded. Please try again later." />
         }
         else if (LoadState == WorkspaceLoadState.Landing)
         {
-            <section class="workspace-message" aria-labelledby="workspace-landing">
-                <h2 id="workspace-landing">Choose a Creator workspace</h2>
-                <p>Open an explicitly addressed Creator workspace to view its Adventure Plans.</p>
-            </section>
+            <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Unavailable"
+                                   Title="Choose a Creator workspace"
+                                   Message="Open an explicitly addressed Creator workspace to view its Adventure Plans." />
         }
         else if (Plan is not null)
         {
@@ -68,7 +64,16 @@
 
                 @if (EditStatusMessage is not null)
                 {
-                    <p class="plan-create-status" role="status">@EditStatusMessage</p>
+                    @if (IsEditConflict)
+                    {
+                        <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Conflict"
+                                               Title="Plan changed"
+                                               Message="@EditStatusMessage" />
+                    }
+                    else
+                    {
+                        <p class="plan-create-status" role="status">@EditStatusMessage</p>
+                    }
                 }
                 @if (PlanCanEdit)
                 {
@@ -384,10 +389,9 @@
 
             @if (Plans.Count == 0)
             {
-                <section class="workspace-message" aria-labelledby="workspace-empty">
-                    <h2 id="workspace-empty">No active plans</h2>
-                    <p>There are no active Adventure Plans in this private workspace yet.</p>
-                </section>
+                <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Empty"
+                                       Title="No active plans"
+                                       Message="There are no active Adventure Plans in this private workspace yet." />
             }
             else
             {
@@ -426,4 +430,6 @@
         <a href="@ExternalIdBrowserEndpoints.SignInPath"
            data-enhance-nav="false">Sign in</a>
     }
-</main>
+    </div>
+    </ChildContent>
+</PlannerWorkspaceShell>
