@@ -438,6 +438,8 @@ public sealed class SqlMigrationIntegrationTests
                 var before = await MigrationOperationalState.CaptureAsync(restricted);
                 Assert.Equal(MigrationJournalOutcome.At0006,
                     MigrationOperationalState.Classify(before.Journal));
+                MigrationOperationRunner.ValidatePreMigrationState(
+                    before, MigrationJournalOutcome.At0006);
                 await MigrationOperationRunner.VerifyPermissionsBeforeMigrationAsync(
                     () => new SqlConnection(restricted), "permission-gate-test");
                 Assert.Equal(3, DatabaseMigratorRunner.MigrateWithLockHeld(
@@ -473,6 +475,116 @@ public sealed class SqlMigrationIntegrationTests
             await DropDatabaseAsync(masterConnectionString, databaseName);
             await ExecuteAsync(masterConnectionString,
                 $"IF EXISTS (SELECT 1 FROM sys.server_principals WHERE name=N'{loginName}') DROP LOGIN [{loginName}];");
+        }
+    }
+
+    /// <summary>Proves malformed bootstrapped runtime roles stop at the production pre-state gate.</summary>
+    [Fact]
+    public async Task Bootstrapped0006RoleGate_RejectsMalformedRolesBeforeDbUpSelection()
+    {
+        var masterConnectionString = Environment.GetEnvironmentVariable(ConnectionVariable);
+        Assert.False(string.IsNullOrWhiteSpace(masterConnectionString),
+            $"Set {ConnectionVariable} for the SQL integration gate.");
+        var databaseName = $"AdventuresSuiteBootstrappedGate_{Guid.NewGuid():N}";
+        var connectionString = BuildDatabaseConnectionString(masterConnectionString, databaseName);
+        await CreateDatabaseAsync(masterConnectionString, databaseName);
+        try
+        {
+            var assembly = typeof(MigrationCatalog).Assembly;
+            var baseline = DeployChanges.To.SqlDatabase(connectionString)
+                .WithScriptsEmbeddedInAssembly(assembly, name =>
+                    MigrationCatalog.IsMigrationResource(assembly, name)
+                    && !name.EndsWith("0007_create_traveler_participations.sql", StringComparison.Ordinal)
+                    && !name.EndsWith("0008_create_companion_read_role.sql", StringComparison.Ordinal)
+                    && !name.EndsWith("0009_create_adventure_plan_create_results.sql", StringComparison.Ordinal))
+                .JournalToSqlTable("dbo", "AdventuresSuiteSchemaVersions")
+                .WithTransactionPerScript()
+                .Build()
+                .PerformUpgrade();
+            Assert.True(baseline.Successful, baseline.Error?.Message);
+            await ExecuteAsync(connectionString, """
+                CREATE ROLE AdventuresSuiteCompanionReadRuntime AUTHORIZATION dbo;
+                CREATE ROLE AdventuresSuitePlanningRuntime AUTHORIZATION dbo;
+                """);
+
+            async Task AssertGateAcceptsAsync()
+            {
+                var state = await MigrationOperationalState.CaptureAsync(connectionString);
+                Assert.Equal(MigrationJournalOutcome.At0006,
+                    MigrationOperationalState.Classify(state.Journal));
+                MigrationOperationRunner.ValidatePreMigrationState(
+                    state, MigrationJournalOutcome.At0006);
+            }
+
+            async Task AssertGateRejectsAsync()
+            {
+                var state = await MigrationOperationalState.CaptureAsync(connectionString);
+                Assert.Equal(MigrationJournalOutcome.At0006,
+                    MigrationOperationalState.Classify(state.Journal));
+                Assert.Throws<InvalidOperationException>(() =>
+                    MigrationOperationRunner.ValidatePreMigrationState(
+                        state, MigrationJournalOutcome.At0006));
+                Assert.Empty(state.RelevantObjects);
+                Assert.Equal(6, state.Journal.Count);
+            }
+
+            await AssertGateAcceptsAsync();
+
+            await ExecuteAsync(connectionString, """
+                DROP ROLE AdventuresSuiteCompanionReadRuntime;
+                CREATE ROLE AdventuresSuiteCompanionReadRuntimeSubstitute AUTHORIZATION dbo;
+                """);
+            await AssertGateRejectsAsync();
+            await ExecuteAsync(connectionString, """
+                DROP ROLE AdventuresSuiteCompanionReadRuntimeSubstitute;
+                CREATE ROLE AdventuresSuiteCompanionReadRuntime AUTHORIZATION dbo;
+                """);
+
+            await ExecuteAsync(connectionString, """
+                CREATE USER malformed_role_owner WITHOUT LOGIN;
+                ALTER AUTHORIZATION ON ROLE::AdventuresSuiteCompanionReadRuntime TO malformed_role_owner;
+                """);
+            await AssertGateRejectsAsync();
+            await ExecuteAsync(connectionString, """
+                ALTER AUTHORIZATION ON ROLE::AdventuresSuiteCompanionReadRuntime TO dbo;
+                DROP USER malformed_role_owner;
+                """);
+
+            await ExecuteAsync(connectionString, """
+                CREATE ROLE malformed_parent_role AUTHORIZATION dbo;
+                ALTER ROLE malformed_parent_role ADD MEMBER AdventuresSuitePlanningRuntime;
+                """);
+            await AssertGateRejectsAsync();
+            await ExecuteAsync(connectionString, """
+                ALTER ROLE malformed_parent_role DROP MEMBER AdventuresSuitePlanningRuntime;
+                DROP ROLE malformed_parent_role;
+                """);
+
+            await ExecuteAsync(connectionString, """
+                CREATE USER malformed_role_member WITHOUT LOGIN;
+                ALTER ROLE AdventuresSuitePlanningRuntime ADD MEMBER malformed_role_member;
+                """);
+            await AssertGateRejectsAsync();
+            await ExecuteAsync(connectionString, """
+                ALTER ROLE AdventuresSuitePlanningRuntime DROP MEMBER malformed_role_member;
+                DROP USER malformed_role_member;
+                """);
+
+            await ExecuteAsync(connectionString, """
+                GRANT SELECT ON OBJECT::planning.AdventurePlans TO AdventuresSuiteCompanionReadRuntime;
+                GRANT SELECT ON OBJECT::planning.AdventurePlans TO AdventuresSuitePlanningRuntime;
+                """);
+            await AssertGateRejectsAsync();
+            await ExecuteAsync(connectionString, """
+                REVOKE SELECT ON OBJECT::planning.AdventurePlans FROM AdventuresSuiteCompanionReadRuntime;
+                REVOKE SELECT ON OBJECT::planning.AdventurePlans FROM AdventuresSuitePlanningRuntime;
+                """);
+
+            await AssertGateAcceptsAsync();
+        }
+        finally
+        {
+            await DropDatabaseAsync(masterConnectionString, databaseName);
         }
     }
 
