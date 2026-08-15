@@ -103,6 +103,10 @@ active, unexpired assignment to one Creator-owned Adventure/traveler
 participation at that participation's current version. Missing assignments,
 unknown profile keys, scope mismatches, stale participation versions, and
 inactive, expired, or revoked assignments fail closed without fallback.
+An assignment binds both the profile key and exact code-definition version;
+deploying a new definition never silently upgrades an existing assignment.
+Effective time is read from an injected `TimeProvider`; the start instant is
+inclusive and the optional expiry instant is exclusive.
 
 The profile permits only:
 

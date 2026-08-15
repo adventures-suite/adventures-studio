@@ -156,6 +156,7 @@ public sealed record CompanionInformationPolicyAssignment
         string travelerId,
         long participationVersion,
         string profileKey,
+        long profileDefinitionVersion,
         long version,
         CompanionInformationPolicyAssignmentStatus status,
         DateTimeOffset effectiveFromUtc,
@@ -169,6 +170,8 @@ public sealed record CompanionInformationPolicyAssignment
             throw new ArgumentOutOfRangeException(nameof(participationVersion));
         if (string.IsNullOrWhiteSpace(profileKey) || profileKey.Length > 64 || profileKey != profileKey.Trim())
             throw new ArgumentException("A bounded exact profile key is required.", nameof(profileKey));
+        if (profileDefinitionVersion < 1)
+            throw new ArgumentOutOfRangeException(nameof(profileDefinitionVersion));
         if (version < 1)
             throw new ArgumentOutOfRangeException(nameof(version));
         if (!Enum.IsDefined(status))
@@ -181,6 +184,7 @@ public sealed record CompanionInformationPolicyAssignment
         CreatorId = creatorId;
         ParticipationVersion = participationVersion;
         ProfileKey = profileKey;
+        ProfileDefinitionVersion = profileDefinitionVersion;
         Version = version;
         Status = status;
         EffectiveFromUtc = effectiveFromUtc;
@@ -197,6 +201,8 @@ public sealed record CompanionInformationPolicyAssignment
     public long ParticipationVersion { get; }
     /// <summary>Gets the exact code-defined profile key.</summary>
     public string ProfileKey { get; }
+    /// <summary>Gets the exact code-definition version approved by the assignment.</summary>
+    public long ProfileDefinitionVersion { get; }
     /// <summary>Gets the positive assignment version.</summary>
     public long Version { get; }
     /// <summary>Gets the assignment lifecycle.</summary>
@@ -249,14 +255,17 @@ public sealed class AssignedCompanionInformationPolicy : ICompanionInformationPo
 {
     private readonly ICompanionInformationProfileCatalog catalog;
     private readonly ICompanionInformationPolicyAssignmentProvider assignments;
+    private readonly TimeProvider timeProvider;
 
     /// <summary>Initializes the closed evaluator with code catalog and authoritative assignments.</summary>
     public AssignedCompanionInformationPolicy(
         ICompanionInformationProfileCatalog catalog,
-        ICompanionInformationPolicyAssignmentProvider assignments)
+        ICompanionInformationPolicyAssignmentProvider assignments,
+        TimeProvider timeProvider)
     {
         this.catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
         this.assignments = assignments ?? throw new ArgumentNullException(nameof(assignments));
+        this.timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
     }
 
     /// <inheritdoc />
@@ -266,6 +275,7 @@ public sealed class AssignedCompanionInformationPolicy : ICompanionInformationPo
     {
         ArgumentNullException.ThrowIfNull(request);
         cancellationToken.ThrowIfCancellationRequested();
+        var evaluatedAtUtc = timeProvider.GetUtcNow();
         var assignment = await assignments.GetAsync(
             request.CreatorId,
             request.AdventureId,
@@ -279,10 +289,12 @@ public sealed class AssignedCompanionInformationPolicy : ICompanionInformationPo
             || assignment.ParticipationVersion != request.ParticipationVersion
             || assignment.Status != CompanionInformationPolicyAssignmentStatus.Active
             || request.EvaluatedAtUtc.Offset != TimeSpan.Zero
-            || request.EvaluatedAtUtc < assignment.EffectiveFromUtc
-            || (assignment.ExpiresAtUtc.HasValue && request.EvaluatedAtUtc >= assignment.ExpiresAtUtc.Value)
+            || evaluatedAtUtc.Offset != TimeSpan.Zero
+            || evaluatedAtUtc < assignment.EffectiveFromUtc
+            || (assignment.ExpiresAtUtc.HasValue && evaluatedAtUtc >= assignment.ExpiresAtUtc.Value)
             || !catalog.TryGet(assignment.ProfileKey, out var profile)
-            || profile is null)
+            || profile is null
+            || assignment.ProfileDefinitionVersion != profile.DefinitionVersion)
         {
             return CompanionInformationPolicyDecision.Closed;
         }

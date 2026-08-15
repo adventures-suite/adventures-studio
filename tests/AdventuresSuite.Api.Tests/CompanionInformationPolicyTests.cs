@@ -62,6 +62,7 @@ public sealed class CompanionInformationPolicyTests
     {
         AssertClosed(await Policy(null).EvaluateAsync(Request()));
         AssertClosed(await Policy(Assignment(profileKey: "unknown_profile")).EvaluateAsync(Request()));
+        AssertClosed(await Policy(Assignment(profileDefinitionVersion: 2)).EvaluateAsync(Request()));
         AssertClosed(await Policy(Assignment()).EvaluateAsync(Request(Permissions.AdventurePlanEdit)));
 
         var closedProvider = new ClosedCompanionInformationPolicyAssignmentProvider();
@@ -80,13 +81,21 @@ public sealed class CompanionInformationPolicyTests
         var assignment = scenario switch
         {
             "revoked" => Assignment(status: CompanionInformationPolicyAssignmentStatus.Revoked),
-            "future" => Assignment(effectiveFromUtc: Now.AddMinutes(1)),
+            "future" => Assignment(effectiveFromUtc: Now.AddTicks(1)),
             "expired" => Assignment(expiresAtUtc: Now),
             "stale_participation" => Assignment(participationVersion: 4),
             _ => throw new InvalidOperationException()
         };
 
         AssertClosed(await Policy(assignment).EvaluateAsync(Request()));
+    }
+
+    /// <summary>Proves the effective boundary is inclusive and expiry boundary is exclusive.</summary>
+    [Fact]
+    public async Task AssignedPolicy_UsesInjectedTimeWithInclusiveExclusiveBounds()
+    {
+        Assert.True((await Policy(Assignment(effectiveFromUtc: Now)).EvaluateAsync(Request())).IsAllowed);
+        AssertClosed(await Policy(Assignment(expiresAtUtc: Now)).EvaluateAsync(Request()));
     }
 
     /// <summary>Proves Creator, Adventure, traveler, and case substitutions fail closed.</summary>
@@ -128,7 +137,8 @@ public sealed class CompanionInformationPolicyTests
     private static AssignedCompanionInformationPolicy Policy(
         CompanionInformationPolicyAssignment? assignment) => new(
             new CompanionInformationProfileCatalog(),
-            new StubAssignmentProvider(assignment));
+            new StubAssignmentProvider(assignment),
+            new FixedTimeProvider(Now));
 
     private static CompanionInformationPolicyRequest Request(Permission? permission = null) => new(
         new UserId("user_alpha"),
@@ -146,6 +156,7 @@ public sealed class CompanionInformationPolicyTests
         string travelerId = "traveler_alpha",
         long participationVersion = 5,
         string profileKey = CompanionInformationProfileCatalog.AdventureOverviewV1,
+        long profileDefinitionVersion = 1,
         CompanionInformationPolicyAssignmentStatus status = CompanionInformationPolicyAssignmentStatus.Active,
         DateTimeOffset? effectiveFromUtc = null,
         DateTimeOffset? expiresAtUtc = null) => new(
@@ -154,6 +165,7 @@ public sealed class CompanionInformationPolicyTests
             travelerId,
             participationVersion,
             profileKey,
+            profileDefinitionVersion,
             version: 9,
             status,
             effectiveFromUtc ?? Now.AddDays(-1),
@@ -177,5 +189,10 @@ public sealed class CompanionInformationPolicyTests
             cancellationToken.ThrowIfCancellationRequested();
             return Task.FromResult(assignment);
         }
+    }
+
+    private sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => utcNow;
     }
 }
