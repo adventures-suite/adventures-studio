@@ -259,6 +259,20 @@ public sealed class AdventurePlan
             BudgetItems, PackingItems);
     }
 
+    /// <summary>Creates the next validated version with one proposed accommodation appended.</summary>
+    public AdventurePlan WithAccommodation(
+        Accommodation accommodation,
+        DateTimeOffset updatedAtUtc)
+    {
+        ArgumentNullException.ThrowIfNull(accommodation);
+        return new(
+            Id, CreatorId, Title, WorkingDescription, LifecycleStage, Status, Dates,
+            new PlanAudit(checked(Audit.Version + 1), Audit.CreatedAtUtc, updatedAtUtc),
+            Travelers, DestinationVisits, ItineraryDays, Activities, Transportation,
+            [.. Accommodations, accommodation], Reservations, Notes, Tasks,
+            BudgetItems, PackingItems);
+    }
+
     private void Validate()
     {
         ValidateUnique(Travelers, item => item.Id, "traveler");

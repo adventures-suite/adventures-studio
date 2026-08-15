@@ -281,6 +281,8 @@
                     </section>
                     <section aria-labelledby="plan-accommodations">
                         <h3 id="plan-accommodations">Accommodations</h3>
+                        @if (AccommodationStatusMessage is not null)
+                        { <p class="plan-create-status" role="status">@AccommodationStatusMessage</p> }
                         @if (Plan.Accommodations.Count == 0)
                         {
                             <p>No accommodations have been added.</p>
@@ -293,6 +295,20 @@
                                     <li><strong>@accommodation.Name</strong><span>@FormatDates(accommodation.Dates) · @FormatStatus(accommodation.Status)</span></li>
                                 }
                             </ul>
+                        }
+                        @if (PlanCanEdit)
+                        {
+                            <form class="plan-create" method="post" action="@AddAccommodationPath">
+                                <AntiforgeryToken />
+                                <input type="hidden" name="expectedVersion" value="@Plan.Version" />
+                                <label>Accommodation name<input name="name" required maxlength="200" /></label>
+                                <div class="plan-create-dates">
+                                    <label>Check-in date<input type="date" name="startDate" required /></label>
+                                    <label>Check-out date<input type="date" name="endDate" required /></label>
+                                </div>
+                                <label>Property time zone<input name="timeZoneId" required maxlength="100" placeholder="Europe/Rome" /></label>
+                                <button type="submit">Add proposed accommodation</button>
+                            </form>
                         }
                     </section>
                 </div>
@@ -485,6 +501,7 @@
     private string AddDayPath => $"{PlanListPath}/{Plan!.Id.Value}/days";
     private string AddActivityPath => $"{PlanListPath}/{Plan!.Id.Value}/activities";
     private string AddTransportationPath => $"{PlanListPath}/{Plan!.Id.Value}/transportation";
+    private string AddAccommodationPath => $"{PlanListPath}/{Plan!.Id.Value}/accommodations";
     private string PlanPath(AdventurePlanId planId) => $"{PlanListPath}/{planId.Value}";
     private string? CreateStatusMessage =>
         HttpContextAccessor.HttpContext?.Request.Query["create"].ToString() switch
@@ -545,6 +562,16 @@
             "conflict" => "This plan changed. Review transportation and try again.",
             "validation" => "Review the route, local dates, times, and IANA time zones.",
             "failure" => "The transportation could not be added. Please try again.",
+            _ => null
+        };
+    private string? AccommodationStatusMessage =>
+        HttpContextAccessor.HttpContext?.Request.Query["accommodation"].ToString() switch
+        {
+            "added" => "The proposed accommodation was added.",
+            "denied" => "The accommodation could not be added.",
+            "conflict" => "This plan changed. Review accommodations and try again.",
+            "validation" => "Review the accommodation name, dates, and IANA time zone.",
+            "failure" => "The accommodation could not be added. Please try again.",
             _ => null
         };
     private static string FormatDates(AdventurePlanDashboardItem plan) => FormatDates(plan.Dates);

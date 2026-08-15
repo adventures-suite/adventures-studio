@@ -208,6 +208,8 @@ public sealed class WorkspaceRootTests
         Assert.Contains("name=\"departureTimeZoneId\"", html);
         Assert.Contains("name=\"arrivalTimeZoneId\"", html);
         Assert.Contains("Add proposed transportation", html);
+        Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/accommodations\"", html);
+        Assert.Contains("Add proposed accommodation", html);
         Assert.DoesNotContain("name=\"status\"", html);
         Assert.DoesNotContain("name=\"lifecycle", html);
     }

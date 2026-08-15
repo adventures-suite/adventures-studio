@@ -258,6 +258,23 @@ public sealed class PlanningDomainInvariantTests
         Assert.Empty(plan.Transportation);
     }
 
+    /// <summary>Appending accommodation preserves state and advances one version.</summary>
+    [Fact]
+    public void WithAccommodation_ValidAccommodation_AppendsAndAdvancesVersion()
+    {
+        var plan = CreatePlan();
+        var accommodation = new Accommodation
+        {
+            Id = new("accommodation_rome"),
+            Name = "Rome hotel",
+            Dates = new(Dates.Start, Dates.Start.AddDays(2)),
+            TimeZone = new("Europe/Rome")
+        };
+        var updated = plan.WithAccommodation(accommodation, Audit.UpdatedAtUtc.AddHours(1));
+        Assert.Equal(accommodation, Assert.Single(updated.Accommodations));
+        Assert.Equal(2, updated.Audit.Version);
+    }
+
     /// <summary>Two itinerary days cannot represent the same local plan date.</summary>
     [Fact]
     public void Constructor_DuplicateItineraryDates_Throws()

@@ -127,6 +127,17 @@ public interface IAdventurePlanRepository
         TransportationSegment segment,
         long expectedVersion,
         CancellationToken cancellationToken = default);
+
+    /// <summary>Appends one accommodation and advances the plan at the expected version.</summary>
+    /// <exception cref="PlanningConcurrencyException">
+    /// The persisted plan has changed since <paramref name="expectedVersion"/>.
+    /// </exception>
+    Task AddAccommodationAsync(
+        CreatorId creatorId,
+        AdventurePlan plan,
+        Accommodation accommodation,
+        long expectedVersion,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>Contains only the authoritative facts needed to authorize one plan.</summary>

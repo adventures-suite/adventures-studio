@@ -140,6 +140,7 @@ public sealed class TransportationSegmentAddServiceTests
         public ItineraryDayId NewItineraryDayId() => throw new NotSupportedException();
         public PlannedActivityId NewPlannedActivityId() => throw new NotSupportedException();
         public TransportationSegmentId NewTransportationSegmentId() => new("transport_flight_01");
+        public AccommodationId NewAccommodationId() => new("accommodation_fixed_01");
         public AuditEventId NewAuditEventId() => new("audit_transport_01");
         public CorrelationId NewCorrelationId() => new("correlation_transport_01");
     }
@@ -215,5 +216,6 @@ public sealed class TransportationSegmentAddServiceTests
         public Task AddDestinationVisitAsync(CreatorId creatorId, AdventurePlan plan, DestinationVisit destinationVisit, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task AddItineraryDayAsync(CreatorId creatorId, AdventurePlan plan, ItineraryDay itineraryDay, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task AddPlannedActivityAsync(CreatorId creatorId, AdventurePlan plan, PlannedActivity activity, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task AddAccommodationAsync(CreatorId creatorId, AdventurePlan plan, Accommodation accommodation, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 }

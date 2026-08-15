@@ -290,10 +290,16 @@ public sealed class PlanningRepositoryIntegrationTests
 
             var segment = new TransportationSegment
             {
-                Id = new("transport_train"), Mode = "Rail", From = "Madrid", To = "Barcelona",
-                DepartureDate = new(2027, 10, 28), DepartureTimeLocal = new(9, 0),
-                DepartureTimeZone = new("Europe/Madrid"), ArrivalDate = new(2027, 10, 28),
-                ArrivalTimeLocal = new(12, 0), ArrivalTimeZone = new("Europe/Madrid"),
+                Id = new("transport_train"),
+                Mode = "Rail",
+                From = "Madrid",
+                To = "Barcelona",
+                DepartureDate = new(2027, 10, 28),
+                DepartureTimeLocal = new(9, 0),
+                DepartureTimeZone = new("Europe/Madrid"),
+                ArrivalDate = new(2027, 10, 28),
+                ArrivalTimeLocal = new(12, 0),
+                ArrivalTimeZone = new("Europe/Madrid"),
                 Status = PlanItemStatus.Proposed
             };
             var updated = original.WithTransportationSegment(
@@ -330,6 +336,76 @@ public sealed class PlanningRepositoryIntegrationTests
                 var loaded = await transaction.AdventurePlans.GetAsync(creator, original.Id);
                 Assert.Equal(2, loaded!.Audit.Version);
                 Assert.DoesNotContain(loaded.Transportation, item => item.Id == rollbackSegment.Id);
+                await transaction.CommitAsync();
+            }
+        }
+        finally
+        {
+            await ExecuteAsync(master,
+                $"ALTER DATABASE [{databaseName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [{databaseName}];");
+        }
+    }
+
+    /// <summary>Proves accommodation append, version, and audit commit atomically.</summary>
+    [Fact]
+    public async Task AddAccommodation_RealSqlServer_IsAtomicAndConcurrent()
+    {
+        var master = Environment.GetEnvironmentVariable(ConnectionVariable);
+        Assert.False(string.IsNullOrWhiteSpace(master), $"Set {ConnectionVariable} for the SQL integration gate.");
+        var databaseName = $"AdventuresSuiteAccommodationTest_{Guid.NewGuid():N}";
+        var connectionString = BuildDatabaseConnectionString(master, databaseName);
+        await ExecuteAsync(master, $"CREATE DATABASE [{databaseName}];");
+        try
+        {
+            DatabaseMigratorRunner.Migrate(connectionString);
+            var factory = new SqlPlanningTransactionFactory(connectionString);
+            var creator = new CreatorId("creator_accommodation");
+            var original = CreatePlan(creator, 1, "Accommodation append");
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                await transaction.AdventurePlans.AddAsync(creator, original);
+                transaction.RequiredAuditIntents.AddRequired(Audit(
+                    creator, original.Id, Permissions.AdventurePlanCreate, null, 1));
+                await transaction.CommitAsync();
+            }
+            var accommodation = new Accommodation
+            {
+                Id = new("accommodation_barcelona"),
+                Name = "Barcelona hotel",
+                Dates = new(new(2027, 10, 28), new(2027, 10, 29)),
+                TimeZone = new("Europe/Madrid"),
+                Status = PlanItemStatus.Proposed
+            };
+            var updated = original.WithAccommodation(
+                accommodation, original.Audit.UpdatedAtUtc.AddMinutes(1));
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                await transaction.AdventurePlans.AddAccommodationAsync(
+                    creator, updated, accommodation, 1);
+                transaction.RequiredAuditIntents.AddRequired(Audit(
+                    creator, original.Id, Permissions.AdventurePlanEdit, 1, 2));
+                await transaction.CommitAsync();
+            }
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                var loaded = await transaction.AdventurePlans.GetAsync(creator, original.Id);
+                Assert.Equal(2, loaded!.Audit.Version);
+                Assert.Equal("Barcelona hotel", loaded.Accommodations.Single(item => item.Id == accommodation.Id).Name);
+                await Assert.ThrowsAsync<PlanningConcurrencyException>(() =>
+                    transaction.AdventurePlans.AddAccommodationAsync(creator, updated, accommodation, 1));
+            }
+            var rollback = accommodation with { Id = new("accommodation_rollback"), Name = "Rollback" };
+            var rollbackPlan = updated.WithAccommodation(rollback, updated.Audit.UpdatedAtUtc.AddMinutes(1));
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                await transaction.AdventurePlans.AddAccommodationAsync(creator, rollbackPlan, rollback, 2);
+                await Assert.ThrowsAsync<InvalidOperationException>(() => transaction.CommitAsync());
+            }
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                var loaded = await transaction.AdventurePlans.GetAsync(creator, original.Id);
+                Assert.Equal(2, loaded!.Audit.Version);
+                Assert.DoesNotContain(loaded.Accommodations, item => item.Id == rollback.Id);
                 await transaction.CommitAsync();
             }
         }

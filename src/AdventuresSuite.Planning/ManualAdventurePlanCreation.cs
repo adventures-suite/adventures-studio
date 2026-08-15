@@ -98,6 +98,9 @@ public interface IPlanningCreationIdentityGenerator
     /// <summary>Generates a new private transportation-segment identity.</summary>
     TransportationSegmentId NewTransportationSegmentId();
 
+    /// <summary>Generates a new private accommodation identity.</summary>
+    AccommodationId NewAccommodationId();
+
     /// <summary>Generates a new required audit-event identity.</summary>
     AuditEventId NewAuditEventId();
 
@@ -122,6 +125,9 @@ public sealed class GuidPlanningCreationIdentityGenerator : IPlanningCreationIde
 
     /// <inheritdoc />
     public TransportationSegmentId NewTransportationSegmentId() => new($"transport_{Guid.NewGuid():N}");
+
+    /// <inheritdoc />
+    public AccommodationId NewAccommodationId() => new($"accommodation_{Guid.NewGuid():N}");
 
     /// <inheritdoc />
     public AuditEventId NewAuditEventId() => new($"audit_{Guid.NewGuid():N}");

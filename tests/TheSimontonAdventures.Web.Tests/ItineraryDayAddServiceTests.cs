@@ -77,8 +77,11 @@ public sealed class ItineraryDayAddServiceTests
     {
         var existing = new ItineraryDay
         {
-            Id = new("day_existing_01"), DestinationVisitId = VisitId,
-            Date = new(2027, 1, 3), TimeZone = new("Europe/Rome"), Title = "Existing"
+            Id = new("day_existing_01"),
+            DestinationVisitId = VisitId,
+            Date = new(2027, 1, 3),
+            TimeZone = new("Europe/Rome"),
+            Title = "Existing"
         };
         var transaction = new RecordingTransaction(Creator, Plan(days: [existing]));
         var result = await Service(transaction).AddAsync(Command());
@@ -120,8 +123,11 @@ public sealed class ItineraryDayAddServiceTests
     {
         var visit = new DestinationVisit
         {
-            Id = VisitId, Name = "Rome", Dates = new(new(2027, 1, 2), new(2027, 1, 5)),
-            TimeZone = new("Europe/Rome"), Sequence = 1
+            Id = VisitId,
+            Name = "Rome",
+            Dates = new(new(2027, 1, 2), new(2027, 1, 5)),
+            TimeZone = new("Europe/Rome"),
+            Sequence = 1
         };
         return new(
             PlanId, creator ?? Creator, "Italy", null, AdventureLifecycleStage.Plan,
@@ -160,6 +166,7 @@ public sealed class ItineraryDayAddServiceTests
         public ItineraryDayId NewItineraryDayId() => new("day_rome_01");
         public PlannedActivityId NewPlannedActivityId() => new("activity_fixed_01");
         public TransportationSegmentId NewTransportationSegmentId() => new("transport_fixed_01");
+        public AccommodationId NewAccommodationId() => new("accommodation_fixed_01");
         public AuditEventId NewAuditEventId() => new("audit_day_01");
         public CorrelationId NewCorrelationId() => new("correlation_day_01");
     }
@@ -231,5 +238,6 @@ public sealed class ItineraryDayAddServiceTests
         public Task AddDestinationVisitAsync(CreatorId creatorId, AdventurePlan plan, DestinationVisit destinationVisit, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task AddPlannedActivityAsync(CreatorId creatorId, AdventurePlan plan, PlannedActivity activity, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task AddTransportationSegmentAsync(CreatorId creatorId, AdventurePlan plan, TransportationSegment segment, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task AddAccommodationAsync(CreatorId creatorId, AdventurePlan plan, Accommodation accommodation, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 }
