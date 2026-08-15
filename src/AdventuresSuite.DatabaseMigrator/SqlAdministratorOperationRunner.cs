@@ -92,7 +92,7 @@ internal static class SqlAdministratorOperationRunner
         throw new InvalidOperationException("Fresh administrator credentials unexpectedly retained SQL access.");
     }
 
-    private static async Task<int> CaptureBaselineAsync(SqlConnection connection, Context context)
+    internal static async Task<int> CaptureBaselineAsync(SqlConnection connection, Context context)
     {
         var path = Path.GetFullPath(Require("ADVENTURESSUITE_ADMIN_BASELINE_SQL_PATH"));
         if (!path.EndsWith("/infrastructure/private-sql-admin-operation/baseline.sql", StringComparison.Ordinal)
@@ -284,7 +284,7 @@ internal static class SqlAdministratorOperationRunner
     private static string Hash(string value) =>
         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
 
-    private sealed record Context(
+    internal sealed record Context(
         Guid TenantId, Guid AdministratorPrincipalId, Guid AdministratorClientId,
         Guid MigrationPrincipalId, Guid MigrationClientId, string MigrationPrincipalName,
         string SqlServer, string SqlDatabase, string SourceSha, string OperationId,

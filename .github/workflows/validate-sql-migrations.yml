@@ -15,6 +15,7 @@ on:
   pull_request:
     paths:
       - database/**
+      - infrastructure/private-sql-admin-operation/baseline.sql
       - src/AdventuresSuite.DatabaseMigrator/**
       - src/AdventuresSuite.Authorization.SqlServer/**
       - src/AdventuresSuite.Identity.SqlServer/**
