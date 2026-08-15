@@ -9,6 +9,7 @@ using TheSimontonAdventures.Web.Resources;
 using TheSimontonAdventures.Web.Planning;
 using TheSimontonAdventures.Web.Planning.Persistence;
 using TheSimontonAdventures.Web.Services;
+using TheSimontonAdventures.Web.Showcase;
 using TheSimontonAdventures.Web.Validation;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +19,28 @@ builder.Services
     .AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddHttpContextAccessor();
+
+// The showcase is an isolated development surface backed only by a validated,
+// fictional JSON fixture. It never changes or bypasses private authentication.
+var showcaseRequested = builder.Configuration.GetValue<bool>("Showcase:Enabled");
+var isShowcaseEnvironment = builder.Environment.IsEnvironment("Showcase");
+var isPublicShowcaseEnvironment =
+    builder.Environment.IsEnvironment("PublicShowcase");
+if (showcaseRequested
+    && !builder.Environment.IsDevelopment()
+    && !isShowcaseEnvironment)
+{
+    throw new InvalidOperationException(
+        "The read-only product showcase may be enabled only in Development " +
+        "or the isolated Showcase environment.");
+}
+
+var showcaseEnabled = showcaseRequested
+    && (builder.Environment.IsDevelopment() || isShowcaseEnvironment);
+if (showcaseEnabled)
+{
+    builder.Services.AddSingleton<IShowcaseAdventureService, JsonShowcaseAdventureService>();
+}
 
 // Bind environment-specific Creator host aliases. The resolver ignores these
 // mappings outside Development so production hosts always require an explicit
@@ -62,6 +85,13 @@ if (string.Equals(authenticationMode, nameof(AuthenticationMode.ExternalProvider
     builder.Services.AddScoped<IPlannerWorkspaceQueryService, PlannerWorkspaceQueryService>();
     builder.Services.AddSingleton<IPlanningCreationIdentityGenerator, GuidPlanningCreationIdentityGenerator>();
     builder.Services.AddScoped<IManualAdventurePlanCreateService, ManualAdventurePlanCreateService>();
+    builder.Services.AddScoped<IAdventurePlanOverviewEditService, AdventurePlanOverviewEditService>();
+    builder.Services.AddScoped<IDestinationVisitAddService, DestinationVisitAddService>();
+    builder.Services.AddScoped<IItineraryDayAddService, ItineraryDayAddService>();
+    builder.Services.AddScoped<IPlannedActivityAddService, PlannedActivityAddService>();
+    builder.Services.AddScoped<ITransportationSegmentAddService, TransportationSegmentAddService>();
+    builder.Services.AddScoped<IAccommodationAddService, AccommodationAddService>();
+    builder.Services.AddScoped<IReservationAddService, ReservationAddService>();
 }
 
 // Register the existing JSON-backed travel-content implementation.
@@ -171,6 +201,59 @@ app.UseMiddleware<BrowserSecurityHeadersMiddleware>();
 // static assets, endpoints, or shared UI can expose Creator-owned content.
 app.UseMiddleware<CreatorResolutionMiddleware>();
 
+// The Simonton Adventures public showcase serves the approved public Creator
+// story and local Resources without activating any private workspace surface.
+if (isPublicShowcaseEnvironment)
+{
+    app.Use(async (context, next) =>
+    {
+        if (IsPrivateShowcaseRoute(context.Request.Path))
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            return;
+        }
+
+        await next(context);
+    });
+}
+
+// The remotely hosted showcase is a deliberately narrow public surface. It
+// shares no private workspace route and serves only the fictional experience,
+// its required static/interactive assets, and minimal deployment health.
+if (isShowcaseEnvironment)
+{
+    app.Use(async (context, next) =>
+    {
+        if (context.Request.Path == "/")
+        {
+            context.Response.Redirect("/showcase");
+            return;
+        }
+
+        if (!IsShowcaseRequest(context.Request.Path))
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            return;
+        }
+
+        await next(context);
+    });
+}
+
+// Keep the compiled route unreachable outside the explicit development-only
+// configuration. The route contains synthetic data, but still fails closed so
+// it cannot evolve into an accidental production preview surface.
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/showcase") && !showcaseEnabled)
+    {
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+        return;
+    }
+
+    await next(context);
+});
+
 // Redirect HTTP requests to HTTPS.
 app.UseHttpsRedirection();
 
@@ -228,6 +311,13 @@ if (authenticationConfiguration.Mode == AuthenticationMode.ExternalProvider)
 {
     app.MapAdventuresSuiteExternalIdEndpoints(authenticationConfiguration);
     app.MapManualAdventurePlanCreateEndpoint();
+    app.MapAdventurePlanOverviewEditEndpoint();
+    app.MapDestinationVisitAddEndpoint();
+    app.MapItineraryDayAddEndpoint();
+    app.MapPlannedActivityAddEndpoint();
+    app.MapTransportationSegmentAddEndpoint();
+    app.MapAccommodationAddEndpoint();
+    app.MapReservationAddEndpoint();
 }
 
 /// <summary>
@@ -354,6 +444,44 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.Run();
+
+static bool IsShowcaseRequest(PathString path) =>
+    path.StartsWithSegments("/showcase")
+    || path.StartsWithSegments("/health")
+    || path.StartsWithSegments("/_blazor")
+    || path.StartsWithSegments("/_framework")
+    || path.StartsWithSegments("/_content")
+    || path.StartsWithSegments("/images")
+    || path.StartsWithSegments("/lib")
+    || path == "/favicon.png"
+    || IsShowcaseStylesheet(path)
+    || IsShowcaseReconnectModule(path);
+
+static bool IsPrivateShowcaseRoute(PathString path) =>
+    path.StartsWithSegments("/workspace")
+    || path.StartsWithSegments("/authentication")
+    || path.StartsWithSegments("/showcase");
+
+static bool IsShowcaseStylesheet(PathString path)
+{
+    var value = path.Value;
+    return value is not null
+        && value.EndsWith(".css", StringComparison.Ordinal)
+        && (value.StartsWith("/app.", StringComparison.Ordinal)
+            || value.StartsWith(
+                "/TheSimontonAdventures.Web.",
+                StringComparison.Ordinal));
+}
+
+static bool IsShowcaseReconnectModule(PathString path)
+{
+    var value = path.Value;
+    return value is not null
+        && value.StartsWith(
+            "/Components/Layout/ReconnectModal.",
+            StringComparison.Ordinal)
+        && value.EndsWith(".razor.js", StringComparison.Ordinal);
+}
 
 /// <summary>
 /// Exposes the top-level application entry point to the integration-test host.

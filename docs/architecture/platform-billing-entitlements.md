@@ -1,10 +1,10 @@
 # AdventuresSuite Platform Billing and Entitlements Architecture
 
-**Version:** 1.0
+**Version:** 1.1
 
 **Status:** Approved Direction
 
-**Last Updated:** August 8, 2026
+**Last Updated:** August 11, 2026
 
 ## Purpose
 
@@ -142,6 +142,13 @@ Entitlements can arise from a paid subscription, trial, promotional grant,
 contract, support remedy, or approved migration. Manual grants are time-bound
 where possible, require stronger permission and reason, and are fully audited.
 
+Every time-bounded grant records a trusted UTC effective time, optional UTC
+expiration, status, version, source, and supersession or revocation evidence.
+Expiration is evaluated below the UI for every protected operation and again
+when delayed background work executes. Opening a screen before expiration does
+not authorize a later mutation. User-facing remaining-time displays are derived
+projections; countdown ticks are never persisted as entitlement state.
+
 ### SeatAllocation
 
 A seat allocation limits how many active memberships may consume a plan's team
@@ -185,13 +192,44 @@ Decisions are cacheable only under a documented, short, version-aware policy.
 Security-sensitive revocation, administrative suspension, or corrected grants
 must have deterministic invalidation.
 
+Cache keys include the Creator, capability, relevant relationship or actor
+scope, entitlement version, and applicable expiry. A cache entry never lives
+past the authoritative grant expiration. Offline clients consume only bounded,
+versioned entitlement projections and fail safely when the projection becomes
+too stale.
+
+## Workspace Tool Projection
+
+The private workspace consumes a provider-neutral projection of tools applicable
+to the current actor, Creator, resource, and product state. Each registered tool
+identifies its stable Platform Capability, required permission, resource and
+relationship context, applicable allowance, rollout and availability gates, and
+presentation metadata.
+
+The projection may classify a tool as available, discoverable as a commercial
+upgrade, or omitted. A missing subscription capability may be explained without
+claiming authorization. A role-, traveler-policy-, engagement-, or
+resource-denied tool normally remains omitted to avoid disclosing protected
+relationships or resource state.
+
+Navigation projection is not enforcement. Application services, APIs, exports,
+and background work independently evaluate authorization, entitlement,
+allowances, rollout, and service availability. Browser state, a rendered icon,
+a hidden tool, or a forged route cannot grant or deny authoritative capability.
+
 ## Plan and Packaging Direction
 
-Initial product language may include Free/Trial, Explorer, Creator,
-Professional, and Enterprise, but these names remain product hypotheses until
-commercial approval. Plans are versioned bundles over stable capabilities and
-allowances. Add-ons can supplement a plan without creating a new role or code
-path.
+Initial product direction uses three understandable plans: Free, Explorer, and
+Navigator. Free is a genuine versioned subscription that provides bounded real
+utility. Explorer is intended to be the complete choice for most travelers.
+Navigator adds meaningful advanced convenience, intelligence, collaboration,
+readiness, outputs, or capacity without manufacturing limitations in Explorer.
+
+Plans remain versioned bundles over stable capabilities and allowances. Trials,
+previews, launch offers, and support remedies are time-bounded grants layered
+over a base plan rather than additional hidden tiers. Add-ons can supplement a
+plan without creating a new role or code path, but the initial product should
+prefer simple packaging over a large add-on catalog.
 
 Potential add-ons include additional seats, storage, AI usage, notification
 volume, advanced publishing, commerce, professional collaboration, custom
@@ -199,6 +237,12 @@ domains, and reporting.
 
 Price, tax treatment, refund terms, free limits, and exact bundles are business
 decisions, not architectural constants.
+
+Adding a capability to Free, Explorer, or Navigator creates a new immutable plan
+version. Whether existing subscribers receive it automatically, opt in, or
+retain a grandfathered version is an explicit, audited reconciliation policy.
+Feature rollout remains separate: entitlement does not promise that a feature
+is enabled for a cohort, and rollout never creates contractual entitlement.
 
 ## Billing Lifecycle and Customer Protection
 
@@ -219,6 +263,12 @@ Cancellation, expiration, downgrade, and allowance reduction require preview,
 effective time, data-impact explanation, and deterministic reconciliation.
 Downgrade cannot make existing data cross Creator boundaries or disappear
 without the approved retention process.
+
+Subscription or promotional expiry does not revoke Creator membership or alter
+Planning lifecycle state. Seats remain capacity rather than identity or access.
+Where policy permits, existing data remains viewable, recoverable, and
+exportable while selected new premium operations are restricted. Grace periods
+and support overrides are explicit, time-bounded, reasoned, and audited.
 
 ## Provider Integration
 
@@ -301,3 +351,5 @@ the current Phase 3 identity work.
 
 Detailed delivery gates are defined in
 `docs/development/platform-billing-entitlements-implementation-plan.md`.
+Product experience and packaging principles are defined in
+`docs/product/workspace-experience-and-value.md`.

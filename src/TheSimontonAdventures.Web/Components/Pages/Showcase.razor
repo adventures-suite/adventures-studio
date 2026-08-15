@@ -1,0 +1,228 @@
+@page "/showcase"
+@layout ShowcaseLayout
+@rendermode InteractiveServer
+@using TheSimontonAdventures.Web.Showcase
+@using TheSimontonAdventures.Web.Components.Showcase
+@inject IShowcaseAdventureService ShowcaseAdventureService
+
+<PageTitle>AdventuresSuite Planner Showcase</PageTitle>
+<HeadContent>
+    <meta name="robots" content="noindex,nofollow,noarchive" />
+    <meta name="description" content="A fictional, read-only AdventuresSuite product showcase." />
+</HeadContent>
+
+@if (_adventure is null)
+{
+    <main class="showcase-loading" aria-busy="true">
+        <p>Preparing the Adventure…</p>
+    </main>
+}
+else
+{
+    <div class="showcase @(_darkMode ? "showcase--dark" : "") @(_railCollapsed ? "showcase--collapsed" : "")">
+        <aside class="showcase-rail" aria-label="Showcase workspace navigation">
+            <div class="showcase-brand">
+                <span class="showcase-brand-mark" aria-hidden="true">A</span>
+                <span class="showcase-brand-copy"><strong>AdventuresSuite</strong><small>Planner preview</small></span>
+            </div>
+
+            <nav aria-label="Adventure tools">
+                @foreach (var item in Navigation)
+                {
+                    <button type="button"
+                            class="@(item.View == _view ? "active" : null)"
+                            aria-current="@(item.View == _view ? "page" : null)"
+                            title="@item.Label"
+                            @onclick="() => SelectView(item.View)">
+                        <ShowcaseNavIcon Name="@item.Icon" />
+                        <span>@item.Label</span>
+                    </button>
+                }
+            </nav>
+
+            <div class="showcase-rail-actions">
+                <button type="button" title="Toggle color theme" @onclick="ToggleTheme">
+                    <span class="theme-icon" aria-hidden="true">@(_darkMode ? "☀" : "☾")</span>
+                    <span>@(_darkMode ? "Light mode" : "Dark mode")</span>
+                </button>
+                <button type="button" title="Resize navigation" @onclick="ToggleRail">
+                    <span class="collapse-icon" aria-hidden="true">@(_railCollapsed ? "›" : "‹")</span>
+                    <span>Collapse</span>
+                </button>
+            </div>
+        </aside>
+
+        <main class="showcase-main">
+            <div class="showcase-banner" role="note">
+                <span>Development showcase</span>
+                <p>Fictional travelers and planning details · Read-only · No booking or private customer data</p>
+            </div>
+
+            <header class="showcase-topbar">
+                <div>
+                    <p class="showcase-kicker">@_adventure.Eyebrow</p>
+                    <h1>@ViewTitle</h1>
+                </div>
+                <div class="showcase-top-actions">
+                    <span class="showcase-countdown">@_adventure.Countdown</span>
+                    <span class="showcase-avatar" aria-label="Fictional planner Alex Morgan">AM</span>
+                </div>
+            </header>
+
+            @switch (_view)
+            {
+                case ShowcaseView.Overview:
+                    @Overview()
+                    break;
+                case ShowcaseView.Itinerary:
+                    @Itinerary()
+                    break;
+                case ShowcaseView.Travelers:
+                    @Travelers()
+                    break;
+                case ShowcaseView.Readiness:
+                    @Readiness()
+                    break;
+            }
+        </main>
+    </div>
+}
+
+@code {
+    private static readonly IReadOnlyList<ShowcaseNavigationItem> Navigation =
+    [
+        new(ShowcaseView.Overview, "overview", "Overview"),
+        new(ShowcaseView.Itinerary, "itinerary", "Itinerary"),
+        new(ShowcaseView.Travelers, "travelers", "Travelers"),
+        new(ShowcaseView.Readiness, "readiness", "Readiness")
+    ];
+
+    private ShowcaseAdventure? _adventure;
+    private ShowcaseView _view;
+    private int _selectedDay;
+    private bool _darkMode;
+    private bool _railCollapsed;
+
+    private string ViewTitle => _view switch
+    {
+        ShowcaseView.Overview => _adventure!.Title,
+        ShowcaseView.Itinerary => "Itinerary & experiences",
+        ShowcaseView.Travelers => "Travelers & preferences",
+        ShowcaseView.Readiness => "Ready for the Adventure",
+        _ => _adventure!.Title
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        _adventure = await ShowcaseAdventureService.GetAsync();
+        _selectedDay = _adventure.Days[0].Day;
+    }
+
+    private void SelectView(ShowcaseView view) => _view = view;
+    private void ToggleTheme() => _darkMode = !_darkMode;
+    private void ToggleRail() => _railCollapsed = !_railCollapsed;
+
+    private RenderFragment Overview() => @<div class="showcase-content">
+        <section class="showcase-hero">
+            <img src="@_adventure!.HeroImage" alt="@_adventure.HeroAlt" />
+            <div class="showcase-hero-overlay">
+                <span>@_adventure.Status</span>
+                <h2>@_adventure.Title</h2>
+                <p>@_adventure.Summary</p>
+                <strong>@_adventure.Dates</strong>
+            </div>
+        </section>
+
+        <section class="showcase-stats" aria-label="Adventure summary">
+            @foreach (var stat in _adventure.Stats)
+            {
+                <div><strong>@stat.Value</strong><span>@stat.Label</span></div>
+            }
+        </section>
+
+        <section class="showcase-section">
+            <div class="showcase-section-heading">
+                <div><p class="showcase-kicker">The route</p><h2>Places worth slowing down for</h2></div>
+                <button type="button" @onclick="() => SelectView(ShowcaseView.Itinerary)">Explore itinerary <span aria-hidden="true">→</span></button>
+            </div>
+            <div class="destination-grid">
+                @foreach (var destination in _adventure.Destinations)
+                {
+                    <article>
+                        <img src="@destination.Image" alt="@destination.ImageAlt" />
+                        <div><p>@destination.Country · @destination.Dates</p><h3>@destination.Name</h3><span>@destination.Highlight</span></div>
+                    </article>
+                }
+            </div>
+        </section>
+
+        <section class="showcase-section recommendation-section">
+            <div class="showcase-section-heading"><div><p class="showcase-kicker">Explainable planning</p><h2>Helpful, never automatic</h2></div></div>
+            <div class="recommendation-grid">
+                @foreach (var recommendation in _adventure.Recommendations)
+                {
+                    <article><p>@recommendation.Label</p><h3>@recommendation.Title</h3><span>@recommendation.Explanation</span><strong>@recommendation.State</strong></article>
+                }
+            </div>
+        </section>
+    </div>;
+
+    private RenderFragment Itinerary() => @<div class="showcase-content itinerary-layout">
+        <aside class="itinerary-days" aria-label="Adventure days">
+            @foreach (var day in _adventure!.Days)
+            {
+                <button type="button" class="@(day.Day == _selectedDay ? "active" : null)" @onclick="() => _selectedDay = day.Day">
+                    <span>Day @day.Day</span><div><strong>@day.Title</strong><small>@day.Date · @day.Location</small></div>
+                </button>
+            }
+        </aside>
+        @if (_adventure.Days.FirstOrDefault(day => day.Day == _selectedDay) is { } selected)
+        {
+            <article class="itinerary-detail">
+                <p class="showcase-kicker">Day @selected.Day · @selected.Date</p>
+                <h2>@selected.Title</h2>
+                <p class="itinerary-location">@selected.Location</p>
+                <p class="itinerary-summary">@selected.Summary</p>
+                <div class="transport-card"><ShowcaseNavIcon Name="itinerary" /><div><span>Transportation</span><strong>@selected.Transportation</strong></div></div>
+                <h3>Today's plan</h3>
+                <ol class="activity-list">
+                    @foreach (var activity in selected.Activities)
+                    {
+                        <li><time>@activity.Time</time><div><strong>@activity.Title</strong><span>@activity.State</span></div></li>
+                    }
+                </ol>
+            </article>
+        }
+    </div>;
+
+    private RenderFragment Travelers() => @<div class="showcase-content">
+        <section class="showcase-intro"><p>No traveler is globally ranked. Safety and hard constraints come first; preferences help the planners understand tradeoffs.</p></section>
+        <div class="traveler-grid">
+            @foreach (var traveler in _adventure!.Travelers)
+            {
+                <article>
+                    <header><span class="traveler-avatar @traveler.Accent">@traveler.Initials</span><div><h2>@traveler.Name</h2><p>@traveler.Role</p></div></header>
+                    <dl><div><dt>Transportation</dt><dd>@traveler.Transportation</dd></div><div><dt>Adventure pace</dt><dd>@traveler.Pace</dd></div><div><dt>Readiness</dt><dd>@traveler.Readiness</dd></div></dl>
+                </article>
+            }
+        </div>
+        <section class="resolution-card">
+            <p class="showcase-kicker">Group resolution</p><h2>Why the direct evening flight fits</h2>
+            <ol><li><strong>Hard requirements</strong><span>Step-free arrival window and no unsafe transfers</span></li><li><strong>Adventure overrides</strong><span>Avoid overnight rail on this trip</span></li><li><strong>Group preferences</strong><span>Direct service preferred by three travelers</span></li><li><strong>Planner decision</strong><span>Ready for explicit approval—not booked</span></li></ol>
+        </section>
+    </div>;
+
+    private RenderFragment Readiness() => @<div class="showcase-content">
+        <section class="readiness-summary"><div class="readiness-ring"><strong>72%</strong><span>ready</span></div><div><p class="showcase-kicker">Explainable readiness</p><h2>A clear path from planning to departure</h2><p>Readiness comes from the current plan. It does not change lifecycle state or expose another traveler's private reason.</p></div></section>
+        <div class="readiness-list">
+            @foreach (var item in _adventure!.Readiness)
+            {
+                <article><span class="readiness-state @item.State.ToLowerInvariant().Replace(" ", "-")"></span><div><p>@item.Category</p><h3>@item.Title</h3><span>@item.Detail</span></div><strong>@item.State</strong></article>
+            }
+        </div>
+        <section class="showcase-intro"><strong>What happens next?</strong><p>Resolve the Santorini route, let the affected traveler review the private identity reminder, then generate each traveler's minimized Playbook.</p></section>
+    </div>;
+
+    private enum ShowcaseView { Overview, Itinerary, Travelers, Readiness }
+    private sealed record ShowcaseNavigationItem(ShowcaseView View, string Icon, string Label);
+}

@@ -31,21 +31,24 @@ public sealed record PlannerWorkspaceResult
 /// <summary>Describes a safe outcome from an authorized read-only plan query.</summary>
 public sealed record PlannerPlanDetailResult
 {
-    private PlannerPlanDetailResult(bool isAllowed, AdventurePlanDetail? plan)
+    private PlannerPlanDetailResult(bool isAllowed, AdventurePlanDetail? plan, bool canEdit)
     {
         IsAllowed = isAllowed;
         Plan = plan;
+        CanEdit = canEdit;
     }
 
     /// <summary>Gets whether the authenticated user may view the requested plan.</summary>
     public bool IsAllowed { get; }
     /// <summary>Gets the allowlisted plan projection after authorization.</summary>
     public AdventurePlanDetail? Plan { get; }
+    /// <summary>Gets whether a separately evaluated instance policy permits overview editing.</summary>
+    public bool CanEdit { get; }
     /// <summary>Creates a non-disclosing denied or unavailable result.</summary>
-    public static PlannerPlanDetailResult Denied() => new(false, null);
+    public static PlannerPlanDetailResult Denied() => new(false, null, false);
     /// <summary>Creates an allowed result from an authorized private query.</summary>
-    public static PlannerPlanDetailResult Allowed(AdventurePlanDetail plan) =>
-        new(true, plan ?? throw new ArgumentNullException(nameof(plan)));
+    public static PlannerPlanDetailResult Allowed(AdventurePlanDetail plan, bool canEdit = false) =>
+        new(true, plan ?? throw new ArgumentNullException(nameof(plan)), canEdit);
 }
 
 /// <summary>Reads the private Planner dashboard through authorization and persistence boundaries.</summary>
@@ -145,12 +148,25 @@ public sealed class PlannerWorkspaceQueryService(
             return PlannerPlanDetailResult.Denied();
         }
 
+        var editDecision = await authorizationPolicyEvaluator.AuthorizeAsync(
+            new AuthorizationRequest(
+                actor,
+                Permissions.AdventurePlanEdit,
+                AuthorizationResourceScope.ForInstance(
+                    creatorId,
+                    AuthorizationResourceTypes.AdventurePlan,
+                    planId.Value),
+                membershipVersion: membership.Version),
+            cancellationToken);
+        var canEdit = editDecision.IsAllowed
+            && editDecision.AuditRequirement == AuthorizationAuditRequirement.RequiredMutation;
+
         await using var transaction = await transactionFactory.BeginAsync(
             creatorId, cancellationToken);
         var plan = await transaction.AdventurePlans.GetDetailAsync(
             creatorId, planId, cancellationToken);
         return plan is null || plan.Id != planId
             ? PlannerPlanDetailResult.Denied()
-            : PlannerPlanDetailResult.Allowed(plan);
+            : PlannerPlanDetailResult.Allowed(plan, canEdit);
     }
 }

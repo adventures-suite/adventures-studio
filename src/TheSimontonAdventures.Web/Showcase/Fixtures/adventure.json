@@ -1,0 +1,154 @@
+{
+  "title": "Mediterranean Grand Journey",
+  "eyebrow": "Fictional Adventure · Product Showcase",
+  "summary": "A slow-travel celebration through Italy, Greece, and Croatia—balancing unforgettable places, unhurried mornings, and a seven-night Adriatic sailing.",
+  "status": "Planning beautifully",
+  "dates": "May 8–25, 2027",
+  "countdown": "268 days to departure",
+  "heroImage": "/images/volumes/volume-1/italy/venice/canal-hero.jpeg",
+  "heroAlt": "Warm evening light over a Venetian canal",
+  "stats": [
+    { "label": "Travelers", "value": "4" },
+    { "label": "Days", "value": "18" },
+    { "label": "Destinations", "value": "7" },
+    { "label": "Ready", "value": "72%" }
+  ],
+  "destinations": [
+    {
+      "name": "Venice",
+      "country": "Italy",
+      "dates": "May 9–12",
+      "image": "/images/volumes/volume-1/italy/venice/golden-canal.jpeg",
+      "imageAlt": "Golden light reflecting on a canal in Venice",
+      "highlight": "A private lagoon arrival and two evenings to wander after the day crowds leave."
+    },
+    {
+      "name": "Dubrovnik",
+      "country": "Croatia",
+      "dates": "May 14",
+      "image": "/images/volumes/volume-1/croatia/dubrovnik/harbor-arrival.jpeg",
+      "imageAlt": "Dubrovnik harbor beneath the old city walls",
+      "highlight": "Walk the walls early, share a waterside lunch, and keep the afternoon intentionally open."
+    },
+    {
+      "name": "Santorini",
+      "country": "Greece",
+      "dates": "May 17",
+      "image": "/images/volumes/volume-1/greece/santorini/caldera-wide.jpeg",
+      "imageAlt": "The Santorini caldera beneath a wide blue sky",
+      "highlight": "A small-group island drive timed around accessibility, heat, and the sunset crowds."
+    },
+    {
+      "name": "Athens",
+      "country": "Greece",
+      "dates": "May 20–24",
+      "image": "/images/volumes/volume-1/greece/athens/acropolis.jpeg",
+      "imageAlt": "The Acropolis rising above Athens",
+      "highlight": "Ancient landmarks, neighborhood tables, and a final unscheduled day to follow curiosity."
+    }
+  ],
+  "days": [
+    {
+      "day": 1,
+      "date": "Sat, May 8",
+      "title": "The Adventure begins",
+      "location": "Phoenix → Venice",
+      "summary": "A comfortable overnight departure with one connection and protected arrival time.",
+      "transportation": "Air · Preferred option identified",
+      "activities": [
+        { "time": "2:30 PM", "title": "Meet at the airport lounge", "state": "Planned" },
+        { "time": "5:10 PM", "title": "Depart for Europe", "state": "Option held externally" }
+      ]
+    },
+    {
+      "day": 2,
+      "date": "Sun, May 9",
+      "title": "Arrive by water",
+      "location": "Venice, Italy",
+      "summary": "A gentle arrival day with a private water transfer and no timed sightseeing.",
+      "transportation": "Water taxi · Step-free assistance requested",
+      "activities": [
+        { "time": "1:15 PM", "title": "Lagoon transfer to Cannaregio", "state": "Proposed" },
+        { "time": "6:30 PM", "title": "Neighborhood welcome dinner", "state": "Shortlisted" }
+      ]
+    },
+    {
+      "day": 4,
+      "date": "Tue, May 11",
+      "title": "Venice at our own pace",
+      "location": "Venice, Italy",
+      "summary": "A market morning, a quiet afternoon, and an evening photography walk in blue hour.",
+      "transportation": "Walking + vaporetto · Low-transfer route",
+      "activities": [
+        { "time": "9:00 AM", "title": "Rialto market with a local cook", "state": "Reserved" },
+        { "time": "7:45 PM", "title": "Canals after sunset", "state": "Planned" }
+      ]
+    },
+    {
+      "day": 6,
+      "date": "Thu, May 13",
+      "title": "Set sail from Ravenna",
+      "location": "Ravenna, Italy",
+      "summary": "Private transfer to the ship with boarding documents and timing gathered in one place.",
+      "transportation": "Private van + cruise · Group route",
+      "activities": [
+        { "time": "10:00 AM", "title": "Transfer to cruise terminal", "state": "Confirmed externally" },
+        { "time": "5:00 PM", "title": "Adriatic sail-away", "state": "Published schedule" }
+      ]
+    },
+    {
+      "day": 7,
+      "date": "Fri, May 14",
+      "title": "Walls above the Adriatic",
+      "location": "Dubrovnik, Croatia",
+      "summary": "An early old-city walk with two route choices, then lunch overlooking the harbor.",
+      "transportation": "Ship shuttle + walking · Accessible alternative ready",
+      "activities": [
+        { "time": "8:15 AM", "title": "Old City before the crowds", "state": "Planned" },
+        { "time": "12:30 PM", "title": "Harbor lunch", "state": "Voting complete" }
+      ]
+    },
+    {
+      "day": 10,
+      "date": "Mon, May 17",
+      "title": "Caldera, villages, and sunset",
+      "location": "Santorini, Greece",
+      "summary": "A paced island day that avoids the longest stairs and preserves time for an unhurried sunset.",
+      "transportation": "Tender + private driver · Constraint-aware",
+      "activities": [
+        { "time": "9:30 AM", "title": "Pyrgos and island viewpoints", "state": "Recommended" },
+        { "time": "5:45 PM", "title": "Caldera dinner", "state": "Shortlisted" }
+      ]
+    },
+    {
+      "day": 13,
+      "date": "Thu, May 20",
+      "title": "Athens beyond the postcard",
+      "location": "Athens, Greece",
+      "summary": "Disembarkation flows into a four-night stay with room for both landmarks and neighborhood life.",
+      "transportation": "Private transfer · Confirmed externally",
+      "activities": [
+        { "time": "11:30 AM", "title": "Check in near Plaka", "state": "Confirmed externally" },
+        { "time": "6:00 PM", "title": "First evening food walk", "state": "Reserved" }
+      ]
+    }
+  ],
+  "travelers": [
+    { "initials": "AM", "name": "Alex Morgan", "role": "Primary Planner", "transportation": "Rail first · Direct flights preferred", "pace": "Balanced days", "readiness": "Profile current", "accent": "coral" },
+    { "initials": "JM", "name": "Jordan Morgan", "role": "Co-Planner", "transportation": "Step-free routes required", "pace": "Slower mornings", "readiness": "1 item to review", "accent": "blue" },
+    { "initials": "RS", "name": "Riley Santos", "role": "Traveler", "transportation": "Window seat · Willing to drive", "pace": "Full days", "readiness": "Profile current", "accent": "gold" },
+    { "initials": "TS", "name": "Taylor Santos", "role": "Traveler", "transportation": "Avoid overnight rail", "pace": "Flexible", "readiness": "Invitation accepted", "accent": "sage" }
+  ],
+  "readiness": [
+    { "category": "Identity", "title": "Passport validity", "detail": "Three travelers reviewed; one traveler has a private reminder.", "state": "Attention" },
+    { "category": "Transportation", "title": "Arrival plan", "detail": "Preferred flight and accessible Venice transfer align with all hard constraints.", "state": "Ready" },
+    { "category": "Decisions", "title": "Santorini route", "detail": "The private-driver option satisfies the recorded mobility requirement and group pace.", "state": "Review" },
+    { "category": "Reservations", "title": "External confirmations", "detail": "Cruise and Athens lodging verified. Supplier systems remain authoritative.", "state": "On track" },
+    { "category": "Travel day", "title": "Offline Playbook", "detail": "Traveler-safe itinerary is ready to generate after the final route decision.", "state": "Waiting" }
+  ],
+  "recommendations": [
+    { "label": "Transportation fit", "title": "Choose the direct evening flight", "explanation": "It is acceptable to all four travelers, avoids the overnight-rail constraint, and preserves the step-free Venice arrival window.", "state": "Recommended" },
+    { "label": "Group decision", "title": "Use a private driver in Santorini", "explanation": "The option costs more, but it satisfies the hard mobility constraint and reduces two transfers during the hottest part of the day.", "state": "Planner review" },
+    { "label": "Protected reminder", "title": "One identity item needs attention", "explanation": "The affected traveler can review the private requirement. Other travelers see only that readiness is incomplete.", "state": "Private" }
+  ]
+}

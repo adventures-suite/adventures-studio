@@ -43,6 +43,13 @@ Traveler participation:
 One user may participate in multiple Adventures and may separately hold Creator
 membership. Those authorization bases remain distinct.
 
+A reusable Traveler Profile remains separate from both Planning `Traveler` and
+`TravelerParticipation`. Adventure-specific preferences may override profile
+defaults without changing them. Group choices use scoped decision authority,
+hard-constraint precedence, explicit traveler sets, and visible conflict
+resolution rather than globally ranking travelers. See
+`docs/architecture/traveler-profile-and-preference-resolution.md`.
+
 ## Group Structure
 
 A group Adventure may organize travelers into optional, explicit subgroups such
