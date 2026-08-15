@@ -1,6 +1,6 @@
 SET NOCOUNT ON;
 
-SELECT name, type_desc,
+SELECT name, N'SCHEMA' AS type_desc,
        CASE USER_NAME(principal_id) WHEN N'db_ddladmin' THEN N'db_ddladmin' ELSE N'unexpected-redacted' END AS owner
 FROM sys.schemas
 WHERE name IN (N'planning', N'auth', N'audit')
