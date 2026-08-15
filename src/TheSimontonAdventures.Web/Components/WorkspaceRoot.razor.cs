@@ -210,20 +210,11 @@ public partial class WorkspaceRoot
     private static string FormatDates(PlanningDateRange dates) =>
         $"{dates.Start:MMM d, yyyy} – {dates.End:MMM d, yyyy}";
 
-    private static string FormatTimeRange(TimeOnly? start, TimeOnly? end) => (start, end) switch
-    {
-        ({ } startTime, { } endTime) => $"{startTime:h:mm tt}–{endTime:h:mm tt}",
-        ({ } startTime, null) => startTime.ToString("h:mm tt"),
-        _ => "Time flexible"
-    };
-
     private static string FormatStatus(PlanningStatus status) => status switch
     {
         PlanningStatus.InProgress => "In progress",
         _ => status.ToString()
     };
-
-    private static string FormatStatus(PlanItemStatus status) => status.ToString();
 
     private enum WorkspaceLoadState { Landing, Loading, Ready, Unavailable, Failure }
 
