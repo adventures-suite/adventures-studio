@@ -49,6 +49,36 @@ public sealed class AzureDevelopmentBootstrapperTests
     }
 
     [Fact]
+    public void BootstrapUsesExactSidWithoutDirectoryLookup()
+    {
+        var source = File.ReadAllText(Path.Combine(
+            FindRepositoryRoot(), "src/AdventuresSuite.DatabaseMigrator/AzureDevelopmentBootstrapper.cs"));
+
+        Assert.Contains("CREATE USER {quotedAlias} WITH SID = ", source, StringComparison.Ordinal);
+        Assert.Contains("TYPE = E", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("FROM EXTERNAL PROVIDER", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("WITH OBJECT_ID", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void CleanupRevokesOnlyTemporaryCatalogDropsUserAndRetainsPrerequisites()
+    {
+        var source = File.ReadAllText(Path.Combine(
+            FindRepositoryRoot(), "src/AdventuresSuite.DatabaseMigrator/AzureDevelopmentBootstrapper.cs"));
+
+        foreach (var expected in new[]
+        {
+            "REVOKE CONNECT", "REVOKE CREATE TABLE", "REVOKE VIEW DEFINITION",
+            "REVOKE CONTROL ON SCHEMA::planning", "REVOKE CONTROL ON SCHEMA::auth",
+            "REVOKE CONTROL ON SCHEMA::audit", "REVOKE SELECT, INSERT, UPDATE, DELETE",
+            "DROP USER"
+        }) Assert.Contains(expected, source, StringComparison.Ordinal);
+        Assert.DoesNotContain("DROP SCHEMA", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("DROP ROLE", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("DROP TABLE", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void CreatePrincipalAliasUsesExactDisplayNameAndObjectIdSuffix()
     {
         var alias = AzureDevelopmentBootstrapper.CreatePrincipalAlias(
@@ -79,5 +109,13 @@ public sealed class AzureDevelopmentBootstrapperTests
     {
         Assert.Throws<InvalidOperationException>(() =>
             AzureDevelopmentBootstrapper.CreatePrincipalAlias(new string('a', 123), Guid.NewGuid()));
+    }
+
+    private static string FindRepositoryRoot()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "TheSimontonAdventures.slnx")))
+            directory = directory.Parent;
+        return directory?.FullName ?? throw new InvalidOperationException("Repository root not found.");
     }
 }

@@ -14,6 +14,14 @@ try
 {
     switch (args)
     {
+        case ["--admin-baseline"]:
+            return await SqlAdministratorOperationRunner.RunAsync("baseline");
+        case ["--admin-bootstrap"]:
+            return await SqlAdministratorOperationRunner.RunAsync("bootstrap");
+        case ["--admin-cleanup"]:
+            return await SqlAdministratorOperationRunner.RunAsync("cleanup");
+        case ["--admin-denial-proof"]:
+            return await SqlAdministratorOperationRunner.RunAsync("denial-proof");
         case ["--bootstrap-sql"]:
             await AzureDevelopmentBootstrapper.BootstrapMigrationIdentityAsync(
                 RequireEnvironment(administratorConnectionVariable),
