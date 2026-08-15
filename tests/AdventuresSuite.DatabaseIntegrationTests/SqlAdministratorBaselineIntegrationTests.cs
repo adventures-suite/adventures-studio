@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using AdventuresSuite.DatabaseMigrator;
 using Microsoft.Data.SqlClient;
 
@@ -25,12 +26,70 @@ public sealed class SqlAdministratorBaselineIntegrationTests
             await using var connection = new SqlConnection(connectionString);
             await connection.OpenAsync();
 
-            Assert.Equal(0, await CaptureBaselineAsync(connection, databaseName));
+            var result = await CaptureBaselineAsync(connection, databaseName);
+            Assert.Equal(0, result.ExitCode);
+            Assert.Equal("absent", result.Evidence.RootElement.GetProperty("outcome").GetString());
         }
         finally
         {
             await DropDatabaseAsync(masterConnectionString, databaseName);
         }
+    }
+
+    /// <summary>Accepts only the exact DbUp-qualified canonical 0001-0006 state.</summary>
+    [Fact]
+    public async Task BaselineReader_AcceptsExactQualifiedAt0006State()
+    {
+        var master = RequireConnectionString();
+        var databaseName = $"AdventuresSuiteAdminBaseline0006_{Guid.NewGuid():N}";
+        var connectionString = BuildDatabaseConnectionString(master, databaseName);
+        await CreateDatabaseAsync(master, databaseName);
+        try
+        {
+            using (DatabaseMigratorRunner.AcquireMigrationLock(connectionString))
+                Assert.Equal(6, DatabaseMigratorRunner.MigrateWithLockHeld(connectionString, "0006").Count);
+            await using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync();
+            var result = await CaptureBaselineAsync(connection, databaseName);
+            Assert.Equal(0, result.ExitCode);
+            Assert.Equal("At0006", result.Evidence.RootElement.GetProperty("outcome").GetString());
+            Assert.All(result.Evidence.RootElement.GetProperty("journal").GetProperty("scripts").EnumerateArray(),
+                script => Assert.DoesNotContain("AdventuresSuite.DatabaseMigrator.Database.Migrations.", script.GetString()));
+        }
+        finally { await DropDatabaseAsync(master, databaseName); }
+    }
+
+    /// <summary>Rejects noncanonical journals and other partial committed boundaries.</summary>
+    [Theory]
+    [InlineData("0005", null)]
+    [InlineData("0007", null)]
+    [InlineData("0006", "UPDATE dbo.AdventuresSuiteSchemaVersions SET ScriptName=N'0001_create_planning_schema.sql' WHERE Id=1")]
+    [InlineData("0006", "UPDATE dbo.AdventuresSuiteSchemaVersions SET ScriptName=N'Wrong.Prefix.0001_create_planning_schema.sql' WHERE Id=1")]
+    [InlineData("0006", "DELETE dbo.AdventuresSuiteSchemaVersions WHERE Id=3")]
+    [InlineData("0006", "UPDATE dbo.AdventuresSuiteSchemaVersions SET ScriptName=(SELECT ScriptName FROM dbo.AdventuresSuiteSchemaVersions WHERE Id=1) WHERE Id=2")]
+    [InlineData("0006", "INSERT dbo.AdventuresSuiteSchemaVersions(ScriptName,Applied) VALUES(N'AdventuresSuite.DatabaseMigrator.Database.Migrations.9999_extra.sql',SYSUTCDATETIME())")]
+    [InlineData("0006", "UPDATE dbo.AdventuresSuiteSchemaVersions SET ScriptName=N'temporary' WHERE Id=1; UPDATE dbo.AdventuresSuiteSchemaVersions SET ScriptName=N'AdventuresSuite.DatabaseMigrator.Database.Migrations.0001_create_planning_schema.sql' WHERE Id=2; UPDATE dbo.AdventuresSuiteSchemaVersions SET ScriptName=N'AdventuresSuite.DatabaseMigrator.Database.Migrations.0002_create_adventure_plans.sql' WHERE Id=1")]
+    [InlineData("0006", "CREATE TABLE planning.Unexpected(Id int NOT NULL)")]
+    [InlineData("0006", "GRANT EXECUTE TO AdventuresSuiteAuthenticationRuntime")]
+    [InlineData("0006", "CREATE USER [AdventuresSuiteMigrationDev-ffc9a] WITHOUT LOGIN")]
+    public async Task BaselineReader_RejectsNoncanonicalJournal(string maximum, string? mutation)
+    {
+        var master = RequireConnectionString();
+        var databaseName = $"AdventuresSuiteAdminBaselineInvalid_{Guid.NewGuid():N}";
+        var connectionString = BuildDatabaseConnectionString(master, databaseName);
+        await CreateDatabaseAsync(master, databaseName);
+        try
+        {
+            using (DatabaseMigratorRunner.AcquireMigrationLock(connectionString))
+                DatabaseMigratorRunner.MigrateWithLockHeld(connectionString, maximum);
+            if (mutation is not null) await ExecuteAsync(connectionString, mutation);
+            await using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync();
+            var result = await CaptureBaselineAsync(connection, databaseName);
+            Assert.Equal(1, result.ExitCode);
+            Assert.Equal("unexpected", result.Evidence.RootElement.GetProperty("outcome").GetString());
+        }
+        finally { await DropDatabaseAsync(master, databaseName); }
     }
 
     /// <summary>Consumes every baseline result set after the complete 0001-0009 migration state.</summary>
@@ -58,9 +117,9 @@ public sealed class SqlAdministratorBaselineIntegrationTests
             await using var connection = new SqlConnection(connectionString);
             await connection.OpenAsync();
 
-            // The local SQL-login principal deliberately remains distinguishable from the
-            // reviewed Azure SQL external principal, so this state stays fail-closed.
-            Assert.Equal(1, await CaptureBaselineAsync(connection, databaseName));
+            var result = await CaptureBaselineAsync(connection, databaseName);
+            Assert.Equal(0, result.ExitCode);
+            Assert.Equal("complete", result.Evidence.RootElement.GetProperty("outcome").GetString());
         }
         finally
         {
@@ -72,7 +131,8 @@ public sealed class SqlAdministratorBaselineIntegrationTests
         }
     }
 
-    private static async Task<int> CaptureBaselineAsync(SqlConnection connection, string databaseName)
+    private static async Task<(int ExitCode, JsonDocument Evidence)> CaptureBaselineAsync(
+        SqlConnection connection, string databaseName)
     {
         var baselinePath = Path.Combine(
             FindRepositoryRoot(), "infrastructure/private-sql-admin-operation/baseline.sql");
@@ -85,7 +145,8 @@ public sealed class SqlAdministratorBaselineIntegrationTests
             Environment.SetEnvironmentVariable(
                 "ADVENTURESSUITE_ADMIN_BASELINE_SQL_SHA256",
                 Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(baseline))).ToLowerInvariant());
-            return await SqlAdministratorOperationRunner.CaptureBaselineAsync(
+            using var writer = new StringWriter();
+            var exitCode = await SqlAdministratorOperationRunner.CaptureBaselineAsync(
                 connection,
                 new SqlAdministratorOperationRunner.Context(
                     Guid.Parse("d7add2bb-ac03-49a8-9377-d0bf6a012f2f"),
@@ -105,7 +166,9 @@ public sealed class SqlAdministratorBaselineIntegrationTests
                     new string('d', 64),
                     "/subscriptions/test/resourceGroups/test/providers/Microsoft.ManagedIdentity/userAssignedIdentities/test",
                     "/subscriptions/test/resourceGroups/test/providers/Microsoft.Sql/servers/test",
-                    "/subscriptions/test/resourceGroups/test/providers/Microsoft.Network/privateEndpoints/test"));
+                    "/subscriptions/test/resourceGroups/test/providers/Microsoft.Network/privateEndpoints/test"),
+                writer);
+            return (exitCode, JsonDocument.Parse(writer.ToString()));
         }
         finally
         {
