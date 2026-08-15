@@ -5,6 +5,7 @@ using AdventuresSuite.Companion.Contracts;
 using AdventuresSuite.Companion.SqlServer;
 using TheSimontonAdventures.Web.Authorization;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Policy;
 using Microsoft.AspNetCore.Http.Json;
@@ -13,6 +14,7 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 var deterministicMode = builder.Configuration.GetValue<bool>(CompanionApiConstants.DeterministicModeKey);
+var authenticationMode = builder.Configuration[CompanionApiConstants.AuthenticationModeKey];
 var activationMode = builder.Configuration[CompanionApiConstants.ActivationModeKey];
 var projectionProvider = builder.Configuration[CompanionApiConstants.ProjectionProviderKey];
 var releaseSha = builder.Configuration[CompanionApiConstants.ReleaseShaKey];
@@ -22,6 +24,13 @@ if (deterministicMode && !builder.Environment.IsEnvironment("Test"))
 }
 if (!builder.Environment.IsEnvironment("Test"))
 {
+    if (authenticationMode is not (CompanionApiConstants.ClosedAuthenticationMode
+        or CompanionApiConstants.BearerAuthenticationMode))
+    {
+        throw new InvalidOperationException(
+            "Authentication:CompanionApi:Mode must be explicitly set to Closed or Bearer.");
+    }
+
     if (!string.Equals(activationMode, CompanionApiConstants.DisabledActivationMode, StringComparison.Ordinal))
     {
         throw new InvalidOperationException("Companion:ActivationMode must be explicitly set to Disabled until production activation gates pass.");
@@ -39,8 +48,16 @@ if (!builder.Environment.IsEnvironment("Test"))
     {
         throw new InvalidOperationException("Companion:ProjectionProvider must be explicitly Closed or Sql.");
     }
+
+    if (authenticationMode == CompanionApiConstants.BearerAuthenticationMode
+        && projectionProvider != CompanionApiConstants.ClosedProjectionProvider)
+    {
+        throw new InvalidOperationException(
+            "Bearer authentication must remain paired with the Closed projection provider until authoritative access-context resolution is implemented.");
+    }
 }
 
+authenticationMode ??= CompanionApiConstants.ClosedAuthenticationMode;
 activationMode ??= CompanionApiConstants.DisabledActivationMode;
 releaseSha ??= "0000000000000000000000000000000000000000";
 projectionProvider ??= CompanionApiConstants.ClosedProjectionProvider;
@@ -62,11 +79,19 @@ builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = deterministicMode
         ? TestCompanionAuthenticationHandler.SchemeName
-        : ClosedCompanionAuthenticationHandler.SchemeName;
+        : authenticationMode == CompanionApiConstants.BearerAuthenticationMode
+            ? JwtBearerDefaults.AuthenticationScheme
+            : ClosedCompanionAuthenticationHandler.SchemeName;
     options.DefaultChallengeScheme = options.DefaultAuthenticateScheme;
 })
     .AddScheme<AuthenticationSchemeOptions, ClosedCompanionAuthenticationHandler>(
         ClosedCompanionAuthenticationHandler.SchemeName, _ => { });
+
+if (!deterministicMode && authenticationMode == CompanionApiConstants.BearerAuthenticationMode)
+{
+    var bearerConfiguration = CompanionBearerConfiguration.Parse(builder.Configuration);
+    builder.Services.AddAuthentication().AddJwtBearer(options => bearerConfiguration.Configure(options));
+}
 
 if (deterministicMode)
 {
@@ -111,7 +136,7 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy(CompanionApiConstants.AuthorizationPolicy, policy =>
     {
         policy.RequireAuthenticatedUser();
-        policy.RequireClaim("scope", DeterministicCompanionProjectionService.RequiredScope);
+        policy.RequireAssertion(context => CompanionBearerConfiguration.HasRequiredScope(context.User));
     });
 
 var app = builder.Build();

@@ -2,9 +2,116 @@ using System.Security.Claims;
 using System.Text.Encodings.Web;
 using AdventuresSuite.Companion.Application;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 
 namespace AdventuresSuite.Api;
+
+/// <summary>Validates and applies the closed Companion bearer-transport configuration.</summary>
+public sealed class CompanionBearerConfiguration
+{
+    private CompanionBearerConfiguration(string issuer, string audience)
+    {
+        Issuer = issuer;
+        Audience = audience;
+    }
+
+    /// <summary>Gets the exact HTTPS token issuer.</summary>
+    public string Issuer { get; }
+
+    /// <summary>Gets the exact API audience.</summary>
+    public string Audience { get; }
+
+    /// <summary>Reads exact non-secret bearer settings and fails closed on unsafe values.</summary>
+    public static CompanionBearerConfiguration Parse(IConfiguration configuration)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+        var issuerValue = configuration[CompanionApiConstants.AuthenticationIssuerKey];
+        var audience = configuration[CompanionApiConstants.AuthenticationAudienceKey];
+        if (string.IsNullOrWhiteSpace(issuerValue)
+            || issuerValue.Length > 2048
+            || issuerValue != issuerValue.Trim()
+            || !Uri.TryCreate(issuerValue, UriKind.Absolute, out var issuer)
+            || issuer.Scheme != Uri.UriSchemeHttps
+            || !string.IsNullOrEmpty(issuer.UserInfo)
+            || !string.IsNullOrEmpty(issuer.Query)
+            || !string.IsNullOrEmpty(issuer.Fragment)
+            || issuer.AbsolutePath.Length <= 1
+            || string.IsNullOrWhiteSpace(audience)
+            || audience.Length > 256
+            || audience.Any(char.IsWhiteSpace))
+        {
+            throw new InvalidOperationException("Companion bearer issuer and audience configuration is invalid.");
+        }
+
+        return new CompanionBearerConfiguration(issuerValue, audience);
+    }
+
+    /// <summary>Applies strict protocol validation without retaining token material.</summary>
+    public void Configure(JwtBearerOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        options.Authority = Issuer;
+        options.Audience = Audience;
+        options.MapInboundClaims = false;
+        options.SaveToken = false;
+        options.IncludeErrorDetails = false;
+        options.RequireHttpsMetadata = true;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = Issuer,
+            ValidateAudience = true,
+            ValidAudience = Audience,
+            ValidateIssuerSigningKey = true,
+            RequireSignedTokens = true,
+            ValidateLifetime = true,
+            RequireExpirationTime = true,
+            ClockSkew = TimeSpan.FromMinutes(1),
+            ValidAlgorithms = [SecurityAlgorithms.RsaSha256],
+            NameClaimType = "sub",
+            RoleClaimType = "__companion_roles_not_authoritative"
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = context =>
+            {
+                if (!TryValidateExternalIdentity(context.Principal))
+                {
+                    context.Fail("The bearer identity is invalid.");
+                }
+
+                return Task.CompletedTask;
+            }
+        };
+    }
+
+    /// <summary>Checks the exact delegated scope without treating other claims as authority.</summary>
+    public static bool HasRequiredScope(ClaimsPrincipal principal) =>
+        principal.FindAll("scope")
+            .SelectMany(claim => claim.Value.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            .Contains(DeterministicCompanionProjectionService.RequiredScope, StringComparer.Ordinal);
+
+    private bool TryValidateExternalIdentity(ClaimsPrincipal? principal)
+    {
+        var issuers = principal?.FindAll("iss").Select(claim => claim.Value).ToArray() ?? [];
+        var subjects = principal?.FindAll("sub").Select(claim => claim.Value).ToArray() ?? [];
+        if (issuers.Length != 1 || subjects.Length != 1)
+            return false;
+
+        try
+        {
+            var issuer = new AdventuresSuite.Identity.ExternalIdentityIssuer(issuers[0]);
+            _ = new AdventuresSuite.Identity.ExternalIdentitySubject(subjects[0]);
+            return string.Equals(issuer.Value, Issuer, StringComparison.Ordinal);
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
+    }
+}
 
 /// <summary>Represents the permanently closed authentication scheme used before production OAuth activation.</summary>
 public sealed class ClosedCompanionAuthenticationHandler(
