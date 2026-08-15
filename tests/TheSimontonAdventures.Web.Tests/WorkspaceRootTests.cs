@@ -131,7 +131,8 @@ public sealed class WorkspaceRootTests
                 Version = 7,
                 TravelerCount = 2,
                 Destinations = [new(new("visit_madrid"), "Madrid",
-                    new(new(2027, 10, 26), new(2027, 10, 29)), new("Europe/Madrid"), 1)]
+                    new(new(2027, 10, 26), new(2027, 10, 29)), new("Europe/Madrid"), 1)],
+                Reservations = [new(new("reservation_prado"), "Prado Museum", PlanItemStatus.Proposed)]
             }));
         var html = await RenderAsync(ApplicationPrincipal(),
             "/workspace/creators/creator_alpha_01/plans/plan_spain_2027",
@@ -143,10 +144,113 @@ public sealed class WorkspaceRootTests
 
         Assert.Contains("Spain and Atlantic", html);
         Assert.Contains("Madrid", html);
-        Assert.Contains("Sensitive reservation references", html);
+        Assert.Contains("Prado Museum", html);
+        Assert.Contains("Sensitive confirmation references", html);
         Assert.DoesNotContain("RESERVATION-SECRET-123", html, StringComparison.Ordinal);
         Assert.DoesNotContain("Traveler Private Name", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("/overview", html, StringComparison.Ordinal);
         Assert.Equal(new AdventurePlanId("plan_spain_2027"), query.LastPlanId);
+    }
+
+    /// <summary>The detail route renders only the reviewed overview-edit fields and expected version.</summary>
+    [Fact]
+    public async Task AddressedPlanRoute_RendersMinimalOverviewEditForm()
+    {
+        var query = new StubPlannerWorkspaceQueryService(
+            PlannerWorkspaceResult.Denied(),
+            PlannerPlanDetailResult.Allowed(new AdventurePlanDetail
+            {
+                Id = new("plan_spain_2027"),
+                Title = "Spain and Atlantic",
+                WorkingDescription = "Private working plan",
+                LifecycleStage = AdventureLifecycleStage.Plan,
+                Status = PlanningStatus.Draft,
+                Dates = new(new(2027, 10, 25), new(2027, 11, 15)),
+                Version = 7,
+                TravelerCount = 0,
+                Destinations =
+                [
+                    new(new("visit_madrid_01"), "Madrid",
+                        new(new(2027, 10, 25), new(2027, 10, 28)),
+                        new("Europe/Madrid"), 1)
+                ],
+                Days =
+                [
+                    new(new("day_madrid_01"), new DestinationVisitId("visit_madrid_01"),
+                        new(2027, 10, 26), new("Europe/Madrid"), "Madrid arrival", [])
+                ]
+            }, canEdit: true));
+        var html = await RenderAsync(ApplicationPrincipal(),
+            "/workspace/creators/creator_alpha_01/plans/plan_spain_2027?edit=conflict&destination=conflict&day=conflict&activity=conflict&transportation=conflict&accommodation=conflict&reservation=conflict",
+            services =>
+            {
+                services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>();
+                services.AddSingleton<IPlannerWorkspaceQueryService>(query);
+            });
+
+        Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/overview\"", html);
+        Assert.Contains("name=\"expectedVersion\" value=\"7\"", html);
+        Assert.Contains("name=\"title\" value=\"Spain and Atlantic\"", html);
+        Assert.Contains("name=\"description\"", html);
+        Assert.Contains("name=\"startDate\" value=\"2027-10-25\"", html);
+        Assert.Contains("name=\"endDate\" value=\"2027-11-15\"", html);
+        Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/destinations\"", html);
+        Assert.Contains("name=\"timeZoneId\"", html);
+        Assert.Contains("placeholder=\"Europe/Rome\"", html);
+        Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/days\"", html);
+        Assert.Contains("name=\"destinationVisitId\"", html);
+        Assert.Contains("name=\"date\"", html);
+        Assert.Contains("placeholder=\"Arrival in Rome\"", html);
+        Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/activities\"", html);
+        Assert.Contains("name=\"itineraryDayId\" value=\"day_madrid_01\"", html);
+        Assert.Contains("name=\"startsAtLocal\"", html);
+        Assert.Contains("name=\"endsAtLocal\"", html);
+        Assert.Contains("placeholder=\"Museum visit\"", html);
+        Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/transportation\"", html);
+        Assert.Contains("name=\"departureTimeZoneId\"", html);
+        Assert.Contains("name=\"arrivalTimeZoneId\"", html);
+        Assert.Contains("Add proposed transportation", html);
+        Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/accommodations\"", html);
+        Assert.Contains("Add proposed accommodation", html);
+        Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/reservations\"", html);
+        Assert.Contains("Add proposed reservation", html);
+        Assert.Contains("This plan changed. Review the current values and try again.", html);
+        Assert.Contains("This plan changed. Review the current route and try again.", html);
+        Assert.Contains("This plan changed. Review the current itinerary and try again.", html);
+        Assert.Contains("This plan changed. Review transportation and try again.", html);
+        Assert.Contains("This plan changed. Review accommodations and try again.", html);
+        Assert.Contains("This plan changed. Review reservations and try again.", html);
+        Assert.DoesNotContain("name=\"status\"", html);
+        Assert.DoesNotContain("name=\"lifecycle", html);
+    }
+
+    /// <summary>Overview status messages use only allowlisted state and never reflect private input.</summary>
+    [Fact]
+    public async Task AddressedPlanRoute_EditFailure_DoesNotReflectSubmittedContent()
+    {
+        const string secret = "PRIVATE-OVERVIEW-TITLE";
+        var query = new StubPlannerWorkspaceQueryService(
+            PlannerWorkspaceResult.Denied(),
+            PlannerPlanDetailResult.Allowed(new AdventurePlanDetail
+            {
+                Id = new("plan_spain_2027"),
+                Title = "Current title",
+                LifecycleStage = AdventureLifecycleStage.Plan,
+                Status = PlanningStatus.Draft,
+                Dates = new(new(2027, 10, 25), new(2027, 11, 15)),
+                Version = 7,
+                TravelerCount = 0
+            }, canEdit: true));
+        var html = await RenderAsync(ApplicationPrincipal(),
+            $"/workspace/creators/creator_alpha_01/plans/plan_spain_2027?edit=failure&title={secret}",
+            services =>
+            {
+                services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>();
+                services.AddSingleton<IPlannerWorkspaceQueryService>(query);
+            });
+
+        Assert.Contains("The plan overview could not be updated. Please try again.", html);
+        Assert.DoesNotContain(secret, html);
     }
 
     /// <summary>Denied Creator routes return a generic state without protected plan content.</summary>

@@ -189,6 +189,120 @@ public sealed class PlanningDomainInvariantTests
             destinationVisits: [first, second]));
     }
 
+    /// <summary>Appending a visit preserves existing state and advances exactly one version.</summary>
+    [Fact]
+    public void WithDestinationVisit_ValidVisit_AppendsAndAdvancesVersion()
+    {
+        var plan = CreatePlan();
+        var visit = ValidVisit();
+        var updatedAt = Audit.UpdatedAtUtc.AddHours(1);
+
+        var updated = plan.WithDestinationVisit(visit, updatedAt);
+
+        Assert.Single(updated.DestinationVisits);
+        Assert.Equal(visit, updated.DestinationVisits[0]);
+        Assert.Equal(plan.Audit.Version + 1, updated.Audit.Version);
+        Assert.Equal(updatedAt, updated.Audit.UpdatedAtUtc);
+        Assert.Empty(plan.DestinationVisits);
+    }
+
+    /// <summary>Appending a day preserves state and advances exactly one plan version.</summary>
+    [Fact]
+    public void WithItineraryDay_ValidDay_AppendsAndAdvancesVersion()
+    {
+        var visit = ValidVisit();
+        var plan = CreatePlan(destinationVisits: [visit]);
+        var day = ValidDay(visit);
+
+        var updated = plan.WithItineraryDay(day, Audit.UpdatedAtUtc.AddHours(1));
+
+        Assert.Equal(day, Assert.Single(updated.ItineraryDays));
+        Assert.Equal(2, updated.Audit.Version);
+        Assert.Empty(plan.ItineraryDays);
+    }
+
+    /// <summary>Appending an activity preserves state and advances one plan version.</summary>
+    [Fact]
+    public void WithPlannedActivity_ValidActivity_AppendsAndAdvancesVersion()
+    {
+        var visit = ValidVisit();
+        var day = ValidDay(visit);
+        var plan = CreatePlan(destinationVisits: [visit], itineraryDays: [day]);
+        var activity = new PlannedActivity
+        {
+            Id = new("activity_museum"),
+            ItineraryDayId = day.Id,
+            Title = "Museum",
+            StartsAtLocal = new(10, 0),
+            EndsAtLocal = new(12, 0)
+        };
+
+        var updated = plan.WithPlannedActivity(activity, Audit.UpdatedAtUtc.AddHours(1));
+
+        Assert.Equal(activity, Assert.Single(updated.Activities));
+        Assert.Equal(2, updated.Audit.Version);
+        Assert.Empty(plan.Activities);
+    }
+
+    /// <summary>Appending transportation preserves state and advances one plan version.</summary>
+    [Fact]
+    public void WithTransportationSegment_ValidSegment_AppendsAndAdvancesVersion()
+    {
+        var plan = CreatePlan();
+        var segment = ValidTransportation();
+
+        var updated = plan.WithTransportationSegment(segment, Audit.UpdatedAtUtc.AddHours(1));
+
+        Assert.Equal(segment, Assert.Single(updated.Transportation));
+        Assert.Equal(2, updated.Audit.Version);
+        Assert.Empty(plan.Transportation);
+    }
+
+    /// <summary>Appending accommodation preserves state and advances one version.</summary>
+    [Fact]
+    public void WithAccommodation_ValidAccommodation_AppendsAndAdvancesVersion()
+    {
+        var plan = CreatePlan();
+        var accommodation = new Accommodation
+        {
+            Id = new("accommodation_rome"),
+            Name = "Rome hotel",
+            Dates = new(Dates.Start, Dates.Start.AddDays(2)),
+            TimeZone = new("Europe/Rome")
+        };
+        var updated = plan.WithAccommodation(accommodation, Audit.UpdatedAtUtc.AddHours(1));
+        Assert.Equal(accommodation, Assert.Single(updated.Accommodations));
+        Assert.Equal(2, updated.Audit.Version);
+    }
+
+    /// <summary>Appending a reservation preserves state and advances one version.</summary>
+    [Fact]
+    public void WithReservation_ValidReservation_AppendsAndAdvancesVersion()
+    {
+        var plan = CreatePlan();
+        var reservation = new Reservation
+        {
+            Id = new("reservation_prado_01"),
+            Subject = "Prado Museum",
+            Status = PlanItemStatus.Proposed
+        };
+        var updated = plan.WithReservation(reservation, Audit.UpdatedAtUtc.AddHours(1));
+        Assert.Equal(reservation, Assert.Single(updated.Reservations));
+        Assert.Equal(2, updated.Audit.Version);
+    }
+
+    /// <summary>Two itinerary days cannot represent the same local plan date.</summary>
+    [Fact]
+    public void Constructor_DuplicateItineraryDates_Throws()
+    {
+        var visit = ValidVisit();
+        var first = ValidDay(visit);
+        var second = first with { Id = new("day_duplicate_date") };
+
+        Assert.Throws<ArgumentException>(() => CreatePlan(
+            destinationVisits: [visit], itineraryDays: [first, second]));
+    }
+
     /// <summary>Ensures transportation range and status are valid.</summary>
     [Fact]
     public void Constructor_InvalidTransportation_Throws()

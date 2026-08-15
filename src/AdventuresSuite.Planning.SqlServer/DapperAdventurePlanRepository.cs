@@ -91,6 +91,9 @@ internal sealed class DapperAdventurePlanRepository(
             SELECT AccommodationId,Name,StartDate,EndDate,TimeZone,Status
               FROM planning.Accommodations
              WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY StartDate,AccommodationId;
+            SELECT ReservationId,Subject,Status
+              FROM planning.Reservations
+             WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY ReservationId;
             """;
         using var results = await connection.QueryMultipleAsync(Command(
             sql, new { CreatorId = creatorId.Value, PlanId = planId.Value }, cancellationToken));
@@ -100,6 +103,7 @@ internal sealed class DapperAdventurePlanRepository(
         var activities = (await results.ReadAsync<ActivityRow>()).ToArray();
         var transportation = (await results.ReadAsync<TransportationRow>()).ToArray();
         var accommodations = (await results.ReadAsync<AccommodationRow>()).ToArray();
+        var reservations = (await results.ReadAsync<ReservationSummaryRow>()).ToArray();
         if (root is null)
         {
             return null;
@@ -135,7 +139,10 @@ internal sealed class DapperAdventurePlanRepository(
                 Enum.Parse<PlanItemStatus>(row.Status))).ToArray(),
             Accommodations = accommodations.Select(row => new AccommodationDetail(
                 new(row.AccommodationId), row.Name, Range(row.StartDate, row.EndDate),
-                new(row.TimeZone), Enum.Parse<PlanItemStatus>(row.Status))).ToArray()
+                new(row.TimeZone), Enum.Parse<PlanItemStatus>(row.Status))).ToArray(),
+            Reservations = reservations.Select(row => new ReservationDetail(
+                new(row.ReservationId), row.Subject,
+                Enum.Parse<PlanItemStatus>(row.Status))).ToArray()
         };
     }
 
@@ -268,6 +275,389 @@ internal sealed class DapperAdventurePlanRepository(
 
             await DeleteChildrenAsync(plan, cancellationToken);
             await InsertChildrenAsync(plan, cancellationToken);
+            auditTracker.RecordMutation(plan.Id, expectedVersion, plan.Audit.Version);
+        }
+        catch
+        {
+            auditTracker.RecordFailure();
+            throw;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task UpdateOverviewAsync(
+        CreatorId creatorId,
+        AdventurePlan plan,
+        long expectedVersion,
+        CancellationToken cancellationToken = default)
+    {
+        RequirePlanScope(creatorId, plan);
+        if (expectedVersion < 1 || plan.Audit.Version != expectedVersion + 1)
+        {
+            throw new ArgumentException(
+                "An overview update must advance the expected version by exactly one.",
+                nameof(expectedVersion));
+        }
+
+        try
+        {
+            var updated = await connection.ExecuteAsync(Command(UpdateOverviewSql,
+                new
+                {
+                    CreatorId = creatorId.Value,
+                    PlanId = plan.Id.Value,
+                    plan.Title,
+                    plan.WorkingDescription,
+                    StartDate = plan.Dates.Start.ToDateTime(TimeOnly.MinValue),
+                    EndDate = plan.Dates.End.ToDateTime(TimeOnly.MinValue),
+                    Version = plan.Audit.Version,
+                    plan.Audit.UpdatedAtUtc,
+                    ExpectedVersion = expectedVersion
+                }, cancellationToken));
+            if (updated == 0)
+            {
+                throw new PlanningConcurrencyException(plan.Id, expectedVersion);
+            }
+
+            auditTracker.RecordMutation(plan.Id, expectedVersion, plan.Audit.Version);
+        }
+        catch
+        {
+            auditTracker.RecordFailure();
+            throw;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task AddDestinationVisitAsync(
+        CreatorId creatorId,
+        AdventurePlan plan,
+        DestinationVisit destinationVisit,
+        long expectedVersion,
+        CancellationToken cancellationToken = default)
+    {
+        RequirePlanScope(creatorId, plan);
+        ArgumentNullException.ThrowIfNull(destinationVisit);
+        if (expectedVersion < 1 || plan.Audit.Version != expectedVersion + 1
+            || !plan.DestinationVisits.Contains(destinationVisit))
+        {
+            throw new ArgumentException(
+                "A destination visit append must advance the expected version by exactly one.",
+                nameof(expectedVersion));
+        }
+
+        try
+        {
+            var updated = await connection.ExecuteAsync(Command(AdvancePlanVersionSql,
+                new
+                {
+                    CreatorId = creatorId.Value,
+                    PlanId = plan.Id.Value,
+                    Version = plan.Audit.Version,
+                    plan.Audit.UpdatedAtUtc,
+                    ExpectedVersion = expectedVersion
+                }, cancellationToken));
+            if (updated == 0)
+            {
+                throw new PlanningConcurrencyException(plan.Id, expectedVersion);
+            }
+
+            await ExecuteAsync(
+                "INSERT planning.DestinationVisits VALUES (@CreatorId,@PlanId,@Id,@Name,@Start,@End,@Zone,@Sequence,@Notes);",
+                new
+                {
+                    CreatorId = creatorId.Value,
+                    PlanId = plan.Id.Value,
+                    Id = destinationVisit.Id.Value,
+                    destinationVisit.Name,
+                    Start = destinationVisit.Dates.Start.ToDateTime(TimeOnly.MinValue),
+                    End = destinationVisit.Dates.End.ToDateTime(TimeOnly.MinValue),
+                    Zone = destinationVisit.TimeZone.Value,
+                    destinationVisit.Sequence,
+                    destinationVisit.Notes
+                }, cancellationToken);
+            auditTracker.RecordMutation(plan.Id, expectedVersion, plan.Audit.Version);
+        }
+        catch
+        {
+            auditTracker.RecordFailure();
+            throw;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task AddItineraryDayAsync(
+        CreatorId creatorId,
+        AdventurePlan plan,
+        ItineraryDay itineraryDay,
+        long expectedVersion,
+        CancellationToken cancellationToken = default)
+    {
+        RequirePlanScope(creatorId, plan);
+        ArgumentNullException.ThrowIfNull(itineraryDay);
+        if (expectedVersion < 1 || plan.Audit.Version != expectedVersion + 1
+            || !plan.ItineraryDays.Contains(itineraryDay))
+        {
+            throw new ArgumentException(
+                "An itinerary day append must advance the expected version by exactly one.",
+                nameof(expectedVersion));
+        }
+
+        try
+        {
+            var updated = await connection.ExecuteAsync(Command(AdvancePlanVersionSql,
+                new
+                {
+                    CreatorId = creatorId.Value,
+                    PlanId = plan.Id.Value,
+                    Version = plan.Audit.Version,
+                    plan.Audit.UpdatedAtUtc,
+                    ExpectedVersion = expectedVersion
+                }, cancellationToken));
+            if (updated == 0)
+            {
+                throw new PlanningConcurrencyException(plan.Id, expectedVersion);
+            }
+
+            await ExecuteAsync(
+                "INSERT planning.ItineraryDays VALUES (@CreatorId,@PlanId,@Id,@VisitId,@Date,@Zone,@Title);",
+                new
+                {
+                    CreatorId = creatorId.Value,
+                    PlanId = plan.Id.Value,
+                    Id = itineraryDay.Id.Value,
+                    VisitId = itineraryDay.DestinationVisitId?.Value,
+                    Date = itineraryDay.Date.ToDateTime(TimeOnly.MinValue),
+                    Zone = itineraryDay.TimeZone.Value,
+                    itineraryDay.Title
+                }, cancellationToken);
+            auditTracker.RecordMutation(plan.Id, expectedVersion, plan.Audit.Version);
+        }
+        catch
+        {
+            auditTracker.RecordFailure();
+            throw;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task AddPlannedActivityAsync(
+        CreatorId creatorId,
+        AdventurePlan plan,
+        PlannedActivity activity,
+        long expectedVersion,
+        CancellationToken cancellationToken = default)
+    {
+        RequirePlanScope(creatorId, plan);
+        ArgumentNullException.ThrowIfNull(activity);
+        if (expectedVersion < 1 || plan.Audit.Version != expectedVersion + 1
+            || !plan.Activities.Contains(activity))
+        {
+            throw new ArgumentException(
+                "A planned activity append must advance the expected version by exactly one.",
+                nameof(expectedVersion));
+        }
+
+        try
+        {
+            var updated = await connection.ExecuteAsync(Command(AdvancePlanVersionSql,
+                new
+                {
+                    CreatorId = creatorId.Value,
+                    PlanId = plan.Id.Value,
+                    Version = plan.Audit.Version,
+                    plan.Audit.UpdatedAtUtc,
+                    ExpectedVersion = expectedVersion
+                }, cancellationToken));
+            if (updated == 0)
+            {
+                throw new PlanningConcurrencyException(plan.Id, expectedVersion);
+            }
+
+            await ExecuteAsync(
+                "INSERT planning.PlannedActivities VALUES (@CreatorId,@PlanId,@Id,@DayId,@Title,@Start,@End,@Status);",
+                new
+                {
+                    CreatorId = creatorId.Value,
+                    PlanId = plan.Id.Value,
+                    Id = activity.Id.Value,
+                    DayId = activity.ItineraryDayId.Value,
+                    activity.Title,
+                    Start = activity.StartsAtLocal?.ToTimeSpan(),
+                    End = activity.EndsAtLocal?.ToTimeSpan(),
+                    Status = activity.Status.ToString()
+                }, cancellationToken);
+            auditTracker.RecordMutation(plan.Id, expectedVersion, plan.Audit.Version);
+        }
+        catch
+        {
+            auditTracker.RecordFailure();
+            throw;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task AddTransportationSegmentAsync(
+        CreatorId creatorId,
+        AdventurePlan plan,
+        TransportationSegment segment,
+        long expectedVersion,
+        CancellationToken cancellationToken = default)
+    {
+        RequirePlanScope(creatorId, plan);
+        ArgumentNullException.ThrowIfNull(segment);
+        if (expectedVersion < 1 || plan.Audit.Version != expectedVersion + 1
+            || !plan.Transportation.Contains(segment))
+        {
+            throw new ArgumentException(
+                "A transportation append must advance the expected version by exactly one.",
+                nameof(expectedVersion));
+        }
+
+        try
+        {
+            var updated = await connection.ExecuteAsync(Command(AdvancePlanVersionSql,
+                new
+                {
+                    CreatorId = creatorId.Value,
+                    PlanId = plan.Id.Value,
+                    Version = plan.Audit.Version,
+                    plan.Audit.UpdatedAtUtc,
+                    ExpectedVersion = expectedVersion
+                }, cancellationToken));
+            if (updated == 0)
+            {
+                throw new PlanningConcurrencyException(plan.Id, expectedVersion);
+            }
+
+            await ExecuteAsync(
+                "INSERT planning.TransportationSegments VALUES (@CreatorId,@PlanId,@Id,@Mode,@From,@To,@DepartureDate,@DepartureTime,@DepartureZone,@ArrivalDate,@ArrivalTime,@ArrivalZone,@Status);",
+                new
+                {
+                    CreatorId = creatorId.Value,
+                    PlanId = plan.Id.Value,
+                    Id = segment.Id.Value,
+                    segment.Mode,
+                    segment.From,
+                    segment.To,
+                    DepartureDate = segment.DepartureDate.ToDateTime(TimeOnly.MinValue),
+                    DepartureTime = segment.DepartureTimeLocal?.ToTimeSpan(),
+                    DepartureZone = segment.DepartureTimeZone.Value,
+                    ArrivalDate = segment.ArrivalDate.ToDateTime(TimeOnly.MinValue),
+                    ArrivalTime = segment.ArrivalTimeLocal?.ToTimeSpan(),
+                    ArrivalZone = segment.ArrivalTimeZone.Value,
+                    Status = segment.Status.ToString()
+                }, cancellationToken);
+            auditTracker.RecordMutation(plan.Id, expectedVersion, plan.Audit.Version);
+        }
+        catch
+        {
+            auditTracker.RecordFailure();
+            throw;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task AddAccommodationAsync(
+        CreatorId creatorId,
+        AdventurePlan plan,
+        Accommodation accommodation,
+        long expectedVersion,
+        CancellationToken cancellationToken = default)
+    {
+        RequirePlanScope(creatorId, plan);
+        ArgumentNullException.ThrowIfNull(accommodation);
+        if (expectedVersion < 1 || plan.Audit.Version != expectedVersion + 1
+            || !plan.Accommodations.Contains(accommodation))
+        {
+            throw new ArgumentException(
+                "An accommodation append must advance the expected version by exactly one.",
+                nameof(expectedVersion));
+        }
+
+        try
+        {
+            var updated = await connection.ExecuteAsync(Command(AdvancePlanVersionSql,
+                new
+                {
+                    CreatorId = creatorId.Value,
+                    PlanId = plan.Id.Value,
+                    Version = plan.Audit.Version,
+                    plan.Audit.UpdatedAtUtc,
+                    ExpectedVersion = expectedVersion
+                }, cancellationToken));
+            if (updated == 0)
+            {
+                throw new PlanningConcurrencyException(plan.Id, expectedVersion);
+            }
+
+            await ExecuteAsync(
+                "INSERT planning.Accommodations VALUES (@CreatorId,@PlanId,@Id,@Name,@Start,@End,@Zone,@Status);",
+                new
+                {
+                    CreatorId = creatorId.Value,
+                    PlanId = plan.Id.Value,
+                    Id = accommodation.Id.Value,
+                    accommodation.Name,
+                    Start = accommodation.Dates.Start.ToDateTime(TimeOnly.MinValue),
+                    End = accommodation.Dates.End.ToDateTime(TimeOnly.MinValue),
+                    Zone = accommodation.TimeZone.Value,
+                    Status = accommodation.Status.ToString()
+                }, cancellationToken);
+            auditTracker.RecordMutation(plan.Id, expectedVersion, plan.Audit.Version);
+        }
+        catch
+        {
+            auditTracker.RecordFailure();
+            throw;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task AddReservationAsync(
+        CreatorId creatorId,
+        AdventurePlan plan,
+        Reservation reservation,
+        long expectedVersion,
+        CancellationToken cancellationToken = default)
+    {
+        RequirePlanScope(creatorId, plan);
+        ArgumentNullException.ThrowIfNull(reservation);
+        if (expectedVersion < 1 || plan.Audit.Version != expectedVersion + 1
+            || !plan.Reservations.Contains(reservation)
+            || reservation.ConfirmationReference is not null)
+        {
+            throw new ArgumentException(
+                "A proposed reservation append must advance the expected version and omit confirmation credentials.",
+                nameof(expectedVersion));
+        }
+
+        try
+        {
+            var updated = await connection.ExecuteAsync(Command(AdvancePlanVersionSql,
+                new
+                {
+                    CreatorId = creatorId.Value,
+                    PlanId = plan.Id.Value,
+                    Version = plan.Audit.Version,
+                    plan.Audit.UpdatedAtUtc,
+                    ExpectedVersion = expectedVersion
+                }, cancellationToken));
+            if (updated == 0)
+            {
+                throw new PlanningConcurrencyException(plan.Id, expectedVersion);
+            }
+
+            await ExecuteAsync(
+                "INSERT planning.Reservations VALUES (@CreatorId,@PlanId,@Id,@Subject,NULL,@Status);",
+                new
+                {
+                    CreatorId = creatorId.Value,
+                    PlanId = plan.Id.Value,
+                    Id = reservation.Id.Value,
+                    reservation.Subject,
+                    Status = reservation.Status.ToString()
+                }, cancellationToken);
             auditTracker.RecordMutation(plan.Id, expectedVersion, plan.Audit.Version);
         }
         catch
@@ -438,6 +828,18 @@ internal sealed class DapperAdventurePlanRepository(
           PlanningStatus=@PlanningStatus,StartDate=@StartDate,EndDate=@EndDate,Version=@Version,UpdatedAtUtc=@UpdatedAtUtc
         WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId AND Version=@ExpectedVersion;
         """;
+    private const string UpdateOverviewSql = """
+        UPDATE planning.AdventurePlans
+           SET Title=@Title,WorkingDescription=@WorkingDescription,
+               StartDate=@StartDate,EndDate=@EndDate,
+               Version=@Version,UpdatedAtUtc=@UpdatedAtUtc
+         WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId AND Version=@ExpectedVersion;
+        """;
+    private const string AdvancePlanVersionSql = """
+        UPDATE planning.AdventurePlans
+           SET Version=@Version,UpdatedAtUtc=@UpdatedAtUtc
+         WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId AND Version=@ExpectedVersion;
+        """;
     private const string DeleteChildrenSql = """
         DELETE planning.TravelerPreferences WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId;
         DELETE planning.PlannedActivities WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId;
@@ -461,6 +863,7 @@ internal sealed class DapperAdventurePlanRepository(
     private sealed record ActivityRow(string PlannedActivityId, string ItineraryDayId, string Title, TimeSpan? StartsAtLocal, TimeSpan? EndsAtLocal, string Status);
     private sealed record TransportationRow(string TransportationSegmentId, string Mode, string Origin, string Destination, DateTime DepartureDate, TimeSpan? DepartureTimeLocal, string DepartureTimeZone, DateTime ArrivalDate, TimeSpan? ArrivalTimeLocal, string ArrivalTimeZone, string Status);
     private sealed record AccommodationRow(string AccommodationId, string Name, DateTime StartDate, DateTime EndDate, string TimeZone, string Status);
+    private sealed record ReservationSummaryRow(string ReservationId, string Subject, string Status);
     private sealed record ReservationRow(string ReservationId, string Subject, string? ConfirmationReference, string Status);
     private sealed record DashboardRow(
         string AdventurePlanId,

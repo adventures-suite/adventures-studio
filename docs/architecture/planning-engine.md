@@ -94,6 +94,11 @@ health, accessibility, identity-document, and loyalty-program information
 requires explicit data classification and must not be added casually to the
 initial model.
 
+A future reusable Traveler Profile is distinct from the plan-owned `Traveler`.
+The plan stores only approved linkage, trip-specific values, and the minimum
+authorized projections it owns. See
+`docs/architecture/traveler-profile-and-preference-resolution.md`.
+
 ### Destination Visit
 
 Represents one planned visit to a Destination in this Adventure. It owns the

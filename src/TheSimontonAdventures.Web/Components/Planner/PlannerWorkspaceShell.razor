@@ -1,0 +1,74 @@
+@namespace TheSimontonAdventures.Web.Components
+
+<div class="@ShellClasses"
+     data-theme="@Theme.ToDataAttribute()"
+     data-sidebar-collapsed="@IsSidebarCollapsed"
+     data-sidebar-hidden="@IsSidebarHidden"
+     data-mobile-navigation-open="@IsMobileNavigationOpen"
+     style="--planner-sidebar-width: @(SidebarWidthPixels)px">
+    <a class="planner-shell__skip" href="#planner-workspace-content">Skip to Planner content</a>
+
+    @if (!IsSidebarHidden)
+    {
+        <PlannerWorkspaceSidebar IsCollapsed="@IsSidebarCollapsed"
+                                 IsMobileOpen="@IsMobileNavigationOpen"
+                                 WidthPixels="@SidebarWidthPixels"
+                                 MinimumWidthPixels="@MinimumSidebarWidthPixels"
+                                 MaximumWidthPixels="@MaximumSidebarWidthPixels"
+                                 OnCollapseRequested="ToggleSidebarCollapseAsync"
+                                 OnHideRequested="HideSidebarAsync"
+                                 OnMobileCloseRequested="CloseMobileNavigationAsync"
+                                 OnResizeRequested="ResizeSidebarAsync" />
+    }
+
+    <div class="planner-shell__workspace">
+        <header class="planner-shell__toolbar">
+            <div class="planner-shell__heading">
+                <p class="planner-shell__eyebrow">AdventuresSuite</p>
+                <h1>@Title</h1>
+                @if (!string.IsNullOrWhiteSpace(Description))
+                {
+                    <p class="planner-shell__description">@Description</p>
+                }
+            </div>
+
+            <div class="planner-shell__actions" aria-label="Workspace display controls">
+                <button type="button"
+                        class="planner-shell__mobile-toggle"
+                        aria-controls="planner-workspace-sidebar"
+                        aria-expanded="@(IsMobileNavigationOpen ? "true" : "false")"
+                        @onclick="ToggleMobileNavigationAsync">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path d="M4 7h16M4 12h16M4 17h16" />
+                    </svg>
+                    <span>Navigation</span>
+                </button>
+
+                @if (IsSidebarHidden)
+                {
+                    <button type="button"
+                            aria-controls="planner-workspace-sidebar"
+                            aria-expanded="false"
+                            @onclick="ShowSidebarAsync">
+                        Show navigation
+                    </button>
+                }
+
+                <label class="planner-shell__theme">
+                    <span>Theme</span>
+                    <select aria-label="Planner color theme" value="@Theme.ToDataAttribute()" @onchange="ChangeThemeAsync">
+                        <option value="system">System</option>
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                    </select>
+                </label>
+
+                @ToolbarContent
+            </div>
+        </header>
+
+        <main id="planner-workspace-content" class="planner-shell__content" aria-label="@Title" tabindex="-1">
+            @ChildContent
+        </main>
+    </div>
+</div>

@@ -23,6 +23,7 @@ Read before implementation:
 - `docs/architecture/adventure-lifecycle.md`
 - `docs/architecture/adventure-readiness-and-change-management.md`
 - `docs/architecture/partner-collaboration-engine.md`
+- `docs/architecture/traveler-profile-and-preference-resolution.md`
 
 ## Working Rules
 
@@ -102,6 +103,8 @@ Acceptance criteria:
 - reversed or inconsistent date ranges fail predictably
 - local date/time values are not silently converted to UTC
 - UTC audit timestamps remain distinct from travel dates
+- initial travelers do not imply a reusable profile, guardian authority,
+  protected booking identity, loyalty storage, or supplier disclosure
 - no type depends on JSON, Razor, EF Core, or an AI provider
 - the Spain/trans-Atlantic scenario can be represented in tests
 
@@ -328,6 +331,8 @@ Exit gate:
 
 Scope:
 
+- dormant provider-neutral published-cruise search, sailing, freshness, and
+  unavailable-provider contracts; no live adapter until commercial approval
 - protected itinerary image/PDF upload and pasted-text input
 - framework-independent source-evidence, extracted-field, confidence, and
   `JourneyStopProposal` contracts
@@ -355,6 +360,8 @@ Exit gate:
 - Resource, Planning, AI, security, privacy, accessibility, provider, and
   regression review approved
 - `docs/architecture/itinerary-ingestion.md` definition of done is satisfied
+- a live published-cruise adapter additionally satisfies the commercial
+  activation gate in `docs/architecture/published-cruise-itinerary-import.md`
 
 ## Phase 6B: Group Travel Collaboration Foundation
 

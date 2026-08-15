@@ -109,8 +109,13 @@ public static class CompanionEndpoints
                 return Problem(context, StatusCodes.Status400BadRequest, "invalid_request", supportId);
             }
 
-            var result = await service.GetTodayAsync(
-                CreateAccessContext(context.User), adventureId, supportId, cancellationToken);
+            if (!TryCreateTestAccessContext(context.User, out var access))
+            {
+                outcome = "unavailable";
+                return Problem(context, StatusCodes.Status404NotFound, "resource_unavailable", supportId);
+            }
+
+            var result = await service.GetTodayAsync(access, adventureId, supportId, cancellationToken);
             if (!result.IsAvailable)
             {
                 outcome = "unavailable";
@@ -159,8 +164,13 @@ public static class CompanionEndpoints
                 return Problem(context, StatusCodes.Status400BadRequest, "invalid_request", supportId);
             }
 
-            var result = await service.GetAdventureAsync(
-                CreateAccessContext(context.User), adventureId, supportId, cancellationToken);
+            if (!TryCreateTestAccessContext(context.User, out var access))
+            {
+                outcome = "unavailable";
+                return Problem(context, StatusCodes.Status404NotFound, "resource_unavailable", supportId);
+            }
+
+            var result = await service.GetAdventureAsync(access, adventureId, supportId, cancellationToken);
             if (!result.IsAvailable)
             {
                 outcome = "unavailable";
@@ -211,8 +221,14 @@ public static class CompanionEndpoints
                 return Problem(context, StatusCodes.Status400BadRequest, "invalid_request", supportId);
             }
 
+            if (!TryCreateTestAccessContext(context.User, out var access))
+            {
+                outcome = "unavailable";
+                return Problem(context, StatusCodes.Status404NotFound, "resource_unavailable", supportId);
+            }
+
             var result = await service.ListAdventuresAsync(
-                CreateAccessContext(context.User), limit, continuationToken, includeCompleted, supportId, cancellationToken);
+                access, limit, continuationToken, includeCompleted, supportId, cancellationToken);
             if (!result.IsAvailable)
             {
                 outcome = "unavailable";
@@ -249,13 +265,23 @@ public static class CompanionEndpoints
             contentType: "application/problem+json");
     }
 
-    private static CompanionAccessContext CreateAccessContext(ClaimsPrincipal principal)
+    private static bool TryCreateTestAccessContext(
+        ClaimsPrincipal principal, out CompanionAccessContext access)
     {
+        access = null!;
+        if (!string.Equals(
+                principal.Identity?.AuthenticationType,
+                TestCompanionAuthenticationHandler.SchemeName,
+                StringComparison.Ordinal))
+        {
+            return false;
+        }
+
         var scopes = (principal.FindFirstValue("scope") ?? string.Empty)
             .Split(' ', StringSplitOptions.RemoveEmptyEntries)
             .ToHashSet(StringComparer.Ordinal);
         var userId = new UserId(principal.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty);
-        return new(
+        access = new(
             new ActorIdentity(ActorType.Human, userId.Value, userId),
             principal.FindFirstValue("traveler_id") ?? string.Empty,
             new CreatorId(principal.FindFirstValue("creator_id") ?? string.Empty),
@@ -264,6 +290,7 @@ public static class CompanionEndpoints
                 : 0,
             string.Equals(principal.FindFirstValue("revoked"), "true", StringComparison.Ordinal),
             scopes);
+        return true;
     }
 
     private static bool IsValidOpaqueIdentity(string value) =>

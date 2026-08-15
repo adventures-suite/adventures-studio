@@ -79,7 +79,14 @@ public sealed class PlanningPersistenceContractTests
             typeof(IRequiredAuditIntentCollector),
             typeof(IAdventurePlanCreateIdempotencyStore),
             typeof(IManualAdventurePlanCreateService),
-            typeof(IPlanningCreationIdentityGenerator)
+            typeof(IPlanningCreationIdentityGenerator),
+            typeof(IAdventurePlanOverviewEditService),
+            typeof(IDestinationVisitAddService),
+            typeof(IItineraryDayAddService),
+            typeof(IPlannedActivityAddService),
+            typeof(ITransportationSegmentAddService),
+            typeof(IAccommodationAddService),
+            typeof(IReservationAddService)
         ];
 
         var exposedTypes = contracts

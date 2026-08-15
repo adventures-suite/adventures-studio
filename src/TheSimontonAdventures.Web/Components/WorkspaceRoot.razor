@@ -3,14 +3,9 @@
 @using TheSimontonAdventures.Web.Planning
 @using TheSimontonAdventures.Web.Planning.Persistence
 @using TheSimontonAdventures.Web.Creators
-@inject IHttpContextAccessor HttpContextAccessor
 
-<main class="workspace-root">
-    <header class="workspace-header">
-        <div>
-            <p class="workspace-eyebrow">AdventuresSuite</p>
-            <h1>Planner workspace</h1>
-        </div>
+<PlannerWorkspaceShell Title="Planner workspace" Description="Private workspace and itinerary planning.">
+    <ToolbarContent>
         @if (IsAuthenticated)
         {
             <form method="post" action="@ExternalIdBrowserEndpoints.SignOutPath">
@@ -18,34 +13,34 @@
                 <button class="workspace-signout" type="submit">Sign out</button>
             </form>
         }
-    </header>
+    </ToolbarContent>
+    <ChildContent>
+    <div class="workspace-root">
     @if (IsAuthenticated)
     {
         <p class="workspace-private">You are signed in to the private workspace. Authorization is checked before plan data is read.</p>
         @if (LoadState == WorkspaceLoadState.Loading)
         {
-            <p role="status">Loading your Adventure Plans…</p>
+            <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Loading"
+                                   Title="Loading your Adventure Plans…" />
         }
         else if (LoadState == WorkspaceLoadState.Unavailable)
         {
-            <section class="workspace-message" aria-labelledby="workspace-unavailable">
-                <h2 id="workspace-unavailable">Workspace unavailable</h2>
-                <p>Your account does not currently have access to this Planner workspace.</p>
-            </section>
+            <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Unavailable"
+                                   Title="Workspace unavailable"
+                                   Message="Your account does not currently have access to this Planner workspace." />
         }
         else if (LoadState == WorkspaceLoadState.Failure)
         {
-            <section class="workspace-message" aria-labelledby="workspace-failure">
-                <h2 id="workspace-failure">Planner temporarily unavailable</h2>
-                <p>The private workspace could not be loaded. Please try again later.</p>
-            </section>
+            <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Failure"
+                                   Title="Planner temporarily unavailable"
+                                   Message="The private workspace could not be loaded. Please try again later." />
         }
         else if (LoadState == WorkspaceLoadState.Landing)
         {
-            <section class="workspace-message" aria-labelledby="workspace-landing">
-                <h2 id="workspace-landing">Choose a Creator workspace</h2>
-                <p>Open an explicitly addressed Creator workspace to view its Adventure Plans.</p>
-            </section>
+            <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Unavailable"
+                                   Title="Choose a Creator workspace"
+                                   Message="Open an explicitly addressed Creator workspace to view its Adventure Plans." />
         }
         else if (Plan is not null)
         {
@@ -67,8 +62,56 @@
                     </dl>
                 </header>
 
+                @if (EditStatusMessage is not null)
+                {
+                    @if (IsEditConflict)
+                    {
+                        <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Conflict"
+                                               Title="Plan changed"
+                                               Message="@EditStatusMessage" />
+                    }
+                    else
+                    {
+                        <p class="plan-create-status" role="status">@EditStatusMessage</p>
+                    }
+                }
+                @if (PlanCanEdit)
+                {
+                    <section class="plan-create" aria-labelledby="edit-plan-overview">
+                        <p class="workspace-eyebrow">Plan overview</p>
+                        <h3 id="edit-plan-overview">Edit overview</h3>
+                        <form method="post" action="@EditPlanPath">
+                            <AntiforgeryToken />
+                            <input type="hidden" name="expectedVersion" value="@Plan.Version" />
+                            <label>
+                                Title
+                                <input name="title" value="@Plan.Title" required maxlength="200" autocomplete="off" />
+                            </label>
+                            <label>
+                                Description <span>(optional)</span>
+                                <textarea name="description" maxlength="2000" rows="3">@Plan.WorkingDescription</textarea>
+                            </label>
+                            <div class="plan-create-dates">
+                                <label>
+                                    Start date
+                                    <input type="date" name="startDate" value="@Plan.Dates.Start.ToString("yyyy-MM-dd")" required />
+                                </label>
+                                <label>
+                                    End date
+                                    <input type="date" name="endDate" value="@Plan.Dates.End.ToString("yyyy-MM-dd")" required />
+                                </label>
+                            </div>
+                            <button type="submit">Save overview</button>
+                        </form>
+                    </section>
+                }
+
                 <section aria-labelledby="plan-route">
                     <h3 id="plan-route">Destinations and route</h3>
+                    @if (DestinationStatusMessage is not null)
+                    {
+                        <p class="plan-create-status" role="status">@DestinationStatusMessage</p>
+                    }
                     @if (Plan.Destinations.Count == 0)
                     {
                         <p>No destinations have been added.</p>
@@ -85,10 +128,44 @@
                             }
                         </ol>
                     }
+                    @if (PlanCanEdit)
+                    {
+                        <form class="plan-create" method="post" action="@AddDestinationPath">
+                            <AntiforgeryToken />
+                            <input type="hidden" name="expectedVersion" value="@Plan.Version" />
+                            <label>
+                                Destination name
+                                <input name="name" required maxlength="200" autocomplete="off" />
+                            </label>
+                            <div class="plan-create-dates">
+                                <label>
+                                    Arrival date
+                                    <input type="date" name="startDate" min="@Plan.Dates.Start.ToString("yyyy-MM-dd")" max="@Plan.Dates.End.ToString("yyyy-MM-dd")" required />
+                                </label>
+                                <label>
+                                    Departure date
+                                    <input type="date" name="endDate" min="@Plan.Dates.Start.ToString("yyyy-MM-dd")" max="@Plan.Dates.End.ToString("yyyy-MM-dd")" required />
+                                </label>
+                            </div>
+                            <label>
+                                Destination time zone
+                                <input name="timeZoneId" required maxlength="100" placeholder="Europe/Rome" autocomplete="off" />
+                            </label>
+                            <button type="submit">Add destination</button>
+                        </form>
+                    }
                 </section>
 
                 <section aria-labelledby="plan-itinerary">
                     <h3 id="plan-itinerary">Daily itinerary</h3>
+                    @if (ActivityStatusMessage is not null)
+                    {
+                        <p class="plan-create-status" role="status">@ActivityStatusMessage</p>
+                    }
+                    @if (DayStatusMessage is not null)
+                    {
+                        <p class="plan-create-status" role="status">@DayStatusMessage</p>
+                    }
                     @if (Plan.Days.Count == 0)
                     {
                         <p>No itinerary days have been added.</p>
@@ -110,15 +187,67 @@
                                             }
                                         </ul>
                                     }
+                                    @if (PlanCanEdit)
+                                    {
+                                        <form class="plan-create" method="post" action="@AddActivityPath">
+                                            <AntiforgeryToken />
+                                            <input type="hidden" name="expectedVersion" value="@Plan.Version" />
+                                            <input type="hidden" name="itineraryDayId" value="@day.Id.Value" />
+                                            <label>
+                                                Proposed activity
+                                                <input name="title" required maxlength="200" autocomplete="off" placeholder="Museum visit" />
+                                            </label>
+                                            <div class="plan-create-dates">
+                                                <label>
+                                                    Start time <span>(optional)</span>
+                                                    <input type="time" name="startsAtLocal" />
+                                                </label>
+                                                <label>
+                                                    End time <span>(optional)</span>
+                                                    <input type="time" name="endsAtLocal" />
+                                                </label>
+                                            </div>
+                                            <button type="submit">Add proposed activity</button>
+                                        </form>
+                                    }
                                 </article>
                             }
                         </div>
+                    }
+                    @if (PlanCanEdit && Plan.Destinations.Count > 0)
+                    {
+                        <form class="plan-create" method="post" action="@AddDayPath">
+                            <AntiforgeryToken />
+                            <input type="hidden" name="expectedVersion" value="@Plan.Version" />
+                            <label>
+                                Destination visit
+                                <select name="destinationVisitId" required>
+                                    @foreach (var destination in Plan.Destinations)
+                                    {
+                                        <option value="@destination.Id.Value">@destination.Name · @FormatDates(destination.Dates)</option>
+                                    }
+                                </select>
+                            </label>
+                            <label>
+                                Local date
+                                <input type="date" name="date" min="@Plan.Dates.Start.ToString("yyyy-MM-dd")" max="@Plan.Dates.End.ToString("yyyy-MM-dd")" required />
+                            </label>
+                            <label>
+                                Day title
+                                <input name="title" required maxlength="200" autocomplete="off" placeholder="Arrival in Rome" />
+                            </label>
+                            <button type="submit">Add itinerary day</button>
+                        </form>
                     }
                 </section>
 
                 <div class="detail-columns">
                     <section aria-labelledby="plan-transportation">
                         <h3 id="plan-transportation">Transportation</h3>
+                        @if (TransportationStatusMessage is not null)
+                        {
+                            <p class="plan-create-status" role="status">@TransportationStatusMessage</p>
+                        }
                         @if (Plan.Transportation.Count == 0)
                         {
                             <p>No transportation has been added.</p>
@@ -132,9 +261,32 @@
                                 }
                             </ul>
                         }
+                        @if (PlanCanEdit)
+                        {
+                            <form class="plan-create" method="post" action="@AddTransportationPath">
+                                <AntiforgeryToken />
+                                <input type="hidden" name="expectedVersion" value="@Plan.Version" />
+                                <label>Mode<input name="mode" required maxlength="100" placeholder="Flight, rail, cruise, or car" /></label>
+                                <label>From<input name="from" required maxlength="200" /></label>
+                                <label>To<input name="to" required maxlength="200" /></label>
+                                <div class="plan-create-dates">
+                                    <label>Departure date<input type="date" name="departureDate" required /></label>
+                                    <label>Departure time <span>(optional)</span><input type="time" name="departureTimeLocal" /></label>
+                                </div>
+                                <label>Departure time zone<input name="departureTimeZoneId" required maxlength="100" placeholder="America/Phoenix" /></label>
+                                <div class="plan-create-dates">
+                                    <label>Arrival date<input type="date" name="arrivalDate" required /></label>
+                                    <label>Arrival time <span>(optional)</span><input type="time" name="arrivalTimeLocal" /></label>
+                                </div>
+                                <label>Arrival time zone<input name="arrivalTimeZoneId" required maxlength="100" placeholder="Europe/Rome" /></label>
+                                <button type="submit">Add proposed transportation</button>
+                            </form>
+                        }
                     </section>
                     <section aria-labelledby="plan-accommodations">
                         <h3 id="plan-accommodations">Accommodations</h3>
+                        @if (AccommodationStatusMessage is not null)
+                        { <p class="plan-create-status" role="status">@AccommodationStatusMessage</p> }
                         @if (Plan.Accommodations.Count == 0)
                         {
                             <p>No accommodations have been added.</p>
@@ -148,9 +300,56 @@
                                 }
                             </ul>
                         }
+                        @if (PlanCanEdit)
+                        {
+                            <form class="plan-create" method="post" action="@AddAccommodationPath">
+                                <AntiforgeryToken />
+                                <input type="hidden" name="expectedVersion" value="@Plan.Version" />
+                                <label>Accommodation name<input name="name" required maxlength="200" /></label>
+                                <div class="plan-create-dates">
+                                    <label>Check-in date<input type="date" name="startDate" required /></label>
+                                    <label>Check-out date<input type="date" name="endDate" required /></label>
+                                </div>
+                                <label>Property time zone<input name="timeZoneId" required maxlength="100" placeholder="Europe/Rome" /></label>
+                                <button type="submit">Add proposed accommodation</button>
+                            </form>
+                        }
                     </section>
                 </div>
-                <p class="workspace-private">Sensitive reservation references, private notes, budgets, packing lists, and traveler identities are not included in this view.</p>
+                <section aria-labelledby="plan-reservations">
+                    <h3 id="plan-reservations">Reservations</h3>
+                    @if (ReservationStatusMessage is not null)
+                    {
+                        <p class="plan-create-status" role="status">@ReservationStatusMessage</p>
+                    }
+                    @if (Plan.Reservations.Count == 0)
+                    {
+                        <p>No reservation summaries have been added.</p>
+                    }
+                    else
+                    {
+                        <ul class="detail-list">
+                            @foreach (var reservation in Plan.Reservations)
+                            {
+                                <li><strong>@reservation.Subject</strong><span>@FormatStatus(reservation.Status)</span></li>
+                            }
+                        </ul>
+                    }
+                    @if (PlanCanEdit)
+                    {
+                        <form class="plan-create" method="post" action="@AddReservationPath">
+                            <AntiforgeryToken />
+                            <input type="hidden" name="expectedVersion" value="@Plan.Version" />
+                            <label>
+                                Reservation subject
+                                <input name="subject" required maxlength="200" autocomplete="off" placeholder="Hotel, tour, or transportation hold" />
+                            </label>
+                            <p>Confirmation references are added through a separate protected workflow.</p>
+                            <button type="submit">Add proposed reservation</button>
+                        </form>
+                    }
+                </section>
+                <p class="workspace-private">Sensitive confirmation references, private notes, budgets, packing lists, and traveler identities are not included in this view.</p>
             </article>
         }
         else
@@ -190,10 +389,9 @@
 
             @if (Plans.Count == 0)
             {
-                <section class="workspace-message" aria-labelledby="workspace-empty">
-                    <h2 id="workspace-empty">No active plans</h2>
-                    <p>There are no active Adventure Plans in this private workspace yet.</p>
-                </section>
+                <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Empty"
+                                       Title="No active plans"
+                                       Message="There are no active Adventure Plans in this private workspace yet." />
             }
             else
             {
@@ -232,134 +430,6 @@
         <a href="@ExternalIdBrowserEndpoints.SignInPath"
            data-enhance-nav="false">Sign in</a>
     }
-</main>
-
-@code {
-    private IReadOnlyList<AdventurePlanDashboardItem> Plans { get; set; } = [];
-    private AdventurePlanDetail? Plan { get; set; }
-    private CreatorId AddressedCreatorId { get; set; }
-    private WorkspaceLoadState LoadState { get; set; } = WorkspaceLoadState.Landing;
-    private string CreateIdempotencyKey { get; } = $"request_{Guid.NewGuid():N}";
-
-    private bool IsAuthenticated =>
-        HttpContextAccessor.HttpContext?.User.Identity?.IsAuthenticated is true;
-
-    protected override async Task OnInitializedAsync()
-    {
-        var context = HttpContextAccessor.HttpContext;
-        if (context?.User.Identity?.IsAuthenticated is not true)
-        {
-            return;
-        }
-
-        if (!TryGetAddressedRoute(context.Request.Path, out var creatorId, out var planId))
-        {
-            LoadState = WorkspaceLoadState.Landing;
-            return;
-        }
-
-        LoadState = WorkspaceLoadState.Loading;
-        var actorResolver = context.RequestServices.GetService<IWorkspaceActorResolver>();
-        var query = context.RequestServices.GetService<IPlannerWorkspaceQueryService>();
-        var actor = actorResolver?.Resolve(context.User);
-        if (query is null || actor is null)
-        {
-            LoadState = WorkspaceLoadState.Unavailable;
-            return;
-        }
-
-        try
-        {
-            AddressedCreatorId = creatorId;
-            if (planId.HasValue)
-            {
-                var result = await query.GetAsync(actor, creatorId, planId.Value, context.RequestAborted);
-                Plan = result.Plan;
-                LoadState = result.IsAllowed ? WorkspaceLoadState.Ready : WorkspaceLoadState.Unavailable;
-            }
-            else
-            {
-                var result = await query.ListAsync(actor, creatorId, context.RequestAborted);
-                Plans = result.Plans;
-                LoadState = result.IsAllowed ? WorkspaceLoadState.Ready : WorkspaceLoadState.Unavailable;
-            }
-        }
-        catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception exception)
-        {
-            context.RequestServices.GetService<ILogger<WorkspaceRoot>>()?.LogError(
-                exception,
-                "Planner dashboard read failed before a safe response could be rendered.");
-            LoadState = WorkspaceLoadState.Failure;
-        }
-    }
-
-    private static bool TryGetAddressedRoute(
-        PathString path,
-        out CreatorId creatorId,
-        out AdventurePlanId? planId)
-    {
-        creatorId = default;
-        planId = null;
-        var segments = path.Value?.Split('/', StringSplitOptions.None);
-        if (segments is null
-            || segments.Length is not (5 or 6)
-            || segments[0] != string.Empty
-            || segments[1] != "workspace"
-            || segments[2] != "creators"
-            || segments[4] != "plans")
-        {
-            return false;
-        }
-
-        try
-        {
-            creatorId = new CreatorId(segments[3]);
-            if (segments.Length == 6)
-            {
-                planId = new AdventurePlanId(segments[5]);
-            }
-            return true;
-        }
-        catch (ArgumentException)
-        {
-            return false;
-        }
-    }
-
-    private string PlanListPath => $"/workspace/creators/{AddressedCreatorId.Value}/plans";
-    private string CreatePlanPath => $"{PlanListPath}/create";
-    private string PlanPath(AdventurePlanId planId) => $"{PlanListPath}/{planId.Value}";
-    private string? CreateStatusMessage =>
-        HttpContextAccessor.HttpContext?.Request.Query["create"].ToString() switch
-        {
-            "denied" => "The plan could not be created for this workspace.",
-            "conflict" => "This request no longer matches its original submission. Start a new request.",
-            "validation" => "Review the plan details and try again.",
-            "failure" => "The plan could not be created. Please try again.",
-            _ => null
-        };
-    private static string FormatDates(AdventurePlanDashboardItem plan) => FormatDates(plan.Dates);
-    private static string FormatDates(PlanningDateRange dates) =>
-        $"{dates.Start:MMM d, yyyy} – {dates.End:MMM d, yyyy}";
-
-    private static string FormatTimeRange(TimeOnly? start, TimeOnly? end) => (start, end) switch
-    {
-        ({ } startTime, { } endTime) => $"{startTime:h:mm tt}–{endTime:h:mm tt}",
-        ({ } startTime, null) => startTime.ToString("h:mm tt"),
-        _ => "Time flexible"
-    };
-
-    private static string FormatStatus(PlanningStatus status) => status switch
-    {
-        PlanningStatus.InProgress => "In progress",
-        _ => status.ToString()
-    };
-
-    private static string FormatStatus(PlanItemStatus status) => status.ToString();
-
-    private enum WorkspaceLoadState { Landing, Loading, Ready, Unavailable, Failure }
-}
+    </div>
+    </ChildContent>
+</PlannerWorkspaceShell>

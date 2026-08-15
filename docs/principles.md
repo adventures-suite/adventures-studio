@@ -327,6 +327,33 @@ Every design decision should support that goal.
 
 ---
 
+# Principle 15
+
+## Exceptional Value Builds Trust
+
+AdventuresSuite should be affordable, easy to understand, and extraordinarily
+helpful.
+
+Free should provide genuine utility. Paid plans should earn upgrades through
+coherent value rather than manufactured frustration. Expiration or payment
+state should never hold customer memories or private plans hostage.
+
+Ask:
+
+Did this save meaningful time?
+
+Did this reduce planning anxiety?
+
+Did this help someone travel with greater confidence?
+
+Would a customer be surprised by how much useful value they receive for the
+price?
+
+Revenue supports a reliable, secure, continuously improving product. It follows
+customer value and trust.
+
+---
+
 # Guiding Question
 
 Whenever uncertainty exists, ask:

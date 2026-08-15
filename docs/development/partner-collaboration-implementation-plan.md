@@ -17,6 +17,7 @@ Read before implementation:
 - `AGENTS.md`
 - `docs/DECISIONS.md`
 - `docs/architecture/partner-collaboration-engine.md`
+- `docs/architecture/travel-booking-companion.md`
 - `docs/product/travel-professional-partnership.md`
 - `docs/architecture/planning-engine.md`
 - `docs/architecture/ai-planning-copilot.md`
@@ -226,6 +227,10 @@ Acceptance criteria:
 - duplicate and stale imports are handled idempotently
 - connectors cannot broaden their own access
 - no import claims a booking or payment without authoritative evidence
+
+Direct supplier search, booking handoff, hosted checkout, or confirmation
+callbacks are not implied by this phase. Each requires the commercial and
+regulatory activation gate in `docs/architecture/travel-booking-companion.md`.
 
 ## Phase 8: Travel and Preserve Integration
 

@@ -15,6 +15,7 @@ Read first:
 - `AGENTS.md`
 - `docs/architecture/platform-billing-entitlements.md`
 - `docs/product/pricing-model.md`
+- `docs/product/workspace-experience-and-value.md`
 - `docs/business/business-model.md`
 - `docs/architecture/identity-authorization.md`
 - `docs/architecture/commerce-engine.md`
@@ -33,6 +34,11 @@ Phase 3 authentication implementation.
 Approve initial customer types, stable `PlatformCapability` names, entitlement
 targets, plan/version rules, add-ons, allowances, seat semantics, downgrade and
 grace behavior, support policy, and the separation from Commerce Entitlements.
+
+Define the initial Free, Explorer, and Navigator promises, promotional-grant
+semantics, time-bound access, workspace tool-projection vocabulary, upgrade
+discoverability rules, and behavior after expiry or downgrade without embedding
+plan display names in application behavior.
 
 Exit gate: product, business, architecture, security, privacy, legal, tax,
 accounting, and support owners approve terminology and unresolved decisions are
@@ -63,6 +69,10 @@ and audit tests pass on supported SQL Server infrastructure.
 Integrate entitlement evaluation below the UI using deterministic development
 grants. Add version-aware caching, administrative revocation, background-job
 rechecks, safe denial UX, and operational telemetry.
+
+Add the provider-neutral workspace tool projection only after the applicable
+permission, entitlement, allowance, rollout, availability, effective-period,
+and non-disclosure semantics are testable below the UI.
 
 Exit gate: protected services require both authorization and entitlement;
 revocation and expiry are deterministic; existing Creator data remains
