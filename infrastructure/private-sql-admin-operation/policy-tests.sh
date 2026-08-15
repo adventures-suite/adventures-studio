@@ -41,6 +41,15 @@ validate(){ (
   "$dir/validate-operation.sh" >/dev/null 2>&1
 ); }
 validate
+while IFS= read -r valid_id; do validate "MIGRATION_IDENTITY_RESOURCE_ID=$valid_id"; done < <(jq -r '.validMigrationIdentityIds[]' "$dir/arm-resource-id-fixtures.json")
+while IFS= read -r invalid_id; do
+  if validate "MIGRATION_IDENTITY_RESOURCE_ID=$invalid_id"; then echo "invalid ARM ID accepted: $invalid_id" >&2; exit 1; fi
+done < <(jq -r '.invalidMigrationIdentityIds[]' "$dir/arm-resource-id-fixtures.json")
+validate \
+  "ADMINISTRATOR_IDENTITY_RESOURCE_ID=${admin_id/resourceGroups/resourcegroups}" \
+  "MIGRATION_IDENTITY_RESOURCE_ID=${migration_id/resourceGroups/resourcegroups}" \
+  "SQL_SERVER_RESOURCE_ID=${server_id/resourceGroups/resourcegroups}" \
+  "SQL_PRIVATE_ENDPOINT_RESOURCE_ID=${endpoint_id/resourceGroups/resourcegroups}"
 for invalid in \
   'REPOSITORY_ID=1' \
   'SOURCE_SHA=cccccccccccccccccccccccccccccccccccccccc' \
@@ -52,6 +61,10 @@ for invalid in \
   'SQL_SERVER_RESOURCE_ID=/bad' \
   'SQL_DATABASE_NAME=wrong' \
   'SQL_PRIVATE_ENDPOINT_RESOURCE_ID=/bad' \
+  "MIGRATION_IDENTITY_RESOURCE_ID=${migration_id/providers\/Microsoft.ManagedIdentity/providers\/Microsoft.Network}" \
+  "SQL_SERVER_RESOURCE_ID=$server_id/databases/extra" \
+  "SQL_PRIVATE_ENDPOINT_RESOURCE_ID=${endpoint_id/pe-adventures-suite-dev-sql/pe-substituted}" \
+  "ADMINISTRATOR_IDENTITY_RESOURCE_ID=$admin_id?api-version=1" \
   'OPERATION_APPROVAL_SHA256=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'; do
   if validate "$invalid"; then echo "invalid binding accepted" >&2; exit 1; fi
 done
