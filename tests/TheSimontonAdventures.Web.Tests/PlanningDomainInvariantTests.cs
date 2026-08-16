@@ -244,6 +244,36 @@ public sealed class PlanningDomainInvariantTests
         Assert.Empty(plan.Activities);
     }
 
+    /// <summary>Editing an activity preserves its identity, day, and status while advancing one version.</summary>
+    [Fact]
+    public void WithEditedPlannedActivity_ValidDetails_ReplacesOnlyEditableState()
+    {
+        var visit = ValidVisit();
+        var day = ValidDay(visit);
+        var activity = new PlannedActivity
+        {
+            Id = new("activity_museum"),
+            ItineraryDayId = day.Id,
+            Title = "Museum",
+            StartsAtLocal = new(10, 0),
+            EndsAtLocal = new(12, 0),
+            Status = PlanItemStatus.Confirmed
+        };
+        var plan = CreatePlan(
+            destinationVisits: [visit], itineraryDays: [day], activities: [activity]);
+
+        var updated = plan.WithEditedPlannedActivity(
+            activity.Id, "Gallery", new(11, 0), new(13, 0), Audit.UpdatedAtUtc.AddHours(1));
+
+        var edited = Assert.Single(updated.Activities);
+        Assert.Equal(activity.Id, edited.Id);
+        Assert.Equal(activity.ItineraryDayId, edited.ItineraryDayId);
+        Assert.Equal(activity.Status, edited.Status);
+        Assert.Equal("Gallery", edited.Title);
+        Assert.Equal(2, updated.Audit.Version);
+        Assert.Equal("Museum", Assert.Single(plan.Activities).Title);
+    }
+
     /// <summary>Appending transportation preserves state and advances one plan version.</summary>
     [Fact]
     public void WithTransportationSegment_ValidSegment_AppendsAndAdvancesVersion()
@@ -256,6 +286,41 @@ public sealed class PlanningDomainInvariantTests
         Assert.Equal(segment, Assert.Single(updated.Transportation));
         Assert.Equal(2, updated.Audit.Version);
         Assert.Empty(plan.Transportation);
+    }
+
+    /// <summary>Editing transportation preserves identity, status, and unrelated plan state.</summary>
+    [Fact]
+    public void WithEditedTransportationSegment_ValidDetails_ReplacesOnlyEditableState()
+    {
+        var segment = new TransportationSegment
+        {
+            Id = new("transport_flight"),
+            Mode = "Flight",
+            From = "Phoenix",
+            To = "Madrid",
+            DepartureDate = new(2027, 10, 26),
+            DepartureTimeLocal = new(18, 0),
+            DepartureTimeZone = new("America/Phoenix"),
+            ArrivalDate = new(2027, 10, 27),
+            ArrivalTimeLocal = new(13, 0),
+            ArrivalTimeZone = new("Europe/Madrid"),
+            Status = PlanItemStatus.Confirmed
+        };
+        var note = new PlanningNote { Id = new("note_keep"), Text = "Preserve this note" };
+        var plan = CreatePlan(transportation: [segment], notes: [note]);
+
+        var updated = plan.WithEditedTransportationSegment(
+            segment.Id, "Rail", "Madrid", "Barcelona", new(2027, 10, 28),
+            new(9, 0), new("Europe/Madrid"), new(2027, 10, 28), new(12, 0),
+            new("Europe/Madrid"), Audit.UpdatedAtUtc.AddHours(1));
+
+        var edited = Assert.Single(updated.Transportation);
+        Assert.Equal(segment.Id, edited.Id);
+        Assert.Equal(segment.Status, edited.Status);
+        Assert.Equal("Rail", edited.Mode);
+        Assert.Equal(2, updated.Audit.Version);
+        Assert.Equal(note, Assert.Single(updated.Notes));
+        Assert.Equal("Flight", Assert.Single(plan.Transportation).Mode);
     }
 
     /// <summary>Appending accommodation preserves state and advances one version.</summary>

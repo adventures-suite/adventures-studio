@@ -243,6 +243,36 @@ public sealed class AdventurePlan
     }
 
     /// <summary>
+    /// Creates the next aggregate version with one existing activity's editable details replaced.
+    /// Its identity, itinerary-day relationship, and planning status are preserved.
+    /// </summary>
+    public AdventurePlan WithEditedPlannedActivity(
+        PlannedActivityId activityId,
+        string title,
+        TimeOnly? startsAtLocal,
+        TimeOnly? endsAtLocal,
+        DateTimeOffset updatedAtUtc)
+    {
+        var existing = Activities.SingleOrDefault(item => item.Id == activityId)
+            ?? throw new ArgumentException("The planned activity must belong to this plan.", nameof(activityId));
+        var replacement = new PlannedActivity
+        {
+            Id = existing.Id,
+            ItineraryDayId = existing.ItineraryDayId,
+            Title = title,
+            StartsAtLocal = startsAtLocal,
+            EndsAtLocal = endsAtLocal,
+            Status = existing.Status
+        };
+        var activities = Activities.Select(item => item.Id == activityId ? replacement : item).ToArray();
+        return new(
+            Id, CreatorId, Title, WorkingDescription, LifecycleStage, Status, Dates,
+            new PlanAudit(checked(Audit.Version + 1), Audit.CreatedAtUtc, updatedAtUtc),
+            Travelers, DestinationVisits, ItineraryDays, activities, Transportation,
+            Accommodations, Reservations, Notes, Tasks, BudgetItems, PackingItems);
+    }
+
+    /// <summary>
     /// Creates the next validated aggregate version with one transportation segment appended.
     /// Existing plan fields and child records are preserved.
     /// </summary>
@@ -257,6 +287,49 @@ public sealed class AdventurePlan
             Travelers, DestinationVisits, ItineraryDays, Activities,
             [.. Transportation, segment], Accommodations, Reservations, Notes, Tasks,
             BudgetItems, PackingItems);
+    }
+
+    /// <summary>
+    /// Creates the next aggregate version with one existing transportation segment's editable
+    /// details replaced while preserving its identity and planning status.
+    /// </summary>
+    public AdventurePlan WithEditedTransportationSegment(
+        TransportationSegmentId segmentId,
+        string mode,
+        string from,
+        string to,
+        DateOnly departureDate,
+        TimeOnly? departureTimeLocal,
+        IanaTimeZone departureTimeZone,
+        DateOnly arrivalDate,
+        TimeOnly? arrivalTimeLocal,
+        IanaTimeZone arrivalTimeZone,
+        DateTimeOffset updatedAtUtc)
+    {
+        var existing = Transportation.SingleOrDefault(item => item.Id == segmentId)
+            ?? throw new ArgumentException(
+                "The transportation segment must belong to this plan.", nameof(segmentId));
+        var replacement = new TransportationSegment
+        {
+            Id = existing.Id,
+            Mode = mode,
+            From = from,
+            To = to,
+            DepartureDate = departureDate,
+            DepartureTimeLocal = departureTimeLocal,
+            DepartureTimeZone = departureTimeZone,
+            ArrivalDate = arrivalDate,
+            ArrivalTimeLocal = arrivalTimeLocal,
+            ArrivalTimeZone = arrivalTimeZone,
+            Status = existing.Status
+        };
+        var transportation = Transportation.Select(
+            item => item.Id == segmentId ? replacement : item).ToArray();
+        return new(
+            Id, CreatorId, Title, WorkingDescription, LifecycleStage, Status, Dates,
+            new PlanAudit(checked(Audit.Version + 1), Audit.CreatedAtUtc, updatedAtUtc),
+            Travelers, DestinationVisits, ItineraryDays, Activities, transportation,
+            Accommodations, Reservations, Notes, Tasks, BudgetItems, PackingItems);
     }
 
     /// <summary>Creates the next validated version with one proposed accommodation appended.</summary>

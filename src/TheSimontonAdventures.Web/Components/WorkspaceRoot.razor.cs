@@ -176,6 +176,17 @@ public partial class WorkspaceRoot
             "failure" => "The activity could not be added. Please try again.",
             _ => null
         };
+    private string? ActivityEditStatusMessage =>
+        HttpContextAccessor.HttpContext?.Request.Query["activity-edit"].ToString() switch
+        {
+            "updated" => "The activity was updated.",
+            "unchanged" => "The activity was already current.",
+            "denied" => "The activity could not be updated.",
+            "conflict" => "This plan changed. Review the current activity values and try again.",
+            "validation" => "Review the activity title and local times.",
+            "failure" => "The activity could not be updated. Please try again.",
+            _ => null
+        };
     private string? TransportationStatusMessage =>
         HttpContextAccessor.HttpContext?.Request.Query["transportation"].ToString() switch
         {
@@ -184,6 +195,17 @@ public partial class WorkspaceRoot
             "conflict" => "This plan changed. Review transportation and try again.",
             "validation" => "Review the route, local dates, times, and IANA time zones.",
             "failure" => "The transportation could not be added. Please try again.",
+            _ => null
+        };
+    private string? TransportationEditStatusMessage =>
+        HttpContextAccessor.HttpContext?.Request.Query["transportation-edit"].ToString() switch
+        {
+            "updated" => "The transportation segment was updated.",
+            "unchanged" => "The transportation segment was already current.",
+            "denied" => "The transportation segment could not be updated.",
+            "conflict" => "This plan changed. Review the current transportation values and try again.",
+            "validation" => "Review the route, local dates, times, and IANA time zones.",
+            "failure" => "The transportation segment could not be updated. Please try again.",
             _ => null
         };
     private string? AccommodationStatusMessage =>

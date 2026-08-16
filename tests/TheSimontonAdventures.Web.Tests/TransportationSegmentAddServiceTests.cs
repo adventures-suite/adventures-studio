@@ -206,6 +206,9 @@ public sealed class TransportationSegmentAddServiceTests
             Segment = segment;
             return Task.CompletedTask;
         }
+        public Task UpdateTransportationSegmentAsync(CreatorId creatorId, AdventurePlan plan,
+            TransportationSegment segment, long expectedVersion,
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<AdventurePlanAuthorizationFacts?> GetAuthorizationFactsAsync(CreatorId creatorId, AdventurePlanId planId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<IReadOnlyList<AdventurePlanDashboardItem>> ListDashboardAsync(CreatorId creatorId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<AdventurePlanDetail?> GetDetailAsync(CreatorId creatorId, AdventurePlanId planId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
@@ -217,6 +220,7 @@ public sealed class TransportationSegmentAddServiceTests
         public Task AddDestinationVisitAsync(CreatorId creatorId, AdventurePlan plan, DestinationVisit destinationVisit, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task AddItineraryDayAsync(CreatorId creatorId, AdventurePlan plan, ItineraryDay itineraryDay, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task AddPlannedActivityAsync(CreatorId creatorId, AdventurePlan plan, PlannedActivity activity, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task UpdatePlannedActivityAsync(CreatorId creatorId, AdventurePlan plan, PlannedActivity activity, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task AddAccommodationAsync(CreatorId creatorId, AdventurePlan plan, Accommodation accommodation, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task AddReservationAsync(CreatorId creatorId, AdventurePlan plan, Reservation reservation, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }

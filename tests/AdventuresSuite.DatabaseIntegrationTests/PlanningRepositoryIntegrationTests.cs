@@ -237,24 +237,47 @@ public sealed class PlanningRepositoryIntegrationTests
                         creator, updated, activity, 1));
             }
 
-            var rollbackActivity = activity with
-            {
-                Id = new("activity_rollback"),
-                Title = "Must roll back"
-            };
-            var rollbackPlan = updated.WithPlannedActivity(
-                rollbackActivity, updated.Audit.UpdatedAtUtc.AddMinutes(1));
+            var editedPlan = updated.WithEditedPlannedActivity(
+                activity.Id, "Reina Sofía afternoon", new(15, 0), new(17, 0),
+                updated.Audit.UpdatedAtUtc.AddMinutes(1));
+            var editedActivity = editedPlan.Activities.Single(item => item.Id == activity.Id);
             await using (var transaction = await factory.BeginAsync(creator))
             {
-                await transaction.AdventurePlans.AddPlannedActivityAsync(
-                    creator, rollbackPlan, rollbackActivity, 2);
+                await transaction.AdventurePlans.UpdatePlannedActivityAsync(
+                    creator, editedPlan, editedActivity, 2);
+                transaction.RequiredAuditIntents.AddRequired(Audit(
+                    creator, original.Id, Permissions.AdventurePlanEdit, 2, 3));
+                await transaction.CommitAsync();
+            }
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                var loaded = await transaction.AdventurePlans.GetAsync(creator, original.Id);
+                var persisted = loaded!.Activities.Single(item => item.Id == activity.Id);
+                Assert.Equal(3, loaded.Audit.Version);
+                Assert.Equal("Reina Sofía afternoon", persisted.Title);
+                Assert.Equal(activity.ItineraryDayId, persisted.ItineraryDayId);
+                Assert.Equal(activity.Status, persisted.Status);
+                await Assert.ThrowsAsync<PlanningConcurrencyException>(() =>
+                    transaction.AdventurePlans.UpdatePlannedActivityAsync(
+                        creator, editedPlan, editedActivity, 2));
+            }
+
+            var rollbackPlan = editedPlan.WithEditedPlannedActivity(
+                activity.Id, "Must roll back", new(16, 0), new(18, 0),
+                editedPlan.Audit.UpdatedAtUtc.AddMinutes(1));
+            var rollbackActivity = rollbackPlan.Activities.Single(item => item.Id == activity.Id);
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                await transaction.AdventurePlans.UpdatePlannedActivityAsync(
+                    creator, rollbackPlan, rollbackActivity, 3);
                 await Assert.ThrowsAsync<InvalidOperationException>(() => transaction.CommitAsync());
             }
             await using (var transaction = await factory.BeginAsync(creator))
             {
                 var loaded = await transaction.AdventurePlans.GetAsync(creator, original.Id);
-                Assert.Equal(2, loaded!.Audit.Version);
-                Assert.DoesNotContain(loaded.Activities, item => item.Id == rollbackActivity.Id);
+                Assert.Equal(3, loaded!.Audit.Version);
+                Assert.Equal("Reina Sofía afternoon",
+                    loaded.Activities.Single(item => item.Id == activity.Id).Title);
                 await transaction.CommitAsync();
             }
         }
@@ -322,20 +345,52 @@ public sealed class PlanningRepositoryIntegrationTests
                         creator, updated, segment, 1));
             }
 
-            var rollbackSegment = segment with { Id = new("transport_rollback"), Mode = "Car" };
-            var rollbackPlan = updated.WithTransportationSegment(
-                rollbackSegment, updated.Audit.UpdatedAtUtc.AddMinutes(1));
+            var editedPlan = updated.WithEditedTransportationSegment(
+                segment.Id, "Express rail", "Madrid Atocha", "Barcelona Sants",
+                new(2027, 10, 28), new(10, 0), new("Europe/Madrid"),
+                new(2027, 10, 28), new(13, 0), new("Europe/Madrid"),
+                updated.Audit.UpdatedAtUtc.AddMinutes(1));
+            var editedSegment = editedPlan.Transportation.Single(item => item.Id == segment.Id);
             await using (var transaction = await factory.BeginAsync(creator))
             {
-                await transaction.AdventurePlans.AddTransportationSegmentAsync(
-                    creator, rollbackPlan, rollbackSegment, 2);
+                await transaction.AdventurePlans.UpdateTransportationSegmentAsync(
+                    creator, editedPlan, editedSegment, 2);
+                transaction.RequiredAuditIntents.AddRequired(Audit(
+                    creator, original.Id, Permissions.AdventurePlanEdit, 2, 3));
+                await transaction.CommitAsync();
+            }
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                var loaded = await transaction.AdventurePlans.GetAsync(creator, original.Id);
+                var persisted = loaded!.Transportation.Single(item => item.Id == segment.Id);
+                Assert.Equal(3, loaded.Audit.Version);
+                Assert.Equal("Express rail", persisted.Mode);
+                Assert.Equal("Madrid Atocha", persisted.From);
+                Assert.Equal(segment.Id, persisted.Id);
+                Assert.Equal(segment.Status, persisted.Status);
+                await Assert.ThrowsAsync<PlanningConcurrencyException>(() =>
+                    transaction.AdventurePlans.UpdateTransportationSegmentAsync(
+                        creator, editedPlan, editedSegment, 2));
+            }
+
+            var rollbackPlan = editedPlan.WithEditedTransportationSegment(
+                segment.Id, "Must roll back", "Private origin", "Private destination",
+                new(2027, 10, 28), new(11, 0), new("Europe/Madrid"),
+                new(2027, 10, 28), new(14, 0), new("Europe/Madrid"),
+                editedPlan.Audit.UpdatedAtUtc.AddMinutes(1));
+            var rollbackSegment = rollbackPlan.Transportation.Single(item => item.Id == segment.Id);
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                await transaction.AdventurePlans.UpdateTransportationSegmentAsync(
+                    creator, rollbackPlan, rollbackSegment, 3);
                 await Assert.ThrowsAsync<InvalidOperationException>(() => transaction.CommitAsync());
             }
             await using (var transaction = await factory.BeginAsync(creator))
             {
                 var loaded = await transaction.AdventurePlans.GetAsync(creator, original.Id);
-                Assert.Equal(2, loaded!.Audit.Version);
-                Assert.DoesNotContain(loaded.Transportation, item => item.Id == rollbackSegment.Id);
+                Assert.Equal(3, loaded!.Audit.Version);
+                Assert.Equal("Express rail",
+                    loaded.Transportation.Single(item => item.Id == segment.Id).Mode);
                 await transaction.CommitAsync();
             }
         }

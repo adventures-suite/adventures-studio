@@ -114,6 +114,17 @@ public interface IAdventurePlanRepository
         long expectedVersion,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Updates one existing planned activity and advances the plan at the expected version.</summary>
+    /// <exception cref="PlanningConcurrencyException">
+    /// The persisted plan has changed since <paramref name="expectedVersion"/>.
+    /// </exception>
+    Task UpdatePlannedActivityAsync(
+        CreatorId creatorId,
+        AdventurePlan plan,
+        PlannedActivity activity,
+        long expectedVersion,
+        CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Appends one transportation segment and advances the owning plan when the
     /// persisted version matches the expected version.
@@ -122,6 +133,17 @@ public interface IAdventurePlanRepository
     /// The persisted plan has changed since <paramref name="expectedVersion"/>.
     /// </exception>
     Task AddTransportationSegmentAsync(
+        CreatorId creatorId,
+        AdventurePlan plan,
+        TransportationSegment segment,
+        long expectedVersion,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Updates one transportation segment and advances the plan at the expected version.</summary>
+    /// <exception cref="PlanningConcurrencyException">
+    /// The persisted plan changed since <paramref name="expectedVersion"/>.
+    /// </exception>
+    Task UpdateTransportationSegmentAsync(
         CreatorId creatorId,
         AdventurePlan plan,
         TransportationSegment segment,
