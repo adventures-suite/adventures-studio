@@ -12,6 +12,9 @@ param creatorId string
 @description('Immutable source revision included in health and deployment evidence.')
 param commitSha string
 
+@description('Object ID of the GitHub dev-environment deployment principal.')
+param deploymentPrincipalObjectId string
+
 @description('Azure region inherited from the existing App Service plan.')
 param location string = resourceGroup().location
 
@@ -68,6 +71,10 @@ resource showcaseApp 'Microsoft.Web/sites@2023-12-01' = {
           value: 'false'
         }
         {
+          name: 'Preview__NoIndex'
+          value: 'true'
+        }
+        {
           name: 'Deployment__CommitSha'
           value: commitSha
         }
@@ -97,6 +104,18 @@ resource showcaseApp 'Microsoft.Web/sites@2023-12-01' = {
         }
       ]
     }
+  }
+}
+
+resource deploymentAccess 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(showcaseApp.id, deploymentPrincipalObjectId, 'de139f84-1756-47ae-9be6-808fbbe84772')
+  scope: showcaseApp
+  properties: {
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      'de139f84-1756-47ae-9be6-808fbbe84772')
+    principalId: deploymentPrincipalObjectId
+    principalType: 'ServicePrincipal'
   }
 }
 
