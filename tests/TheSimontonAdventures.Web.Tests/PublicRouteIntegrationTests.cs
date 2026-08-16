@@ -76,6 +76,19 @@ public sealed class PublicRouteIntegrationTests : IClassFixture<PublicRouteInteg
         Assert.DoesNotContain("method=\"post\"", html);
     }
 
+    /// <summary>Ensures the main development entrance serves AdventuresSuite rather than Creator content.</summary>
+    [Fact]
+    public async Task PlatformHost_RendersPublicProductLandingPage()
+    {
+        using var response = await SendAsync("localhost", "/");
+        var html = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("Your adventures deserve to become more than memories", html);
+        Assert.Contains("Adventures Studio", html);
+        Assert.DoesNotContain("adventures-studio-hero.jpeg", html);
+    }
+
     /// <summary>Ensures a draft Creator-owned volume is not served publicly.</summary>
     [Fact]
     public async Task DraftVolume_ReturnsNotFound()

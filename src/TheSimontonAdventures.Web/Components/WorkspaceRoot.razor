@@ -207,9 +207,17 @@
     }
     else
     {
-        <p>Sign in to access the private workspace.</p>
-        <a href="@ExternalIdBrowserEndpoints.SignInPath"
-           data-enhance-nav="false">Sign in</a>
+        <section class="workspace-sign-in" aria-labelledby="workspace-sign-in-title">
+            <p class="workspace-sign-in__brand">AdventuresSuite</p>
+            <p class="workspace-sign-in__eyebrow">Creator workspace</p>
+            <h1 id="workspace-sign-in-title">Your adventures begin here.</h1>
+            <p class="workspace-sign-in__description">
+                Dream, plan, preserve, and publish meaningful adventures in one private workspace.
+            </p>
+            <a class="workspace-sign-in__action"
+               href="@ExternalIdBrowserEndpoints.SignInPath"
+               data-enhance-nav="false">Sign in to your workspace</a>
+        </section>
     }
     </div>
     </ChildContent>

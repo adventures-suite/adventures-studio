@@ -1,0 +1,19 @@
+<article class="application-card">
+    <div class="application-card__top">
+        <span class="application-card__symbol" aria-hidden="true">@Symbol</span>
+        <span class="application-card__status">@Status</span>
+    </div>
+    <h3>@Name</h3>
+    <p>@Description</p>
+</article>
+
+@code {
+    /// <summary>Gets or sets the application name.</summary>
+    [Parameter, EditorRequired] public string Name { get; set; } = string.Empty;
+    /// <summary>Gets or sets the delivery status.</summary>
+    [Parameter, EditorRequired] public string Status { get; set; } = string.Empty;
+    /// <summary>Gets or sets the application description.</summary>
+    [Parameter, EditorRequired] public string Description { get; set; } = string.Empty;
+    /// <summary>Gets or sets the decorative application mark.</summary>
+    [Parameter, EditorRequired] public string Symbol { get; set; } = string.Empty;
+}

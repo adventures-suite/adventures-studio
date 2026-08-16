@@ -1,0 +1,49 @@
+.journey-step {
+    border-left: 1px solid rgba(23, 45, 46, 0.14);
+    min-height: 20rem;
+    padding: 1.5rem clamp(1.2rem, 2.4vw, 2.4rem) 2rem;
+}
+
+.journey-step:nth-child(-n + 3) {
+    border-bottom: 1px solid rgba(23, 45, 46, 0.14);
+}
+
+.journey-step__top {
+    align-items: center;
+    color: #89938f;
+    display: flex;
+    font-size: 0.7rem;
+    font-weight: 700;
+    justify-content: space-between;
+    letter-spacing: 0.12em;
+}
+
+.journey-step__symbol {
+    align-items: center;
+    background: #e9e4d8;
+    border-radius: 50%;
+    color: #a15e35;
+    display: inline-flex;
+    font-size: 1.2rem;
+    height: 2.8rem;
+    justify-content: center;
+    width: 2.8rem;
+}
+
+.journey-step h3 {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 2rem;
+    font-weight: 400;
+    margin: 5rem 0 0.8rem;
+}
+
+.journey-step p {
+    color: #687572;
+    font-size: 0.9rem;
+    line-height: 1.65;
+    margin: 0;
+}
+
+@media (max-width: 48rem) {
+    .journey-step { border-bottom: 1px solid rgba(23, 45, 46, 0.14); }
+}

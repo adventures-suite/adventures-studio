@@ -211,7 +211,40 @@ public sealed class CreatorResolutionMiddlewareTests
             resolver,
             creatorAccessor,
             trustedHostAccessor,
+            DenyPlatformHostClassifier.Instance,
             ExternalConfiguration());
+
+        Assert.True(nextCalled);
+        Assert.Equal(0, resolver.ResolveCallCount);
+    }
+
+    /// <summary>
+    /// Ensures an explicitly approved public platform host does not acquire a
+    /// Creator tenant or enter the private workspace branch.
+    /// </summary>
+    [Fact]
+    public async Task InvokeAsync_PublicPlatformHost_EstablishesPlatformWithoutCreator()
+    {
+        var resolver = new StubCreatorResolver(new Dictionary<string, CreatorContext>());
+        var creatorAccessor = new CreatorContextAccessor();
+        var trustedHostAccessor = new TrustedRequestHostContextAccessor();
+        var nextCalled = false;
+        var middleware = new CreatorResolutionMiddleware(_ =>
+        {
+            nextCalled = true;
+            Assert.Equal(TrustedRequestHostType.PublicPlatform, trustedHostAccessor.Current.Type);
+            Assert.Null(trustedHostAccessor.Current.Creator);
+            Assert.Throws<InvalidOperationException>(() => creatorAccessor.Current);
+            return Task.CompletedTask;
+        });
+
+        await middleware.InvokeAsync(
+            CreateHttpContext("platform.example.com"),
+            resolver,
+            creatorAccessor,
+            trustedHostAccessor,
+            new ExactPlatformHostClassifier("platform.example.com"),
+            AuthenticationConfiguration.Disabled());
 
         Assert.True(nextCalled);
         Assert.Equal(0, resolver.ResolveCallCount);
@@ -248,6 +281,7 @@ public sealed class CreatorResolutionMiddlewareTests
             resolver,
             creatorAccessor,
             trustedHostAccessor,
+            DenyPlatformHostClassifier.Instance,
             ExternalConfiguration());
 
         if (requestHost == "creator.example.com")
@@ -281,6 +315,7 @@ public sealed class CreatorResolutionMiddlewareTests
             resolver,
             creatorAccessor,
             trustedHostAccessor ?? new TrustedRequestHostContextAccessor(),
+            DenyPlatformHostClassifier.Instance,
             AuthenticationConfiguration.Disabled());
 
     private static AuthenticationConfiguration ExternalConfiguration() => new(
@@ -332,5 +367,18 @@ public sealed class CreatorResolutionMiddlewareTests
             contexts.TryGetValue(host.Host, out var context);
             return Task.FromResult(context);
         }
+    }
+
+    private sealed class DenyPlatformHostClassifier : IPlatformHostClassifier
+    {
+        internal static DenyPlatformHostClassifier Instance { get; } = new();
+
+        public bool IsPublicPlatformHost(HostString host) => false;
+    }
+
+    private sealed class ExactPlatformHostClassifier(string approvedHost) : IPlatformHostClassifier
+    {
+        public bool IsPublicPlatformHost(HostString host) =>
+            string.Equals(host.Host, approvedHost, StringComparison.OrdinalIgnoreCase);
     }
 }
