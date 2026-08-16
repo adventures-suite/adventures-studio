@@ -136,6 +136,11 @@ mutation authorization and audit, runtime grants, indexes, projection mapping,
 ETags, service registration, endpoints, and Bearer + SQL activation remain
 separately reviewed work.
 
+The implementation-ready persistence proposal, including the approved
+parent-compatible seek plus BIN2 residual comparison rule, is defined in
+`docs/architecture/companion-policy-assignment-persistence.md`. That design is
+documentation only and does not authorize migration `0010` or activation.
+
 Activation remains dependent on separately reviewed work:
 
 1. add separately reviewed persistence for explicit profile assignments and
