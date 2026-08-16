@@ -162,53 +162,31 @@
 }
 
 .platform-hero__art {
-    background: linear-gradient(165deg, #e8cda9 0%, #ccad83 45%, #718b7d 100%);
-    min-height: 42rem;
+    align-self: center;
+    aspect-ratio: 75 / 56;
+    margin: 0;
     overflow: hidden;
     position: relative;
 }
 
-.platform-hero__sun {
-    background: #f5dfae;
-    border-radius: 50%;
-    height: clamp(10rem, 20vw, 19rem);
+.platform-hero__art::after {
+    background: linear-gradient(0deg, rgba(12, 38, 38, 0.58), transparent 42%);
+    content: "";
+    inset: 0;
     position: absolute;
-    right: 12%;
-    top: 12%;
-    width: clamp(10rem, 20vw, 19rem);
 }
 
-.platform-hero__mountain {
-    bottom: -2rem;
-    clip-path: polygon(0 100%, 33% 28%, 45% 52%, 63% 8%, 100% 100%);
-    left: -10%;
+.platform-hero__art img {
+    display: block;
+    height: 100%;
+    inset: 0;
+    object-fit: cover;
+    object-position: center;
     position: absolute;
-    right: -10%;
+    width: 100%;
 }
 
-.platform-hero__mountain--far {
-    background: #769084;
-    height: 62%;
-}
-
-.platform-hero__mountain--near {
-    background: #2d5754;
-    clip-path: polygon(0 100%, 24% 50%, 37% 67%, 56% 22%, 70% 51%, 82% 35%, 100% 100%);
-    height: 47%;
-}
-
-.platform-hero__path {
-    background: #d3ad7b;
-    border-radius: 50% 50% 0 0;
-    bottom: -5%;
-    clip-path: polygon(41% 100%, 49% 0, 55% 0, 68% 100%);
-    height: 44%;
-    left: 0;
-    position: absolute;
-    right: 0;
-}
-
-.platform-hero__art-note {
+.platform-hero__art figcaption {
     bottom: 2.5rem;
     color: rgba(255, 255, 255, 0.82);
     font-family: Georgia, 'Times New Roman', serif;
@@ -217,11 +195,13 @@
     left: 2.5rem;
     line-height: 1.45;
     position: absolute;
+    z-index: 1;
 }
 
 .platform-purpose,
 .platform-journey,
 .platform-story,
+.platform-featured,
 .platform-creator-cta,
 .platform-returning {
     margin: 0 auto;
@@ -238,6 +218,7 @@
 .platform-purpose h2,
 .platform-section-heading h2,
 .platform-story h2,
+.platform-featured h2,
 .platform-creator-cta h2,
 .platform-returning h2 {
     font-family: Georgia, 'Times New Roman', serif;
@@ -289,6 +270,53 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.platform-journey__story {
+    align-items: center;
+    display: grid;
+    gap: clamp(2.5rem, 7vw, 7rem);
+    grid-template-columns: minmax(16rem, 0.72fr) minmax(0, 1fr);
+    margin-bottom: clamp(4rem, 8vw, 7rem);
+}
+
+.platform-journey__photo {
+    margin: 0;
+}
+
+.platform-journey__photo img {
+    aspect-ratio: 3 / 4;
+    border-radius: 1.25rem;
+    box-shadow: 0 1.5rem 4rem rgba(23, 45, 46, 0.16);
+    display: block;
+    height: auto;
+    object-fit: cover;
+    width: 100%;
+}
+
+.platform-journey__photo figcaption {
+    color: var(--muted);
+    font-size: 0.74rem;
+    line-height: 1.55;
+    margin-top: 0.8rem;
+}
+
+.platform-journey__story-copy h3 {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(2.2rem, 4.5vw, 4.5rem);
+    font-weight: 400;
+    letter-spacing: -0.045em;
+    line-height: 1.02;
+    margin: 0;
+    max-width: 13ch;
+}
+
+.platform-journey__story-copy > p:last-child {
+    color: var(--muted);
+    font-size: 1.02rem;
+    line-height: 1.75;
+    margin: 1.5rem 0 0;
+    max-width: 38rem;
+}
+
 .platform-applications {
     background: var(--forest);
     color: #f8f4e9;
@@ -306,9 +334,10 @@
 }
 
 .platform-story {
+    align-items: center;
     display: grid;
-    gap: clamp(3rem, 9vw, 10rem);
-    grid-template-columns: minmax(12rem, 0.35fr) minmax(0, 1fr);
+    gap: clamp(2.5rem, 6vw, 6rem);
+    grid-template-columns: minmax(10rem, 0.3fr) minmax(15rem, 0.55fr) minmax(0, 1fr);
 }
 
 .platform-story__label > span {
@@ -320,6 +349,25 @@
 
 .platform-story__content {
     max-width: 58rem;
+}
+
+.platform-story__photo {
+    margin: 0;
+}
+
+.platform-story__photo img {
+    aspect-ratio: 3 / 4;
+    border-radius: 1.25rem;
+    display: block;
+    object-fit: cover;
+    width: 100%;
+}
+
+.platform-story__photo figcaption {
+    color: var(--muted);
+    font-size: 0.74rem;
+    line-height: 1.55;
+    margin-top: 0.8rem;
 }
 
 .platform-story__content > p {
@@ -341,6 +389,47 @@
     font-size: 0.8rem;
     font-weight: 700;
     padding: 0.55rem 0.9rem;
+}
+
+.platform-featured {
+    align-items: stretch;
+    display: grid;
+    gap: 0;
+    grid-template-columns: minmax(0, 1.1fr) minmax(22rem, 0.9fr);
+    max-width: 82rem;
+}
+
+.platform-featured__image {
+    min-height: 30rem;
+}
+
+.platform-featured__image img {
+    border-radius: 1.5rem 0 0 1.5rem;
+    display: block;
+    height: 100%;
+    object-fit: cover;
+    width: 100%;
+}
+
+.platform-featured__content {
+    align-content: center;
+    background: var(--forest);
+    border-radius: 0 1.5rem 1.5rem 0;
+    color: #f8f4e9;
+    display: grid;
+    padding: clamp(2.5rem, 6vw, 5.5rem);
+}
+
+.platform-featured__content > p:not(.platform-eyebrow) {
+    color: #c4d0cc;
+    line-height: 1.75;
+    margin: 1.5rem 0 2rem;
+}
+
+.platform-featured__content .platform-action {
+    background: #f8f4e9;
+    color: var(--forest);
+    justify-self: start;
 }
 
 .platform-creator-cta {
@@ -395,8 +484,9 @@
     .platform-nav { display: none; }
     .platform-header { grid-template-columns: 1fr 1fr; }
     .platform-hero { grid-template-columns: 1fr; }
-    .platform-hero__art { min-height: 34rem; }
     .platform-applications__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .platform-story { grid-template-columns: minmax(15rem, 0.55fr) minmax(0, 1fr); }
+    .platform-story__label { grid-column: 1 / -1; }
     .platform-returning { grid-template-columns: 1fr 1fr; }
     .platform-returning .platform-action { justify-self: start; }
 }
@@ -405,7 +495,15 @@
     .platform-purpose__statement,
     .platform-section-heading,
     .platform-story,
-    .platform-returning { grid-template-columns: 1fr; }
+    .platform-featured,
+    .platform-returning,
+    .platform-journey__story { grid-template-columns: 1fr; }
+    .platform-story__label { grid-column: auto; }
+    .platform-story__photo { max-width: 28rem; }
+    .platform-featured__image { min-height: 24rem; }
+    .platform-featured__image img { border-radius: 1.5rem 1.5rem 0 0; }
+    .platform-featured__content { border-radius: 0 0 1.5rem 1.5rem; }
+    .platform-journey__photo { max-width: 28rem; }
     .platform-journey__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .platform-footer { grid-template-columns: 1fr; text-align: center; }
     .platform-footer .platform-brand,
@@ -414,7 +512,6 @@
 
 @media (max-width: 34rem) {
     .platform-header__sign-in { font-size: 0.78rem; padding: 0.5rem 0.8rem; }
-    .platform-hero__art { min-height: 26rem; }
     .platform-journey__grid,
     .platform-applications__grid { grid-template-columns: 1fr; }
 }

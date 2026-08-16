@@ -38,13 +38,11 @@
                     }
                 </div>
             </div>
-            <div class="platform-hero__art" aria-hidden="true">
-                <div class="platform-hero__sun"></div>
-                <div class="platform-hero__mountain platform-hero__mountain--far"></div>
-                <div class="platform-hero__mountain platform-hero__mountain--near"></div>
-                <div class="platform-hero__path"></div>
-                <span class="platform-hero__art-note">Every story begins<br />with a horizon.</span>
-            </div>
+            <figure class="platform-hero__art">
+                <img src="@HeroImageUrl"
+                     alt="A couple overlooking the blue Santorini caldera" />
+                <figcaption>Every story begins<br />with a horizon.</figcaption>
+            </figure>
         </section>
 
         <section id="why" class="platform-purpose" aria-labelledby="platform-purpose-title">
@@ -77,6 +75,22 @@
                     AdventuresSuite follows the natural rhythm of an adventure instead of
                     forcing your life into disconnected tools.
                 </p>
+            </div>
+            <div class="platform-journey__story">
+                <figure class="platform-journey__photo">
+                    <img src="@JourneyImageUrl"
+                         alt="Two passport covers and travel drinks marking the beginning of an adventure" />
+                    <figcaption>A real journey. The beginning of the idea behind AdventuresSuite.</figcaption>
+                </figure>
+                <div class="platform-journey__story-copy">
+                    <p class="platform-eyebrow">Where an Adventure begins</p>
+                    <h3>Sometimes it starts with two passports and a shared horizon.</h3>
+                    <p>
+                        Long before an Adventure becomes a story, it begins as anticipation:
+                        a conversation, a possibility, and the decision to go. AdventuresSuite
+                        keeps that beginning connected to everything that follows.
+                    </p>
+                </div>
             </div>
             <div class="platform-journey__grid">
                 <PlatformJourneyStep Number="01" Title="Dream" Symbol="✦"
@@ -122,6 +136,11 @@
                 <p class="platform-eyebrow">Who we are</p>
                 <span>Adventures Studio</span>
             </div>
+            <figure class="platform-story__photo">
+                <img src="@StoryImageUrl"
+                     alt="The Adventures Studio founders together in a Tuscan vineyard" />
+                <figcaption>Built from our own journeys—and the wish to remember them well.</figcaption>
+            </figure>
             <div class="platform-story__content">
                 <h2 id="platform-story-title">Built from a belief that remembering matters.</h2>
                 <p>
@@ -142,6 +161,27 @@
                 </div>
             </div>
         </section>
+
+        @if (!string.IsNullOrWhiteSpace(FeaturedAdventureUrl))
+        {
+            <section class="platform-featured" aria-labelledby="platform-featured-title">
+                <div class="platform-featured__image">
+                    <img src="@FeaturedImageUrl"
+                         alt="The Simontons overlooking Oia and the Santorini caldera" />
+                </div>
+                <div class="platform-featured__content">
+                    <p class="platform-eyebrow">A published Adventure</p>
+                    <h2 id="platform-featured-title">See what a journey can become.</h2>
+                    <p>
+                        The Simonton Adventures is a living example of the stories,
+                        photographs, places, and memories AdventuresSuite is being built to preserve.
+                    </p>
+                    <a class="platform-action platform-action--primary" href="@FeaturedAdventureUrl">
+                        Explore The Simonton Adventures →
+                    </a>
+                </div>
+            </section>
+        }
 
         <section id="become-a-creator" class="platform-creator-cta" aria-labelledby="creator-cta-title">
             <p class="platform-eyebrow">Begin something meaningful</p>
@@ -184,4 +224,20 @@
     /// <summary>Gets or sets an optional featured public Creator experience.</summary>
     [Parameter]
     public string FeaturedAdventureUrl { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the public image illustrating the beginning of an Adventure.</summary>
+    [Parameter, EditorRequired]
+    public string JourneyImageUrl { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the public photograph shown in the platform hero.</summary>
+    [Parameter, EditorRequired]
+    public string HeroImageUrl { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the public photograph accompanying the Adventures Studio story.</summary>
+    [Parameter, EditorRequired]
+    public string StoryImageUrl { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the public preview image for the featured Creator experience.</summary>
+    [Parameter, EditorRequired]
+    public string FeaturedImageUrl { get; set; } = string.Empty;
 }
