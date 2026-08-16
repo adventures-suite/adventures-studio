@@ -206,6 +206,9 @@ public sealed class TransportationSegmentAddServiceTests
             Segment = segment;
             return Task.CompletedTask;
         }
+        public Task UpdateTransportationSegmentAsync(CreatorId creatorId, AdventurePlan plan,
+            TransportationSegment segment, long expectedVersion,
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<AdventurePlanAuthorizationFacts?> GetAuthorizationFactsAsync(CreatorId creatorId, AdventurePlanId planId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<IReadOnlyList<AdventurePlanDashboardItem>> ListDashboardAsync(CreatorId creatorId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<AdventurePlanDetail?> GetDetailAsync(CreatorId creatorId, AdventurePlanId planId, CancellationToken cancellationToken = default) => throw new NotSupportedException();

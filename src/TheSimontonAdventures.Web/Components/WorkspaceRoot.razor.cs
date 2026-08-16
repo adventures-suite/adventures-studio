@@ -197,6 +197,17 @@ public partial class WorkspaceRoot
             "failure" => "The transportation could not be added. Please try again.",
             _ => null
         };
+    private string? TransportationEditStatusMessage =>
+        HttpContextAccessor.HttpContext?.Request.Query["transportation-edit"].ToString() switch
+        {
+            "updated" => "The transportation segment was updated.",
+            "unchanged" => "The transportation segment was already current.",
+            "denied" => "The transportation segment could not be updated.",
+            "conflict" => "This plan changed. Review the current transportation values and try again.",
+            "validation" => "Review the route, local dates, times, and IANA time zones.",
+            "failure" => "The transportation segment could not be updated. Please try again.",
+            _ => null
+        };
     private string? AccommodationStatusMessage =>
         HttpContextAccessor.HttpContext?.Request.Query["accommodation"].ToString() switch
         {
