@@ -21,6 +21,7 @@ public sealed class CompanionReadProjectionBoundaryTests
             typeof(ICompanionAdventureSummaryQuery).GetMethods()
                 .Concat(typeof(ICompanionAdventureDetailQuery).GetMethods())
                 .Concat(typeof(ICompanionTodayQuery).GetMethods())
+                .Concat(typeof(ICompanionItineraryQuery).GetMethods())
                 .SelectMany(method => method.GetParameters().Select(parameter => parameter.ParameterType)
                     .Append(method.ReturnType)),
             type => Assert.DoesNotContain("Contracts", type.FullName ?? string.Empty, StringComparison.Ordinal));

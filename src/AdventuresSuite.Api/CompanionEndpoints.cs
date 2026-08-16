@@ -87,7 +87,82 @@ public static class CompanionEndpoints
                 return Task.CompletedTask;
             });
 
+        group.MapGet("/adventures/{adventureId}/itinerary", GetItineraryAsync)
+            .WithName("GetCompanionItinerary")
+            .WithSummary("Gets the authorized Itinerary for one Adventure")
+            .WithDescription("Returns bounded destination-local itinerary days after current participation, Creator ownership, itinerary-visibility, information-policy, and AdventurePlan.View evaluation. Proposed, reserved, and confirmed states remain distinct and do not establish a booking or guarantee.")
+            .Produces<CompanionItineraryDto>(StatusCodes.Status200OK, "application/json")
+            .Produces(StatusCodes.Status304NotModified)
+            .Produces<CompanionProblemDto>(StatusCodes.Status400BadRequest, "application/problem+json")
+            .Produces<CompanionProblemDto>(StatusCodes.Status401Unauthorized, "application/problem+json")
+            .Produces<CompanionProblemDto>(StatusCodes.Status403Forbidden, "application/problem+json")
+            .Produces<CompanionProblemDto>(StatusCodes.Status404NotFound, "application/problem+json")
+            .Produces<CompanionProblemDto>(StatusCodes.Status500InternalServerError, "application/problem+json")
+            .AddOpenApiOperationTransformer((operation, _, _) =>
+            {
+                var parameter = operation.Parameters?.OfType<OpenApiParameter>()
+                    .SingleOrDefault(value => value.Name == "adventureId");
+                if (parameter is not null)
+                    parameter.Description = "Bounded opaque Adventure identity; matching is case-sensitive.";
+                return Task.CompletedTask;
+            });
+
         return endpoints;
+    }
+
+    private static async Task<IResult> GetItineraryAsync(
+        HttpContext context,
+        ICompanionProjectionService service,
+        ISupportIdProvider supportIds,
+        string adventureId,
+        CancellationToken cancellationToken)
+    {
+        var started = Stopwatch.GetTimestamp();
+        using var activity = CompanionTelemetry.StartGetItinerary();
+        var outcome = "error";
+        var supportId = supportIds.Create();
+        try
+        {
+            if (!IsValidOpaqueIdentity(adventureId))
+            {
+                outcome = "invalid";
+                return Problem(context, StatusCodes.Status400BadRequest, "invalid_request", supportId);
+            }
+
+            if (!TryCreateTestAccessContext(context.User, out var access))
+            {
+                outcome = "unavailable";
+                return Problem(context, StatusCodes.Status404NotFound, "resource_unavailable", supportId);
+            }
+
+            var result = await service.GetItineraryAsync(access, adventureId, supportId, cancellationToken);
+            if (!result.IsAvailable)
+            {
+                outcome = "unavailable";
+                return Problem(context, StatusCodes.Status404NotFound, "resource_unavailable", supportId);
+            }
+
+            var etag = $"\"{result.ProjectionVersion}\"";
+            context.Response.Headers["X-Support-Id"] = supportId;
+            context.Response.Headers.ETag = etag;
+            context.Response.Headers.CacheControl = "private, max-age=0, must-revalidate";
+            if (context.Request.Headers.IfNoneMatch.Any(value => value == etag || value == "*"))
+            {
+                outcome = "not_modified";
+                return Results.StatusCode(StatusCodes.Status304NotModified);
+            }
+
+            outcome = "allowed";
+            return Results.Ok(result.Value);
+        }
+        finally
+        {
+            CompanionTelemetry.Record(
+                CompanionTelemetry.GetItineraryOperation,
+                outcome,
+                Stopwatch.GetElapsedTime(started),
+                activity);
+        }
     }
 
     private static async Task<IResult> GetTodayAsync(

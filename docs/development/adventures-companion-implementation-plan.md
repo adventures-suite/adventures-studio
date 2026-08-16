@@ -39,7 +39,13 @@ The isolated MAUI POC remains under
 The production transition has begun in
 `src/AdventuresSuite.Companion.Mobile`, carrying forward the proven shell,
 appearance behavior, Adventure selection, explicit Demo/API composition, and
-API-backed Adventure list, detail, and Today presentation.
+API-backed Adventure list, detail, Today, and Journey/Itinerary presentation.
+
+The Journey vertical reads the versioned authorized Itinerary contract through
+an explicit provider-neutral application query and typed mobile client. Its
+deterministic adapter remains fictional and test-only; authoritative SQL,
+mobile authentication, offline persistence, and itinerary mutation remain
+inactive follow-on work.
 
 The manual TestFlight workflow builds the production mobile project and keeps
 the existing application bundle identity. Demo publication remains an explicit

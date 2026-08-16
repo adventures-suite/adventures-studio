@@ -106,6 +106,7 @@ if (deterministicMode)
         provider.GetRequiredService<DeterministicCompanionAuthorizationFacts>());
     builder.Services.AddSingleton<IAuthorizationPolicyEvaluator, AuthorizationPolicyEvaluator>();
     builder.Services.AddSingleton<ICompanionTodayQuery, DeterministicCompanionTodayQuery>();
+    builder.Services.AddSingleton<ICompanionItineraryQuery, DeterministicCompanionItineraryQuery>();
     builder.Services.AddSingleton<ICompanionProjectionService, DeterministicCompanionProjectionService>();
 }
 else if (projectionProvider == CompanionApiConstants.SqlProjectionProvider)
@@ -122,6 +123,7 @@ else if (projectionProvider == CompanionApiConstants.SqlProjectionProvider)
     builder.Services.AddSingleton<ICompanionAdventureDetailQuery>(provider =>
         provider.GetRequiredService<SqlCompanionAdventureQueries>());
     builder.Services.AddSingleton<ICompanionTodayQuery, ClosedCompanionTodayQuery>();
+    builder.Services.AddSingleton<ICompanionItineraryQuery, ClosedCompanionItineraryQuery>();
     builder.Services.AddSingleton<ICompanionProjectionService, AuthoritativeCompanionProjectionService>();
     builder.Services.AddSingleton<ICompanionSqlReadinessProbe>(
         new CompanionSqlReadinessProbe(sqlConnectionString));
