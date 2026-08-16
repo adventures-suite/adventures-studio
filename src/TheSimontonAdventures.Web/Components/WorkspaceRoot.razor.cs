@@ -218,6 +218,17 @@ public partial class WorkspaceRoot
             "failure" => "The accommodation could not be added. Please try again.",
             _ => null
         };
+    private string? AccommodationEditStatusMessage =>
+        HttpContextAccessor.HttpContext?.Request.Query["accommodation-edit"].ToString() switch
+        {
+            "updated" => "The accommodation was updated.",
+            "unchanged" => "The accommodation was already current.",
+            "denied" => "The accommodation could not be updated.",
+            "conflict" => "This plan changed. Review the current accommodation values and try again.",
+            "validation" => "Review the accommodation name, inclusive dates, and IANA time zone.",
+            "failure" => "The accommodation could not be updated. Please try again.",
+            _ => null
+        };
     private string? ReservationStatusMessage =>
         HttpContextAccessor.HttpContext?.Request.Query["reservation"].ToString() switch
         {

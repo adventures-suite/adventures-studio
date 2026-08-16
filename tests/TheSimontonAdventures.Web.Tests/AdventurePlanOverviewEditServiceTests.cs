@@ -535,6 +535,9 @@ public sealed class AdventurePlanOverviewEditServiceTests
         public Task AddAccommodationAsync(CreatorId creatorId, AdventurePlan plan,
             Accommodation accommodation, long expectedVersion,
             CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task UpdateAccommodationAsync(CreatorId creatorId, AdventurePlan plan,
+            Accommodation accommodation, long expectedVersion,
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task AddReservationAsync(CreatorId creatorId, AdventurePlan plan,
             Reservation reservation, long expectedVersion,
             CancellationToken cancellationToken = default) => throw new NotSupportedException();

@@ -1,0 +1,187 @@
+<div class="platform-site">
+    <header class="platform-header">
+        <a class="platform-brand" href="#top" aria-label="AdventuresSuite home">
+            <span class="platform-brand__mark" aria-hidden="true">A</span>
+            <span>AdventuresSuite</span>
+        </a>
+        <nav class="platform-nav" aria-label="Primary navigation">
+            <a href="#why">Why AdventuresSuite</a>
+            <a href="#journey">The journey</a>
+            <a href="#applications">Applications</a>
+            <a href="#about">About us</a>
+        </nav>
+        <a class="platform-header__sign-in" href="@SignInUrl">Sign in</a>
+    </header>
+
+    <main id="top">
+        <section class="platform-hero" aria-labelledby="platform-hero-title">
+            <div class="platform-hero__content">
+                <p class="platform-eyebrow">Create · Preserve · Publish · Remember</p>
+                <h1 id="platform-hero-title">Your adventures deserve to become more than memories.</h1>
+                <p class="platform-hero__lead">
+                    AdventuresSuite brings dreaming, planning, storytelling, photography,
+                    and publishing together—so the experiences that shape your life are
+                    never scattered or forgotten.
+                </p>
+                <div class="platform-hero__actions">
+                    <a class="platform-action platform-action--primary" href="#become-a-creator">
+                        Become a Creator
+                    </a>
+                    <a class="platform-action platform-action--secondary" href="#journey">
+                        Discover the journey
+                    </a>
+                    @if (!string.IsNullOrWhiteSpace(FeaturedAdventureUrl))
+                    {
+                        <a class="platform-action platform-action--text" href="@FeaturedAdventureUrl">
+                            Explore The Simonton Adventures →
+                        </a>
+                    }
+                </div>
+            </div>
+            <div class="platform-hero__art" aria-hidden="true">
+                <div class="platform-hero__sun"></div>
+                <div class="platform-hero__mountain platform-hero__mountain--far"></div>
+                <div class="platform-hero__mountain platform-hero__mountain--near"></div>
+                <div class="platform-hero__path"></div>
+                <span class="platform-hero__art-note">Every story begins<br />with a horizon.</span>
+            </div>
+        </section>
+
+        <section id="why" class="platform-purpose" aria-labelledby="platform-purpose-title">
+            <p class="platform-eyebrow">Why we exist</p>
+            <div class="platform-purpose__statement">
+                <h2 id="platform-purpose-title">Life moves quickly.<br />Meaningful adventures should remain.</h2>
+                <div>
+                    <p>
+                        Photographs disappear into camera rolls. Plans become old messages.
+                        Stories fade into fragments. The moments that changed us deserve better.
+                    </p>
+                    <p>
+                        AdventuresSuite gives every adventure a lasting home—from the first idea
+                        to the finished story—without asking you to become a technologist.
+                    </p>
+                </div>
+            </div>
+            <blockquote>
+                “The software should disappear. The story should remain.”
+            </blockquote>
+        </section>
+
+        <section id="journey" class="platform-journey" aria-labelledby="platform-journey-title">
+            <div class="platform-section-heading">
+                <div>
+                    <p class="platform-eyebrow">One connected journey</p>
+                    <h2 id="platform-journey-title">From possibility to legacy</h2>
+                </div>
+                <p>
+                    AdventuresSuite follows the natural rhythm of an adventure instead of
+                    forcing your life into disconnected tools.
+                </p>
+            </div>
+            <div class="platform-journey__grid">
+                <PlatformJourneyStep Number="01" Title="Dream" Symbol="✦"
+                    Description="Collect inspiration and give the next possibility somewhere to begin." />
+                <PlatformJourneyStep Number="02" Title="Plan" Symbol="⌁"
+                    Description="Shape the route, itinerary, people, reservations, and details with confidence." />
+                <PlatformJourneyStep Number="03" Title="Travel" Symbol="⌖"
+                    Description="Keep the right guidance close while the real experience takes center stage." />
+                <PlatformJourneyStep Number="04" Title="Preserve" Symbol="◇"
+                    Description="Bring photographs, journals, videos, and reflections into one meaningful record." />
+                <PlatformJourneyStep Number="05" Title="Publish" Symbol="↗"
+                    Description="Choose what becomes a story, website, book, or experience you can share." />
+                <PlatformJourneyStep Number="06" Title="Remember" Symbol="∞"
+                    Description="Return to the places, people, and moments that became part of who you are." />
+            </div>
+        </section>
+
+        <section id="applications" class="platform-applications" aria-labelledby="platform-applications-title">
+            <div class="platform-section-heading platform-section-heading--light">
+                <div>
+                    <p class="platform-eyebrow">The AdventuresSuite family</p>
+                    <h2 id="platform-applications-title">Purpose-built applications.<br />One Adventure.</h2>
+                </div>
+                <p>
+                    Each application serves a clear moment in the journey while protecting one
+                    coherent, Creator-owned record.
+                </p>
+            </div>
+            <div class="platform-applications__grid">
+                <PlatformApplicationCard Name="Creator Workspace" Status="In development" Symbol="A"
+                    Description="The private home for creating, managing, preserving, and publishing your Adventures." />
+                <PlatformApplicationCard Name="Adventure Planner" Status="In development" Symbol="P"
+                    Description="Structured travel planning with thoughtful assistance and Creator-approved decisions." />
+                <PlatformApplicationCard Name="AdventuresCompanion" Status="Preview" Symbol="C"
+                    Description="A traveler-focused mobile companion for readiness, playbooks, memories, and the journey itself." />
+                <PlatformApplicationCard Name="Adventure Publisher" Status="Coming later" Symbol="B"
+                    Description="Transform approved stories and media into beautiful websites, books, and lasting editions." />
+            </div>
+        </section>
+
+        <section id="about" class="platform-story" aria-labelledby="platform-story-title">
+            <div class="platform-story__label">
+                <p class="platform-eyebrow">Who we are</p>
+                <span>Adventures Studio</span>
+            </div>
+            <div class="platform-story__content">
+                <h2 id="platform-story-title">Built from a belief that remembering matters.</h2>
+                <p>
+                    Adventures Studio is the company behind AdventuresSuite. We are building the
+                    platform we wanted for our own journeys: a place where planning serves the
+                    experience, technology respects people, and memories can grow into stories
+                    worth keeping.
+                </p>
+                <p>
+                    We believe Creators should own their work, travelers should control their
+                    private information, and artificial intelligence should assist human judgment—not replace it.
+                </p>
+                <div class="platform-values" aria-label="Our principles">
+                    <span>Human-led</span>
+                    <span>Creator-owned</span>
+                    <span>Private by design</span>
+                    <span>Built to last</span>
+                </div>
+            </div>
+        </section>
+
+        <section id="become-a-creator" class="platform-creator-cta" aria-labelledby="creator-cta-title">
+            <p class="platform-eyebrow">Begin something meaningful</p>
+            <h2 id="creator-cta-title">Become an AdventuresSuite Creator.</h2>
+            <p>
+                Creator enrollment is coming soon. Join us as AdventuresSuite grows into a
+                thoughtful home for the adventures that matter most.
+            </p>
+            <div class="platform-creator-cta__actions">
+                <span class="platform-action platform-action--disabled" aria-disabled="true">Creator signup coming soon</span>
+                <a class="platform-action platform-action--text" href="@SignInUrl">Already a Creator or Traveler? Sign in →</a>
+            </div>
+        </section>
+
+        <section id="returning-creators" class="platform-returning" aria-labelledby="returning-title">
+            <div>
+                <p class="platform-eyebrow">Welcome back</p>
+                <h2 id="returning-title">Your Adventure is waiting.</h2>
+            </div>
+            <p>Creators and Travelers use one secure identity. Your access determines the private experiences available to you.</p>
+            <a class="platform-action platform-action--primary" href="@SignInUrl">Sign in to AdventuresSuite</a>
+        </section>
+    </main>
+
+    <footer class="platform-footer">
+        <a class="platform-brand" href="#top">
+            <span class="platform-brand__mark" aria-hidden="true">A</span>
+            <span>AdventuresSuite</span>
+        </a>
+        <p>Created by Adventures Studio · Create. Preserve. Publish. Share. Remember.</p>
+        <p>&copy; @DateTime.UtcNow.Year Adventures Studio</p>
+    </footer>
+</div>
+
+@code {
+    /// <summary>Gets or sets the canonical workspace sign-in destination.</summary>
+    [Parameter, EditorRequired]
+    public string SignInUrl { get; set; } = "#returning-creators";
+
+    /// <summary>Gets or sets an optional featured public Creator experience.</summary>
+    [Parameter]
+    public string FeaturedAdventureUrl { get; set; } = string.Empty;
+}

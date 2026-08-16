@@ -1,0 +1,74 @@
+.workspace-experience-card {
+    --experience-accent: #294f51;
+    background: rgba(255, 255, 255, 0.76);
+    border: 1px solid rgba(29, 43, 44, 0.1);
+    border-radius: 1rem;
+    display: flex;
+    flex-direction: column;
+    min-height: 20rem;
+    overflow: hidden;
+    padding: 1.15rem;
+    position: relative;
+}
+
+.workspace-experience-card::before {
+    background: var(--experience-accent);
+    content: '';
+    height: 0.22rem;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.workspace-experience-card--sunrise { --experience-accent: #c77d40; }
+.workspace-experience-card--ocean { --experience-accent: #317b83; }
+.workspace-experience-card--forest { --experience-accent: #55755b; }
+.workspace-experience-card--plum { --experience-accent: #735a75; }
+.workspace-experience-card--terracotta { --experience-accent: #a75c45; }
+
+.workspace-experience-card__meta {
+    align-items: center;
+    color: #7b8985;
+    display: flex;
+    font-size: 0.68rem;
+    font-weight: 700;
+    justify-content: space-between;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.workspace-experience-card__status {
+    background: #f0f1ee;
+    border-radius: 999px;
+    color: #687572;
+    letter-spacing: 0.04em;
+    padding: 0.35rem 0.55rem;
+}
+
+.workspace-experience-card__symbol {
+    align-items: center;
+    background: color-mix(in srgb, var(--experience-accent) 12%, white);
+    border-radius: 50%;
+    color: var(--experience-accent);
+    display: inline-flex;
+    font-size: 1.4rem;
+    height: 3.25rem;
+    justify-content: center;
+    margin: 2.5rem 0 auto;
+    width: 3.25rem;
+}
+
+.workspace-experience-card h3 {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.65rem;
+    font-weight: 400;
+    margin: 2rem 0 0.7rem;
+}
+
+.workspace-experience-card p {
+    color: #667470;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin: 0;
+}

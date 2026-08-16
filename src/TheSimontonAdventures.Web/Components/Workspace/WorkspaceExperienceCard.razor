@@ -1,0 +1,42 @@
+<article class="workspace-experience-card workspace-experience-card--@Accent">
+    <div class="workspace-experience-card__meta">
+        <span>@Stage</span>
+        @if (!string.IsNullOrWhiteSpace(Status))
+        {
+            <span class="workspace-experience-card__status">@Status</span>
+        }
+        else
+        {
+            <span class="workspace-experience-card__status">Coming soon</span>
+        }
+    </div>
+    <span class="workspace-experience-card__symbol" aria-hidden="true">@Symbol</span>
+    <h3>@Title</h3>
+    <p>@Description</p>
+</article>
+
+@code {
+    /// <summary>Gets or sets the journey-stage sequence.</summary>
+    [Parameter, EditorRequired]
+    public string Stage { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the experience title.</summary>
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the concise experience description.</summary>
+    [Parameter, EditorRequired]
+    public string Description { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the decorative symbol hidden from assistive technology.</summary>
+    [Parameter, EditorRequired]
+    public string Symbol { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the allowlisted visual accent name.</summary>
+    [Parameter, EditorRequired]
+    public string Accent { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets an optional delivery status.</summary>
+    [Parameter]
+    public string? Status { get; set; }
+}

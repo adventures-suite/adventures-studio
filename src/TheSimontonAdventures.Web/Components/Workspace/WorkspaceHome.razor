@@ -1,0 +1,97 @@
+@using AdventuresSuite.Identity.ExternalId
+
+<div class="workspace-shell">
+    <header class="workspace-header">
+        <a class="workspace-header__brand" href="/" aria-label="AdventuresSuite workspace home">
+            <span class="workspace-header__mark" aria-hidden="true">A</span>
+            <span>AdventuresSuite</span>
+        </a>
+        <form method="post" action="@ExternalIdBrowserEndpoints.SignOutPath">
+            <AntiforgeryToken />
+            <button class="workspace-header__sign-out" type="submit">Sign out</button>
+        </form>
+    </header>
+
+    <main class="workspace-home">
+        <section class="workspace-welcome" aria-labelledby="workspace-welcome-title">
+            <div>
+                <p class="workspace-welcome__eyebrow">Creator workspace</p>
+                <h1 id="workspace-welcome-title">Where will your next adventure take you?</h1>
+                <p class="workspace-welcome__description">
+                    Bring every part of an adventure together—from the first spark of an idea
+                    to the stories and memories you choose to share.
+                </p>
+            </div>
+            <div class="workspace-welcome__prompt" aria-label="Workspace status">
+                <span class="workspace-welcome__prompt-icon" aria-hidden="true">✦</span>
+                <div>
+                    <strong>Your private workspace is ready.</strong>
+                    <span>Adventure creation is coming next.</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="workspace-journey" aria-labelledby="workspace-journey-title">
+            <div class="workspace-section-heading">
+                <div>
+                    <p class="workspace-section-heading__eyebrow">The adventure journey</p>
+                    <h2 id="workspace-journey-title">Create at every stage</h2>
+                </div>
+                <p>Each experience will become available as its secure foundation is completed.</p>
+            </div>
+
+            <div class="workspace-experience-grid">
+                <WorkspaceExperienceCard
+                    Stage="01"
+                    Title="Dream"
+                    Description="Capture possibilities, inspiration, and the places calling you forward."
+                    Symbol="✦"
+                    Accent="sunrise" />
+                <WorkspaceExperienceCard
+                    Stage="02"
+                    Title="Plan"
+                    Description="Shape your itinerary, travelers, stays, activities, tasks, and budget."
+                    Symbol="⌁"
+                    Accent="ocean"
+                    Status="In development" />
+                <WorkspaceExperienceCard
+                    Stage="03"
+                    Title="Travel"
+                    Description="Carry the right details with you and stay ready as the journey unfolds."
+                    Symbol="⌖"
+                    Accent="forest" />
+                <WorkspaceExperienceCard
+                    Stage="04"
+                    Title="Preserve"
+                    Description="Gather photographs, journals, videos, and the moments worth remembering."
+                    Symbol="◇"
+                    Accent="plum" />
+                <WorkspaceExperienceCard
+                    Stage="05"
+                    Title="Publish"
+                    Description="Deliberately transform approved memories into stories, books, and websites."
+                    Symbol="↗"
+                    Accent="terracotta" />
+            </div>
+        </section>
+
+        <section class="workspace-next" aria-labelledby="workspace-next-title">
+            <div class="workspace-next__copy">
+                <p class="workspace-section-heading__eyebrow">Your adventures</p>
+                <h2 id="workspace-next-title">A place for what comes next</h2>
+                <p>
+                    Your active plans, recent work, readiness, and publishing progress will appear
+                    here as the Planner experience comes online.
+                </p>
+            </div>
+            <div class="workspace-empty-state">
+                <span class="workspace-empty-state__icon" aria-hidden="true">＋</span>
+                <div>
+                    <strong>Create your first Adventure</strong>
+                    <span>Available when Planner activation is complete.</span>
+                </div>
+                <span class="workspace-status-badge">Coming soon</span>
+            </div>
+        </section>
+    </main>
+</div>

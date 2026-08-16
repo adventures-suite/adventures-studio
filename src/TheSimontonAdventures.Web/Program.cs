@@ -47,6 +47,9 @@ if (showcaseEnabled)
 // approved-domain registration.
 builder.Services.Configure<CreatorResolutionOptions>(
     builder.Configuration.GetSection(CreatorResolutionOptions.SectionName));
+builder.Services.Configure<PlatformHostOptions>(
+    builder.Configuration.GetSection(PlatformHostOptions.SectionName));
+builder.Services.AddSingleton<IPlatformHostClassifier, PlatformHostClassifier>();
 
 // Register the Creator Engine retrieval and host-resolution foundation. Request
 // context establishment is introduced separately in the middleware phase.
@@ -93,6 +96,7 @@ if (string.Equals(authenticationMode, nameof(AuthenticationMode.ExternalProvider
     builder.Services.AddScoped<ITransportationSegmentAddService, TransportationSegmentAddService>();
     builder.Services.AddScoped<ITransportationSegmentEditService, TransportationSegmentEditService>();
     builder.Services.AddScoped<IAccommodationAddService, AccommodationAddService>();
+    builder.Services.AddScoped<IAccommodationEditService, AccommodationEditService>();
     builder.Services.AddScoped<IReservationAddService, ReservationAddService>();
 }
 
@@ -321,6 +325,7 @@ if (authenticationConfiguration.Mode == AuthenticationMode.ExternalProvider)
     app.MapTransportationSegmentAddEndpoint();
     app.MapTransportationSegmentEditEndpoint();
     app.MapAccommodationAddEndpoint();
+    app.MapAccommodationEditEndpoint();
     app.MapReservationAddEndpoint();
 }
 

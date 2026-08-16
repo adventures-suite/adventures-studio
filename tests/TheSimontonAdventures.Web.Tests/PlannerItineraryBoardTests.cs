@@ -43,7 +43,7 @@ public sealed class PlannerItineraryBoardTests
         {
             Assert.Contains($"action=\"{path}\"", html, StringComparison.Ordinal);
         }
-        Assert.Equal(8, Count(html, "name=\"expectedVersion\" value=\"17\""));
+        Assert.Equal(9, Count(html, "name=\"expectedVersion\" value=\"17\""));
         Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/activities/activity_prado_01/edit\"", html);
         Assert.Contains("Edit activity: Prado Museum", html);
         Assert.Contains("href=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027\"", html);
@@ -60,6 +60,17 @@ public sealed class PlannerItineraryBoardTests
         Assert.Contains("name=\"departureTimeZoneId\" value=\"America/Phoenix\"", html);
         Assert.Contains("name=\"arrivalTimeZoneId\" value=\"Europe/Madrid\"", html);
         Assert.Contains("name=\"transportation-editor\"", html);
+        Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/accommodations/stay_madrid_01/edit\"", html);
+        Assert.Contains("Edit accommodation: Hotel Central", html);
+        Assert.Contains("name=\"name\" value=\"Hotel Central\"", html);
+        Assert.Contains("Start date", html);
+        Assert.Contains("End date", html);
+        Assert.DoesNotContain("Check-in", html, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Check-out", html, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("name=\"startDate\" value=\"2027-10-25\"", html);
+        Assert.Contains("name=\"endDate\" value=\"2027-10-29\"", html);
+        Assert.Contains("name=\"timeZoneId\" value=\"Europe/Madrid\"", html);
+        Assert.Contains("name=\"accommodation-editor\"", html);
         Assert.Contains("name=\"subject\" required", html);
         Assert.Contains("Confirmation references are added through a separate protected workflow.", html);
     }
@@ -77,8 +88,9 @@ public sealed class PlannerItineraryBoardTests
         Assert.Contains("Transportation status", html);
         Assert.Contains("Transportation edit status", html);
         Assert.Contains("Accommodation status", html);
+        Assert.Contains("Accommodation edit status", html);
         Assert.Contains("Reservation status", html);
-        Assert.Equal(8, Count(html, "role=\"status\""));
+        Assert.Equal(9, Count(html, "role=\"status\""));
         Assert.DoesNotContain("PRIVATE-QUERY-VALUE", html, StringComparison.Ordinal);
     }
 
@@ -149,6 +161,9 @@ public sealed class PlannerItineraryBoardTests
                 [nameof(PlannerItineraryBoard.TransportationCancelPath)] =
                     "/workspace/creators/creator_alpha_01/plans/plan_spain_2027",
                 [nameof(PlannerItineraryBoard.AddAccommodationPath)] = Paths["accommodation"],
+                [nameof(PlannerItineraryBoard.EditAccommodationPathPrefix)] = Paths["accommodation"],
+                [nameof(PlannerItineraryBoard.AccommodationCancelPath)] =
+                    "/workspace/creators/creator_alpha_01/plans/plan_spain_2027",
                 [nameof(PlannerItineraryBoard.AddReservationPath)] = Paths["reservation"]
             };
             if (includeMessages)
@@ -161,6 +176,8 @@ public sealed class PlannerItineraryBoardTests
                 parameters[nameof(PlannerItineraryBoard.TransportationEditStatusMessage)] =
                     "Transportation edit status";
                 parameters[nameof(PlannerItineraryBoard.AccommodationStatusMessage)] = "Accommodation status";
+                parameters[nameof(PlannerItineraryBoard.AccommodationEditStatusMessage)] =
+                    "Accommodation edit status";
                 parameters[nameof(PlannerItineraryBoard.ReservationStatusMessage)] = "Reservation status";
             }
             var output = await renderer.RenderComponentAsync<PlannerItineraryBoard>(ParameterView.FromDictionary(parameters));

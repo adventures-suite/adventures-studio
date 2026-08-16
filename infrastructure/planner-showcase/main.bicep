@@ -6,8 +6,17 @@ param appName string
 @description('Name of the existing non-production Linux App Service plan.')
 param appServicePlanName string
 
-@description('Creator used only to resolve local public image resources.')
-param showcaseCreatorId string
+@description('Exact hostname emitted by the existing showcase App Service.')
+param platformHostname string
+
+@description('HTTPS URL of The Simonton Adventures public showcase.')
+param featuredAdventureUrl string
+
+@description('Canonical HTTPS sign-in endpoint on the existing Creator workspace.')
+param workspaceSignInUrl string
+
+@description('Object ID of the GitHub dev-environment deployment principal.')
+param deploymentPrincipalObjectId string
 
 @description('Immutable source revision included in health and deployment evidence.')
 param commitSha string
@@ -25,8 +34,8 @@ resource showcaseApp 'Microsoft.Web/sites@2023-12-01' = {
   kind: 'app,linux'
   tags: {
     Environment: 'Showcase'
-    Purpose: 'Synthetic Planner customer demonstration'
-    DataClassification: 'Fictional public data only'
+    Purpose: 'AdventuresSuite public landing preview'
+    DataClassification: 'Public marketing content only'
     SourceRevision: commitSha
   }
   properties: {
@@ -60,11 +69,23 @@ resource showcaseApp 'Microsoft.Web/sites@2023-12-01' = {
           value: 'Disabled'
         }
         {
-          name: 'CreatorResolution__AzureDefaultCreatorId'
-          value: showcaseCreatorId
+          name: 'PlatformHosts__Hosts__0'
+          value: platformHostname
+        }
+        {
+          name: 'PlatformHosts__FeaturedAdventureUrl'
+          value: featuredAdventureUrl
+        }
+        {
+          name: 'PlatformHosts__WorkspaceSignInUrl'
+          value: workspaceSignInUrl
         }
         {
           name: 'Showcase__Enabled'
+          value: 'false'
+        }
+        {
+          name: 'Preview__NoIndex'
           value: 'true'
         }
         {
@@ -97,6 +118,18 @@ resource showcaseApp 'Microsoft.Web/sites@2023-12-01' = {
         }
       ]
     }
+  }
+}
+
+resource deploymentAccess 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(showcaseApp.id, deploymentPrincipalObjectId, 'de139f84-1756-47ae-9be6-808fbbe84772')
+  scope: showcaseApp
+  properties: {
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      'de139f84-1756-47ae-9be6-808fbbe84772')
+    principalId: deploymentPrincipalObjectId
+    principalType: 'ServicePrincipal'
   }
 }
 

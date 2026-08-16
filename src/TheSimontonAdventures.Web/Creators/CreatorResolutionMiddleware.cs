@@ -31,12 +31,14 @@ public sealed class CreatorResolutionMiddleware
         ICreatorResolver creatorResolver,
         CreatorContextAccessor contextAccessor,
         TrustedRequestHostContextAccessor trustedHostAccessor,
+        IPlatformHostClassifier platformHostClassifier,
         AuthenticationConfiguration authenticationConfiguration)
     {
         ArgumentNullException.ThrowIfNull(httpContext);
         ArgumentNullException.ThrowIfNull(creatorResolver);
         ArgumentNullException.ThrowIfNull(contextAccessor);
         ArgumentNullException.ThrowIfNull(trustedHostAccessor);
+        ArgumentNullException.ThrowIfNull(platformHostClassifier);
         ArgumentNullException.ThrowIfNull(authenticationConfiguration);
 
         if (trustedHostAccessor.IsEstablished)
@@ -49,6 +51,14 @@ public sealed class CreatorResolutionMiddleware
         {
             trustedHostAccessor.Establish(new TrustedRequestHostContext(
                 TrustedRequestHostType.PlatformWorkspace));
+            await _next(httpContext);
+            return;
+        }
+
+        if (platformHostClassifier.IsPublicPlatformHost(httpContext.Request.Host))
+        {
+            trustedHostAccessor.Establish(new TrustedRequestHostContext(
+                TrustedRequestHostType.PublicPlatform));
             await _next(httpContext);
             return;
         }

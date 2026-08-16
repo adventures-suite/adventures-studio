@@ -1,7 +1,11 @@
 ﻿@inject ICreatorContextAccessor CreatorContextAccessor
+@using TheSimontonAdventures.Web.Components.Platform
 @inject IResourceService ResourceService
 @inject IHttpContextAccessor HttpContextAccessor
 @inject ITrustedRequestHostContextAccessor TrustedRequestHostContextAccessor
+@inject AuthenticationConfiguration AuthenticationConfiguration
+@inject Microsoft.Extensions.Options.IOptions<PlatformHostOptions> PlatformHostConfiguration
+@inject IConfiguration Configuration
 
 <!DOCTYPE html>
 <html lang="@Locale">
@@ -16,6 +20,10 @@
     <link rel="stylesheet" href="@Assets["TheSimontonAdventures.Web.styles.css"]" />
     <ImportMap AdditionalAttributes="@ImportMapAttributes" />
     <meta name="description" content="@Description" />
+    @if (Configuration.GetValue<bool>("Preview:NoIndex"))
+    {
+        <meta name="robots" content="noindex,nofollow,noarchive" />
+    }
     @if (!string.IsNullOrEmpty(FaviconUrl))
     {
         <link rel="icon" href="@FaviconUrl" />
@@ -24,9 +32,13 @@
 </head>
 
 <body>
-    @if (IsWorkspace)
+    @if (HostType == TrustedRequestHostType.PlatformWorkspace)
     {
         <WorkspaceRoot />
+    }
+    else if (HostType == TrustedRequestHostType.PublicPlatform)
+    {
+        <PlatformLanding SignInUrl="@SignInUrl" FeaturedAdventureUrl="@FeaturedAdventureUrl" />
     }
     else
     {
@@ -45,7 +57,9 @@
     private string Description { get; set; } = WorkspaceDescription;
     private string FaviconUrl { get; set; } = string.Empty;
     private IReadOnlyDictionary<string, object>? ImportMapAttributes { get; set; }
-    private bool IsWorkspace { get; set; }
+    private TrustedRequestHostType HostType { get; set; }
+    private string SignInUrl { get; set; } = "#returning-creators";
+    private string FeaturedAdventureUrl { get; set; } = string.Empty;
     private string Locale { get; set; } = "en-US";
 
     protected override async Task OnInitializedAsync()
@@ -57,10 +71,27 @@
             ["nonce"] = BrowserSecurityHeadersMiddleware.GetNonce(httpContext)
         };
 
-        IsWorkspace = TrustedRequestHostContextAccessor.Current.Type
-            == TrustedRequestHostType.PlatformWorkspace;
-        if (IsWorkspace)
+        HostType = TrustedRequestHostContextAccessor.Current.Type;
+        if (HostType == TrustedRequestHostType.PlatformWorkspace)
         {
+            return;
+        }
+
+        if (HostType == TrustedRequestHostType.PublicPlatform)
+        {
+            FeaturedAdventureUrl = PlatformHostConfiguration.Value.FeaturedAdventureUrl;
+            if (!string.IsNullOrWhiteSpace(PlatformHostConfiguration.Value.WorkspaceSignInUrl))
+            {
+                SignInUrl = PlatformHostConfiguration.Value.WorkspaceSignInUrl;
+            }
+            else if (AuthenticationConfiguration.Mode == AuthenticationMode.ExternalProvider
+                && Uri.TryCreate(AuthenticationConfiguration.WorkspaceOrigin, UriKind.Absolute, out var workspace))
+            {
+                SignInUrl = new Uri(workspace, AdventuresSuite.Identity.ExternalId.ExternalIdBrowserEndpoints.SignInPath)
+                    .AbsoluteUri;
+            }
+
+            Description = "Dream, plan, preserve, and publish meaningful adventures with AdventuresSuite.";
             return;
         }
 
