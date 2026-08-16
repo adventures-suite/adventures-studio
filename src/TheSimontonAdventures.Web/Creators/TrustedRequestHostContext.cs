@@ -3,6 +3,9 @@ namespace TheSimontonAdventures.Web.Creators;
 /// <summary>Classifies one request after exact trusted-host resolution.</summary>
 public enum TrustedRequestHostType
 {
+    /// <summary>The request may serve the public AdventuresSuite product experience.</summary>
+    PublicPlatform,
+
     /// <summary>The request may serve published content for one Creator.</summary>
     PublicCreator,
 
@@ -20,7 +23,7 @@ public sealed record TrustedRequestHostContext
     {
         if (!Enum.IsDefined(type)
             || (type == TrustedRequestHostType.PublicCreator && creator is null)
-            || (type == TrustedRequestHostType.PlatformWorkspace && creator is not null))
+            || (type != TrustedRequestHostType.PublicCreator && creator is not null))
         {
             throw new ArgumentException("The trusted-host classification is inconsistent.");
         }

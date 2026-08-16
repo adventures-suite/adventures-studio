@@ -47,6 +47,9 @@ if (showcaseEnabled)
 // approved-domain registration.
 builder.Services.Configure<CreatorResolutionOptions>(
     builder.Configuration.GetSection(CreatorResolutionOptions.SectionName));
+builder.Services.Configure<PlatformHostOptions>(
+    builder.Configuration.GetSection(PlatformHostOptions.SectionName));
+builder.Services.AddSingleton<IPlatformHostClassifier, PlatformHostClassifier>();
 
 // Register the Creator Engine retrieval and host-resolution foundation. Request
 // context establishment is introduced separately in the middleware phase.

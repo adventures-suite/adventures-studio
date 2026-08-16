@@ -1,0 +1,19 @@
+<article class="journey-step">
+    <div class="journey-step__top">
+        <span>@Number</span>
+        <span class="journey-step__symbol" aria-hidden="true">@Symbol</span>
+    </div>
+    <h3>@Title</h3>
+    <p>@Description</p>
+</article>
+
+@code {
+    /// <summary>Gets or sets the journey sequence.</summary>
+    [Parameter, EditorRequired] public string Number { get; set; } = string.Empty;
+    /// <summary>Gets or sets the journey stage.</summary>
+    [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
+    /// <summary>Gets or sets the stage description.</summary>
+    [Parameter, EditorRequired] public string Description { get; set; } = string.Empty;
+    /// <summary>Gets or sets the decorative stage symbol.</summary>
+    [Parameter, EditorRequired] public string Symbol { get; set; } = string.Empty;
+}
