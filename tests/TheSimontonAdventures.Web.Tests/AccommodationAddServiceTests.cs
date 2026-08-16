@@ -117,6 +117,7 @@ public sealed class AccommodationAddServiceTests
         public bool ThrowConcurrency { get; set; }
         public Task<AdventurePlan?> GetAsync(CreatorId creatorId, AdventurePlanId planId, CancellationToken cancellationToken = default) => Task.FromResult<AdventurePlan?>(current);
         public Task AddAccommodationAsync(CreatorId creatorId, AdventurePlan plan, Accommodation accommodation, long expectedVersion, CancellationToken cancellationToken = default) { if (ThrowConcurrency) throw new PlanningConcurrencyException(plan.Id, expectedVersion); Accommodation = accommodation; return Task.CompletedTask; }
+        public Task UpdateAccommodationAsync(CreatorId c, AdventurePlan p, Accommodation a, long v, CancellationToken x = default) => throw new NotSupportedException();
         public Task AddReservationAsync(CreatorId creatorId, AdventurePlan plan, Reservation reservation, long expectedVersion, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<AdventurePlanAuthorizationFacts?> GetAuthorizationFactsAsync(CreatorId c, AdventurePlanId p, CancellationToken x = default) => throw new NotSupportedException();
         public Task<IReadOnlyList<AdventurePlanDashboardItem>> ListDashboardAsync(CreatorId c, CancellationToken x = default) => throw new NotSupportedException();

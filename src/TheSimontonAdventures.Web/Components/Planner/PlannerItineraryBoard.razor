@@ -165,9 +165,44 @@
     </section>
 
     <section class="planner-board__card" aria-labelledby="plan-accommodations">
-        <h4 id="plan-accommodations">Accommodations</h4>@Status(AccommodationStatusMessage)
-        @if (Plan.Accommodations.Count == 0){<p class="planner-board__empty">No accommodations have been added.</p>}else{<ul class="planner-board__summary-list">@foreach(var accommodation in Plan.Accommodations){<li><strong>@accommodation.Name</strong><span>@FormatDates(accommodation.Dates) · @accommodation.TimeZone</span><small>@FormatStatus(accommodation.Status)</small></li>}</ul>}
-        @if (CanEdit){<form class="planner-board__form" method="post" action="@AddAccommodationPath"><AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" /><label>Accommodation name<input name="name" required maxlength="200" /></label><div class="planner-board__form-columns"><label>Check-in date<input type="date" name="startDate" required /></label><label>Check-out date<input type="date" name="endDate" required /></label></div><label>Property time zone<input name="timeZoneId" required maxlength="100" placeholder="Europe/Rome" /></label><button type="submit">Add proposed accommodation</button></form>}
+        <h4 id="plan-accommodations">Accommodations</h4>
+        @Status(AccommodationEditStatusMessage)
+        @Status(AccommodationStatusMessage)
+        @if (Plan.Accommodations.Count == 0)
+        {
+            <p class="planner-board__empty">No accommodations have been added.</p>
+        }
+        else
+        {
+            <ul class="planner-board__summary-list">
+                @foreach (var accommodation in Plan.Accommodations)
+                {
+                    <li>
+                        <strong>@accommodation.Name</strong>
+                        <span>Start date <time datetime="@DateValue(accommodation.Dates.Start)">@FormatDate(accommodation.Dates.Start)</time> · End date <time datetime="@DateValue(accommodation.Dates.End)">@FormatDate(accommodation.Dates.End)</time> · @accommodation.TimeZone</span>
+                        <small>@FormatStatus(accommodation.Status)</small>
+                        @if (CanEdit)
+                        {
+                            <details class="planner-board__accommodation-editor" name="accommodation-editor">
+                                <summary>Edit accommodation: @accommodation.Name</summary>
+                                <form class="planner-board__form" method="post" action="@EditAccommodationPath(accommodation.Id)">
+                                    <AntiforgeryToken />
+                                    <input type="hidden" name="expectedVersion" value="@Plan.Version" />
+                                    <label>Accommodation name<input name="name" value="@accommodation.Name" required maxlength="200" autocomplete="off" /></label>
+                                    <div class="planner-board__form-columns">
+                                        <label>Start date<input type="date" name="startDate" value="@DateValue(accommodation.Dates.Start)" min="@DateValue(Plan.Dates.Start)" max="@DateValue(Plan.Dates.End)" required /></label>
+                                        <label>End date<input type="date" name="endDate" value="@DateValue(accommodation.Dates.End)" min="@DateValue(Plan.Dates.Start)" max="@DateValue(Plan.Dates.End)" required /></label>
+                                    </div>
+                                    <label>Property time zone<input name="timeZoneId" value="@accommodation.TimeZone.Value" required maxlength="100" autocomplete="off" /></label>
+                                    <div class="planner-board__form-actions"><button type="submit">Save accommodation</button><a class="planner-board__secondary-button" href="@AccommodationCancelPath">Cancel</a></div>
+                                </form>
+                            </details>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+        @if (CanEdit){<form class="planner-board__form" method="post" action="@AddAccommodationPath"><AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" /><label>Accommodation name<input name="name" required maxlength="200" /></label><div class="planner-board__form-columns"><label>Start date<input type="date" name="startDate" required /></label><label>End date<input type="date" name="endDate" required /></label></div><label>Property time zone<input name="timeZoneId" required maxlength="100" placeholder="Europe/Rome" /></label><button type="submit">Add proposed accommodation</button></form>}
     </section>
 
     <section class="planner-board__card planner-board__reservations" aria-labelledby="plan-reservations">

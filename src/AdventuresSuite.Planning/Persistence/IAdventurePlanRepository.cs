@@ -161,6 +161,17 @@ public interface IAdventurePlanRepository
         long expectedVersion,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Updates one accommodation and advances the plan at the expected version.</summary>
+    /// <exception cref="PlanningConcurrencyException">
+    /// The persisted plan changed since <paramref name="expectedVersion"/>.
+    /// </exception>
+    Task UpdateAccommodationAsync(
+        CreatorId creatorId,
+        AdventurePlan plan,
+        Accommodation accommodation,
+        long expectedVersion,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Appends one reservation and advances the plan at the expected version.</summary>
     /// <exception cref="PlanningConcurrencyException">
     /// The persisted plan has changed since <paramref name="expectedVersion"/>.

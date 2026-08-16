@@ -116,6 +116,8 @@ defined in `docs/architecture/experience-design-system.md`.
   changing its identity, day, or planning status
 - correction of an existing transportation segment's route, local schedule,
   and IANA time zones without changing its identity or planning status
+- correction of an existing accommodation's name, inclusive start and end
+  dates, and IANA time zone without changing its identity or planning status
 - transportation and accommodations
 - reservation linkage
 - conflict and missing-information indicators

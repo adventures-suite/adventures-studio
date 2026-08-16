@@ -449,17 +449,90 @@ public sealed class PlanningRepositoryIntegrationTests
                 await Assert.ThrowsAsync<PlanningConcurrencyException>(() =>
                     transaction.AdventurePlans.AddAccommodationAsync(creator, updated, accommodation, 1));
             }
-            var rollback = accommodation with { Id = new("accommodation_rollback"), Name = "Rollback" };
-            var rollbackPlan = updated.WithAccommodation(rollback, updated.Audit.UpdatedAtUtc.AddMinutes(1));
+
+            var editedPlan = updated.WithEditedAccommodation(
+                accommodation.Id, "Barcelona Central",
+                new(new(2027, 10, 27), new(2027, 10, 30)),
+                new("Europe/Madrid"), updated.Audit.UpdatedAtUtc.AddMinutes(1));
+            var editedAccommodation = editedPlan.Accommodations.Single(
+                item => item.Id == accommodation.Id);
             await using (var transaction = await factory.BeginAsync(creator))
             {
-                await transaction.AdventurePlans.AddAccommodationAsync(creator, rollbackPlan, rollback, 2);
+                await transaction.AdventurePlans.UpdateAccommodationAsync(
+                    creator, editedPlan, editedAccommodation, 2);
+                transaction.RequiredAuditIntents.AddRequired(Audit(
+                    creator, original.Id, Permissions.AdventurePlanEdit, 2, 3));
+                await transaction.CommitAsync();
+            }
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                var loaded = await transaction.AdventurePlans.GetAsync(creator, original.Id);
+                var persisted = loaded!.Accommodations.Single(item => item.Id == accommodation.Id);
+                Assert.Equal(3, loaded.Audit.Version);
+                Assert.Equal("Barcelona Central", persisted.Name);
+                Assert.Equal(new DateOnly(2027, 10, 27), persisted.Dates.Start);
+                Assert.Equal(new DateOnly(2027, 10, 30), persisted.Dates.End);
+                Assert.Equal(accommodation.Id, persisted.Id);
+                Assert.Equal(accommodation.Status, persisted.Status);
+                await Assert.ThrowsAsync<PlanningConcurrencyException>(() =>
+                    transaction.AdventurePlans.UpdateAccommodationAsync(
+                        creator, editedPlan, editedAccommodation, 2));
+            }
+
+            var auditRollbackPlan = editedPlan.WithEditedAccommodation(
+                accommodation.Id, "Must roll back",
+                new(new(2027, 10, 26), new(2027, 10, 31)),
+                new("Europe/Madrid"), editedPlan.Audit.UpdatedAtUtc.AddMinutes(1));
+            var auditRollbackAccommodation = auditRollbackPlan.Accommodations.Single(
+                item => item.Id == accommodation.Id);
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                await transaction.AdventurePlans.UpdateAccommodationAsync(
+                    creator, auditRollbackPlan, auditRollbackAccommodation, 3);
                 await Assert.ThrowsAsync<InvalidOperationException>(() => transaction.CommitAsync());
             }
             await using (var transaction = await factory.BeginAsync(creator))
             {
                 var loaded = await transaction.AdventurePlans.GetAsync(creator, original.Id);
-                Assert.Equal(2, loaded!.Audit.Version);
+                Assert.Equal(3, loaded!.Audit.Version);
+                Assert.Equal("Barcelona Central",
+                    loaded.Accommodations.Single(item => item.Id == accommodation.Id).Name);
+                await transaction.CommitAsync();
+            }
+
+            var missing = accommodation with
+            {
+                Id = new("accommodation_missing"),
+                Name = "Must not advance parent"
+            };
+            var missingPlan = editedPlan.WithAccommodation(
+                missing, editedPlan.Audit.UpdatedAtUtc.AddMinutes(2));
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                await Assert.ThrowsAsync<PlanningConcurrencyException>(() =>
+                    transaction.AdventurePlans.UpdateAccommodationAsync(
+                        creator, missingPlan, missing, 3));
+            }
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                var loaded = await transaction.AdventurePlans.GetAsync(creator, original.Id);
+                Assert.Equal(3, loaded!.Audit.Version);
+                Assert.DoesNotContain(loaded.Accommodations, item => item.Id == missing.Id);
+                await transaction.CommitAsync();
+            }
+
+            var rollback = accommodation with { Id = new("accommodation_rollback"), Name = "Rollback" };
+            var rollbackPlan = editedPlan.WithAccommodation(
+                rollback, editedPlan.Audit.UpdatedAtUtc.AddMinutes(3));
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                await transaction.AdventurePlans.AddAccommodationAsync(creator, rollbackPlan, rollback, 3);
+                await Assert.ThrowsAsync<InvalidOperationException>(() => transaction.CommitAsync());
+            }
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                var loaded = await transaction.AdventurePlans.GetAsync(creator, original.Id);
+                Assert.Equal(3, loaded!.Audit.Version);
                 Assert.DoesNotContain(loaded.Accommodations, item => item.Id == rollback.Id);
                 await transaction.CommitAsync();
             }

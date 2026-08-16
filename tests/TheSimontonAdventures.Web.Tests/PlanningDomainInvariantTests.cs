@@ -323,6 +323,43 @@ public sealed class PlanningDomainInvariantTests
         Assert.Equal("Flight", Assert.Single(plan.Transportation).Mode);
     }
 
+    /// <summary>Editing accommodation preserves identity, status, order, and unrelated plan state.</summary>
+    [Fact]
+    public void WithEditedAccommodation_ValidDetails_ReplacesOnlyEditableState()
+    {
+        var first = new Accommodation
+        {
+            Id = new("accommodation_first"),
+            Name = "Original Hotel",
+            Dates = new(new(2027, 10, 25), new(2027, 10, 27)),
+            TimeZone = new("Europe/Madrid"),
+            Status = PlanItemStatus.Confirmed
+        };
+        var second = first with
+        {
+            Id = new("accommodation_second"),
+            Name = "Preserve This Stay",
+            Status = PlanItemStatus.Proposed
+        };
+        var note = new PlanningNote { Id = new("note_keep"), Text = "Preserve this note" };
+        var plan = CreatePlan(accommodations: [first, second], notes: [note]);
+
+        var updated = plan.WithEditedAccommodation(
+            first.Id, "Hotel Central", new(new(2027, 10, 26), new(2027, 10, 29)),
+            new("Europe/Madrid"), Audit.UpdatedAtUtc.AddHours(1));
+
+        Assert.Equal([first.Id, second.Id], updated.Accommodations.Select(item => item.Id));
+        var edited = updated.Accommodations[0];
+        Assert.Equal(first.Id, edited.Id);
+        Assert.Equal(first.Status, edited.Status);
+        Assert.Equal("Hotel Central", edited.Name);
+        Assert.Equal(new DateOnly(2027, 10, 29), edited.Dates.End);
+        Assert.Equal(second, updated.Accommodations[1]);
+        Assert.Equal(2, updated.Audit.Version);
+        Assert.Equal(note, Assert.Single(updated.Notes));
+        Assert.Equal("Original Hotel", plan.Accommodations[0].Name);
+    }
+
     /// <summary>Appending accommodation preserves state and advances one version.</summary>
     [Fact]
     public void WithAccommodation_ValidAccommodation_AppendsAndAdvancesVersion()

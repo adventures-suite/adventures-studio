@@ -346,6 +346,37 @@ public sealed class AdventurePlan
             BudgetItems, PackingItems);
     }
 
+    /// <summary>
+    /// Creates the next aggregate version with one existing accommodation's editable details
+    /// replaced while preserving its identity, planning status, and list position.
+    /// </summary>
+    public AdventurePlan WithEditedAccommodation(
+        AccommodationId accommodationId,
+        string name,
+        PlanningDateRange dates,
+        IanaTimeZone timeZone,
+        DateTimeOffset updatedAtUtc)
+    {
+        var existing = Accommodations.SingleOrDefault(item => item.Id == accommodationId)
+            ?? throw new ArgumentException(
+                "The accommodation must belong to this plan.", nameof(accommodationId));
+        var replacement = new Accommodation
+        {
+            Id = existing.Id,
+            Name = name,
+            Dates = dates,
+            TimeZone = timeZone,
+            Status = existing.Status
+        };
+        var accommodations = Accommodations.Select(
+            item => item.Id == accommodationId ? replacement : item).ToArray();
+        return new(
+            Id, CreatorId, Title, WorkingDescription, LifecycleStage, Status, Dates,
+            new PlanAudit(checked(Audit.Version + 1), Audit.CreatedAtUtc, updatedAtUtc),
+            Travelers, DestinationVisits, ItineraryDays, Activities, Transportation,
+            accommodations, Reservations, Notes, Tasks, BudgetItems, PackingItems);
+    }
+
     /// <summary>Creates the next validated version with one proposed reservation appended.</summary>
     public AdventurePlan WithReservation(
         Reservation reservation,
