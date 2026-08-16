@@ -1,0 +1,360 @@
+﻿@page "/"
+@implements IDisposable
+@inject ICompanionContentProvider ContentProvider
+@inject ICompanionAdventureDetailProvider DetailProvider
+@inject ICompanionTodayProvider TodayProvider
+@inject PlaybookContentService PlaybookService
+@inject ICompanionAppearanceService Appearance
+@inject TransientBackNavigationService BackNavigation
+
+@if (_state is null)
+{
+    <div class="loading-state" role="status">
+        <div class="brand-mark">S</div>
+        <p>Preparing your Adventure…</p>
+    </div>
+}
+else if (_state != AdventuresSuite.Companion.Client.CompanionAdventureListState.Success || _adventure is null)
+{
+    <section class="loading-state companion-load-state" role="@(_state == AdventuresSuite.Companion.Client.CompanionAdventureListState.Empty ? "status" : "alert")">
+        <div class="brand-mark">S</div>
+        <h1>@StateHeading</h1>
+        <p>@StateMessage</p>
+        @if (!string.IsNullOrWhiteSpace(_supportId))
+        {
+            <small>Support ID: @_supportId</small>
+        }
+        <button type="button" @onclick="LoadAsync">Try again</button>
+    </section>
+}
+else
+{
+    <div class="companion-shell theme-@Appearance.EffectivePalette.ToString().ToLowerInvariant()" data-theme="@Appearance.EffectivePalette.ToString().ToLowerInvariant()">
+        <header class="topbar">
+            <div class="brand-lockup" aria-label="AdventuresSuite Companion">
+                <span class="suite-mark" aria-hidden="true">
+                    <svg viewBox="0 0 48 48"><path class="pin" d="M24 3C14.1 3 6 11.1 6 21c0 13.6 18 25 18 25s18-11.4 18-25C42 11.1 33.9 3 24 3Z"/><circle cx="24" cy="21" r="11"/><path class="needle" d="m29 15-3 8-8 4 3-8 8-4Z"/></svg>
+                </span>
+                <span><strong>AdventuresSuite</strong><small>Companion</small></span>
+            </div>
+            <div class="header-actions">
+                <label class="appearance-picker">
+                    <span class="visually-hidden">Appearance</span>
+                    <select aria-label="Appearance" value="@Appearance.Preference" @onchange="ChangeAppearance">
+                        <option value="System">System</option>
+                        <option value="Light">Light</option>
+                        <option value="Dark">Dark</option>
+                    </select>
+                </label>
+                <span class="creator-badge" role="img" aria-label="Presented by The Simonton Adventures">
+                    <img src="brand/the-simonton-adventures/logo-horizontal.svg"
+                         alt="" />
+                </span>
+                <button class="avatar" aria-label="Open traveler profile">SS</button>
+            </div>
+        </header>
+
+        <section class="adventure-switcher" aria-label="Choose an Adventure">
+            <button class="adventure-switcher-trigger" @onclick="ToggleAdventureMenu" aria-expanded="@_adventureMenuOpen">
+                <span><small>Adventure</small><strong>@_adventure.Title</strong></span>
+                <b aria-hidden="true">@(_adventureMenuOpen ? "⌃" : "⌄")</b>
+            </button>
+            @if (_adventureMenuOpen)
+            {
+                <div class="adventure-menu">
+                    @foreach (var adventure in _adventures)
+                    {
+                        <button class="@(adventure.Id == _adventure.Id ? "selected" : null)" @onclick="() => SelectAdventure(adventure)">
+                            <span class="adventure-state @(adventure.IsCurrent ? "current" : "planned")">@(adventure.IsCurrent ? "Current" : "Planned")</span>
+                            <span><strong>@adventure.Title</strong><small>@adventure.TravelDates</small></span>
+                            <b>@(adventure.Id == _adventure.Id ? "✓" : "")</b>
+                        </button>
+                    }
+                </div>
+            }
+        </section>
+
+        <ErrorBoundary>
+            <ChildContent>
+                <section class="screen" aria-live="polite">
+                    @if (_detailState?.IsOpen == true)
+                    {
+                        <AdventureDetailView IsLoading="_detailState.IsLoading"
+                                             Result="_detailState.Current"
+                                             OnBack="CloseDetailAsync"
+                                             OnRetry="RetryDetailAsync" />
+                    }
+                    else
+                    {
+                        @switch (_selectedTab)
+                        {
+                            case CompanionTab.Home:
+                                @if (_hasDetailedContent)
+                                {
+                                    <HomeTab Adventure="_adventure"
+                                             OnOpenJourney="() => SelectTab(CompanionTab.Itinerary)"
+                                             OnOpenReadiness="() => SelectTab(CompanionTab.Readiness)"
+                                             OnOpenPlaybook="OpenPlaybook"
+                                             OnOpenDetail="OpenDetailAsync"
+                                             RestoreDetailFocus="_restoreDetailFocus"
+                                             DetailFocusRestored="DetailFocusRestored"
+                                             OnFeedback="ShowToast" />
+                                }
+                                else
+                                {
+                                    <AdventureListTab Adventure="_adventure"
+                                                      OnOpenDetail="OpenDetailAsync"
+                                                      RestoreDetailFocus="_restoreDetailFocus"
+                                                      DetailFocusRestored="DetailFocusRestored" />
+                                }
+                                <TodayView IsLoading="@(_todayState?.IsLoading == true)"
+                                           Result="@_todayState?.Current"
+                                           OnRetry="RetryTodayAsync" />
+                                break;
+                            case CompanionTab.Itinerary:
+                                <JourneyTab Adventure="_adventure" />
+                                break;
+                            case CompanionTab.Readiness:
+                                <ReadinessTab Adventure="_adventure" OnFeedback="ShowToast" />
+                                break;
+                            case CompanionTab.Memories:
+                                <MemoriesTab Adventures="_adventures"
+                                             SelectedAdventure="_adventure"
+                                             SelectedAdventureChanged="SelectMemoryAdventure"
+                                             OnFeedback="ShowToast" />
+                                break;
+                            case CompanionTab.Playbook:
+                                @if (_playbook is not null)
+                                {
+                                    <PlaybookTab Playbook="_playbook" OnBack="() => SelectTab(CompanionTab.Home)" />
+                                }
+                                break;
+                        }
+                    }
+                </section>
+            </ChildContent>
+            <ErrorContent Context="error">
+                <section class="poc-error" role="alert">
+                    <strong>Companion could not render this view.</strong>
+                    <p>@error.Message</p>
+                </section>
+            </ErrorContent>
+        </ErrorBoundary>
+
+        @if (_hasDetailedContent)
+        {
+            <nav class="tabbar" aria-label="Companion navigation">
+                @TabButton(CompanionTab.Home, "⌂", "Home")
+                @TabButton(CompanionTab.Itinerary, "≡", "Journey")
+                @TabButton(CompanionTab.Readiness, "✓", "Ready")
+                @TabButton(CompanionTab.Memories, "◇", "Memories")
+            </nav>
+        }
+
+        @if (_toast is not null)
+        {
+            <div class="toast" role="status">@_toast</div>
+        }
+    </div>
+}
+
+@code {
+    private IReadOnlyList<CompanionAdventure> _adventures = [];
+    private CompanionAdventure? _adventure;
+    private CompanionTab _selectedTab;
+    private bool _adventureMenuOpen;
+    private CompanionPlaybook? _playbook;
+    private string? _toast;
+    private PeriodicTimer? _timer;
+    private CancellationTokenSource? _timerCancellation;
+    private AdventuresSuite.Companion.Client.CompanionAdventureListState? _state;
+    private bool _hasDetailedContent;
+    private string? _errorTitle;
+    private string? _supportId;
+    private CompanionAdventureDetailPresentationState? _detailState;
+    private CompanionTodayPresentationState? _todayState;
+    private IDisposable? _detailBackRegistration;
+    private bool _restoreDetailFocus;
+
+    protected override async Task OnInitializedAsync()
+    {
+		Appearance.Changed += OnAppearanceChanged;
+        _detailState = new CompanionAdventureDetailPresentationState(DetailProvider);
+        _todayState = new CompanionTodayPresentationState(TodayProvider);
+        await LoadAsync();
+        _timer = new PeriodicTimer(TimeSpan.FromMinutes(1));
+        _timerCancellation = new CancellationTokenSource();
+        _ = RefreshCountdownAsync(_timerCancellation.Token);
+    }
+
+    private async Task LoadAsync()
+    {
+        _state = null;
+        _adventure = null;
+        var result = await ContentProvider.LoadAsync();
+        _state = result.State;
+        _adventures = result.Adventures;
+        _adventure = _adventures.FirstOrDefault(adventure => adventure.IsCurrent) ?? _adventures.FirstOrDefault();
+        _hasDetailedContent = result.HasDetailedContent;
+        _errorTitle = result.ErrorTitle;
+        _supportId = result.SupportId;
+        if (_adventure is not null && _todayState is not null)
+        {
+            await _todayState.LoadAsync(_adventure.Id);
+        }
+    }
+
+    private string StateHeading => _state switch
+    {
+        AdventuresSuite.Companion.Client.CompanionAdventureListState.Empty => "No Adventures yet",
+        AdventuresSuite.Companion.Client.CompanionAdventureListState.Unavailable => "Companion is unavailable",
+        AdventuresSuite.Companion.Client.CompanionAdventureListState.Unauthorized => "Sign-in is required",
+        _ => _errorTitle ?? "Adventure list unavailable"
+    };
+
+    private string StateMessage => _state switch
+    {
+        AdventuresSuite.Companion.Client.CompanionAdventureListState.Empty => "Your authorized Adventures will appear here.",
+        AdventuresSuite.Companion.Client.CompanionAdventureListState.Unavailable => "Check your connection and try again.",
+        AdventuresSuite.Companion.Client.CompanionAdventureListState.Unauthorized => "This session cannot access Companion Adventures.",
+        _ => "Try again later or provide the support ID if you contact support."
+    };
+
+    private RenderFragment TabButton(CompanionTab tab, string icon, string label) => @<button class="@(_selectedTab == tab ? "active" : null)" @onclick="() => _selectedTab = tab"><span>@icon</span><small>@label</small></button>;
+
+    private void SelectTab(CompanionTab tab) => _selectedTab = tab;
+
+    private void ToggleAdventureMenu() => _adventureMenuOpen = !_adventureMenuOpen;
+
+    private async Task SelectAdventure(CompanionAdventure adventure)
+    {
+        _adventure = adventure;
+        _adventureMenuOpen = false;
+        _selectedTab = CompanionTab.Home;
+        if (_todayState is not null)
+        {
+            var load = _todayState.LoadAsync(adventure.Id);
+            StateHasChanged();
+            await load;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SelectMemoryAdventure(CompanionAdventure adventure)
+    {
+        _adventure = adventure;
+        if (_todayState is not null)
+        {
+            await _todayState.LoadAsync(adventure.Id);
+        }
+    }
+
+    private async Task RetryTodayAsync()
+    {
+        if (_todayState is null) return;
+        var load = _todayState.RetryAsync();
+        StateHasChanged();
+        await load;
+        StateHasChanged();
+    }
+
+    private async Task OpenDetailAsync()
+    {
+        if (_adventure is null || _detailState is null)
+        {
+            return;
+        }
+
+        _detailBackRegistration?.Dispose();
+        _detailBackRegistration = BackNavigation.Register(CloseDetailAsync);
+        var load = _detailState.OpenAsync(_adventure.Id);
+        StateHasChanged();
+        await load;
+        StateHasChanged();
+    }
+
+    private async Task RetryDetailAsync()
+    {
+        if (_detailState is null)
+        {
+            return;
+        }
+
+        var load = _detailState.RetryAsync();
+        StateHasChanged();
+        await load;
+        StateHasChanged();
+    }
+
+    private Task CloseDetailAsync()
+    {
+        _detailState?.Close();
+        _detailBackRegistration?.Dispose();
+        _detailBackRegistration = null;
+        _restoreDetailFocus = true;
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private void DetailFocusRestored() => _restoreDetailFocus = false;
+
+    private void ChangeAppearance(ChangeEventArgs args)
+    {
+        var preference = Enum.TryParse(args.Value?.ToString(), ignoreCase: true, out CompanionAppearancePreference parsed)
+            ? parsed
+            : CompanionAppearancePreference.System;
+        Appearance.SetPreference(preference);
+    }
+
+    private void OnAppearanceChanged(object? sender, EventArgs args) => _ = InvokeAsync(StateHasChanged);
+
+    private async Task OpenPlaybook()
+    {
+        if (_adventure?.Id != "1")
+        {
+            await ShowToast("A Playbook has not been generated for this Planned Adventure yet.");
+            return;
+        }
+
+        _playbook ??= await PlaybookService.LoadItalyAsync();
+        _selectedTab = CompanionTab.Playbook;
+    }
+
+    private async Task RefreshCountdownAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            while (_timer is not null && await _timer.WaitForNextTickAsync(cancellationToken))
+            {
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
+    private async Task ShowToast(string message)
+    {
+        _toast = message;
+        StateHasChanged();
+        await Task.Delay(2600);
+        if (_toast == message)
+        {
+            _toast = null;
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+		Appearance.Changed -= OnAppearanceChanged;
+        _detailBackRegistration?.Dispose();
+        _detailState?.Dispose();
+        _todayState?.Dispose();
+        _timerCancellation?.Cancel();
+        _timerCancellation?.Dispose();
+        _timer?.Dispose();
+    }
+
+    private enum CompanionTab { Home, Itinerary, Readiness, Memories, Playbook }
+}

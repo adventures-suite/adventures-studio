@@ -12,9 +12,12 @@ concurrency:
 
 env:
   DOTNET_VERSION: "10.0.x"
-  PROJECT: prototypes/AdventuresSuite.Companion.Poc/AdventuresSuite.Companion.Poc.csproj
+  PROJECT: src/AdventuresSuite.Companion.Mobile/AdventuresSuite.Companion.Mobile.csproj
+  CLIENT_PROJECT: src/AdventuresSuite.Companion.Client/AdventuresSuite.Companion.Client.csproj
+  TEST_PROJECT: tests/AdventuresSuite.Companion.Mobile.Tests/AdventuresSuite.Companion.Mobile.Tests.csproj
   TARGET_FRAMEWORK: net10.0-ios
   RUNTIME_IDENTIFIER: ios-arm64
+  EXPECTED_MARKETING_VERSION: "1.0"
 
 jobs:
   publish-testflight:
@@ -91,6 +94,26 @@ jobs:
 
       - name: Install .NET MAUI iOS workload
         run: dotnet workload install maui-ios
+
+      - name: Validate production marketing version
+        shell: bash
+        run: |
+          project_marketing_version="$(dotnet msbuild "${{ env.PROJECT }}" \
+            --nologo \
+            -getProperty:ApplicationDisplayVersion \
+            -p:TargetFramework="${{ env.TARGET_FRAMEWORK }}")"
+          if [ "$project_marketing_version" != "${{ env.EXPECTED_MARKETING_VERSION }}" ]; then
+            echo "::error::Production ApplicationDisplayVersion must match EXPECTED_MARKETING_VERSION."
+            exit 1
+          fi
+
+      - name: Test production Companion presentation
+        run: >
+          dotnet test
+          "${{ env.TEST_PROJECT }}"
+          --configuration Release
+          --nologo
+          --verbosity minimal
 
       - name: Install signing material
         id: signing
@@ -183,6 +206,11 @@ jobs:
           --runtime "${{ env.RUNTIME_IDENTIFIER }}"
           -p:TargetFramework="${{ env.TARGET_FRAMEWORK }}"
 
+      - name: Restore production Companion dependencies
+        run: >
+          dotnet restore
+          "${{ env.CLIENT_PROJECT }}"
+
       - name: Build signed IPA
         env:
           IOS_BUNDLE_ID: ${{ vars.IOS_BUNDLE_ID }}
@@ -229,9 +257,15 @@ jobs:
           fi
 
           reported_bundle_id="$(plutil -extract CFBundleIdentifier raw -o - "$app_path/Info.plist")"
+          reported_marketing_version="$(plutil -extract CFBundleShortVersionString raw -o - "$app_path/Info.plist")"
           reported_build="$(plutil -extract CFBundleVersion raw -o - "$app_path/Info.plist")"
           if [ "$reported_bundle_id" != "$IOS_BUNDLE_ID" ]; then
             echo "::error::IPA bundle ID does not match IOS_BUNDLE_ID."
+            exit 1
+          fi
+
+          if [ "$reported_marketing_version" != "${{ env.EXPECTED_MARKETING_VERSION }}" ]; then
+            echo "::error::IPA marketing version does not match EXPECTED_MARKETING_VERSION."
             exit 1
           fi
 
@@ -242,7 +276,7 @@ jobs:
 
           codesign --verify --deep --strict --verbose=2 "$app_path"
           echo "ipa_path=$ipa_path" >> "$GITHUB_OUTPUT"
-          echo "Validated bundle $reported_bundle_id build $reported_build."
+          echo "Validated bundle $reported_bundle_id version $reported_marketing_version build $reported_build."
 
       - name: Retain signed IPA
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

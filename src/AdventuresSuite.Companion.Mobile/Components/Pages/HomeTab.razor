@@ -1,0 +1,106 @@
+@using Microsoft.AspNetCore.Components
+
+<article class="hero-card">
+    @if (!string.IsNullOrWhiteSpace(Adventure.HeroImagePath))
+    {
+        <img class="hero-photo" src="@Adventure.HeroImagePath" alt="@Adventure.HeroAlternativeText" />
+    }
+    <div class="hero-shade"></div>
+    <div class="hero-texture"></div>
+    <div class="hero-content">
+        <div class="hero-status-row">
+            <span class="status-pill">@Adventure.Status</span>
+            <span class="sync-pill on-photo"><i></i> Offline</span>
+        </div>
+        <div class="hero-summary">
+            <p class="hero-kicker">@Adventure.Subtitle</p>
+            <h1>@Adventure.Title</h1>
+            <p class="date-line">@Adventure.TravelDates</p>
+        </div>
+        @if (Adventure.IsCurrent)
+        {
+            <div class="current-progress" aria-label="Adventure in progress">
+                <strong>Day @CurrentAdventureDay</strong>
+                <span>of @AdventureLengthDays</span>
+            </div>
+        }
+        else
+        {
+            <div class="countdown" aria-label="@CountdownAccessibleText">
+                <strong>@CountdownValue</strong>
+                <span>@CountdownUnit</span>
+            </div>
+            <p class="countdown-detail">Until your Adventure begins</p>
+        }
+    </div>
+</article>
+
+<button @ref="_detailButton" class="detail-entry" type="button" @onclick="OnOpenDetail">
+    View Adventure details
+</button>
+
+<section class="adventure-tools" aria-label="Adventure tools">
+    <button @onclick='() => FeedbackAsync("Calendar preview opened — no device write was performed.")'>
+        <span aria-hidden="true">▣</span><strong>Calendar</strong>
+    </button>
+    <button @onclick="OnOpenPlaybook">
+        <span aria-hidden="true">▤</span><strong>Playbook</strong>
+    </button>
+    <button @onclick='() => FeedbackAsync("Document Inbox is simulated in this internal beta.")'>
+        <span aria-hidden="true">⌑</span><strong>Documents</strong>
+    </button>
+</section>
+
+<section class="section-block">
+    <div class="section-heading"><div><span class="eyebrow">Adventure pulse</span><h2>Almost ready</h2></div><strong class="score">72%</strong></div>
+    <div class="progress" aria-label="Adventure readiness 72 percent"><i style="width:72%"></i></div>
+    <div class="attention-card" role="note">
+        <span>!</span><div><strong>3 items need attention</strong><p>Flights, pre-cruise stay, and shore plans are not confirmed.</p></div>
+        <button aria-label="Review readiness" @onclick="OnOpenReadiness">›</button>
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public CompanionAdventure Adventure { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback OnOpenJourney { get; set; }
+
+    [Parameter]
+    public EventCallback OnOpenReadiness { get; set; }
+
+    [Parameter]
+    public EventCallback OnOpenPlaybook { get; set; }
+
+    [Parameter]
+    public EventCallback OnOpenDetail { get; set; }
+
+    [Parameter]
+    public bool RestoreDetailFocus { get; set; }
+
+    [Parameter]
+    public EventCallback DetailFocusRestored { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnFeedback { get; set; }
+
+    private ElementReference _detailButton;
+
+    private int CountdownValue => Math.Max(0, Adventure.StartDate.DayNumber - DateOnly.FromDateTime(DateTime.Now).DayNumber);
+    private string CountdownUnit => CountdownValue == 1 ? "day" : "days";
+    private string CountdownAccessibleText => $"{CountdownValue} {CountdownUnit} until {Adventure.Title} begins on {Adventure.StartDate:MMMM d, yyyy}";
+    private int AdventureLengthDays => Math.Max(1, Adventure.EndDate.DayNumber - Adventure.StartDate.DayNumber + 1);
+    private int CurrentAdventureDay => Math.Clamp(DateOnly.FromDateTime(DateTime.Now).DayNumber - Adventure.StartDate.DayNumber + 1, 1, AdventureLengthDays);
+
+    private Task FeedbackAsync(string message) => OnFeedback.InvokeAsync(message);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (RestoreDetailFocus)
+        {
+            await _detailButton.FocusAsync();
+            await DetailFocusRestored.InvokeAsync();
+        }
+    }
+}

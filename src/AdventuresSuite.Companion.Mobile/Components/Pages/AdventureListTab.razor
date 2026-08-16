@@ -1,0 +1,43 @@
+@using Microsoft.AspNetCore.Components
+
+<div class="page-heading">
+    <span class="eyebrow">Authorized Adventures</span>
+    <h1>@Adventure.Title</h1>
+    <p>@Adventure.Subtitle</p>
+</div>
+
+<article class="list-summary-card" aria-labelledby="list-adventure-heading">
+    <span class="adventure-state @(Adventure.IsCurrent ? "current" : "planned")">@Adventure.Status</span>
+    <h2 id="list-adventure-heading">@Adventure.TravelDates</h2>
+    <p>Open the traveler-safe Adventure overview from the configured provider.</p>
+    <button @ref="_detailButton" class="primary-action" type="button" @onclick="OnOpenDetail">View Adventure details</button>
+</article>
+
+@code {
+    /// <summary>Gets or sets the selected list-only Adventure.</summary>
+    [Parameter, EditorRequired]
+    public CompanionAdventure Adventure { get; set; } = null!;
+
+    /// <summary>Gets or sets the deliberate detail-navigation callback.</summary>
+    [Parameter]
+    public EventCallback OnOpenDetail { get; set; }
+
+    /// <summary>Gets or sets whether focus should return after Back navigation.</summary>
+    [Parameter]
+    public bool RestoreDetailFocus { get; set; }
+
+    /// <summary>Gets or sets the callback that acknowledges focus restoration.</summary>
+    [Parameter]
+    public EventCallback DetailFocusRestored { get; set; }
+
+    private ElementReference _detailButton;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (RestoreDetailFocus)
+        {
+            await _detailButton.FocusAsync();
+            await DetailFocusRestored.InvokeAsync();
+        }
+    }
+}
