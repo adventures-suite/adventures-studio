@@ -56,6 +56,15 @@ PKCE and authoritative traveler-access gates are complete.
 New Companion product slices should be implemented in the production mobile
 project. The POC is not extended or referenced by production projects.
 
+Physical-device acceptance of the initial production shell passed on iPhone.
+Follow-up iPad acceptance identified that the first tablet breakpoint retained
+the phone-width shell instead of adapting to the available canvas. The focused
+tablet layout correction expands the bounded shell and navigation at iPad
+widths, preserves readable content limits, introduces a landscape home
+composition, and retains the single-column phone experience. Portrait,
+landscape, Split View, larger text, light, and dark device checks remain part of
+the release acceptance gate.
+
 ## M0: Product, Privacy, and Threat Model
 
 Define supported traveler scenarios, minimum OS versions, accessibility,

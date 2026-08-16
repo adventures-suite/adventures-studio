@@ -29,4 +29,9 @@
   <ItemGroup>
     <ProjectReference Include="../../src/AdventuresSuite.Companion.Client/AdventuresSuite.Companion.Client.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="../../src/AdventuresSuite.Companion.Mobile/wwwroot/app.css"
+             Link="Presentation/app.css"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>
