@@ -1,0 +1,31 @@
+@using Microsoft.AspNetCore.Components
+
+<div class="page-heading">
+    <span class="eyebrow">October 25 – November 15</span>
+    <h1>Your journey</h1>
+    <p>Local dates and the latest synchronized plan.</p>
+</div>
+
+<div class="route-line">
+    @foreach (var segment in Adventure.Segments)
+    {
+        <article class="route-stop">
+            <div class="route-marker"><i></i></div>
+            <div class="route-card">
+                <div class="route-meta"><span>@segment.ArrivalDate</span><span>@segment.TravelMode</span></div>
+                <h2>@segment.To</h2>
+                <p>@segment.TravelDescription</p>
+                <small>@segment.TimeZone</small>
+                @if (segment.Waypoints.Count > 0)
+                {
+                    <div class="waypoints">via @string.Join(" · ", segment.Waypoints)</div>
+                }
+            </div>
+        </article>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public CompanionAdventure Adventure { get; set; } = null!;
+}

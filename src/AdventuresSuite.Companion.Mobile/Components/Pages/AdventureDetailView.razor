@@ -1,0 +1,148 @@
+@using AdventuresSuite.Companion.Client
+@using Microsoft.AspNetCore.Components
+
+<section class="detail-view" aria-labelledby="adventure-detail-heading">
+    <button class="detail-back" type="button" @onclick="OnBack">‹ Back to Adventures</button>
+
+    @if (IsLoading)
+    {
+        <div class="detail-state" role="status" aria-live="polite" aria-busy="true">
+            <h1 id="adventure-detail-heading" tabindex="-1" @ref="_heading">Loading Adventure</h1>
+            <p>Retrieving the latest detail from the configured provider…</p>
+        </div>
+    }
+    else if (Result?.State == CompanionAdventureDetailState.Success && Result.Adventure is not null)
+    {
+        var adventure = Result.Adventure;
+        <header class="detail-heading">
+            <span class="eyebrow">Adventure overview</span>
+            <h1 id="adventure-detail-heading" tabindex="-1" @ref="_heading">@adventure.Title</h1>
+            @if (!string.IsNullOrWhiteSpace(adventure.Subtitle))
+            {
+                <p>@adventure.Subtitle</p>
+            }
+        </header>
+
+        <div class="detail-facts" aria-label="Adventure context">
+            <span><strong>Status</strong>@adventure.Status</span>
+            <span><strong>Dates</strong>@adventure.StartDate.ToString("MMM d, yyyy") – @adventure.EndDate.ToString("MMM d, yyyy")</span>
+            <span><strong>Time zone</strong>@adventure.PrimaryTimeZone</span>
+            @if (adventure.FreshUntilUtc is not null)
+            {
+                <span class="@(adventure.FreshUntilUtc < DateTimeOffset.UtcNow ? "stale" : null)">
+                    <strong>Freshness</strong>
+                    @(adventure.FreshUntilUtc < DateTimeOffset.UtcNow ? "Stale since" : "Fresh until")
+                    @adventure.FreshUntilUtc.Value.ToLocalTime().ToString("MMM d, h:mm tt")
+                </span>
+            }
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(adventure.Description))
+        {
+            <p class="detail-description">@adventure.Description</p>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(adventure.NextItemSummary) || !string.IsNullOrWhiteSpace(adventure.ReadinessSummary))
+        {
+            <section class="detail-summary" aria-labelledby="detail-summary-heading">
+                <h2 id="detail-summary-heading">At a glance</h2>
+                @if (!string.IsNullOrWhiteSpace(adventure.NextItemSummary))
+                {
+                    <p><strong>Next</strong> @adventure.NextItemSummary</p>
+                }
+                @if (!string.IsNullOrWhiteSpace(adventure.ReadinessSummary))
+                {
+                    <p><strong>Readiness</strong> @adventure.ReadinessSummary</p>
+                }
+            </section>
+        }
+
+        <section class="detail-destinations" aria-labelledby="destinations-heading">
+            <h2 id="destinations-heading">Destinations</h2>
+            @if (adventure.Destinations.Count == 0)
+            {
+                <p>No destination summaries are available.</p>
+            }
+            @foreach (var destination in adventure.Destinations)
+            {
+                <article class="detail-destination">
+                    <h3>@destination.Name</h3>
+                    <p>@destination.StartDate.ToString("MMM d") – @destination.EndDate.ToString("MMM d, yyyy") · @destination.TimeZone</p>
+                    @if (destination.HeroResource is not null)
+                    {
+                        <div class="resource-reference">
+                            <strong>@destination.HeroResource.Title</strong>
+                            <span>@destination.HeroResource.MediaType · @destination.HeroResource.Availability</span>
+                            @if (!string.IsNullOrWhiteSpace(destination.HeroResource.AlternativeText))
+                            {
+                                <span>@destination.HeroResource.AlternativeText</span>
+                            }
+                            <small>Protected Resource metadata only. Content is not loaded by this view.</small>
+                        </div>
+                    }
+                </article>
+            }
+        </section>
+
+        @if (adventure.AvailableCapabilities.Count > 0)
+        {
+            <section class="capability-references" aria-labelledby="capabilities-heading">
+                <h2 id="capabilities-heading">Available references</h2>
+                <ul>
+                    @foreach (var capability in adventure.AvailableCapabilities)
+                    {
+                        <li>@capability</li>
+                    }
+                </ul>
+                <p>References are informational here; this build does not open or fetch them.</p>
+            </section>
+        }
+    }
+    else
+    {
+        <div class="detail-state error" role="alert" aria-live="assertive">
+            <h1 id="adventure-detail-heading" tabindex="-1" @ref="_heading">@StateHeading</h1>
+            <p>@StateMessage</p>
+            @if (!string.IsNullOrWhiteSpace(Result?.SupportId))
+            {
+                <small>Support ID: @Result.SupportId</small>
+            }
+            <button class="primary-action" type="button" @onclick="OnRetry">Try again</button>
+        </div>
+    }
+</section>
+
+@code {
+    private ElementReference _heading;
+    private object? _lastAnnouncement;
+
+    /// <summary>Gets or sets whether detail is currently loading.</summary>
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    /// <summary>Gets or sets the current detail result.</summary>
+    [Parameter]
+    public CompanionAdventureDetailPresentationResult? Result { get; set; }
+
+    /// <summary>Gets or sets the Back callback.</summary>
+    [Parameter]
+    public EventCallback OnBack { get; set; }
+
+    /// <summary>Gets or sets the retry callback.</summary>
+    [Parameter]
+    public EventCallback OnRetry { get; set; }
+
+    private string StateHeading => CompanionAdventureDetailPresentationText.Heading(Result);
+
+    private string StateMessage => CompanionAdventureDetailPresentationText.Message(Result);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        object? announcement = IsLoading ? this : Result;
+        if (!ReferenceEquals(announcement, _lastAnnouncement))
+        {
+            _lastAnnouncement = announcement;
+            await _heading.FocusAsync();
+        }
+    }
+}
