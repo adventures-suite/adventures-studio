@@ -5,65 +5,72 @@ namespace AdventuresSuite.Companion.Mobile;
 
 public static class MauiProgram
 {
-	public static MauiApp CreateMauiApp()
-	{
-		var builder = MauiApp.CreateBuilder();
-		builder
-			.UseMauiApp<App>();
+    public static MauiApp CreateMauiApp()
+    {
+        var builder = MauiApp.CreateBuilder();
+        builder
+            .UseMauiApp<App>();
 
-		var metadata = typeof(MauiProgram).Assembly
-			.GetCustomAttributes<AssemblyMetadataAttribute>()
-			.ToDictionary(item => item.Key, item => item.Value, StringComparer.Ordinal);
-		var providerSettings = Services.CompanionProviderConfiguration.Resolve(
-			Environment.GetEnvironmentVariable("ADVENTURES_COMPANION_CONTENT_PROVIDER"),
-			Environment.GetEnvironmentVariable("ADVENTURES_COMPANION_API_BASE_ADDRESS"),
-			metadata.GetValueOrDefault("AdventuresCompanion.ContentProvider"),
-			metadata.GetValueOrDefault("AdventuresCompanion.ApiBaseAddress"));
+        var metadata = typeof(MauiProgram).Assembly
+            .GetCustomAttributes<AssemblyMetadataAttribute>()
+            .ToDictionary(item => item.Key, item => item.Value, StringComparer.Ordinal);
+        var providerSettings = Services.CompanionProviderConfiguration.Resolve(
+            Environment.GetEnvironmentVariable("ADVENTURES_COMPANION_CONTENT_PROVIDER"),
+            Environment.GetEnvironmentVariable("ADVENTURES_COMPANION_API_BASE_ADDRESS"),
+            metadata.GetValueOrDefault("AdventuresCompanion.ContentProvider"),
+            metadata.GetValueOrDefault("AdventuresCompanion.ApiBaseAddress"));
 
-		builder.Services.AddMauiBlazorWebView();
-		if (providerSettings.Provider == Models.CompanionContentProviderKind.Demo)
-		{
-			builder.Services.AddSingleton<Services.CompanionContentService>();
-			builder.Services.AddSingleton<Services.ICompanionContentProvider>(services =>
-				services.GetRequiredService<Services.CompanionContentService>());
-			builder.Services.AddSingleton<Services.ICompanionAdventureDetailProvider,
-				Services.DemoCompanionAdventureDetailProvider>();
-			builder.Services.AddSingleton<Services.ICompanionTodayProvider, Services.DemoCompanionTodayProvider>();
-		}
-		else
-		{
-			builder.Services.AddSingleton(new HttpClient { BaseAddress = providerSettings.ApiBaseAddress });
-			builder.Services.AddSingleton<AdventuresSuite.Companion.Client.ICompanionAdventureListTransport,
-				AdventuresSuite.Companion.Client.HttpCompanionAdventureListTransport>();
-			builder.Services.AddSingleton<AdventuresSuite.Companion.Client.ICompanionAdventureListService,
-				AdventuresSuite.Companion.Client.CompanionAdventureListService>();
-			builder.Services.AddSingleton<Services.ICompanionContentProvider, Services.ApiCompanionContentProvider>();
-			builder.Services.AddSingleton<AdventuresSuite.Companion.Client.ICompanionAdventureDetailTransport,
-				AdventuresSuite.Companion.Client.HttpCompanionAdventureDetailTransport>();
-			builder.Services.AddSingleton<AdventuresSuite.Companion.Client.ICompanionAdventureDetailService,
-				AdventuresSuite.Companion.Client.CompanionAdventureDetailService>();
-			builder.Services.AddSingleton<Services.ICompanionAdventureDetailProvider,
-				Services.ApiCompanionAdventureDetailProvider>();
-			builder.Services.AddSingleton<AdventuresSuite.Companion.Client.ICompanionTodayTransport,
-				AdventuresSuite.Companion.Client.HttpCompanionTodayTransport>();
-			builder.Services.AddSingleton<AdventuresSuite.Companion.Client.ICompanionTodayService,
-				AdventuresSuite.Companion.Client.CompanionTodayService>();
-			builder.Services.AddSingleton<Services.ICompanionTodayProvider, Services.ApiCompanionTodayProvider>();
-		}
-		builder.Services.AddSingleton<Services.PlaybookContentService>();
-		builder.Services.AddSingleton<Services.IAppearancePreferenceStore, Services.MauiAppearancePreferenceStore>();
-		builder.Services.AddSingleton<Services.MauiSystemAppearanceSource>();
-		builder.Services.AddSingleton<Services.ISystemAppearanceSource>(services => services.GetRequiredService<Services.MauiSystemAppearanceSource>());
-		builder.Services.AddSingleton<Services.ICompanionAppearanceService, Services.CompanionAppearanceService>();
-		builder.Services.AddSingleton<Services.ICompanionUiDispatcher, Services.MauiCompanionUiDispatcher>();
-		builder.Services.AddSingleton<Services.TransientBackNavigationService>();
-		builder.Services.AddSingleton<MainPage>();
+        builder.Services.AddMauiBlazorWebView();
+        if (providerSettings.Provider == Models.CompanionContentProviderKind.Demo)
+        {
+            builder.Services.AddSingleton<Services.CompanionContentService>();
+            builder.Services.AddSingleton<Services.ICompanionContentProvider>(services =>
+                services.GetRequiredService<Services.CompanionContentService>());
+            builder.Services.AddSingleton<Services.ICompanionAdventureDetailProvider,
+                Services.DemoCompanionAdventureDetailProvider>();
+            builder.Services.AddSingleton<Services.ICompanionTodayProvider, Services.DemoCompanionTodayProvider>();
+            builder.Services.AddSingleton<Services.ICompanionItineraryProvider, Services.DemoCompanionItineraryProvider>();
+        }
+        else
+        {
+            builder.Services.AddSingleton(new HttpClient { BaseAddress = providerSettings.ApiBaseAddress });
+            builder.Services.AddSingleton<AdventuresSuite.Companion.Client.ICompanionAdventureListTransport,
+                AdventuresSuite.Companion.Client.HttpCompanionAdventureListTransport>();
+            builder.Services.AddSingleton<AdventuresSuite.Companion.Client.ICompanionAdventureListService,
+                AdventuresSuite.Companion.Client.CompanionAdventureListService>();
+            builder.Services.AddSingleton<Services.ICompanionContentProvider, Services.ApiCompanionContentProvider>();
+            builder.Services.AddSingleton<AdventuresSuite.Companion.Client.ICompanionAdventureDetailTransport,
+                AdventuresSuite.Companion.Client.HttpCompanionAdventureDetailTransport>();
+            builder.Services.AddSingleton<AdventuresSuite.Companion.Client.ICompanionAdventureDetailService,
+                AdventuresSuite.Companion.Client.CompanionAdventureDetailService>();
+            builder.Services.AddSingleton<Services.ICompanionAdventureDetailProvider,
+                Services.ApiCompanionAdventureDetailProvider>();
+            builder.Services.AddSingleton<AdventuresSuite.Companion.Client.ICompanionTodayTransport,
+                AdventuresSuite.Companion.Client.HttpCompanionTodayTransport>();
+            builder.Services.AddSingleton<AdventuresSuite.Companion.Client.ICompanionTodayService,
+                AdventuresSuite.Companion.Client.CompanionTodayService>();
+            builder.Services.AddSingleton<Services.ICompanionTodayProvider, Services.ApiCompanionTodayProvider>();
+            builder.Services.AddSingleton(TimeProvider.System);
+            builder.Services.AddSingleton<AdventuresSuite.Companion.Client.ICompanionItineraryTransport,
+                AdventuresSuite.Companion.Client.HttpCompanionItineraryTransport>();
+            builder.Services.AddSingleton<AdventuresSuite.Companion.Client.ICompanionItineraryService,
+                AdventuresSuite.Companion.Client.CompanionItineraryService>();
+            builder.Services.AddSingleton<Services.ICompanionItineraryProvider, Services.ApiCompanionItineraryProvider>();
+        }
+        builder.Services.AddSingleton<Services.PlaybookContentService>();
+        builder.Services.AddSingleton<Services.IAppearancePreferenceStore, Services.MauiAppearancePreferenceStore>();
+        builder.Services.AddSingleton<Services.MauiSystemAppearanceSource>();
+        builder.Services.AddSingleton<Services.ISystemAppearanceSource>(services => services.GetRequiredService<Services.MauiSystemAppearanceSource>());
+        builder.Services.AddSingleton<Services.ICompanionAppearanceService, Services.CompanionAppearanceService>();
+        builder.Services.AddSingleton<Services.ICompanionUiDispatcher, Services.MauiCompanionUiDispatcher>();
+        builder.Services.AddSingleton<Services.TransientBackNavigationService>();
+        builder.Services.AddSingleton<MainPage>();
 
 #if DEBUG
-		builder.Services.AddBlazorWebViewDeveloperTools();
-		builder.Logging.AddDebug();
+        builder.Services.AddBlazorWebViewDeveloperTools();
+        builder.Logging.AddDebug();
 #endif
 
-		return builder.Build();
-	}
+        return builder.Build();
+    }
 }

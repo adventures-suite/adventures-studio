@@ -9,6 +9,7 @@ public sealed class AuthoritativeCompanionProjectionService(
     ICompanionAdventureSummaryQuery summaries,
     ICompanionAdventureDetailQuery details,
     ICompanionTodayQuery today,
+    ICompanionItineraryQuery itinerary,
     TimeProvider timeProvider) : ICompanionProjectionService
 {
     /// <inheritdoc />
@@ -104,6 +105,36 @@ public sealed class AuthoritativeCompanionProjectionService(
                 value, access.CreatorId.Value, access.TravelerId, adventureId, now, supportId, out var dto))
         {
             return Unavailable<CompanionTodayDto>();
+        }
+
+        return new(dto, dto!.ProjectionVersion);
+    }
+
+    /// <inheritdoc />
+    public async Task<CompanionQueryResult<CompanionItineraryDto>> GetItineraryAsync(
+        CompanionAccessContext access,
+        string adventureId,
+        string supportId,
+        CancellationToken cancellationToken)
+    {
+        if (!CanQuery(access))
+            return Unavailable<CompanionItineraryDto>();
+
+        var now = timeProvider.GetUtcNow();
+        var value = await itinerary.GetAsync(
+            new CompanionItineraryReadScope(
+                access.CreatorId,
+                access.Actor.UserId!.Value,
+                access.TravelerId,
+                access.MembershipVersion,
+                now),
+            adventureId,
+            cancellationToken);
+        if (value is null
+            || !CompanionDtoMapper.TryMapItinerary(
+                value, access.CreatorId.Value, access.TravelerId, adventureId, now, supportId, out var dto))
+        {
+            return Unavailable<CompanionItineraryDto>();
         }
 
         return new(dto, dto!.ProjectionVersion);
