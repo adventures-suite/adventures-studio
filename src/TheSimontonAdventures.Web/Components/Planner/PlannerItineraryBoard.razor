@@ -30,16 +30,19 @@
         }
         @if (CanEdit)
         {
-            <form class="planner-board__form" method="post" action="@AddDestinationPath">
-                <AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" />
-                <label>Destination name<input name="name" required maxlength="200" autocomplete="off" /></label>
-                <div class="planner-board__form-columns">
-                    <label>Arrival date<input type="date" name="startDate" min="@DateValue(Plan.Dates.Start)" max="@DateValue(Plan.Dates.End)" required /></label>
-                    <label>Departure date<input type="date" name="endDate" min="@DateValue(Plan.Dates.Start)" max="@DateValue(Plan.Dates.End)" required /></label>
-                </div>
-                <label>Destination time zone<input name="timeZoneId" required maxlength="100" placeholder="Europe/Rome" autocomplete="off" /></label>
-                <button type="submit">Add destination</button>
-            </form>
+            <details class="planner-board__disclosure planner-board__action" name="planner-board-action">
+                <summary>Add destination</summary>
+                <form class="planner-board__form" method="post" action="@AddDestinationPath">
+                    <AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" />
+                    <label>Destination name<input name="name" required maxlength="200" autocomplete="off" /></label>
+                    <div class="planner-board__form-columns">
+                        <label>Arrival date<input type="date" name="startDate" min="@DateValue(Plan.Dates.Start)" max="@DateValue(Plan.Dates.End)" required /></label>
+                        <label>Departure date<input type="date" name="endDate" min="@DateValue(Plan.Dates.Start)" max="@DateValue(Plan.Dates.End)" required /></label>
+                    </div>
+                    <label>Destination time zone<input name="timeZoneId" required maxlength="100" placeholder="Europe/Rome" autocomplete="off" /></label>
+                    <button type="submit">Add destination</button>
+                </form>
+            </details>
         }
     </section>
 
@@ -72,7 +75,7 @@
                                         <span>@FormatTimeRange(activity.StartsAtLocal, activity.EndsAtLocal)</span><strong>@activity.Title</strong><small>@FormatStatus(activity.Status)</small>
                                         @if (CanEdit)
                                         {
-                                            <details class="planner-board__activity-editor" name="activity-editor">
+                                            <details class="planner-board__disclosure planner-board__activity-editor" name="planner-board-action">
                                                 <summary>Edit activity: @activity.Title</summary>
                                                 <form class="planner-board__form" method="post" action="@EditActivityPath(activity.Id)">
                                                     <AntiforgeryToken />
@@ -92,12 +95,15 @@
                         }
                         @if (CanEdit)
                         {
-                            <form class="planner-board__form" method="post" action="@AddActivityPath">
-                                <AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" /><input type="hidden" name="itineraryDayId" value="@day.Id.Value" />
-                                <label>Proposed activity<input name="title" required maxlength="200" autocomplete="off" placeholder="Museum visit" /></label>
-                                <div class="planner-board__form-columns"><label>Start time <span>(optional)</span><input type="time" name="startsAtLocal" /></label><label>End time <span>(optional)</span><input type="time" name="endsAtLocal" /></label></div>
-                                <button type="submit">Add proposed activity</button>
-                            </form>
+                            <details class="planner-board__disclosure planner-board__action" name="planner-board-action">
+                                <summary>Add activity to @day.Title</summary>
+                                <form class="planner-board__form" method="post" action="@AddActivityPath">
+                                    <AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" /><input type="hidden" name="itineraryDayId" value="@day.Id.Value" />
+                                    <label>Proposed activity<input name="title" required maxlength="200" autocomplete="off" placeholder="Museum visit" /></label>
+                                    <div class="planner-board__form-columns"><label>Start time <span>(optional)</span><input type="time" name="startsAtLocal" /></label><label>End time <span>(optional)</span><input type="time" name="endsAtLocal" /></label></div>
+                                    <button type="submit">Add proposed activity</button>
+                                </form>
+                            </details>
                         }
                     </article></li>
                 }
@@ -105,13 +111,20 @@
         }
         @if (CanEdit && Plan.Destinations.Count > 0)
         {
-            <form class="planner-board__form" method="post" action="@AddDayPath">
-                <AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" />
-                <label>Destination visit<select name="destinationVisitId" required>@foreach (var destination in Plan.Destinations.OrderBy(item => item.Sequence)){<option value="@destination.Id.Value">@destination.Name · @FormatDates(destination.Dates)</option>}</select></label>
-                <label>Local date<input type="date" name="date" min="@DateValue(Plan.Dates.Start)" max="@DateValue(Plan.Dates.End)" required /></label>
-                <label>Day title<input name="title" required maxlength="200" autocomplete="off" placeholder="Arrival in Rome" /></label>
-                <button type="submit">Add itinerary day</button>
-            </form>
+            <details class="planner-board__disclosure planner-board__action" name="planner-board-action">
+                <summary>Add itinerary day</summary>
+                <form class="planner-board__form" method="post" action="@AddDayPath">
+                    <AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" />
+                    <label>Destination visit<select name="destinationVisitId" required>@foreach (var destination in Plan.Destinations.OrderBy(item => item.Sequence)){<option value="@destination.Id.Value">@destination.Name · @FormatDates(destination.Dates)</option>}</select></label>
+                    <label>Local date<input type="date" name="date" min="@DateValue(Plan.Dates.Start)" max="@DateValue(Plan.Dates.End)" required /></label>
+                    <label>Day title<input name="title" required maxlength="200" autocomplete="off" placeholder="Arrival in Rome" /></label>
+                    <button type="submit">Add itinerary day</button>
+                </form>
+            </details>
+        }
+        else if (CanEdit)
+        {
+            <p class="planner-board__boundary">Add a destination before adding an itinerary day.</p>
         }
     </section>
 
@@ -135,7 +148,7 @@
                         <small>@FormatStatus(segment.Status)</small>
                         @if (CanEdit)
                         {
-                            <details class="planner-board__transportation-editor" name="transportation-editor">
+                            <details class="planner-board__disclosure planner-board__transportation-editor" name="planner-board-action">
                                 <summary>Edit transportation: @segment.Mode from @segment.From to @segment.To</summary>
                                 <form class="planner-board__form" method="post" action="@EditTransportationPath(segment.Id)">
                                     <AntiforgeryToken />
@@ -161,7 +174,13 @@
                 }
             </ul>
         }
-        @if (CanEdit){<form class="planner-board__form" method="post" action="@AddTransportationPath"><AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" /><label>Mode<input name="mode" required maxlength="100" placeholder="Flight, rail, cruise, or car" /></label><label>From<input name="from" required maxlength="200" /></label><label>To<input name="to" required maxlength="200" /></label><div class="planner-board__form-columns"><label>Departure date<input type="date" name="departureDate" required /></label><label>Departure time <span>(optional)</span><input type="time" name="departureTimeLocal" /></label></div><label>Departure time zone<input name="departureTimeZoneId" required maxlength="100" placeholder="America/Phoenix" /></label><div class="planner-board__form-columns"><label>Arrival date<input type="date" name="arrivalDate" required /></label><label>Arrival time <span>(optional)</span><input type="time" name="arrivalTimeLocal" /></label></div><label>Arrival time zone<input name="arrivalTimeZoneId" required maxlength="100" placeholder="Europe/Rome" /></label><button type="submit">Add proposed transportation</button></form>}
+        @if (CanEdit)
+        {
+            <details class="planner-board__disclosure planner-board__action" name="planner-board-action">
+                <summary>Add transportation</summary>
+                <form class="planner-board__form" method="post" action="@AddTransportationPath"><AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" /><label>Mode<input name="mode" required maxlength="100" placeholder="Flight, rail, cruise, or car" /></label><label>From<input name="from" required maxlength="200" /></label><label>To<input name="to" required maxlength="200" /></label><div class="planner-board__form-columns"><label>Departure date<input type="date" name="departureDate" required /></label><label>Departure time <span>(optional)</span><input type="time" name="departureTimeLocal" /></label></div><label>Departure time zone<input name="departureTimeZoneId" required maxlength="100" placeholder="America/Phoenix" /></label><div class="planner-board__form-columns"><label>Arrival date<input type="date" name="arrivalDate" required /></label><label>Arrival time <span>(optional)</span><input type="time" name="arrivalTimeLocal" /></label></div><label>Arrival time zone<input name="arrivalTimeZoneId" required maxlength="100" placeholder="Europe/Rome" /></label><button type="submit">Add proposed transportation</button></form>
+            </details>
+        }
     </section>
 
     <section class="planner-board__card" aria-labelledby="plan-accommodations">
@@ -183,7 +202,7 @@
                         <small>@FormatStatus(accommodation.Status)</small>
                         @if (CanEdit)
                         {
-                            <details class="planner-board__accommodation-editor" name="accommodation-editor">
+                            <details class="planner-board__disclosure planner-board__accommodation-editor" name="planner-board-action">
                                 <summary>Edit accommodation: @accommodation.Name</summary>
                                 <form class="planner-board__form" method="post" action="@EditAccommodationPath(accommodation.Id)">
                                     <AntiforgeryToken />
@@ -202,12 +221,24 @@
                 }
             </ul>
         }
-        @if (CanEdit){<form class="planner-board__form" method="post" action="@AddAccommodationPath"><AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" /><label>Accommodation name<input name="name" required maxlength="200" /></label><div class="planner-board__form-columns"><label>Start date<input type="date" name="startDate" required /></label><label>End date<input type="date" name="endDate" required /></label></div><label>Property time zone<input name="timeZoneId" required maxlength="100" placeholder="Europe/Rome" /></label><button type="submit">Add proposed accommodation</button></form>}
+        @if (CanEdit)
+        {
+            <details class="planner-board__disclosure planner-board__action" name="planner-board-action">
+                <summary>Add accommodation</summary>
+                <form class="planner-board__form" method="post" action="@AddAccommodationPath"><AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" /><label>Accommodation name<input name="name" required maxlength="200" /></label><div class="planner-board__form-columns"><label>Start date<input type="date" name="startDate" required /></label><label>End date<input type="date" name="endDate" required /></label></div><label>Property time zone<input name="timeZoneId" required maxlength="100" placeholder="Europe/Rome" /></label><button type="submit">Add proposed accommodation</button></form>
+            </details>
+        }
     </section>
 
     <section class="planner-board__card planner-board__reservations" aria-labelledby="plan-reservations">
         <h4 id="plan-reservations">Reservation summaries</h4><p class="planner-board__boundary">Credential-free planning summaries only. A summary does not prove a booking or confirmation.</p>@Status(ReservationStatusMessage)
         @if (Plan.Reservations.Count == 0){<p class="planner-board__empty">No reservation summaries have been added.</p>}else{<ul class="planner-board__summary-list">@foreach(var reservation in Plan.Reservations){<li><strong>@reservation.Subject</strong><small>@FormatStatus(reservation.Status)</small></li>}</ul>}
-        @if (CanEdit){<form class="planner-board__form" method="post" action="@AddReservationPath"><AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" /><label>Reservation subject<input name="subject" required maxlength="200" autocomplete="off" placeholder="Hotel, tour, or transportation hold" /></label><p>Confirmation references are added through a separate protected workflow.</p><button type="submit">Add proposed reservation</button></form>}
+        @if (CanEdit)
+        {
+            <details class="planner-board__disclosure planner-board__action" name="planner-board-action">
+                <summary>Add reservation summary</summary>
+                <form class="planner-board__form" method="post" action="@AddReservationPath"><AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" /><label>Reservation subject<input name="subject" required maxlength="200" autocomplete="off" placeholder="Hotel, tour, or transportation hold" /></label><p>Confirmation references are added through a separate protected workflow.</p><button type="submit">Add proposed reservation</button></form>
+            </details>
+        }
     </section>
 </section>
