@@ -134,36 +134,100 @@ internal static class CompanionDtoMapper
         return $"pv_today_{Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(scope.ToString()))).ToLowerInvariant()}";
     }
 
-    internal static CompanionItineraryDto MapItinerary(
-        AdventureFixture source, DateTimeOffset now, string supportId)
+    internal static bool TryMapItinerary(
+        CompanionItineraryProjection source,
+        string creatorId,
+        string travelerId,
+        string requestedAdventureId,
+        DateTimeOffset now,
+        string supportId,
+        out CompanionItineraryDto? result)
     {
-        var days = source.Items.GroupBy(value => value.Date).OrderBy(value => value.Key)
-            .Select((group, index) => new CompanionItineraryDayDto
+        result = null;
+        if (!IsValidIdentity(creatorId)
+            || !IsValidIdentity(travelerId)
+            || !IsValidIdentity(requestedAdventureId)
+            || !string.Equals(source.Adventure.AdventureId, requestedAdventureId, StringComparison.Ordinal)
+            || !string.Equals(source.Adventure.TravelerId, travelerId, StringComparison.Ordinal)
+            || !Enum.IsDefined(source.Adventure.Lifecycle)
+            || source.Adventure.EndDate < source.Adventure.StartDate
+            || !IsIanaTimeZone(source.Adventure.PrimaryTimeZone)
+            || source.Adventure.PlanVersion < 1
+            || source.Adventure.ParticipationVersion < 1
+            || source.Adventure.UpdatedAtUtc.Offset != TimeSpan.Zero
+            || now.Offset != TimeSpan.Zero
+            || !IsBounded(source.InformationProfileVersion, 64)
+            || source.Days is null
+            || source.Days.Count > CompanionContractLimits.MaximumItineraryDays)
+        {
+            return false;
+        }
+
+        var days = new List<CompanionItineraryDayDto>(source.Days.Count);
+        var dayIds = new HashSet<string>(StringComparer.Ordinal);
+        var previousDate = DateOnly.MinValue;
+        for (var index = 0; index < source.Days.Count; index++)
+        {
+            var day = source.Days[index];
+            if (day is null
+                || !IsValidIdentity(day.ItineraryDayId)
+                || !dayIds.Add(day.ItineraryDayId)
+                || day.DayNumber != index + 1
+                || day.LocalDate < source.Adventure.StartDate
+                || day.LocalDate > source.Adventure.EndDate
+                || index > 0 && day.LocalDate <= previousDate
+                || !IsIanaTimeZone(day.TimeZone)
+                || !IsOptionalBounded(day.Title, 200)
+                || !IsValidIdentity(day.DestinationVisitId)
+                || !IsBounded(day.DestinationName, 200)
+                || !IsOptionalBounded(day.Summary, 2000)
+                || day.Items is null
+                || day.Items.Any(item => item is null || !string.Equals(item.TimeZone, day.TimeZone, StringComparison.Ordinal))
+                || day.HasMaterialChange != day.Items.Any(value => value.RequiresAcknowledgment)
+                || day.HasMaterialChange != (day.AcknowledgmentId is not null)
+                || day.AcknowledgmentId is not null && !IsValidIdentity(day.AcknowledgmentId)
+                || day.Items.Count > CompanionContractLimits.MaximumScheduleItemsPerDay
+                || !TryMapScheduleItems(day.Items, source.Adventure, day.LocalDate, out var items))
             {
-                ItineraryDayId = $"day_{source.Id}_{index + 1}",
-                LocalDate = group.Key,
-                TimeZone = group.First().TimeZone,
-                DayNumber = index + 1,
-                Title = group.First().Place,
-                DestinationVisitId = source.Destinations.FirstOrDefault(value =>
-                    group.Key >= value.StartDate && group.Key <= value.EndDate)?.Id ?? source.Destinations.First().Id,
-                DestinationName = source.Destinations.FirstOrDefault(value =>
-                    group.Key >= value.StartDate && group.Key <= value.EndDate)?.Name ?? source.Destinations.First().Name,
-                Items = group.OrderBy(value => value.Sequence).Select(MapScheduleItem).ToArray(),
-                Summary = null,
-                HasMaterialChange = group.Any(value => value.RequiresAcknowledgment),
-                AcknowledgmentId = group.Any(value => value.RequiresAcknowledgment) ? $"ack_{group.Key:yyyyMMdd}" : null
-            }).ToArray();
-        return new CompanionItineraryDto
+                return false;
+            }
+
+            previousDate = day.LocalDate;
+            days.Add(new CompanionItineraryDayDto
+            {
+                ItineraryDayId = day.ItineraryDayId,
+                LocalDate = day.LocalDate,
+                TimeZone = day.TimeZone,
+                DayNumber = day.DayNumber,
+                Title = day.Title,
+                DestinationVisitId = day.DestinationVisitId,
+                DestinationName = day.DestinationName,
+                Items = items!,
+                Summary = day.Summary,
+                HasMaterialChange = day.HasMaterialChange,
+                AcknowledgmentId = day.AcknowledgmentId
+            });
+        }
+
+        var versionScope = string.Join('\n', new[]
+        {
+            creatorId, travelerId, source.Adventure.AdventureId, source.InformationProfileVersion,
+            source.Adventure.PlanVersion.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            source.Adventure.ParticipationVersion.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            source.Adventure.UpdatedAtUtc.ToString("O", System.Globalization.CultureInfo.InvariantCulture),
+            string.Join('|', source.Days.Select(day => $"{day.ItineraryDayId}:{day.LocalDate:O}:{day.Items.Count}"))
+        });
+        result = new CompanionItineraryDto
         {
             SchemaVersion = "1.0",
-            ProjectionVersion = $"pv_itinerary_{source.Id}_01",
+            ProjectionVersion = $"pv_itinerary_{Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(versionScope)))}",
             GeneratedAtUtc = now,
             FreshUntilUtc = now.AddMinutes(15),
             SupportId = supportId,
-            AdventureId = source.Id,
+            AdventureId = source.Adventure.AdventureId,
             Days = days
         };
+        return true;
     }
 
     internal static CompanionReadinessDto MapReadiness(

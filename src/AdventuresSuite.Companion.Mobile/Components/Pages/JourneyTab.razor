@@ -1,31 +1,45 @@
-@using Microsoft.AspNetCore.Components
-
 <div class="page-heading">
-    <span class="eyebrow">October 25 – November 15</span>
-    <h1>Your journey</h1>
-    <p>Local dates and the latest synchronized plan.</p>
+    <span class="eyebrow">Journey</span>
+    <h1>Your itinerary</h1>
+    <p>Local dates and times from the latest authorized plan.</p>
 </div>
 
-<div class="route-line">
-    @foreach (var segment in Adventure.Segments)
+@if (IsLoading || Result is null)
+{
+    <section class="companion-load-state" role="status"><p>Loading your itinerary…</p></section>
+}
+else if (Result.State == AdventuresSuite.Companion.Client.CompanionItineraryResultState.Success && Result.Itinerary is not null)
+{
+    <div class="route-line">
+    @foreach (var day in Result.Itinerary.Days)
     {
         <article class="route-stop">
             <div class="route-marker"><i></i></div>
             <div class="route-card">
-                <div class="route-meta"><span>@segment.ArrivalDate</span><span>@segment.TravelMode</span></div>
-                <h2>@segment.To</h2>
-                <p>@segment.TravelDescription</p>
-                <small>@segment.TimeZone</small>
-                @if (segment.Waypoints.Count > 0)
+                <div class="route-meta"><span>Day @day.DayNumber · @FormatDate(day.LocalDate)</span><span>@day.TimeZone</span></div>
+                <h2>@(day.Title ?? day.DestinationName)</h2>
+                @if (!string.IsNullOrWhiteSpace(day.Summary)) { <p>@day.Summary</p> }
+                @if (day.HasMaterialChange) { <strong>Changed · review required</strong> }
+                @foreach (var item in day.Items)
                 {
-                    <div class="waypoints">via @string.Join(" · ", segment.Waypoints)</div>
+                    <section class="journey-item">
+                        <small>@FormatTime(item) · @item.TimeStatus · @item.OperationalStatus</small>
+                        <h3>@item.Title</h3>
+                        @if (!string.IsNullOrWhiteSpace(item.Summary)) { <p>@item.Summary</p> }
+                        @if (!string.IsNullOrWhiteSpace(item.PlaceSummary)) { <p>@item.PlaceSummary</p> }
+                        @if (item.RequiresAcknowledgment) { <strong>Traveler acknowledgment required</strong> }
+                    </section>
                 }
             </div>
         </article>
     }
-</div>
-
-@code {
-    [Parameter, EditorRequired]
-    public CompanionAdventure Adventure { get; set; } = null!;
+    </div>
+}
+else
+{
+    <section class="companion-load-state" role="@(Result.State == AdventuresSuite.Companion.Client.CompanionItineraryResultState.Empty ? "status" : "alert")">
+        <h2>@StateHeading</h2><p>@StateMessage</p>
+        @if (!string.IsNullOrWhiteSpace(Result.SupportId)) { <small>Support ID: @Result.SupportId</small> }
+        @if (CanRetry) { <button type="button" @onclick="OnRetry">Try again</button> }
+    </section>
 }

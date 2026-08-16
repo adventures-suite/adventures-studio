@@ -23,6 +23,7 @@
     <Compile Include="../../src/AdventuresSuite.Companion.Mobile/Services/CompanionContentProviders.cs" Link="Presentation/CompanionContentProviders.cs" />
     <Compile Include="../../src/AdventuresSuite.Companion.Mobile/Services/CompanionAdventureDetailPresentation.cs" Link="Presentation/CompanionAdventureDetailPresentation.cs" />
     <Compile Include="../../src/AdventuresSuite.Companion.Mobile/Services/CompanionTodayPresentation.cs" Link="Presentation/CompanionTodayPresentation.cs" />
+    <Compile Include="../../src/AdventuresSuite.Companion.Mobile/Services/CompanionItineraryPresentation.cs" Link="Presentation/CompanionItineraryPresentation.cs" />
     <Compile Include="../../src/AdventuresSuite.Companion.Mobile/Services/CompanionProviderConfiguration.cs" Link="Presentation/CompanionProviderConfiguration.cs" />
   </ItemGroup>
   <ItemGroup>
