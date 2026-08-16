@@ -118,6 +118,8 @@ defined in `docs/architecture/experience-design-system.md`.
   and IANA time zones without changing its identity or planning status
 - correction of an existing accommodation's name, inclusive start and end
   dates, and IANA time zone without changing its identity or planning status
+- read-first contextual Add and Edit disclosures with only one Planner board
+  action expanded at a time
 - transportation and accommodations
 - reservation linkage
 - conflict and missing-information indicators

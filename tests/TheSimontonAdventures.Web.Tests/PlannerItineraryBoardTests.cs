@@ -43,7 +43,21 @@ public sealed class PlannerItineraryBoardTests
         {
             Assert.Contains($"action=\"{path}\"", html, StringComparison.Ordinal);
         }
+        Assert.Equal(9, Count(html, "method=\"post\""));
         Assert.Equal(9, Count(html, "name=\"expectedVersion\" value=\"17\""));
+        Assert.Equal(9, Count(html, "<details"));
+        Assert.Equal(9, Count(html, "name=\"planner-board-action\""));
+        Assert.DoesNotContain("name=\"activity-editor\"", html);
+        Assert.DoesNotContain("name=\"transportation-editor\"", html);
+        Assert.DoesNotContain("name=\"accommodation-editor\"", html);
+        Assert.DoesNotContain("<details open", html);
+        Assert.DoesNotContain("aria-expanded", html);
+        Assert.Contains(">Add destination</summary>", html);
+        Assert.Contains(">Add itinerary day</summary>", html);
+        Assert.Contains(">Add activity to Arrival day</summary>", html);
+        Assert.Contains(">Add transportation</summary>", html);
+        Assert.Contains(">Add accommodation</summary>", html);
+        Assert.Contains(">Add reservation summary</summary>", html);
         Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/activities/activity_prado_01/edit\"", html);
         Assert.Contains("Edit activity: Prado Museum", html);
         Assert.Contains("href=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027\"", html);
@@ -51,6 +65,8 @@ public sealed class PlannerItineraryBoardTests
         Assert.Contains("name=\"title\" value=\"Prado Museum\"", html);
         Assert.Contains("name=\"itineraryDayId\" value=\"day_madrid_01\"", html);
         Assert.Contains("name=\"destinationVisitId\"", html);
+        Assert.Contains("name=\"date\" min=\"2027-10-25\" max=\"2027-11-05\" required", html);
+        Assert.Contains("name=\"title\" required maxlength=\"200\" autocomplete=\"off\" placeholder=\"Arrival in Rome\"", html);
         Assert.Contains("name=\"departureTimeZoneId\"", html);
         Assert.Contains("name=\"arrivalTimeZoneId\"", html);
         Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/transportation/transport_phx_mad/edit\"", html);
@@ -59,7 +75,6 @@ public sealed class PlannerItineraryBoardTests
         Assert.Contains("name=\"departureDate\" value=\"2027-10-24\"", html);
         Assert.Contains("name=\"departureTimeZoneId\" value=\"America/Phoenix\"", html);
         Assert.Contains("name=\"arrivalTimeZoneId\" value=\"Europe/Madrid\"", html);
-        Assert.Contains("name=\"transportation-editor\"", html);
         Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/accommodations/stay_madrid_01/edit\"", html);
         Assert.Contains("Edit accommodation: Hotel Central", html);
         Assert.Contains("name=\"name\" value=\"Hotel Central\"", html);
@@ -70,8 +85,8 @@ public sealed class PlannerItineraryBoardTests
         Assert.Contains("name=\"startDate\" value=\"2027-10-25\"", html);
         Assert.Contains("name=\"endDate\" value=\"2027-10-29\"", html);
         Assert.Contains("name=\"timeZoneId\" value=\"Europe/Madrid\"", html);
-        Assert.Contains("name=\"accommodation-editor\"", html);
         Assert.Contains("name=\"subject\" required", html);
+        Assert.Contains("name=\"subject\" required maxlength=\"200\" autocomplete=\"off\" placeholder=\"Hotel, tour, or transportation hold\"", html);
         Assert.Contains("Confirmation references are added through a separate protected workflow.", html);
     }
 
@@ -123,6 +138,63 @@ public sealed class PlannerItineraryBoardTests
         Assert.Contains("No transportation has been added.", html);
         Assert.Contains("No accommodations have been added.", html);
         Assert.Contains("No reservation summaries have been added.", html);
+    }
+
+    /// <summary>An editable empty plan exposes only immediately valid contextual actions.</summary>
+    [Fact]
+    public async Task Board_EmptyEditablePlan_PreservesDiscoverabilityAndDependencies()
+    {
+        var html = await RenderAsync(canEdit: true, plan: EmptyPlan());
+
+        Assert.Contains(">Add destination</summary>", html);
+        Assert.Contains(">Add transportation</summary>", html);
+        Assert.Contains(">Add accommodation</summary>", html);
+        Assert.Contains(">Add reservation summary</summary>", html);
+        Assert.Contains("Add a destination before adding an itinerary day.", html);
+        Assert.DoesNotContain(">Add itinerary day</summary>", html);
+        Assert.DoesNotContain("Add activity to", html);
+        Assert.Equal(4, Count(html, "name=\"planner-board-action\""));
+        Assert.Equal(4, Count(html, "<form"));
+        Assert.DoesNotContain("<details open", html);
+    }
+
+    /// <summary>Activity creation remains scoped to the authoritative enclosing itinerary day.</summary>
+    [Fact]
+    public async Task Board_MultipleDays_ContextsEachActivityCreationForm()
+    {
+        var plan = FullPlan() with
+        {
+            Days =
+            [
+                new(new("day_madrid_01"), new DestinationVisitId("visit_madrid_01"),
+                    new(2027, 10, 25), new("Europe/Madrid"), "Arrival day", []),
+                new(new("day_barcelona_01"), new DestinationVisitId("visit_barcelona_01"),
+                    new(2027, 10, 30), new("Europe/Madrid"), "Barcelona day", [])
+            ]
+        };
+
+        var html = await RenderAsync(canEdit: true, plan: plan);
+        var madridArticle = Between(html, ">Arrival day</h5>", "</article>");
+        var barcelonaArticle = Between(html, ">Barcelona day</h5>", "</article>");
+
+        Assert.Contains(">Add activity to Arrival day</summary>", madridArticle);
+        Assert.Contains("name=\"itineraryDayId\" value=\"day_madrid_01\"", madridArticle);
+        Assert.Contains($"action=\"{Paths["activity"]}\"", madridArticle);
+        Assert.Contains(">Add activity to Barcelona day</summary>", barcelonaArticle);
+        Assert.Contains("name=\"itineraryDayId\" value=\"day_barcelona_01\"", barcelonaArticle);
+        Assert.Contains($"action=\"{Paths["activity"]}\"", barcelonaArticle);
+        Assert.Equal(2, Count(html, "Add activity to"));
+    }
+
+    /// <summary>PRG status rendering never opens an ambiguous creation or edit disclosure.</summary>
+    [Fact]
+    public async Task Board_PrgMessages_LeaveEveryDisclosureClosed()
+    {
+        var html = await RenderAsync(canEdit: true, includeMessages: true);
+
+        Assert.Equal(9, Count(html, "role=\"status\""));
+        Assert.Equal(9, Count(html, "name=\"planner-board-action\""));
+        Assert.DoesNotContain("<details open", html);
     }
 
     private static readonly IReadOnlyDictionary<string, string> Paths = new Dictionary<string, string>
@@ -217,4 +289,13 @@ public sealed class PlannerItineraryBoardTests
     };
 
     private static int Count(string value, string search) => value.Split(search, StringSplitOptions.None).Length - 1;
+
+    private static string Between(string value, string start, string end)
+    {
+        var startIndex = value.IndexOf(start, StringComparison.Ordinal);
+        Assert.True(startIndex >= 0, $"Expected start marker '{start}'.");
+        var endIndex = value.IndexOf(end, startIndex, StringComparison.Ordinal);
+        Assert.True(endIndex > startIndex, $"Expected end marker '{end}'.");
+        return value[startIndex..endIndex];
+    }
 }

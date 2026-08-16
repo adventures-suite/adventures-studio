@@ -211,6 +211,8 @@ from local times in different time zones.
 Existing accommodations can be corrected in place by changing only their name,
 inclusive start and end dates, and IANA time zone while preserving identity and
 planning status.
+The itinerary board keeps plan records read-first by placing contextual creation
+and supported edit forms in one native, mutually exclusive disclosure group.
 
 Scope:
 

@@ -234,6 +234,8 @@ public sealed class WorkspaceRootTests
         Assert.Contains("Add proposed accommodation", html);
         Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/reservations\"", html);
         Assert.Contains("Add proposed reservation", html);
+        Assert.Equal(9, Count(html, "name=\"planner-board-action\""));
+        Assert.DoesNotContain("<details open", html);
         Assert.Contains("This plan changed. Review the current values and try again.", html);
         Assert.Contains("This plan changed. Review the current route and try again.", html);
         Assert.Contains("This plan changed. Review the current itinerary and try again.", html);
@@ -331,6 +333,9 @@ public sealed class WorkspaceRootTests
     private static ClaimsPrincipal ApplicationPrincipal() => new(new ClaimsIdentity(
         [new Claim(ApplicationUserClaims.UserId, "user_planner_01")],
         authenticationType: "test"));
+
+    private static int Count(string value, string search) =>
+        value.Split(search, StringSplitOptions.None).Length - 1;
 
     private static async Task<string> RenderAsync(
         ClaimsPrincipal user,
