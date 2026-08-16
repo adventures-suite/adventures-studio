@@ -92,17 +92,30 @@ jobs:
                 Deployment__RunAttempt="${{ github.run_attempt }}" \
               --output none
 
-            az webapp deploy \
-              --resource-group "$RESOURCE_GROUP" \
-              --name "$app_name" \
-              --src-path "${{ env.PACKAGE_DIR }}/${{ env.PACKAGE_NAME }}" \
-              --type zip \
-              --async false \
-              --clean true \
-              --restart false \
-              --track-status false \
-              --enriched-errors true \
-              --output none
+            for attempt in 1 2 3; do
+              if az webapp deploy \
+                --resource-group "$RESOURCE_GROUP" \
+                --name "$app_name" \
+                --src-path "${{ env.PACKAGE_DIR }}/${{ env.PACKAGE_NAME }}" \
+                --type zip \
+                --async false \
+                --clean true \
+                --restart false \
+                --track-status false \
+                --enriched-errors true \
+                --output none; then
+                break
+              fi
+
+              if [ "$attempt" -eq 3 ]; then
+                echo "::error::Azure preview package deployment failed after 3 attempts."
+                exit 1
+              fi
+
+              retry_delay=$((attempt * 20))
+              echo "::warning::Preview deployment attempt $attempt failed; retrying the same package in $retry_delay seconds."
+              sleep "$retry_delay"
+            done
 
             az webapp restart --resource-group "$RESOURCE_GROUP" --name "$app_name"
           done
