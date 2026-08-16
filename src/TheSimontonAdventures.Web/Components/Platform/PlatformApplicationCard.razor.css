@@ -1,0 +1,51 @@
+.application-card {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    border-radius: 1rem;
+    min-height: 21rem;
+    padding: 1.4rem;
+}
+
+.application-card__top {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+}
+
+.application-card__symbol {
+    align-items: center;
+    background: #f2e8d7;
+    border-radius: 0.75rem;
+    color: #214846;
+    display: inline-flex;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.25rem;
+    height: 3rem;
+    justify-content: center;
+    width: 3rem;
+}
+
+.application-card__status {
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 999px;
+    color: #c6d2cd;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    padding: 0.4rem 0.55rem;
+    text-transform: uppercase;
+}
+
+.application-card h3 {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.65rem;
+    font-weight: 400;
+    margin: 5rem 0 0.85rem;
+}
+
+.application-card p {
+    color: #bac8c3;
+    font-size: 0.9rem;
+    line-height: 1.65;
+    margin: 0;
+}

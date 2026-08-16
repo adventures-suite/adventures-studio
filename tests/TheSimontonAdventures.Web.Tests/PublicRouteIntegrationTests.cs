@@ -29,7 +29,7 @@ public sealed class PublicRouteIntegrationTests : IClassFixture<PublicRouteInteg
     public async Task PublicVolume_ReturnsOk()
     {
         using var response = await SendAsync(
-            "localhost",
+            "creator.localhost",
             "/volumes/italy-greece-croatia");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -63,7 +63,7 @@ public sealed class PublicRouteIntegrationTests : IClassFixture<PublicRouteInteg
     [Fact]
     public async Task DevelopmentShowcase_RendersFictionalReadOnlyAdventure()
     {
-        using var response = await SendAsync("localhost", "/showcase");
+        using var response = await SendAsync("creator.localhost", "/showcase");
         var html = await response.Content.ReadAsStringAsync();
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -74,6 +74,19 @@ public sealed class PublicRouteIntegrationTests : IClassFixture<PublicRouteInteg
         Assert.DoesNotContain("/authentication/sign-in", html);
         Assert.DoesNotContain("Create private plan", html);
         Assert.DoesNotContain("method=\"post\"", html);
+    }
+
+    /// <summary>Ensures the main development entrance serves AdventuresSuite rather than Creator content.</summary>
+    [Fact]
+    public async Task PlatformHost_RendersPublicProductLandingPage()
+    {
+        using var response = await SendAsync("localhost", "/");
+        var html = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("Your adventures deserve to become more than memories", html);
+        Assert.Contains("Adventures Studio", html);
+        Assert.DoesNotContain("adventures-studio-hero.jpeg", html);
     }
 
     /// <summary>Ensures a draft Creator-owned volume is not served publicly.</summary>
@@ -92,7 +105,7 @@ public sealed class PublicRouteIntegrationTests : IClassFixture<PublicRouteInteg
     public async Task PublishedDestination_ReturnsOk()
     {
         using var response = await SendAsync(
-            "localhost",
+            "creator.localhost",
             "/volumes/italy-greece-croatia/italy/venice");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -103,7 +116,7 @@ public sealed class PublicRouteIntegrationTests : IClassFixture<PublicRouteInteg
     public async Task PublishedDestination_RendersResourceUrlAndAlternativeText()
     {
         using var response = await SendAsync(
-            "localhost",
+            "creator.localhost",
             "/volumes/italy-greece-croatia/italy/venice");
         var html = await response.Content.ReadAsStringAsync();
 
@@ -118,7 +131,7 @@ public sealed class PublicRouteIntegrationTests : IClassFixture<PublicRouteInteg
     [Fact]
     public async Task HomepageResources_AreCreatorScoped()
     {
-        using var flagship = await SendAsync("localhost", "/");
+        using var flagship = await SendAsync("creator.localhost", "/");
         using var demo = await SendAsync("demo.localhost", "/");
         var flagshipHtml = await flagship.Content.ReadAsStringAsync();
         var demoHtml = await demo.Content.ReadAsStringAsync();
@@ -180,7 +193,7 @@ public sealed class PublicRouteIntegrationTests : IClassFixture<PublicRouteInteg
     [Fact]
     public async Task HomepageComposition_IsOrderedAndCreatorScoped()
     {
-        using var flagship = await SendAsync("localhost", "/");
+        using var flagship = await SendAsync("creator.localhost", "/");
         using var demo = await SendAsync("demo.localhost", "/");
         var flagshipHtml = await flagship.Content.ReadAsStringAsync();
         var demoHtml = await demo.Content.ReadAsStringAsync();
@@ -212,7 +225,7 @@ public sealed class PublicRouteIntegrationTests : IClassFixture<PublicRouteInteg
     [Fact]
     public async Task AdventuresCatalog_IsCreatorScopedAndExcludesDraftVolumes()
     {
-        using var flagship = await SendAsync("localhost", "/adventures");
+        using var flagship = await SendAsync("creator.localhost", "/adventures");
         using var demo = await SendAsync("demo.localhost", "/adventures");
         var flagshipHtml = await flagship.Content.ReadAsStringAsync();
         var demoHtml = await demo.Content.ReadAsStringAsync();
@@ -235,7 +248,7 @@ public sealed class PublicRouteIntegrationTests : IClassFixture<PublicRouteInteg
     public async Task PlannedAdventure_RendersPlanningExperience()
     {
         using var response = await SendAsync(
-            "localhost",
+            "creator.localhost",
             "/volumes/key-west-eastern-caribbean-cruise");
         var html = await response.Content.ReadAsStringAsync();
 
@@ -261,7 +274,7 @@ public sealed class PublicRouteIntegrationTests : IClassFixture<PublicRouteInteg
     public async Task PlanningStageDestination_ReturnsNotFound()
     {
         using var response = await SendAsync(
-            "localhost",
+            "creator.localhost",
             "/volumes/spain-trans-atlantic-cruise/spain/barcelona");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -274,7 +287,7 @@ public sealed class PublicRouteIntegrationTests : IClassFixture<PublicRouteInteg
     [Fact]
     public async Task SharedSlug_ResolvesIndependentlyByCreatorHost()
     {
-        using var flagship = await SendAsync("localhost", "/go/athens");
+        using var flagship = await SendAsync("creator.localhost", "/go/athens");
         using var demo = await SendAsync("demo.localhost", "/go/athens");
 
         Assert.Equal(HttpStatusCode.Redirect, flagship.StatusCode);
@@ -294,7 +307,7 @@ public sealed class PublicRouteIntegrationTests : IClassFixture<PublicRouteInteg
     [Fact]
     public async Task QrEndpoint_UsesResolvedCreatorDomain()
     {
-        using var flagship = await SendAsync("localhost", "/qr/athens.svg");
+        using var flagship = await SendAsync("creator.localhost", "/qr/athens.svg");
         using var demo = await SendAsync("demo.localhost", "/qr/athens.svg");
         var flagshipSvg = await flagship.Content.ReadAsStringAsync();
         var demoSvg = await demo.Content.ReadAsStringAsync();

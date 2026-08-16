@@ -1,0 +1,154 @@
+name: Deploy AdventuresSuite Public Preview Dev
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: adventures-suite-public-preview-dev
+  cancel-in-progress: false
+
+env:
+  DOTNET_VERSION: "10.0.x"
+  PROJECT: src/TheSimontonAdventures.Web/TheSimontonAdventures.Web.csproj
+  PUBLISH_DIR: ./artifacts/public-preview/publish
+  PACKAGE_DIR: ./artifacts/public-preview/package
+  PACKAGE_NAME: adventures-suite-public-preview-${{ github.sha }}-${{ github.run_attempt }}.zip
+  RUNTIME: linux-x64
+
+jobs:
+  build-and-deploy:
+    name: Build and deploy public previews
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+      - name: Checkout exact revision
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: |
+          dotnet restore TheSimontonAdventures.slnx
+          dotnet restore "${{ env.PROJECT }}" --runtime "${{ env.RUNTIME }}"
+
+      - name: Build and test
+        run: |
+          dotnet build TheSimontonAdventures.slnx --configuration Release --no-restore
+          dotnet test TheSimontonAdventures.slnx --configuration Release --no-build
+
+      - name: Publish immutable package
+        run: |
+          dotnet publish "${{ env.PROJECT }}" \
+            --configuration Release \
+            --no-restore \
+            --runtime "${{ env.RUNTIME }}" \
+            --self-contained true \
+            -p:SourceRevisionId="${{ github.sha }}" \
+            --output "${{ env.PUBLISH_DIR }}"
+          mkdir -p "${{ env.PACKAGE_DIR }}"
+          cd "${{ env.PUBLISH_DIR }}"
+          zip -q -r "$GITHUB_WORKSPACE/${{ env.PACKAGE_DIR }}/${{ env.PACKAGE_NAME }}" .
+
+      - name: Retain immutable package
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: adventures-suite-public-preview-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ env.PACKAGE_DIR }}/${{ env.PACKAGE_NAME }}
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Azure Login
+        uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac # v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Configure and deploy exact package
+        env:
+          RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+          PLATFORM_APP: ${{ vars.AZURE_PUBLIC_PREVIEW_WEBAPP_NAME }}
+          CREATOR_APP: ${{ vars.AZURE_CREATOR_PREVIEW_WEBAPP_NAME }}
+        run: |
+          test -n "$RESOURCE_GROUP"
+          test -n "$PLATFORM_APP"
+          test -n "$CREATOR_APP"
+
+          for app_name in "$PLATFORM_APP" "$CREATOR_APP"; do
+            az webapp config appsettings set \
+              --resource-group "$RESOURCE_GROUP" \
+              --name "$app_name" \
+              --settings \
+                Deployment__CommitSha="${{ github.sha }}" \
+                Deployment__RunId="${{ github.run_id }}" \
+                Deployment__RunAttempt="${{ github.run_attempt }}" \
+              --output none
+
+            az webapp deploy \
+              --resource-group "$RESOURCE_GROUP" \
+              --name "$app_name" \
+              --src-path "${{ env.PACKAGE_DIR }}/${{ env.PACKAGE_NAME }}" \
+              --type zip \
+              --async false \
+              --clean true \
+              --restart false \
+              --track-status false \
+              --enriched-errors true \
+              --output none
+
+            az webapp restart --resource-group "$RESOURCE_GROUP" --name "$app_name"
+          done
+
+      - name: Verify public previews
+        env:
+          RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+          PLATFORM_APP: ${{ vars.AZURE_PUBLIC_PREVIEW_WEBAPP_NAME }}
+          CREATOR_APP: ${{ vars.AZURE_CREATOR_PREVIEW_WEBAPP_NAME }}
+        run: |
+          PLATFORM_HOST="$(az webapp show --resource-group "$RESOURCE_GROUP" --name "$PLATFORM_APP" --query defaultHostName --output tsv)"
+          CREATOR_HOST="$(az webapp show --resource-group "$RESOURCE_GROUP" --name "$CREATOR_APP" --query defaultHostName --output tsv)"
+
+          for host_name in "$PLATFORM_HOST" "$CREATOR_HOST"; do
+            for attempt in {1..24}; do
+              if response="$(curl --fail --show-error --silent "https://$host_name/health")" && \
+                 jq -e --arg expected_sha "${{ github.sha }}" \
+                   '.status == "Healthy" and
+                    (.deploymentVersion | capture("\\+(?<sha>[0-9a-f]{40})$").sha == $expected_sha) and
+                    .resourcesValidated == true and
+                    .creatorContentValidated == true' \
+                   >/dev/null <<<"$response"; then
+                break
+              fi
+
+              if [ "$attempt" -eq 24 ]; then
+                echo "::error::Preview health verification failed for $host_name."
+                exit 1
+              fi
+              sleep 10
+            done
+          done
+
+          PLATFORM_HTML="$(curl --fail --show-error --silent "https://$PLATFORM_HOST/")"
+          CREATOR_HTML="$(curl --fail --show-error --silent "https://$CREATOR_HOST/")"
+          grep -q 'Your adventures deserve to become more than memories' <<<"$PLATFORM_HTML"
+          grep -q 'Explore The Simonton Adventures' <<<"$PLATFORM_HTML"
+          grep -q 'noindex,nofollow,noarchive' <<<"$PLATFORM_HTML"
+          grep -q 'The Simonton Adventures' <<<"$CREATOR_HTML"
+          grep -q 'noindex,nofollow,noarchive' <<<"$CREATOR_HTML"
+
+          {
+            echo "## Public preview deployment"
+            echo ""
+            echo "- Commit: \`${{ github.sha }}\`"
+            echo "- Platform: https://$PLATFORM_HOST/"
+            echo "- Creator experience: https://$CREATOR_HOST/"
+            echo "- Search indexing: disabled"
+          } >> "$GITHUB_STEP_SUMMARY"

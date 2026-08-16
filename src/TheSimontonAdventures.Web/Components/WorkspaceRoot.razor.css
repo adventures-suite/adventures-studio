@@ -40,3 +40,27 @@
 .plan-detail-header dd { font-weight: 700; margin: 0; text-align: right; }
 @media (max-width: 48rem) { .plan-detail-header { grid-template-columns: 1fr; } }
 @media (max-width: 36rem) { .workspace-header { align-items: flex-start; } .plan-create-dates { grid-template-columns: 1fr; } }
+
+.workspace-sign-in {
+    background: linear-gradient(145deg, #12291f 0%, #254936 58%, #b6753b 140%);
+    border-radius: 1.25rem;
+    color: #fff;
+    margin: 8vh auto;
+    max-width: 48rem;
+    padding: clamp(2.5rem, 8vw, 6rem);
+    text-align: center;
+}
+
+.workspace-sign-in__brand,
+.workspace-sign-in__eyebrow {
+    font-size: .76rem;
+    font-weight: 800;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+}
+
+.workspace-sign-in__brand { color: #f0c895; }
+.workspace-sign-in__eyebrow { color: #c6d8cc; }
+.workspace-sign-in h1 { color: #fff; }
+.workspace-sign-in__description { color: #e2ebe5; font-size: 1.1rem; margin: 1.25rem auto 2rem; max-width: 34rem; }
+.workspace-sign-in__action { background: #f4d5a8; border-radius: 999px; color: #173426; display: inline-block; font-weight: 800; padding: .85rem 1.35rem; text-decoration: none; }

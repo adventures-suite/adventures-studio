@@ -26,6 +26,8 @@ public sealed class WorkspaceRootTests
 
         Assert.Contains("href=\"/authentication/sign-in\"", html);
         Assert.Contains("data-enhance-nav=\"false\"", html);
+        Assert.Contains("Your adventures begin here.", html);
+        Assert.Contains("Sign in to your workspace", html);
     }
 
     /// <summary>
