@@ -5,6 +5,7 @@
 @inject ITrustedRequestHostContextAccessor TrustedRequestHostContextAccessor
 @inject AuthenticationConfiguration AuthenticationConfiguration
 @inject Microsoft.Extensions.Options.IOptions<PlatformHostOptions> PlatformHostConfiguration
+@inject IConfiguration Configuration
 
 <!DOCTYPE html>
 <html lang="@Locale">
@@ -19,6 +20,10 @@
     <link rel="stylesheet" href="@Assets["TheSimontonAdventures.Web.styles.css"]" />
     <ImportMap AdditionalAttributes="@ImportMapAttributes" />
     <meta name="description" content="@Description" />
+    @if (Configuration.GetValue<bool>("Preview:NoIndex"))
+    {
+        <meta name="robots" content="noindex,nofollow,noarchive" />
+    }
     @if (!string.IsNullOrEmpty(FaviconUrl))
     {
         <link rel="icon" href="@FaviconUrl" />
@@ -75,7 +80,11 @@
         if (HostType == TrustedRequestHostType.PublicPlatform)
         {
             FeaturedAdventureUrl = PlatformHostConfiguration.Value.FeaturedAdventureUrl;
-            if (AuthenticationConfiguration.Mode == AuthenticationMode.ExternalProvider
+            if (!string.IsNullOrWhiteSpace(PlatformHostConfiguration.Value.WorkspaceSignInUrl))
+            {
+                SignInUrl = PlatformHostConfiguration.Value.WorkspaceSignInUrl;
+            }
+            else if (AuthenticationConfiguration.Mode == AuthenticationMode.ExternalProvider
                 && Uri.TryCreate(AuthenticationConfiguration.WorkspaceOrigin, UriKind.Absolute, out var workspace))
             {
                 SignInUrl = new Uri(workspace, AdventuresSuite.Identity.ExternalId.ExternalIdBrowserEndpoints.SignInPath)

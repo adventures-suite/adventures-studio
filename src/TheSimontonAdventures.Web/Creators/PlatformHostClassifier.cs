@@ -16,6 +16,9 @@ public sealed class PlatformHostOptions
 
     /// <summary>Gets the optional public Creator experience featured by the platform site.</summary>
     public string FeaturedAdventureUrl { get; init; } = string.Empty;
+
+    /// <summary>Gets the canonical Creator workspace sign-in URL shown on the public platform.</summary>
+    public string WorkspaceSignInUrl { get; init; } = string.Empty;
 }
 
 /// <summary>Classifies an exact request host as the public platform entrance.</summary>
@@ -52,6 +55,14 @@ public sealed class PlatformHostClassifier : IPlatformHostClassifier
         {
             throw new InvalidDataException(
                 "The featured Adventure URL must be an absolute HTTP or HTTPS URL.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(options.Value.WorkspaceSignInUrl)
+            && (!Uri.TryCreate(options.Value.WorkspaceSignInUrl, UriKind.Absolute, out var workspaceSignIn)
+                || workspaceSignIn.Scheme != Uri.UriSchemeHttps))
+        {
+            throw new InvalidDataException(
+                "The deployed workspace sign-in URL must be an absolute HTTPS URL.");
         }
     }
 
