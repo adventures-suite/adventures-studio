@@ -124,10 +124,39 @@ public sealed record CompanionInformationPolicyRequest(
     DateTimeOffset EvaluatedAtUtc);
 
 /// <summary>Represents an approved, versioned information-policy decision.</summary>
-public sealed record CompanionInformationPolicyDecision(bool IsAllowed, string? Version)
+public sealed record CompanionInformationPolicyDecision
 {
+    private CompanionInformationPolicyDecision(bool isAllowed, string? version)
+    {
+        IsAllowed = isAllowed;
+        Version = version;
+    }
+
+    /// <summary>Gets whether the explicitly assigned profile permits this projection.</summary>
+    public bool IsAllowed { get; }
+
+    /// <summary>Gets the opaque effective profile version only for an allowed decision.</summary>
+    public string? Version { get; }
+
     /// <summary>Creates a closed decision.</summary>
     public static CompanionInformationPolicyDecision Closed { get; } = new(false, null);
+
+    /// <summary>Creates an allowed decision for one validated effective profile version.</summary>
+    public static CompanionInformationPolicyDecision Allow(string version)
+    {
+        if (string.IsNullOrWhiteSpace(version)
+            || version.Length > 64
+            || version != version.Trim()
+            || valueContainsUnsafeCharacter(version))
+        {
+            throw new ArgumentException("An opaque, bounded information-policy version is required.", nameof(version));
+        }
+
+        return new(true, version);
+
+        static bool valueContainsUnsafeCharacter(string value) =>
+            value.Any(character => !char.IsAsciiLetterOrDigit(character) && character is not '_' and not '-' and not '.');
+    }
 }
 
 /// <summary>Evaluates which minimized information profile may be projected.</summary>

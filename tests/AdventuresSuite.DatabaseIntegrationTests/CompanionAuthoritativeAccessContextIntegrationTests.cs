@@ -361,7 +361,7 @@ public sealed class CompanionAuthoritativeAccessContextIntegrationTests
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            return Task.FromResult(new CompanionInformationPolicyDecision(true, "adventure_read_v1"));
+            return Task.FromResult(CompanionInformationPolicyDecision.Allow("adventure_read_v1"));
         }
     }
 
