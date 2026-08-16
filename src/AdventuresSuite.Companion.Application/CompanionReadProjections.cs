@@ -137,6 +137,34 @@ public sealed record CompanionTodayProjection(
     CompanionScheduleItemProjection? NextItem,
     string? Notice);
 
+/// <summary>Contains the server-established scope for one Itinerary projection.</summary>
+public sealed record CompanionItineraryReadScope(
+    CreatorId CreatorId,
+    UserId UserId,
+    string TravelerId,
+    long MembershipVersion,
+    DateTimeOffset EvaluatedAtUtc);
+
+/// <summary>Provides one ordered, traveler-safe itinerary day projection.</summary>
+public sealed record CompanionItineraryDayProjection(
+    string ItineraryDayId,
+    DateOnly LocalDate,
+    string TimeZone,
+    int DayNumber,
+    string? Title,
+    string DestinationVisitId,
+    string DestinationName,
+    IReadOnlyList<CompanionScheduleItemProjection> Items,
+    string? Summary,
+    bool HasMaterialChange,
+    string? AcknowledgmentId);
+
+/// <summary>Provides the minimized authorized Itinerary application projection.</summary>
+public sealed record CompanionItineraryProjection(
+    CompanionAdventureSummaryProjection Adventure,
+    string InformationProfileVersion,
+    IReadOnlyList<CompanionItineraryDayProjection> Days);
+
 /// <summary>Queries authorized Adventure summaries without exposing persistence technology.</summary>
 public interface ICompanionAdventureSummaryQuery
 {
@@ -168,6 +196,16 @@ public interface ICompanionTodayQuery
         CancellationToken cancellationToken = default);
 }
 
+/// <summary>Queries one authorized Itinerary without revealing unavailable resources.</summary>
+public interface ICompanionItineraryQuery
+{
+    /// <summary>Gets an Itinerary, or <see langword="null"/> for every unavailable case.</summary>
+    Task<CompanionItineraryProjection?> GetAsync(
+        CompanionItineraryReadScope scope,
+        string adventureId,
+        CancellationToken cancellationToken = default);
+}
+
 /// <summary>Keeps Today unavailable until an owning authoritative adapter is implemented.</summary>
 public sealed class ClosedCompanionTodayQuery : ICompanionTodayQuery
 {
@@ -177,4 +215,15 @@ public sealed class ClosedCompanionTodayQuery : ICompanionTodayQuery
         string adventureId,
         CancellationToken cancellationToken = default) =>
         Task.FromResult<CompanionTodayProjection?>(null);
+}
+
+/// <summary>Keeps Itinerary unavailable until an owning authoritative adapter is implemented.</summary>
+public sealed class ClosedCompanionItineraryQuery : ICompanionItineraryQuery
+{
+    /// <inheritdoc />
+    public Task<CompanionItineraryProjection?> GetAsync(
+        CompanionItineraryReadScope scope,
+        string adventureId,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult<CompanionItineraryProjection?>(null);
 }

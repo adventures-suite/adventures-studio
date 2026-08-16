@@ -239,7 +239,7 @@ internal static class CompanionTodayValidation
         return MapItem(source, out result);
     }
 
-    private static bool MapItem(CompanionScheduleItemDto source, out MobileCompanionScheduleItem? result)
+    internal static bool MapItem(CompanionScheduleItemDto source, out MobileCompanionScheduleItem? result)
     {
         result = null;
         var times = source.TimeStatus switch

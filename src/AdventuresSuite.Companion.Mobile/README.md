@@ -33,6 +33,13 @@ API mode currently has no mobile sign-in implementation; fail-closed API
 responses remain visible until the separately gated PKCE authentication slice
 is implemented.
 
+The Journey tab consumes the typed `GET
+/v1/companion/adventures/{adventureId}/itinerary` contract in API mode and shows
+explicit loading, empty, unavailable, unauthorized, malformed, stale, and retry
+states. It displays destination-local dates, IANA time zones, and honest
+proposal/reservation/confirmation status labels. API failures never select the
+fictional Demo adapter.
+
 ## TestFlight
 
 The manual `Publish AdventuresCompanion TestFlight` workflow builds this

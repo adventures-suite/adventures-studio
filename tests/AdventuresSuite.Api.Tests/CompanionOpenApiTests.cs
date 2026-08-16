@@ -28,6 +28,7 @@ public sealed class CompanionOpenApiTests(CompanionApiFactory factory)
             {
                 "/v1/companion/adventures",
                 "/v1/companion/adventures/{adventureId}",
+                "/v1/companion/adventures/{adventureId}/itinerary",
                 "/v1/companion/adventures/{adventureId}/today"
             },
             paths.EnumerateObject().Select(value => value.Name).Order(StringComparer.Ordinal));
@@ -78,6 +79,17 @@ public sealed class CompanionOpenApiTests(CompanionApiFactory factory)
         Assert.Equal("path", todayParameter.GetProperty("in").GetString());
         Assert.True(todayParameter.GetProperty("required").GetBoolean());
         Assert.False(string.IsNullOrWhiteSpace(todayParameter.GetProperty("description").GetString()));
+
+        var itinerary = paths.GetProperty("/v1/companion/adventures/{adventureId}/itinerary").GetProperty("get");
+        AssertGetOnly(paths.GetProperty("/v1/companion/adventures/{adventureId}/itinerary"));
+        Assert.Equal("GetCompanionItinerary", itinerary.GetProperty("operationId").GetString());
+        AssertExactReadResponses(itinerary, "CompanionItineraryDto");
+        Assert.False(string.IsNullOrWhiteSpace(itinerary.GetProperty("summary").GetString()));
+        Assert.False(string.IsNullOrWhiteSpace(itinerary.GetProperty("description").GetString()));
+        var itineraryParameter = Assert.Single(itinerary.GetProperty("parameters").EnumerateArray());
+        Assert.Equal("adventureId", itineraryParameter.GetProperty("name").GetString());
+        Assert.Equal("path", itineraryParameter.GetProperty("in").GetString());
+        Assert.True(itineraryParameter.GetProperty("required").GetBoolean());
     }
 
     private static void AssertExactAuthorization(JsonElement document)
@@ -173,6 +185,8 @@ public sealed class CompanionProductionGateTests(ProductionCompanionApiFactory f
         Assert.Equal(HttpStatusCode.Unauthorized, detail.StatusCode);
         var today = await _client.GetAsync("/v1/companion/adventures/adv_demo_italy_2026/today");
         Assert.Equal(HttpStatusCode.Unauthorized, today.StatusCode);
+        var itinerary = await _client.GetAsync("/v1/companion/adventures/adv_demo_italy_2026/itinerary");
+        Assert.Equal(HttpStatusCode.Unauthorized, itinerary.StatusCode);
     }
 
     /// <summary>Ensures a production attempt to select deterministic identities and fixtures fails startup.</summary>
