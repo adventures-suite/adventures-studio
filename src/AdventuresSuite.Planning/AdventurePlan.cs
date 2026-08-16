@@ -289,6 +289,49 @@ public sealed class AdventurePlan
             BudgetItems, PackingItems);
     }
 
+    /// <summary>
+    /// Creates the next aggregate version with one existing transportation segment's editable
+    /// details replaced while preserving its identity and planning status.
+    /// </summary>
+    public AdventurePlan WithEditedTransportationSegment(
+        TransportationSegmentId segmentId,
+        string mode,
+        string from,
+        string to,
+        DateOnly departureDate,
+        TimeOnly? departureTimeLocal,
+        IanaTimeZone departureTimeZone,
+        DateOnly arrivalDate,
+        TimeOnly? arrivalTimeLocal,
+        IanaTimeZone arrivalTimeZone,
+        DateTimeOffset updatedAtUtc)
+    {
+        var existing = Transportation.SingleOrDefault(item => item.Id == segmentId)
+            ?? throw new ArgumentException(
+                "The transportation segment must belong to this plan.", nameof(segmentId));
+        var replacement = new TransportationSegment
+        {
+            Id = existing.Id,
+            Mode = mode,
+            From = from,
+            To = to,
+            DepartureDate = departureDate,
+            DepartureTimeLocal = departureTimeLocal,
+            DepartureTimeZone = departureTimeZone,
+            ArrivalDate = arrivalDate,
+            ArrivalTimeLocal = arrivalTimeLocal,
+            ArrivalTimeZone = arrivalTimeZone,
+            Status = existing.Status
+        };
+        var transportation = Transportation.Select(
+            item => item.Id == segmentId ? replacement : item).ToArray();
+        return new(
+            Id, CreatorId, Title, WorkingDescription, LifecycleStage, Status, Dates,
+            new PlanAudit(checked(Audit.Version + 1), Audit.CreatedAtUtc, updatedAtUtc),
+            Travelers, DestinationVisits, ItineraryDays, Activities, transportation,
+            Accommodations, Reservations, Notes, Tasks, BudgetItems, PackingItems);
+    }
+
     /// <summary>Creates the next validated version with one proposed accommodation appended.</summary>
     public AdventurePlan WithAccommodation(
         Accommodation accommodation,

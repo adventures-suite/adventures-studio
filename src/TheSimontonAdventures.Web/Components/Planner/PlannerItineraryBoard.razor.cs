@@ -24,6 +24,10 @@ public partial class PlannerItineraryBoard : ComponentBase
     [Parameter, EditorRequired] public string ActivityCancelPath { get; set; } = string.Empty;
     /// <summary>Gets or sets the existing transportation POST path.</summary>
     [Parameter, EditorRequired] public string AddTransportationPath { get; set; } = string.Empty;
+    /// <summary>Gets or sets the transportation-edit POST path prefix.</summary>
+    [Parameter, EditorRequired] public string EditTransportationPathPrefix { get; set; } = string.Empty;
+    /// <summary>Gets or sets the safe plan-detail path used to cancel transportation editing.</summary>
+    [Parameter, EditorRequired] public string TransportationCancelPath { get; set; } = string.Empty;
     /// <summary>Gets or sets the existing accommodation POST path.</summary>
     [Parameter, EditorRequired] public string AddAccommodationPath { get; set; } = string.Empty;
     /// <summary>Gets or sets the existing reservation-summary POST path.</summary>
@@ -38,6 +42,8 @@ public partial class PlannerItineraryBoard : ComponentBase
     [Parameter] public string? ActivityEditStatusMessage { get; set; }
     /// <summary>Gets or sets the allowlisted transportation PRG message.</summary>
     [Parameter] public string? TransportationStatusMessage { get; set; }
+    /// <summary>Gets or sets the allowlisted transportation-edit PRG message.</summary>
+    [Parameter] public string? TransportationEditStatusMessage { get; set; }
     /// <summary>Gets or sets the allowlisted accommodation PRG message.</summary>
     [Parameter] public string? AccommodationStatusMessage { get; set; }
     /// <summary>Gets or sets the allowlisted reservation PRG message.</summary>
@@ -49,6 +55,9 @@ public partial class PlannerItineraryBoard : ComponentBase
 
     private string EditActivityPath(PlannedActivityId activityId) =>
         $"{EditActivityPathPrefix}/{activityId.Value}/edit";
+
+    private string EditTransportationPath(TransportationSegmentId segmentId) =>
+        $"{EditTransportationPathPrefix}/{segmentId.Value}/edit";
 
     private static RenderFragment Status(string? message) => builder =>
     {
