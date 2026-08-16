@@ -187,10 +187,16 @@ public sealed class WorkspaceRootTests
                         new(2027, 10, 25), new(18, 0), new("America/Phoenix"),
                         new(2027, 10, 26), new(13, 0), new("Europe/Madrid"),
                         PlanItemStatus.Proposed)
+                ],
+                Accommodations =
+                [
+                    new(new("accommodation_madrid_01"), "Hotel Central",
+                        new(new(2027, 10, 26), new(2027, 10, 29)),
+                        new("Europe/Madrid"), PlanItemStatus.Confirmed)
                 ]
             }, canEdit: true));
         var html = await RenderAsync(ApplicationPrincipal(),
-            "/workspace/creators/creator_alpha_01/plans/plan_spain_2027?edit=conflict&destination=conflict&day=conflict&activity=conflict&transportation=conflict&transportation-edit=conflict&accommodation=conflict&reservation=conflict",
+            "/workspace/creators/creator_alpha_01/plans/plan_spain_2027?edit=conflict&destination=conflict&day=conflict&activity=conflict&transportation=conflict&transportation-edit=conflict&accommodation=conflict&accommodation-edit=conflict&reservation=conflict",
             services =>
             {
                 services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>();
@@ -222,6 +228,7 @@ public sealed class WorkspaceRootTests
         Assert.Contains("name=\"arrivalTimeZoneId\"", html);
         Assert.Contains("Add proposed transportation", html);
         Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/accommodations\"", html);
+        Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/accommodations/accommodation_madrid_01/edit\"", html);
         Assert.Contains("Add proposed accommodation", html);
         Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/reservations\"", html);
         Assert.Contains("Add proposed reservation", html);
@@ -231,6 +238,7 @@ public sealed class WorkspaceRootTests
         Assert.Contains("This plan changed. Review transportation and try again.", html);
         Assert.Contains("This plan changed. Review the current transportation values and try again.", html);
         Assert.Contains("This plan changed. Review accommodations and try again.", html);
+        Assert.Contains("This plan changed. Review the current accommodation values and try again.", html);
         Assert.Contains("This plan changed. Review reservations and try again.", html);
         Assert.DoesNotContain("name=\"status\"", html);
         Assert.DoesNotContain("name=\"lifecycle", html);

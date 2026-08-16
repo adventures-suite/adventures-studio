@@ -208,6 +208,9 @@ item movement, lifecycle transitions, and removal remain later focused slices.
 Existing transportation segments can also be corrected in place without
 changing their identity or planning status and without inferring UTC chronology
 from local times in different time zones.
+Existing accommodations can be corrected in place by changing only their name,
+inclusive start and end dates, and IANA time zone while preserving identity and
+planning status.
 
 Scope:
 

@@ -30,6 +30,10 @@ public partial class PlannerItineraryBoard : ComponentBase
     [Parameter, EditorRequired] public string TransportationCancelPath { get; set; } = string.Empty;
     /// <summary>Gets or sets the existing accommodation POST path.</summary>
     [Parameter, EditorRequired] public string AddAccommodationPath { get; set; } = string.Empty;
+    /// <summary>Gets or sets the accommodation-edit POST path prefix.</summary>
+    [Parameter, EditorRequired] public string EditAccommodationPathPrefix { get; set; } = string.Empty;
+    /// <summary>Gets or sets the safe plan-detail path used to cancel accommodation editing.</summary>
+    [Parameter, EditorRequired] public string AccommodationCancelPath { get; set; } = string.Empty;
     /// <summary>Gets or sets the existing reservation-summary POST path.</summary>
     [Parameter, EditorRequired] public string AddReservationPath { get; set; } = string.Empty;
     /// <summary>Gets or sets the allowlisted destination PRG message.</summary>
@@ -46,6 +50,8 @@ public partial class PlannerItineraryBoard : ComponentBase
     [Parameter] public string? TransportationEditStatusMessage { get; set; }
     /// <summary>Gets or sets the allowlisted accommodation PRG message.</summary>
     [Parameter] public string? AccommodationStatusMessage { get; set; }
+    /// <summary>Gets or sets the allowlisted accommodation-edit PRG message.</summary>
+    [Parameter] public string? AccommodationEditStatusMessage { get; set; }
     /// <summary>Gets or sets the allowlisted reservation PRG message.</summary>
     [Parameter] public string? ReservationStatusMessage { get; set; }
 
@@ -58,6 +64,9 @@ public partial class PlannerItineraryBoard : ComponentBase
 
     private string EditTransportationPath(TransportationSegmentId segmentId) =>
         $"{EditTransportationPathPrefix}/{segmentId.Value}/edit";
+
+    private string EditAccommodationPath(AccommodationId accommodationId) =>
+        $"{EditAccommodationPathPrefix}/{accommodationId.Value}/edit";
 
     private static RenderFragment Status(string? message) => builder =>
     {

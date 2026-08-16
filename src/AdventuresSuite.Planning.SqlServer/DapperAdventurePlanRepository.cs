@@ -748,6 +748,69 @@ internal sealed class DapperAdventurePlanRepository(
     }
 
     /// <inheritdoc />
+    public async Task UpdateAccommodationAsync(
+        CreatorId creatorId,
+        AdventurePlan plan,
+        Accommodation accommodation,
+        long expectedVersion,
+        CancellationToken cancellationToken = default)
+    {
+        RequirePlanScope(creatorId, plan);
+        ArgumentNullException.ThrowIfNull(accommodation);
+        if (expectedVersion < 1 || plan.Audit.Version != expectedVersion + 1
+            || !plan.Accommodations.Contains(accommodation))
+        {
+            throw new ArgumentException(
+                "An accommodation update must advance the expected version by exactly one.",
+                nameof(expectedVersion));
+        }
+
+        try
+        {
+            var updated = await connection.ExecuteAsync(Command(AdvancePlanVersionSql,
+                new
+                {
+                    CreatorId = creatorId.Value,
+                    PlanId = plan.Id.Value,
+                    Version = plan.Audit.Version,
+                    plan.Audit.UpdatedAtUtc,
+                    ExpectedVersion = expectedVersion
+                }, cancellationToken));
+            if (updated == 0)
+            {
+                throw new PlanningConcurrencyException(plan.Id, expectedVersion);
+            }
+
+            var accommodationRows = await connection.ExecuteAsync(Command("""
+                UPDATE planning.Accommodations
+                   SET Name=@Name, StartDate=@Start, EndDate=@End, TimeZone=@Zone
+                 WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId
+                   AND AccommodationId=@Id;
+                """, new
+            {
+                CreatorId = creatorId.Value,
+                PlanId = plan.Id.Value,
+                Id = accommodation.Id.Value,
+                accommodation.Name,
+                Start = accommodation.Dates.Start.ToDateTime(TimeOnly.MinValue),
+                End = accommodation.Dates.End.ToDateTime(TimeOnly.MinValue),
+                Zone = accommodation.TimeZone.Value
+            }, cancellationToken));
+            if (accommodationRows != 1)
+            {
+                throw new PlanningConcurrencyException(plan.Id, expectedVersion);
+            }
+
+            auditTracker.RecordMutation(plan.Id, expectedVersion, plan.Audit.Version);
+        }
+        catch
+        {
+            auditTracker.RecordFailure();
+            throw;
+        }
+    }
+
+    /// <inheritdoc />
     public async Task AddReservationAsync(
         CreatorId creatorId,
         AdventurePlan plan,

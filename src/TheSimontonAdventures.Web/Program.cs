@@ -93,6 +93,7 @@ if (string.Equals(authenticationMode, nameof(AuthenticationMode.ExternalProvider
     builder.Services.AddScoped<ITransportationSegmentAddService, TransportationSegmentAddService>();
     builder.Services.AddScoped<ITransportationSegmentEditService, TransportationSegmentEditService>();
     builder.Services.AddScoped<IAccommodationAddService, AccommodationAddService>();
+    builder.Services.AddScoped<IAccommodationEditService, AccommodationEditService>();
     builder.Services.AddScoped<IReservationAddService, ReservationAddService>();
 }
 
@@ -321,6 +322,7 @@ if (authenticationConfiguration.Mode == AuthenticationMode.ExternalProvider)
     app.MapTransportationSegmentAddEndpoint();
     app.MapTransportationSegmentEditEndpoint();
     app.MapAccommodationAddEndpoint();
+    app.MapAccommodationEditEndpoint();
     app.MapReservationAddEndpoint();
 }
 

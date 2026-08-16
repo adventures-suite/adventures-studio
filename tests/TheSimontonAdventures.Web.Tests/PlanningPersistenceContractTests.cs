@@ -87,6 +87,7 @@ public sealed class PlanningPersistenceContractTests
             typeof(ITransportationSegmentAddService),
             typeof(ITransportationSegmentEditService),
             typeof(IAccommodationAddService),
+            typeof(IAccommodationEditService),
             typeof(IReservationAddService)
         ];
 
