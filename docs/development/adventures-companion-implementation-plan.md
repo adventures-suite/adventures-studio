@@ -65,6 +65,12 @@ composition, and retains the single-column phone experience. Portrait,
 landscape, Split View, larger text, light, and dark device checks remain part of
 the release acceptance gate.
 
+Android emulator acceptance also identified that the .NET MAUI 10 edge-to-edge
+page default placed the WebView header beneath the system status bar, leaving
+the visible appearance selector outside the interactive safe area. The
+production page now explicitly respects container safe areas so header controls
+remain visible and operable without device-specific padding.
+
 ## M0: Product, Privacy, and Threat Model
 
 Define supported traveler scenarios, minimum OS versions, accessibility,

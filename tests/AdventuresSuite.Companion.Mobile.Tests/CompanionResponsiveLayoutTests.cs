@@ -25,6 +25,15 @@ public sealed class CompanionResponsiveLayoutTests
         Assert.Contains("@media (max-width: 430px)", css, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task NativePageKeepsInteractiveHeaderOutsideSystemBars()
+    {
+        var page = await File.ReadAllTextAsync(
+            Path.Combine(AppContext.BaseDirectory, "Presentation", "MainPage.xaml"));
+
+        Assert.Contains("SafeAreaEdges=\"Container\"", page, StringComparison.Ordinal);
+    }
+
     private static Task<string> LoadStylesAsync() =>
         File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Presentation", "app.css"));
 }

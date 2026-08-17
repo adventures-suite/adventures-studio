@@ -33,5 +33,8 @@
     <Content Include="../../src/AdventuresSuite.Companion.Mobile/wwwroot/app.css"
              Link="Presentation/app.css"
              CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../src/AdventuresSuite.Companion.Mobile/MainPage.xaml"
+             Link="Presentation/MainPage.xaml"
+             CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
