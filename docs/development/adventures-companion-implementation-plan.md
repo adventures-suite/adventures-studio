@@ -71,6 +71,11 @@ the visible appearance selector outside the interactive safe area. The
 production page now explicitly respects container safe areas so header controls
 remain visible and operable without device-specific padding.
 
+Before the first Google Play artifact, Android adopted the owned package
+identity `com.adventuressuite.companion`. Apple retains the established
+`com.adventuresstudio.companion` bundle identity for TestFlight continuity; the
+platform identities are intentionally validated separately.
+
 ## M0: Product, Privacy, and Threat Model
 
 Define supported traveler scenarios, minimum OS versions, accessibility,
