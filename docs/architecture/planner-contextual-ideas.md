@@ -1,4 +1,4 @@
-# Planner Contextual Ideas
+# Planner Contextual FootSteps
 
 **Status:** Approved Product and Architecture Direction
 
@@ -9,14 +9,21 @@
 The Planner should make a believable Adventure faster to assemble without
 making the user surrender control. The primary workspace keeps the
 authoritative plan visible as a planning canvas and presents a compact,
-destination-aware Ideas rail beside it. The rail may offer relevant Journeys,
-Destinations, itinerary ideas, activities, route patterns, and later reviewed
+destination-aware FootSteps rail beside it. The rail may offer relevant Journey
+FootSteps, Destination FootSteps, itinerary FootSteps, activities, route
+patterns, and later reviewed
 research or AI suggestions.
 
 The governing principle is:
 
-> Ideas are reusable source material. The plan is authoritative. Adding an idea
-> is an explicit, reviewable Planning operation.
+> FootSteps are reusable inspiration and blueprints. The plan is authoritative.
+> Applying a FootStep is an explicit, reviewable Planning operation.
+
+`FootSteps` is the customer-facing AdventuresSuite product term. Internal
+contracts may continue to use neutral terms such as template, catalog item,
+suggestion, projection, and proposal where those names describe distinct
+technical responsibilities. The brand term does not collapse those security,
+ownership, lifecycle, or persistence boundaries into one record type.
 
 ## Experience Model
 
@@ -24,13 +31,13 @@ On a wide screen, the Planner uses three coordinated regions:
 
 1. the existing collapsible workspace navigation on the left;
 2. the selected Adventure Plan and itinerary board in the main canvas; and
-3. a compact contextual Ideas rail on the right.
+3. a compact contextual FootSteps rail on the right.
 
 The canvas remains the visual and keyboard focus. Selecting a destination visit,
-itinerary day, or empty insertion point changes the Ideas rail context without
-changing plan data. Cards use strong imagery when licensed media is available,
-short useful labels, source and freshness indicators, and an honest explanation
-of why the idea is relevant.
+itinerary day, or empty insertion point changes the FootSteps rail context
+without changing plan data. Cards use strong imagery when licensed media is
+available, short useful labels, source and freshness indicators, and an honest
+explanation of why the FootStep is relevant.
 
 An open plan begins at whole-Adventure context, emphasizing Journeys,
 Destinations, templates, and route patterns. Destination selection emphasizes
@@ -47,11 +54,11 @@ not an authorization decision.
 
 ## Interaction Contract
 
-Pointer users may drag an idea toward an eligible plan destination, day, or
-insertion point. Dragging means **copy this idea into a proposed plan change**;
-it never moves or edits the source item. A drop opens a concise preview with
-the destination, date or day, proposed fields, assumptions, and conflicts. The
-user confirms or cancels before the normal Planning command runs.
+Pointer users may drag a FootStep toward an eligible plan destination, day, or
+insertion point. Dragging means **copy this FootStep into a proposed plan
+change**; it never moves or edits the source item. A drop opens a concise
+preview with the destination, date or day, proposed fields, assumptions, and
+conflicts. The user confirms or cancels before the normal Planning command runs.
 
 Drag and drop is an enhancement, not the only workflow. Every card also offers
 an accessible action such as **Add to plan**. Keyboard and assistive-technology
@@ -186,7 +193,7 @@ Adventure modes.
 
 ## Mutation Boundary
 
-Selecting an idea follows the same safe sequence regardless of input method:
+Selecting a FootStep follows the same safe sequence regardless of input method:
 
 ```text
 Authorized context selection

@@ -215,20 +215,20 @@ The itinerary board keeps plan records read-first by placing contextual creation
 and supported edit forms in one native, mutually exclusive disclosure group.
 
 The approved contextual-ideas direction keeps that itinerary board as the
-authoritative canvas and adds a destination-aware Ideas rail. Delivery begins
+authoritative canvas and adds a destination-aware FootSteps rail. Delivery begins
 with a presentation-only, deterministic rail and then one reviewed
 **Add to plan** operation before accessible drag and drop. See
 `docs/architecture/planner-contextual-ideas.md`. Do not introduce provider
 search, AI ranking, templates, or direct drop mutation in the first rail slice.
 
-The rail may be prepopulated only after the curated Idea Library contracts and
+The rail may be prepopulated only after the curated FootSteps Library contracts and
 reviewed import boundary in
 `docs/architecture/planner-curated-idea-library.md` are approved. Production
-ideas remain Content Engine data consumed through `ITravelContentService` or a
+FootSteps remain Content Engine data consumed through `ITravelContentService` or a
 narrower approved contract; they are never compiled into Razor, application
 conditionals, SQL migration seed rows, or development fixtures.
 
-Near-term Ideas slice priority:
+Near-term FootSteps slice priority:
 
 1. establish the authorized provider-neutral catalog/query boundary;
 2. immediately add deterministic multi-facet filtering and paging over that
@@ -269,14 +269,14 @@ Scope:
 - activities, transportation, accommodations, and reservations
 - notes, tasks, packing, and budget items
 - private read-only preview
-- presentation-only contextual Ideas rail with destination/day selection,
+- presentation-only contextual FootSteps rail with destination/day selection,
   responsive states, and no authoritative mutation
-- deterministic contextual Ideas filtering with combined facets, removable
+- deterministic contextual FootSteps filtering with combined facets, removable
   chips, result counts, paging integration, localized labels, and an accessible
   mobile filter surface
 - composable Adventure-mode facets proven with a motorcycle touring reference
   scenario and reusable across non-conventional travel styles
-- reviewed curated Idea Library foundation and environment-specific launch
+- reviewed curated FootSteps Library foundation and environment-specific launch
   collection before production rail population
 - authorized layered Adventure map with overview, segment, destination, day,
   selected-place, and candidate-point-of-interest views

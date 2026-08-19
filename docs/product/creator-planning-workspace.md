@@ -140,15 +140,15 @@ defined in `docs/architecture/experience-design-system.md`.
 - reservation linkage
 - conflict and missing-information indicators
 
-### Contextual Ideas Rail
+### Contextual FootSteps Rail
 
 - keep the selected Adventure Plan and itinerary board as the authoritative
   central canvas
 - show a compact right-side rail of relevant Journeys, Destinations, itinerary
-  ideas, activities, and route patterns based on the selected destination or
+  FootSteps, activities, and route patterns based on the selected destination or
   day
 - default to whole-Adventure Journeys and Destinations, then change the visible
-  idea types and filters as the user selects a destination visit or itinerary
+  FootStep types and filters as the user selects a destination visit or itinerary
   day; later segment, accommodation, activity, and route-position contexts use
   the same model
 - let users combine country or region, idea kind, duration, transportation,
@@ -162,7 +162,7 @@ defined in `docs/architecture/experience-design-system.md`.
   stable locale-independent facet identifiers with localized display labels
 - use inspirational licensed imagery, concise summaries, source, freshness,
   and an understandable reason for each match
-- let pointer users drag an idea to an eligible destination or day while also
+- let pointer users drag a FootStep to an eligible destination or day while also
   providing an equivalent keyboard-, touch-, and screen-reader-accessible
   **Add to plan** action
 - treat add and drop as requests for a review preview, never as direct Planning
@@ -179,14 +179,18 @@ do not gain plan authority, and its client state does not bypass Creator,
 instance, lifecycle, concurrency, audit, or Platform Capability enforcement.
 See `docs/architecture/planner-contextual-ideas.md`.
 
-AdventuresSuite launches with a deliberately curated Idea Library so early
+AdventuresSuite launches with a deliberately curated FootSteps Library so early
 customers receive useful inspiration before a contributor ecosystem develops.
-Launch ideas may be authored by Adventures Studio, intentionally transformed
+Launch FootSteps may be authored by Adventures Studio, intentionally transformed
 from approved Content Engine stories, or commissioned and licensed from
 Creators and travel professionals. Each item retains ownership, attribution,
 rights, version, freshness, visibility, and review state. Traveler suggestions
 remain private to their Adventure unless separately submitted, licensed,
-reviewed, and published. See
+reviewed, and published. Travel professionals may later author and license
+FootSteps through a dedicated professional product surface, with immutable
+version provenance, attribution, rights evidence, and privacy-safe usage
+reporting. Compensation is a deliberate future business decision and never
+grants the author access to a customer plan. See
 `docs/architecture/planner-curated-idea-library.md`.
 
 ### Adventure Map

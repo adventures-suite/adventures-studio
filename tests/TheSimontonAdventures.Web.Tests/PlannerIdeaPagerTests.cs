@@ -6,7 +6,7 @@ using TheSimontonAdventures.Web.Components;
 
 namespace TheSimontonAdventures.Web.Tests;
 
-/// <summary>Verifies the shared paging contract for all Planner idea collections.</summary>
+/// <summary>Verifies the shared paging contract for all Planner FootStep collections.</summary>
 public sealed class PlannerIdeaPagerTests
 {
     /// <summary>The pager announces position and exposes a user-defined card count.</summary>
@@ -22,7 +22,7 @@ public sealed class PlannerIdeaPagerTests
         });
 
         Assert.Contains("Cards per page", html, StringComparison.Ordinal);
-        Assert.Contains("Page 2 of 3 · 5 ideas", html, StringComparison.Ordinal);
+        Assert.Contains("Page 2 of 3 · 5 FootSteps", html, StringComparison.Ordinal);
         Assert.Contains(">1</option>", html, StringComparison.Ordinal);
         Assert.Contains(">2</option>", html, StringComparison.Ordinal);
         Assert.Contains(">4</option>", html, StringComparison.Ordinal);

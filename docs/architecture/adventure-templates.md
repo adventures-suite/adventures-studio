@@ -5,9 +5,9 @@ Last updated: August 19, 2026
 
 ## Purpose
 
-Adventure Templates let Creators begin with a professionally designed,
-pre-planned Adventure and adapt it to real travelers, dates, time zones,
-budgets, preferences, and constraints.
+Adventure Templates, presented to customers as Journey FootSteps, let Creators
+begin with a professionally designed, pre-planned Adventure and adapt it to real
+travelers, dates, time zones, budgets, preferences, and constraints.
 
 Templates must strengthen AdventuresSuite's partnership with travel
 professionals. They are not a mechanism for AdventuresSuite to replace travel
@@ -120,6 +120,15 @@ Agency templates are a first-class partnership capability. They let a travel
 professional encode expertise, demonstrate value, accelerate customer
 planning, and offer ongoing help without surrendering the customer relationship
 or forcing AdventuresSuite into the role of travel agency.
+
+The broader FootSteps product may eventually let professional Creators author,
+publish, license, and receive compensation for approved reusable expertise.
+Journey FootSteps are the complete-plan form backed by immutable Adventure
+Template versions; smaller Destination, itinerary, activity, transportation,
+stay, and guidance FootSteps remain distinct catalog content with their own
+review and application contracts. Commercial terms and payout mechanics are
+intentionally deferred, and none grants access to an instantiated customer
+plan.
 
 Product language should favor actions such as "Use this template" and
 "Request professional help." AdventuresSuite should not present itself as the

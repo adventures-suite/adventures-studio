@@ -2,10 +2,10 @@ using Microsoft.AspNetCore.Components;
 
 namespace TheSimontonAdventures.Web.Components;
 
-/// <summary>Renders consistent accessible pagination controls for Planner idea collections.</summary>
+/// <summary>Renders consistent accessible pagination controls for Planner FootStep collections.</summary>
 public partial class PlannerIdeaPager : ComponentBase
 {
-    /// <summary>Gets or sets the total number of ideas in the current collection.</summary>
+    /// <summary>Gets or sets the total number of FootSteps in the current collection.</summary>
     [Parameter]
     public int TotalItems { get; set; }
 

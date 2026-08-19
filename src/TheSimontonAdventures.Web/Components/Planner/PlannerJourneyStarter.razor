@@ -9,11 +9,11 @@
         <button type="button" class="journey-starter__choice" aria-pressed="@(!IsBrowsingIdeas)" @onclick="StartFromScratchAsync">
             <span aria-hidden="true">＋</span>
             <strong>Start from scratch</strong>
-            <small>Build a private plan from your own dates and ideas.</small>
+            <small>Build a private plan from your own dates and inspiration.</small>
         </button>
         <button type="button" class="journey-starter__choice" aria-pressed="@IsBrowsingIdeas" @onclick="BrowseIdeasAsync">
             <span aria-hidden="true">✦</span>
-            <strong>Browse journey ideas</strong>
+            <strong>Browse Journey FootSteps</strong>
             <small>Preview a complete Journey before creating your private copy.</small>
         </button>
     </div>
@@ -22,7 +22,7 @@
     {
         <div class="journey-starter__browser">
             <div>
-                <p class="journey-starter__eyebrow">Journey ideas</p>
+                <p class="journey-starter__eyebrow">Journey FootSteps</p>
                 <h3>Find a shape for your Adventure</h3>
                 <p>Templates are starting points, not bookings, prices, or availability.</p>
             </div>
@@ -90,11 +90,11 @@
                             @if (SelectedTemplate.Activities.Count > 0)
                             {
                                 <section aria-labelledby="template-activities">
-                                    <h4 id="template-activities">Activity ideas</h4>
+                                    <h4 id="template-activities">Activity FootSteps</h4>
                                     <ul class="journey-template__plain-list">
                                         @foreach (var activity in SelectedTemplate.Activities)
                                         {
-                                            <li><strong>@activity.Title</strong><span>Proposed idea, not a reservation</span></li>
+                                            <li><strong>@activity.Title</strong><span>Proposed FootStep, not a reservation</span></li>
                                         }
                                     </ul>
                                 </section>
@@ -142,7 +142,7 @@
             else
             {
                 <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Empty"
-                                       Title="Journey ideas are coming soon"
+                                       Title="Journey FootSteps are coming soon"
                                        Message="Start from scratch remains available while the reviewed library is prepared." />
             }
         </div>

@@ -16,10 +16,10 @@ public enum PlannerIdeasContextKind
     Day
 }
 
-/// <summary>Describes transient Planner context selected for Ideas presentation.</summary>
+/// <summary>Describes transient Planner context selected for FootSteps presentation.</summary>
 public sealed record PlannerIdeasContext
 {
-    /// <summary>Initializes a transient Ideas context.</summary>
+    /// <summary>Initializes a transient FootSteps context.</summary>
     public PlannerIdeasContext(PlannerIdeasContextKind kind, string id, string label) =>
         (Kind, Id, Label) = (kind, id, label);
 
@@ -33,13 +33,13 @@ public sealed record PlannerIdeasContext
     public string Label { get; }
 }
 
-/// <summary>Defines safe presentation states for the contextual Ideas rail.</summary>
+/// <summary>Defines safe presentation states for the contextual FootSteps rail.</summary>
 public enum PlannerIdeasState
 {
     /// <summary>No canvas context is selected.</summary>
     NoSelection,
 
-    /// <summary>Ideas are loading.</summary>
+    /// <summary>FootSteps are loading.</summary>
     Loading,
 
     /// <summary>No suggestions matched.</summary>
@@ -59,9 +59,9 @@ public enum PlannerIdeasState
 public partial class PlannerContextualIdeasRail : ComponentBase
 {
     private static readonly IReadOnlyList<int> RailPageSizeOptions = [1, 2, 3];
-    /// <summary>Gets the minimum supported Ideas rail width in pixels.</summary>
+    /// <summary>Gets the minimum supported FootSteps rail width in pixels.</summary>
     public const int MinimumWidthPixels = 272;
-    /// <summary>Gets the maximum supported Ideas rail width in pixels.</summary>
+    /// <summary>Gets the maximum supported FootSteps rail width in pixels.</summary>
     public const int MaximumWidthPixels = 400;
 
     private double? PointerStartX { get; set; }
@@ -85,7 +85,7 @@ public partial class PlannerContextualIdeasRail : ComponentBase
             [
                 new("Activity", "One memorable local anchor", "Choose one meaningful experience and preserve room around it.", "Fictional local Alpha demo", "Demo snapshot", "Fits the selected itinerary day.", "AC"),
                 new("Meal rhythm", "Protect an unhurried meal", "Reserve a flexible meal window instead of filling every hour.", "Fictional local Alpha demo", "Demo snapshot", "Supports a realistic daily pace.", "MR"),
-                new("Pacing", "Keep nearby discoveries flexible", "Group optional ideas near the day's anchor to avoid unnecessary transfers.", "Fictional local Alpha demo", "Demo snapshot", "Uses the selected day as context.", "PC")
+                new("Pacing", "Keep nearby discoveries flexible", "Group optional discoveries near the day's anchor to avoid unnecessary transfers.", "Fictional local Alpha demo", "Demo snapshot", "Uses the selected day as context.", "PC")
             ]
         };
 
@@ -127,16 +127,16 @@ public partial class PlannerContextualIdeasRail : ComponentBase
         || !DevelopmentIdeas.TryGetValue(Context.Kind, out var ideas)
             ? []
             : ideas;
-    /// <summary>Gets the idea types available for the selected context.</summary>
+    /// <summary>Gets the FootStep types available for the selected context.</summary>
     internal IReadOnlyList<string> AvailableTypes => Ideas
         .Select(idea => idea.Type)
         .Distinct(StringComparer.Ordinal)
         .ToArray();
-    /// <summary>Gets the ideas matching the transient type filter.</summary>
+    /// <summary>Gets the FootSteps matching the transient type filter.</summary>
     internal IReadOnlyList<PlannerIdeaCard> FilteredIdeas => SelectedType is null
         ? Ideas
         : Ideas.Where(idea => idea.Type == SelectedType).ToArray();
-    /// <summary>Gets the ideas visible on the selected page.</summary>
+    /// <summary>Gets the FootSteps visible on the selected page.</summary>
     internal IReadOnlyList<PlannerIdeaCard> PagedIdeas => FilteredIdeas
         .Skip((CurrentPage - 1) * PageSize)
         .Take(PageSize)

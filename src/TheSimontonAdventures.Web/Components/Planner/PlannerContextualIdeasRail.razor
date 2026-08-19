@@ -1,9 +1,9 @@
 @namespace TheSimontonAdventures.Web.Components
 
-<button type="button" class="planner-ideas__mobile-open" @ref="OpenButton" aria-haspopup="dialog" @onclick="OpenDrawerAsync">Ideas</button>
+<button type="button" class="planner-ideas__mobile-open" @ref="OpenButton" aria-haspopup="dialog" @onclick="OpenDrawerAsync">FootSteps</button>
 <aside class="@RailClasses" role="@(IsDrawerOpen ? "dialog" : "complementary")" aria-modal="@(IsDrawerOpen ? "true" : null)" aria-labelledby="planner-ideas-title" @onkeydown="HandleKeyAsync">
     <header class="planner-ideas__header">
-        <div><p>Contextual inspiration</p><h3 id="planner-ideas-title">Ideas</h3></div>
+        <div><p>Contextual inspiration</p><h3 id="planner-ideas-title">FootSteps</h3></div>
         <div class="planner-ideas__controls">
             <button type="button" class="planner-ideas__collapse" aria-expanded="@(!IsCollapsed)" @onclick="ToggleCollapsed">@(IsCollapsed ? "Expand" : "Collapse")</button>
             <button type="button" class="planner-ideas__close" @ref="CloseButton" @onclick="CloseDrawerAsync">Close</button>
@@ -18,30 +18,30 @@
             }
             else if (EffectiveState == PlannerIdeasState.Loading)
             {
-                <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Loading" Title="Finding ideas…" />
+                <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Loading" Title="Finding FootSteps…" />
             }
             else if (EffectiveState == PlannerIdeasState.Denied)
             {
-                <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Denied" Title="Ideas unavailable" Message="This context is not available to your workspace." />
+                <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Denied" Title="FootSteps unavailable" Message="This context is not available to your workspace." />
             }
             else if (EffectiveState == PlannerIdeasState.Unavailable)
             {
-                <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Unavailable" Title="Ideas temporarily unavailable" Message="Manual planning remains available." />
+                <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Unavailable" Title="FootSteps temporarily unavailable" Message="Manual planning remains available." />
             }
             else if (EffectiveState == PlannerIdeasState.Empty)
             {
-                <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Empty" Title="No ideas for this context" Message="Your plan is unchanged. Try another destination or day." />
+                <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Empty" Title="No FootSteps for this context" Message="Your plan is unchanged. Try another destination or day." />
             }
             else
             {
                 <div class="planner-ideas__context">
-                    <p>Ideas for <strong>@Context!.Label</strong></p>
+                    <p>FootSteps for <strong>@Context!.Label</strong></p>
                     @if (Context.Kind != PlannerIdeasContextKind.Adventure)
                     {
                         <button type="button" @onclick="ShowWholeAdventureAsync">Whole Adventure</button>
                     }
                 </div>
-                <nav class="planner-ideas__types" aria-label="Idea types for @Context.Label">
+                <nav class="planner-ideas__types" aria-label="FootStep types for @Context.Label">
                     <button type="button" aria-pressed="@(SelectedType is null ? "true" : "false")" @onclick="() => SelectType(null)">All</button>
                     @foreach (var type in AvailableTypes)
                     {
@@ -69,10 +69,10 @@
                                   OnPageChanged="ChangePageAsync" />
             }
         </div>
-        <div class="planner-ideas__resize" role="separator" aria-label="Resize Ideas rail" aria-orientation="vertical" tabindex="0" aria-valuemin="272" aria-valuemax="400" aria-valuenow="@WidthPixels" @onkeydown="HandleResizeKeyAsync" @onpointerdown="BeginPointerResizeAsync" @onpointermove="ContinuePointerResizeAsync" @onpointerup="EndPointerResize" @onpointercancel="EndPointerResize"></div>
+        <div class="planner-ideas__resize" role="separator" aria-label="Resize FootSteps rail" aria-orientation="vertical" tabindex="0" aria-valuemin="272" aria-valuemax="400" aria-valuenow="@WidthPixels" @onkeydown="HandleResizeKeyAsync" @onpointerdown="BeginPointerResizeAsync" @onpointermove="ContinuePointerResizeAsync" @onpointerup="EndPointerResize" @onpointercancel="EndPointerResize"></div>
     }
 </aside>
 @if (IsDrawerOpen)
 {
-    <button type="button" class="planner-ideas__backdrop" aria-label="Close Ideas" @onclick="CloseDrawerAsync"></button>
+    <button type="button" class="planner-ideas__backdrop" aria-label="Close FootSteps" @onclick="CloseDrawerAsync"></button>
 }

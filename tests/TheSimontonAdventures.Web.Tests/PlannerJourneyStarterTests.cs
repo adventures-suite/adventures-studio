@@ -18,7 +18,7 @@ public sealed class PlannerJourneyStarterTests
 
         Assert.Contains("Start a journey", html, StringComparison.Ordinal);
         Assert.Contains("Start from scratch", html, StringComparison.Ordinal);
-        Assert.Contains("Browse journey ideas", html, StringComparison.Ordinal);
+        Assert.Contains("Browse Journey FootSteps", html, StringComparison.Ordinal);
         Assert.DoesNotContain("Preview this Journey", html, StringComparison.Ordinal);
         Assert.DoesNotContain("Import", html, StringComparison.Ordinal);
     }
@@ -29,7 +29,7 @@ public sealed class PlannerJourneyStarterTests
     {
         var html = await RenderAsync([], browse: true);
 
-        Assert.Contains("Journey ideas are coming soon", html, StringComparison.Ordinal);
+        Assert.Contains("Journey FootSteps are coming soon", html, StringComparison.Ordinal);
         Assert.DoesNotContain("Portugal by rail", html, StringComparison.Ordinal);
     }
 
@@ -43,7 +43,7 @@ public sealed class PlannerJourneyStarterTests
         Assert.Contains("Lisbon", html, StringComparison.Ordinal);
         Assert.Contains("Preview this Journey", html, StringComparison.Ordinal);
         Assert.Contains("Cards per page", html, StringComparison.Ordinal);
-        Assert.Contains("Page 1 of 1 · 1 idea", html, StringComparison.Ordinal);
+        Assert.Contains("Page 1 of 1 · 1 FootStep", html, StringComparison.Ordinal);
         Assert.Contains("not bookings, prices, or availability", html, StringComparison.Ordinal);
     }
 

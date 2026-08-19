@@ -63,7 +63,7 @@
                 {
                     <li><article class="planner-board__day @(IsSelected(day) ? "planner-board__selected" : null)">
                         <header><p><time datetime="@DateValue(day.Date)">@day.Date.ToString("ddd, MMM d, yyyy")</time> · @day.TimeZone</p><h5>@day.Title</h5>@if (DestinationName(day) is { } destinationName){<span>@destinationName</span>}</header>
-                        <button type="button" class="planner-board__context-button planner-board__day-context" aria-pressed="@IsSelected(day)" @onclick="() => SelectDay(day)">Explore ideas for @day.Title</button>
+                        <button type="button" class="planner-board__context-button planner-board__day-context" aria-pressed="@IsSelected(day)" @onclick="() => SelectDay(day)">Explore FootSteps for @day.Title</button>
                         @if (CanEdit)
                         {
                             <details class="planner-board__disclosure planner-board__day-editor" name="planner-board-action">

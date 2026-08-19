@@ -12,7 +12,7 @@ public partial class PlannerItineraryBoard : ComponentBase
     [Parameter, EditorRequired] public AdventurePlanDetail Plan { get; set; } = null!;
     /// <summary>Gets or sets whether existing mutation forms may be presented.</summary>
     [Parameter] public bool CanEdit { get; set; }
-    /// <summary>Gets or sets the current transient Ideas context.</summary>
+    /// <summary>Gets or sets the current transient FootSteps context.</summary>
     [Parameter] public PlannerIdeasContext? SelectedContext { get; set; }
     /// <summary>Gets or sets the callback raised when destination or day context is selected.</summary>
     [Parameter] public EventCallback<PlannerIdeasContext> OnContextSelected { get; set; }
