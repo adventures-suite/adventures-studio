@@ -209,6 +209,25 @@ only the minimum provider-neutral audit vocabulary and classifications it needs.
 See `docs/architecture/audit-reporting.md` and
 `docs/development/audit-reporting-implementation-plan.md`.
 
+## Platform Administration Portal Requirement
+
+AdventuresSuite will provide a dedicated administrative portal separate from
+Planner, Companion, and public Creator sites. The portal has distinct Creator
+administration, platform operations, and security/compliance authority lanes.
+Platform responsibility never creates silent universal access to private
+customer data.
+
+Delivery begins with a read-only operations dashboard containing health,
+release, schema/migration, integration, failed-work, aggregate-count, and
+capability-rollout projections that exclude customer content. Creator
+membership administration, audit-evidence access, compliance mutations, and
+just-in-time support elevation follow as separately authorized and audited
+slices.
+
+See `docs/architecture/platform-administration-portal.md`,
+`docs/product/platform-administration-portal.md`, and
+`docs/development/platform-administration-implementation-plan.md`.
+
 ## Platform Billing and Entitlements Requirement
 
 AdventuresSuite will support versioned membership levels, add-ons, seats, and

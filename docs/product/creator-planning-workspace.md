@@ -124,6 +124,32 @@ defined in `docs/architecture/experience-design-system.md`.
 - reservation linkage
 - conflict and missing-information indicators
 
+### Contextual Ideas Rail
+
+- keep the selected Adventure Plan and itinerary board as the authoritative
+  central canvas
+- show a compact right-side rail of relevant Journeys, Destinations, itinerary
+  ideas, activities, and route patterns based on the selected destination or
+  day
+- use inspirational licensed imagery, concise summaries, source, freshness,
+  and an understandable reason for each match
+- let pointer users drag an idea to an eligible destination or day while also
+  providing an equivalent keyboard-, touch-, and screen-reader-accessible
+  **Add to plan** action
+- treat add and drop as requests for a review preview, never as direct Planning
+  mutations
+- distinguish curated content, templates, research, provider candidates, AI or
+  professional proposals, and accepted plan state
+- collapse or hide the rail on desktop and present it as an explicit drawer on
+  narrow screens so it does not crowd the itinerary
+- keep manual planning fully functional when suggestions are empty,
+  unavailable, subscription-locked, stale, or offline
+
+The rail is an authorized and entitlement-aware projection. Its source records
+do not gain plan authority, and its client state does not bypass Creator,
+instance, lifecycle, concurrency, audit, or Platform Capability enforcement.
+See `docs/architecture/planner-contextual-ideas.md`.
+
 ### Adventure Map
 
 - whole-Adventure overview with ordered destinations and major travel legs
