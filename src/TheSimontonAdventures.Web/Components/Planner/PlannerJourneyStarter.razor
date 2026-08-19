@@ -1,0 +1,55 @@
+@namespace TheSimontonAdventures.Web.Components
+
+<section class="journey-starter" aria-labelledby="journey-starter-title">
+    <p class="journey-starter__eyebrow">Begin with confidence</p>
+    <h2 id="journey-starter-title">Start a journey</h2>
+    <p>Choose the starting point that fits how much you already know.</p>
+
+    <div class="journey-starter__choices" aria-label="Journey starting options">
+        <button type="button" class="journey-starter__choice" aria-pressed="@(!IsBrowsingIdeas)" @onclick="StartFromScratchAsync">
+            <span aria-hidden="true">＋</span>
+            <strong>Start from scratch</strong>
+            <small>Build a private plan from your own dates and ideas.</small>
+        </button>
+        <button type="button" class="journey-starter__choice" aria-pressed="@IsBrowsingIdeas" @onclick="BrowseIdeas">
+            <span aria-hidden="true">✦</span>
+            <strong>Browse journey ideas</strong>
+            <small>Preview an inspiring route before creating a plan.</small>
+        </button>
+    </div>
+
+    @if (IsBrowsingIdeas)
+    {
+        <div class="journey-starter__browser">
+            <div>
+                <p class="journey-starter__eyebrow">Journey ideas</p>
+                <h3>Find a shape for your Adventure</h3>
+                <p>Ideas are starting points, not bookings, availability, or changes to a plan.</p>
+            </div>
+            @if (EnableDevelopmentIdeas)
+            {
+                <ul class="journey-starter__ideas">
+                    @foreach (var idea in DevelopmentIdeas)
+                    {
+                        <li>
+                            <article class="journey-starter__idea">
+                                <div class="journey-starter__thumbnail" aria-hidden="true">@idea.Monogram</div>
+                                <p class="journey-starter__eyebrow">Journey idea · @idea.Duration</p>
+                                <h4>@idea.Title</h4>
+                                <p>@idea.Summary</p>
+                                <p class="journey-starter__route">@idea.Route</p>
+                                <button type="button" @onclick="() => SelectIdeaAsync(idea)">Plan this journey</button>
+                            </article>
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Empty"
+                                       Title="Journey ideas are coming soon"
+                                       Message="Start from scratch remains available while the reviewed library is prepared." />
+            }
+        </div>
+    }
+</section>

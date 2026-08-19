@@ -1,0 +1,18 @@
+.journey-starter { background: var(--planner-shell-surface); border: 1px solid var(--planner-shell-border); border-radius: 1rem; box-shadow: var(--planner-shell-shadow); margin-bottom: 1.5rem; padding: clamp(1.25rem, 3vw, 2rem); }
+.journey-starter h2, .journey-starter h3, .journey-starter h4 { font-family: Georgia, serif; margin: 0; }
+.journey-starter > p:not(.journey-starter__eyebrow), .journey-starter__browser > div > p:last-child { color: var(--planner-shell-text-muted); }
+.journey-starter__eyebrow { color: var(--planner-shell-primary); font-size: .72rem; font-weight: 800; letter-spacing: .12em; margin: 0 0 .35rem; text-transform: uppercase; }
+.journey-starter__choices { display: grid; gap: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 1.25rem; }
+.journey-starter__choice { align-items: start; background: var(--planner-shell-surface-muted); border: 1px solid var(--planner-shell-border); border-radius: .8rem; color: var(--planner-shell-text); cursor: pointer; display: grid; gap: .3rem; min-width: 0; padding: 1.1rem; text-align: left; }
+.journey-starter__choice[aria-pressed="true"] { border-color: var(--planner-shell-primary); box-shadow: 0 0 0 2px color-mix(in srgb, var(--planner-shell-primary) 20%, transparent); }
+.journey-starter__choice > span { color: var(--planner-shell-primary); font-size: 1.3rem; }
+.journey-starter__choice small { color: var(--planner-shell-text-muted); font-size: .9rem; }
+.journey-starter__browser { border-top: 1px solid var(--planner-shell-border); margin-top: 1.5rem; padding-top: 1.5rem; }
+.journey-starter__ideas { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); list-style: none; margin: 1.25rem 0 0; padding: 0; }
+.journey-starter__idea { border: 1px solid var(--planner-shell-border); border-radius: .8rem; height: 100%; overflow: hidden; padding: 1rem; }
+.journey-starter__thumbnail { align-items: center; background: linear-gradient(135deg, var(--planner-shell-primary), #8a5b24); border-radius: .65rem; color: #fff; display: flex; font-family: Georgia, serif; font-size: 1.5rem; height: 7rem; justify-content: center; margin: -1rem -1rem 1rem; }
+.journey-starter__idea > p:not(.journey-starter__eyebrow) { color: var(--planner-shell-text-muted); }
+.journey-starter__route { font-weight: 700; }
+.journey-starter__idea button { background: var(--planner-shell-primary); border: 0; border-radius: 999px; color: var(--planner-shell-surface); cursor: pointer; font: inherit; font-weight: 800; padding: .65rem 1rem; }
+.journey-starter button:focus-visible { outline: 3px solid var(--planner-shell-focus); outline-offset: 3px; }
+@media (max-width: 36rem) { .journey-starter__choices { grid-template-columns: 1fr; } }

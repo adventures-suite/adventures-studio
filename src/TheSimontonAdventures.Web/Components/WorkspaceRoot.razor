@@ -147,10 +147,20 @@
         }
         else
         {
+            <PlannerJourneyStarter EnableDevelopmentIdeas="@IsDevelopmentAuthentication"
+                                   OnJourneySelected="SelectJourneySeedAsync"
+                                   OnStartFromScratch="StartJourneyFromScratchAsync" />
             <section class="plan-create" aria-labelledby="create-plan">
-                <p class="workspace-eyebrow">Manual planning</p>
-                <h2 id="create-plan">Create an Adventure Plan</h2>
-                <p>Start a private draft with a title and inclusive travel dates.</p>
+                <p class="workspace-eyebrow">Private plan</p>
+                <h2 id="create-plan">Review and create your plan</h2>
+                @if (SelectedJourneySeed is null)
+                {
+                    <p>Start a private draft with a title and inclusive travel dates.</p>
+                }
+                else
+                {
+                    <p class="plan-create-status" role="status">Journey idea selected. Review the suggested starting point, choose your dates, and create a private plan when it feels right.</p>
+                }
                 @if (CreateStatusMessage is not null)
                 {
                     <p class="plan-create-status" role="status">@CreateStatusMessage</p>
@@ -160,11 +170,11 @@
                     <input type="hidden" name="idempotencyKey" value="@CreateIdempotencyKey" />
                     <label>
                         Title
-                        <input name="title" required maxlength="200" autocomplete="off" />
+                        <input name="title" value="@SelectedJourneySeed?.Title" required maxlength="200" autocomplete="off" />
                     </label>
                     <label>
                         Description <span>(optional)</span>
-                        <textarea name="description" maxlength="2000" rows="3"></textarea>
+                        <textarea name="description" maxlength="2000" rows="3">@SelectedJourneySeed?.Description</textarea>
                     </label>
                     <div class="plan-create-dates">
                         <label>

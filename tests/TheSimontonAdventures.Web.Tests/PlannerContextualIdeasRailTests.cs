@@ -51,8 +51,8 @@ public sealed class PlannerContextualIdeasRailTests
         var dayHtml = await RenderDevelopmentContextAsync(
             new PlannerIdeasContext(PlannerIdeasContextKind.Day, "day-1", "Arrival day"));
 
-        Assert.Contains("Journey", adventureHtml, StringComparison.Ordinal);
         Assert.Contains("Destination", adventureHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("Journey · suggestion", adventureHtml, StringComparison.Ordinal);
         Assert.DoesNotContain("Sample day", adventureHtml, StringComparison.Ordinal);
         Assert.Contains("Sample day", destinationHtml, StringComparison.Ordinal);
         Assert.Contains("Stay pattern", destinationHtml, StringComparison.Ordinal);

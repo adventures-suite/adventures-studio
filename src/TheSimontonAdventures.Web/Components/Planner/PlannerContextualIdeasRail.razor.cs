@@ -72,7 +72,6 @@ public partial class PlannerContextualIdeasRail : ComponentBase
         {
             [PlannerIdeasContextKind.Adventure] =
             [
-                new("Journey", "A relaxed Atlantic pairing", "Shape a two-stop journey with generous time in each place.", "Fictional local Alpha demo", "Demo snapshot", "Fits the whole-Adventure planning stage.", "JR"),
                 new("Destination", "Add a contrasting second stop", "Pair the current route with a nearby destination that offers a different pace.", "Fictional local Alpha demo", "Demo snapshot", "Helps develop the Adventure route.", "DS")
             ],
             [PlannerIdeasContextKind.Destination] =
