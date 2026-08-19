@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  DOTNET_VERSION: "10.0.x"
+  DOTNET_VERSION: "10.0.303"
   PROJECT: src/AdventuresSuite.Companion.Mobile/AdventuresSuite.Companion.Mobile.csproj
   CLIENT_PROJECT: src/AdventuresSuite.Companion.Client/AdventuresSuite.Companion.Client.csproj
   TEST_PROJECT: tests/AdventuresSuite.Companion.Mobile.Tests/AdventuresSuite.Companion.Mobile.Tests.csproj
