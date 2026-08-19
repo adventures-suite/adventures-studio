@@ -118,6 +118,7 @@ public sealed class PlannerContextualIdeasRailTests
     {
         var services = new ServiceCollection();
         services.AddLogging();
+        services.AddSingleton<Microsoft.JSInterop.IJSRuntime, StaticTestJavaScriptRuntime>();
         await using var provider = services.BuildServiceProvider();
         await using var renderer = new HtmlRenderer(provider, provider.GetRequiredService<ILoggerFactory>());
         return await renderer.Dispatcher.InvokeAsync(async () =>

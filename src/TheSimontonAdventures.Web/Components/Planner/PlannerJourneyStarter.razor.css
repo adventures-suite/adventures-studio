@@ -13,6 +13,9 @@
 .journey-starter__thumbnail { align-items: center; background: linear-gradient(135deg, var(--planner-shell-primary), #8a5b24); border-radius: .65rem; color: #fff; display: flex; font-family: Georgia, serif; font-size: 1.5rem; height: 7rem; justify-content: center; margin: -1rem -1rem 1rem; }
 .journey-starter__idea > p:not(.journey-starter__eyebrow) { color: var(--planner-shell-text-muted); }
 .journey-starter__route { font-weight: 700; }
+.journey-starter__attribution { font-size: .88rem; margin-bottom: .65rem; }
+.journey-starter__tags { display: flex; flex-wrap: wrap; gap: .4rem; list-style: none; margin: 0 0 1rem; padding: 0; }
+.journey-starter__tags li { background: var(--planner-shell-surface-muted); border: 1px solid var(--planner-shell-border); border-radius: 999px; color: var(--planner-shell-text); font-size: .78rem; font-weight: 700; padding: .25rem .55rem; }
 .journey-starter__idea button { background: var(--planner-shell-primary); border: 0; border-radius: 999px; color: var(--planner-shell-surface); cursor: pointer; font: inherit; font-weight: 800; padding: .65rem 1rem; }
 .journey-template { background: var(--planner-shell-surface-muted); border: 1px solid var(--planner-shell-border); border-radius: 1rem; margin-top: 1.5rem; padding: clamp(1rem, 3vw, 1.5rem); }
 .journey-template__header { align-items: start; display: grid; gap: 1.5rem; grid-template-columns: minmax(0, 1fr) minmax(13rem, auto); }

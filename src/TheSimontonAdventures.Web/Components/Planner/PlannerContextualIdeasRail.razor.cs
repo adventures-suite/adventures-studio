@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
 
 namespace TheSimontonAdventures.Web.Components;
 
@@ -56,9 +57,10 @@ public enum PlannerIdeasState
 }
 
 /// <summary>Renders a responsive, presentation-only projection beside the authoritative itinerary.</summary>
-public partial class PlannerContextualIdeasRail : ComponentBase
+public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposable
 {
     private static readonly IReadOnlyList<int> RailPageSizeOptions = [1, 2, 3];
+    private const string PageSizePreferenceKey = "adventures-suite.planner.footsteps.rail-page-size";
     /// <summary>Gets the minimum supported FootSteps rail width in pixels.</summary>
     public const int MinimumWidthPixels = 272;
     /// <summary>Gets the maximum supported FootSteps rail width in pixels.</summary>
@@ -68,6 +70,10 @@ public partial class PlannerContextualIdeasRail : ComponentBase
     private int PointerStartWidth { get; set; }
     private bool FocusCloseAfterRender { get; set; }
     private bool FocusOpenAfterRender { get; set; }
+    private IJSObjectReference? PreferenceModule { get; set; }
+
+    [Inject]
+    private IJSRuntime JavaScript { get; set; } = null!;
     private static readonly IReadOnlyDictionary<PlannerIdeasContextKind, IReadOnlyList<PlannerIdeaCard>> DevelopmentIdeas =
         new Dictionary<PlannerIdeasContextKind, IReadOnlyList<PlannerIdeaCard>>
         {
@@ -165,11 +171,14 @@ public partial class PlannerContextualIdeasRail : ComponentBase
             CurrentPage = 1;
         }
     }
-    private Task ChangePageSizeAsync(int pageSize)
+    private async Task ChangePageSizeAsync(int pageSize)
     {
         PageSize = pageSize;
         CurrentPage = 1;
-        return Task.CompletedTask;
+        if (PreferenceModule is not null)
+        {
+            await PreferenceModule.InvokeVoidAsync("writePageSize", PageSizePreferenceKey, pageSize);
+        }
     }
 
     private Task ChangePageAsync(int page)
@@ -194,6 +203,20 @@ public partial class PlannerContextualIdeasRail : ComponentBase
     /// <inheritdoc />
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (firstRender)
+        {
+            PreferenceModule = await JavaScript.InvokeAsync<IJSObjectReference>(
+                "import", "./js/plannerPreferences.js");
+            var savedPageSize = await PreferenceModule.InvokeAsync<int?>(
+                "readPageSize", PageSizePreferenceKey);
+            if (savedPageSize is { } value && RailPageSizeOptions.Contains(value) && value != PageSize)
+            {
+                PageSize = value;
+                CurrentPage = 1;
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+
         if (FocusCloseAfterRender)
         {
             FocusCloseAfterRender = false;
@@ -243,6 +266,24 @@ public partial class PlannerContextualIdeasRail : ComponentBase
         : OnResizeRequested.InvokeAsync(PointerStartWidth - (int)Math.Round(args.ClientX - startX));
 
     private void EndPointerResize() => PointerStartX = null;
+
+    /// <summary>Releases the browser preference module owned by this component.</summary>
+    public async ValueTask DisposeAsync()
+    {
+        if (PreferenceModule is not null)
+        {
+            try
+            {
+                await PreferenceModule.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+                // Browser teardown already owns the disconnected module.
+            }
+        }
+
+        GC.SuppressFinalize(this);
+    }
 }
 
 /// <summary>Describes one narrow, non-authoritative suggestion card.</summary>

@@ -24,7 +24,7 @@
             <div>
                 <p class="journey-starter__eyebrow">Journey FootSteps</p>
                 <h3>Find a shape for your Adventure</h3>
-                <p>Templates are starting points, not bookings, prices, or availability.</p>
+                <p>FootSteps are starting points, not bookings, prices, or availability.</p>
             </div>
             @if (Templates.Count > 0)
             {
@@ -34,14 +34,21 @@
                         <li>
                             <article class="journey-starter__idea">
                                 <div class="journey-starter__thumbnail" aria-hidden="true">@Monogram(template.Title)</div>
-                                <p class="journey-starter__eyebrow">Journey Template · @template.DurationDays days</p>
+                                <p class="journey-starter__eyebrow">Journey FootStep</p>
                                 <h4>@template.Title</h4>
                                 <p>@template.WorkingDescription</p>
                                 <p class="journey-starter__route">@Route(template)</p>
+                                <p class="journey-starter__attribution">By @template.Attribution</p>
+                                <ul class="journey-starter__tags" aria-label="FootStep details">
+                                    @foreach (var tag in DiscoveryTags(template))
+                                    {
+                                        <li>@tag</li>
+                                    }
+                                </ul>
                                 <button type="button"
                                         aria-expanded="@(SelectedTemplate?.VersionId == template.VersionId)"
                                         aria-controls="journey-template-preview"
-                                        @onclick="() => PreviewTemplate(template)">Preview this Journey</button>
+                                        @onclick="() => PreviewTemplate(template)">Preview FootStep</button>
                             </article>
                         </li>
                     }
@@ -57,7 +64,7 @@
                     <section id="journey-template-preview" class="journey-template" aria-labelledby="journey-template-title">
                         <header class="journey-template__header">
                             <div>
-                                <p class="journey-starter__eyebrow">Complete Journey Template preview</p>
+                                <p class="journey-starter__eyebrow">Complete Journey FootStep preview</p>
                                 <h3 id="journey-template-title">@SelectedTemplate.Title</h3>
                                 <p>@SelectedTemplate.WorkingDescription</p>
                             </div>

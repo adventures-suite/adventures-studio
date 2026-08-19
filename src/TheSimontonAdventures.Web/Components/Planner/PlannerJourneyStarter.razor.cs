@@ -1,13 +1,19 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using TheSimontonAdventures.Web.Planning;
 
 namespace TheSimontonAdventures.Web.Components;
 
 /// <summary>Renders the pre-plan choice between manual creation and authorized Journey Templates.</summary>
-public partial class PlannerJourneyStarter : ComponentBase
+public partial class PlannerJourneyStarter : ComponentBase, IAsyncDisposable
 {
     private static readonly IReadOnlyList<int> JourneyPageSizeOptions = [1, 2, 4];
+    private const string PageSizePreferenceKey = "adventures-suite.planner.footsteps.journey-page-size";
     private readonly Dictionary<AdventureTemplateVersionId, string> idempotencyKeys = [];
+    private IJSObjectReference? PreferenceModule { get; set; }
+
+    [Inject]
+    private IJSRuntime JavaScript { get; set; } = null!;
 
     /// <summary>Gets or sets the authorized immutable Journey Templates.</summary>
     [Parameter]
@@ -72,11 +78,14 @@ public partial class PlannerJourneyStarter : ComponentBase
     private void PreviewTemplate(AdventureTemplateBlueprint template) =>
         SelectedTemplate = template;
 
-    private Task ChangePageSizeAsync(int pageSize)
+    private async Task ChangePageSizeAsync(int pageSize)
     {
         PageSize = pageSize;
         CurrentPage = 1;
-        return Task.CompletedTask;
+        if (PreferenceModule is not null)
+        {
+            await PreferenceModule.InvokeVoidAsync("writePageSize", PageSizePreferenceKey, pageSize);
+        }
     }
 
     private Task ChangePageAsync(int page)
@@ -104,4 +113,53 @@ public partial class PlannerJourneyStarter : ComponentBase
 
     private static string Route(AdventureTemplateBlueprint template) =>
         string.Join(" → ", template.Destinations.Select(destination => destination.Name));
+
+    private static IReadOnlyList<string> DiscoveryTags(AdventureTemplateBlueprint template) =>
+        new[]
+        {
+            $"{template.DurationDays} days",
+            $"{template.Destinations.Count} {(template.Destinations.Count == 1 ? "destination" : "destinations")}"
+        }
+        .Concat(template.Transportation
+            .Select(segment => segment.Mode)
+            .Distinct(StringComparer.OrdinalIgnoreCase))
+        .ToArray();
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        PreferenceModule = await JavaScript.InvokeAsync<IJSObjectReference>(
+            "import", "./js/plannerPreferences.js");
+        var savedPageSize = await PreferenceModule.InvokeAsync<int?>(
+            "readPageSize", PageSizePreferenceKey);
+        if (savedPageSize is { } value && JourneyPageSizeOptions.Contains(value) && value != PageSize)
+        {
+            PageSize = value;
+            CurrentPage = 1;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    /// <summary>Releases the browser preference module owned by this component.</summary>
+    public async ValueTask DisposeAsync()
+    {
+        if (PreferenceModule is not null)
+        {
+            try
+            {
+                await PreferenceModule.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+                // Browser teardown already owns the disconnected module.
+            }
+        }
+
+        GC.SuppressFinalize(this);
+    }
 }

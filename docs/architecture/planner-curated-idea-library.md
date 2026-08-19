@@ -169,6 +169,14 @@ private source is normally omitted rather than presented as a commercial lock.
 An approved catalog item may be shown as an upgrade only when product policy
 permits its existence to be disclosed.
 
+The customer-facing catalog may describe an authorized item as Included,
+Premium, Promotional, Separately licensed, Unavailable, or Already used. These
+are localized presentation labels over stable catalog-state identifiers, not
+authorization decisions or subscription-plan names. The authorized query must
+supply the state explicitly; Razor must never infer it from source, owner,
+content, or URL. Time-bounded promotions retain their exact grant and expiry
+evidence below the UI.
+
 ## Creator, Professional, and Traveler Contributions
 
 Creator and professional submissions may later enter a review queue with exact

@@ -24,6 +24,9 @@ contracts may continue to use neutral terms such as template, catalog item,
 suggestion, projection, and proposal where those names describe distinct
 technical responsibilities. The brand term does not collapse those security,
 ownership, lifecycle, or persistence boundaries into one record type.
+`FootSteps` remains the product name in every locale; surrounding labels,
+descriptions, facets, dates, money, and accessibility text are localized at the
+presentation boundary.
 
 ## Experience Model
 
@@ -94,6 +97,14 @@ Published editorial records, templates, provider candidates, and AI proposals
 do not become Planning records merely because they appear beside a plan. The UI
 must distinguish curated, suggested, stale, unavailable, already added, and
 authoritative plan states without depending on color alone.
+
+Catalog access states use stable, non-marketing identifiers beneath the UI.
+The initial product vocabulary is **Included**, **Premium**, **Promotional**,
+**Separately licensed**, **Unavailable**, and **Already used**. These labels do
+not authorize discovery or use, name subscription plans in application logic,
+or imply a price, booking, endorsement, or permanent entitlement. A later
+authorized catalog projection supplies the applicable state; the UI must not
+infer it from authorship, source Creator, or card content.
 
 ## Provider-Neutral Contracts
 

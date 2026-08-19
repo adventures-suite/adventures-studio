@@ -19,7 +19,7 @@ public sealed class PlannerJourneyStarterTests
         Assert.Contains("Start a journey", html, StringComparison.Ordinal);
         Assert.Contains("Start from scratch", html, StringComparison.Ordinal);
         Assert.Contains("Browse Journey FootSteps", html, StringComparison.Ordinal);
-        Assert.DoesNotContain("Preview this Journey", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Preview FootStep", html, StringComparison.Ordinal);
         Assert.DoesNotContain("Import", html, StringComparison.Ordinal);
     }
 
@@ -41,7 +41,11 @@ public sealed class PlannerJourneyStarterTests
 
         Assert.Contains("Portugal by rail", html, StringComparison.Ordinal);
         Assert.Contains("Lisbon", html, StringComparison.Ordinal);
-        Assert.Contains("Preview this Journey", html, StringComparison.Ordinal);
+        Assert.Contains("Journey FootStep", html, StringComparison.Ordinal);
+        Assert.Contains("Preview FootStep", html, StringComparison.Ordinal);
+        Assert.Contains("By Curated collection", html, StringComparison.Ordinal);
+        Assert.Contains("8 days", html, StringComparison.Ordinal);
+        Assert.Contains("1 destination", html, StringComparison.Ordinal);
         Assert.Contains("Cards per page", html, StringComparison.Ordinal);
         Assert.Contains("Page 1 of 1 · 1 FootStep", html, StringComparison.Ordinal);
         Assert.Contains("not bookings, prices, or availability", html, StringComparison.Ordinal);
@@ -54,7 +58,7 @@ public sealed class PlannerJourneyStarterTests
         var markup = File.ReadAllText(Path.Combine(
             FindApplicationRoot(), "Components", "Planner", "PlannerJourneyStarter.razor"));
 
-        Assert.Contains("Complete Journey Template preview", markup, StringComparison.Ordinal);
+        Assert.Contains("Complete Journey FootStep preview", markup, StringComparison.Ordinal);
         Assert.Contains("CreateFromTemplatePath", markup, StringComparison.Ordinal);
         Assert.Contains("AntiforgeryToken", markup, StringComparison.Ordinal);
         Assert.Contains("name=\"templateId\"", markup, StringComparison.Ordinal);
@@ -72,6 +76,7 @@ public sealed class PlannerJourneyStarterTests
     {
         var services = new ServiceCollection();
         services.AddLogging();
+        services.AddSingleton<Microsoft.JSInterop.IJSRuntime, StaticTestJavaScriptRuntime>();
         await using var provider = services.BuildServiceProvider();
         await using var renderer = new HtmlRenderer(provider, provider.GetRequiredService<ILoggerFactory>());
         var output = await renderer.Dispatcher.InvokeAsync(() =>

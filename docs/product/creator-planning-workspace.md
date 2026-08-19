@@ -162,6 +162,17 @@ defined in `docs/architecture/experience-design-system.md`.
   stable locale-independent facet identifiers with localized display labels
 - use inspirational licensed imagery, concise summaries, source, freshness,
   and an understandable reason for each match
+- present customer-facing **FootStep** language while keeping internal
+  template, catalog, suggestion, and projection responsibilities distinct;
+  FootSteps remains the product name in every locale
+- show concise attribution and only evidence-backed discovery tags such as
+  duration, destination count, and transportation modes; do not infer country,
+  pace, style, accessibility, price, or availability from descriptive text
+- preserve each user's selected cards-per-page preference separately for the
+  Journey browser and contextual rail
+- support honest Included, Premium, Promotional, Separately licensed,
+  Unavailable, and Already used states once supplied by the authorized catalog;
+  never derive access state in Razor
 - let pointer users drag a FootStep to an eligible destination or day while also
   providing an equivalent keyboard-, touch-, and screen-reader-accessible
   **Add to plan** action
