@@ -2,6 +2,7 @@ using AdventuresSuite.Identity;
 using AdventuresSuite.Identity.ExternalId;
 using AdventuresSuite.Planning;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.WebUtilities;
 using TheSimontonAdventures.Web.Authorization;
 using TheSimontonAdventures.Web.Creators;
 using TheSimontonAdventures.Web.Planning;
@@ -14,6 +15,18 @@ namespace TheSimontonAdventures.Web.Components;
 /// </summary>
 public partial class WorkspaceRoot
 {
+    /// <summary>
+    /// Gets or sets the workspace request path captured before the interactive circuit starts.
+    /// </summary>
+    [Parameter]
+    public string InitialPath { get; set; } = "/";
+
+    /// <summary>
+    /// Gets or sets the workspace query string captured before the interactive circuit starts.
+    /// </summary>
+    [Parameter]
+    public string InitialQueryString { get; set; } = string.Empty;
+
     [Inject]
     private IHttpContextAccessor HttpContextAccessor { get; set; } = null!;
 
@@ -27,8 +40,7 @@ public partial class WorkspaceRoot
     private bool IsAuthenticated =>
         HttpContextAccessor.HttpContext?.User.Identity?.IsAuthenticated is true;
 
-    private string CurrentLocalPath =>
-        HttpContextAccessor.HttpContext?.Request.Path.Value ?? "/";
+    private string CurrentLocalPath => InitialPath;
 
     private string DevelopmentSignInPath =>
         $"{ExternalIdBrowserEndpoints.SignInPath}?returnUrl={Uri.EscapeDataString(CurrentLocalPath)}";
@@ -45,7 +57,7 @@ public partial class WorkspaceRoot
             return;
         }
 
-        if (!TryGetAddressedRoute(context.Request.Path, out var creatorId, out var planId))
+        if (!TryGetAddressedRoute(InitialPath, out var creatorId, out var planId))
         {
             LoadState = WorkspaceLoadState.Landing;
             return;
@@ -134,8 +146,12 @@ public partial class WorkspaceRoot
     private string AddAccommodationPath => $"{PlanListPath}/{Plan!.Id.Value}/accommodations";
     private string AddReservationPath => $"{PlanListPath}/{Plan!.Id.Value}/reservations";
     private string PlanPath(AdventurePlanId planId) => $"{PlanListPath}/{planId.Value}";
+    private string GetQueryValue(string name) =>
+        QueryHelpers.ParseQuery(InitialQueryString).TryGetValue(name, out var value)
+            ? value.ToString()
+            : string.Empty;
     private string? CreateStatusMessage =>
-        HttpContextAccessor.HttpContext?.Request.Query["create"].ToString() switch
+        GetQueryValue("create") switch
         {
             "denied" => "The plan could not be created for this workspace.",
             "conflict" => "This request no longer matches its original submission. Start a new request.",
@@ -144,7 +160,7 @@ public partial class WorkspaceRoot
             _ => null
         };
     private string? EditStatusMessage =>
-        HttpContextAccessor.HttpContext?.Request.Query["edit"].ToString() switch
+        GetQueryValue("edit") switch
         {
             "updated" => "The plan overview was updated.",
             "unchanged" => "The plan overview was already current.",
@@ -156,9 +172,9 @@ public partial class WorkspaceRoot
             _ => null
         };
     private bool IsEditConflict =>
-        HttpContextAccessor.HttpContext?.Request.Query["edit"].ToString() == "conflict";
+        GetQueryValue("edit") == "conflict";
     private string? DestinationStatusMessage =>
-        HttpContextAccessor.HttpContext?.Request.Query["destination"].ToString() switch
+        GetQueryValue("destination") switch
         {
             "added" => "The destination was added to the route.",
             "denied" => "The destination could not be added.",
@@ -168,7 +184,7 @@ public partial class WorkspaceRoot
             _ => null
         };
     private string? DayStatusMessage =>
-        HttpContextAccessor.HttpContext?.Request.Query["day"].ToString() switch
+        GetQueryValue("day") switch
         {
             "added" => "The itinerary day was added.",
             "denied" => "The itinerary day could not be added.",
@@ -178,7 +194,7 @@ public partial class WorkspaceRoot
             _ => null
         };
     private string? DayEditStatusMessage =>
-        HttpContextAccessor.HttpContext?.Request.Query["day-edit"].ToString() switch
+        GetQueryValue("day-edit") switch
         {
             "updated" => "The itinerary day was updated.",
             "unchanged" => "The itinerary day was already current.",
@@ -189,7 +205,7 @@ public partial class WorkspaceRoot
             _ => null
         };
     private string? ActivityStatusMessage =>
-        HttpContextAccessor.HttpContext?.Request.Query["activity"].ToString() switch
+        GetQueryValue("activity") switch
         {
             "added" => "The proposed activity was added.",
             "denied" => "The activity could not be added.",
@@ -199,7 +215,7 @@ public partial class WorkspaceRoot
             _ => null
         };
     private string? ActivityEditStatusMessage =>
-        HttpContextAccessor.HttpContext?.Request.Query["activity-edit"].ToString() switch
+        GetQueryValue("activity-edit") switch
         {
             "updated" => "The activity was updated.",
             "unchanged" => "The activity was already current.",
@@ -210,7 +226,7 @@ public partial class WorkspaceRoot
             _ => null
         };
     private string? TransportationStatusMessage =>
-        HttpContextAccessor.HttpContext?.Request.Query["transportation"].ToString() switch
+        GetQueryValue("transportation") switch
         {
             "added" => "The proposed transportation was added.",
             "denied" => "The transportation could not be added.",
@@ -220,7 +236,7 @@ public partial class WorkspaceRoot
             _ => null
         };
     private string? TransportationEditStatusMessage =>
-        HttpContextAccessor.HttpContext?.Request.Query["transportation-edit"].ToString() switch
+        GetQueryValue("transportation-edit") switch
         {
             "updated" => "The transportation segment was updated.",
             "unchanged" => "The transportation segment was already current.",
@@ -231,7 +247,7 @@ public partial class WorkspaceRoot
             _ => null
         };
     private string? AccommodationStatusMessage =>
-        HttpContextAccessor.HttpContext?.Request.Query["accommodation"].ToString() switch
+        GetQueryValue("accommodation") switch
         {
             "added" => "The proposed accommodation was added.",
             "denied" => "The accommodation could not be added.",
@@ -241,7 +257,7 @@ public partial class WorkspaceRoot
             _ => null
         };
     private string? AccommodationEditStatusMessage =>
-        HttpContextAccessor.HttpContext?.Request.Query["accommodation-edit"].ToString() switch
+        GetQueryValue("accommodation-edit") switch
         {
             "updated" => "The accommodation was updated.",
             "unchanged" => "The accommodation was already current.",
@@ -252,7 +268,7 @@ public partial class WorkspaceRoot
             _ => null
         };
     private string? ReservationStatusMessage =>
-        HttpContextAccessor.HttpContext?.Request.Query["reservation"].ToString() switch
+        GetQueryValue("reservation") switch
         {
             "added" => "The proposed reservation was added.",
             "denied" => "The reservation could not be added.",

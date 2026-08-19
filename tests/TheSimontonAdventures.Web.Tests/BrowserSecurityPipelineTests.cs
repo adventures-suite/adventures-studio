@@ -139,6 +139,8 @@ public sealed class BrowserSecurityPipelineTests
     [Theory]
     [InlineData("/_blazor/negotiate", "https://workspace.example.com", 200)]
     [InlineData("/_blazor", "https://workspace.example.com", 200)]
+    [InlineData("/_blazor/initializers", null, 200)]
+    [InlineData("/_blazor/initializers", "https://creator.example.com", 200)]
     [InlineData("/_blazor?id=connection", "https://creator.example.com", 403)]
     [InlineData("/_blazor?id=connection", "https://workspace.example.com.evil.test", 403)]
     [InlineData("/_blazor?id=connection", "https://WORKSPACE.EXAMPLE.COM", 200)]

@@ -4,7 +4,11 @@
        class="@SidebarClasses"
        aria-label="Planner navigation"
        data-collapsed="@IsCollapsed"
-       data-mobile-open="@IsMobileOpen">
+       data-mobile-open="@IsMobileOpen"
+       @onpointermove="ContinuePointerResizeAsync"
+       @onpointerup="EndPointerResize"
+       @onpointercancel="EndPointerResize"
+       @onpointerleave="EndPointerResize">
     <div class="planner-sidebar__header">
         <div class="planner-sidebar__brand">
             <svg class="planner-sidebar__brand-mark" viewBox="0 0 32 32" role="img" aria-labelledby="planner-brand-title">
@@ -78,5 +82,7 @@
          aria-valuemax="@MaximumWidthPixels"
          aria-valuenow="@WidthPixels"
          tabindex="0"
-         @onkeydown="HandleResizeKeyAsync"></div>
+         @onkeydown="HandleResizeKeyAsync"
+         @onpointerdown="BeginPointerResizeAsync"
+         @onpointerdown:preventDefault="true"></div>
 </aside>
