@@ -83,6 +83,7 @@ public sealed class PlanningPersistenceContractTests
             typeof(IAdventurePlanOverviewEditService),
             typeof(IDestinationVisitAddService),
             typeof(IItineraryDayAddService),
+            typeof(IItineraryDayEditService),
             typeof(IPlannedActivityAddService),
             typeof(ITransportationSegmentAddService),
             typeof(ITransportationSegmentEditService),

@@ -16,6 +16,7 @@ public readonly record struct Permission
         "AdventurePlan.Archive",
         "AdventurePlan.Restore",
         "AdventurePlan.ViewSensitiveReservations",
+        "AdventurePlan.ManageCompanionPolicy",
         "PlanningProposal.Submit",
         "PlanningProposal.Review",
         "PlanningProposal.ApplyApproved",
@@ -75,6 +76,8 @@ public static class Permissions
     public static readonly Permission AdventurePlanRestore = new("AdventurePlan.Restore");
     /// <summary>View protected reservation summaries.</summary>
     public static readonly Permission AdventurePlanViewSensitiveReservations = new("AdventurePlan.ViewSensitiveReservations");
+    /// <summary>Manage a traveler's Companion information-policy assignment.</summary>
+    public static readonly Permission AdventurePlanManageCompanionPolicy = new("AdventurePlan.ManageCompanionPolicy");
     /// <summary>Submit a non-authoritative Planning proposal.</summary>
     public static readonly Permission PlanningProposalSubmit = new("PlanningProposal.Submit");
     /// <summary>Review Planning proposals.</summary>

@@ -10,6 +10,13 @@ The Content Engine owns content.
 
 Other platform capabilities consume content.
 
+Reusable Planner ideas are Content Engine records, not private Planning state.
+They retain explicit Creator ownership, immutable published versions,
+attribution, licensing, freshness, visibility, and editorial lifecycle. The
+Planner consumes authorized projections through `ITravelContentService` or a
+narrower approved Content Engine contract. See
+`docs/architecture/planner-curated-idea-library.md`.
+
 ---
 
 ## Responsibilities

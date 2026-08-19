@@ -102,6 +102,18 @@ The governing principle is:
 > Transactional systems record authoritative facts. Reporting systems consume
 > authorized, purpose-built projections.
 
+## Platform Administration
+
+1. `architecture/platform-administration-portal.md`
+2. `product/platform-administration-portal.md`
+3. `development/platform-administration-implementation-plan.md`
+4. `architecture/identity-authorization.md`
+5. `architecture/audit-reporting.md`
+
+> Administrative responsibility does not imply unrestricted customer-data
+> access. Creator administration, platform operations, and security/compliance
+> are separate authority lanes.
+
 ## Travel Professional Partnerships
 
 1. `architecture/partner-collaboration-engine.md`

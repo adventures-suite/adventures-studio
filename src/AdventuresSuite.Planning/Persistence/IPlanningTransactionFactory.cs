@@ -26,6 +26,11 @@ public interface IPlanningTransaction : IAsyncDisposable
     /// <summary>Gets Creator-scoped durable Adventure Plan creation idempotency.</summary>
     IAdventurePlanCreateIdempotencyStore AdventurePlanCreateIdempotency { get; }
 
+    /// <summary>Gets immutable template-origin persistence participating in this transaction.</summary>
+    IAdventurePlanTemplateOriginStore AdventurePlanTemplateOrigins =>
+        throw new NotSupportedException(
+            "This transaction does not support Adventure Template provenance.");
+
     /// <summary>
     /// Gets the collector for audit intent that must commit atomically with
     /// Planning mutations in this transaction.

@@ -6,7 +6,10 @@
      data-sidebar-hidden="@IsSidebarHidden"
      data-mobile-navigation-open="@IsMobileNavigationOpen"
      style="--planner-sidebar-width: @(SidebarWidthPixels)px">
-    <a class="planner-shell__skip" href="#planner-workspace-content">Skip to Planner content</a>
+    <a class="planner-shell__skip"
+       href="@SkipLinkHref"
+       @onclick="FocusMainContentAsync"
+       @onclick:preventDefault="true">Skip to Planner content</a>
 
     @if (!IsSidebarHidden)
     {
@@ -67,7 +70,11 @@
             </div>
         </header>
 
-        <main id="planner-workspace-content" class="planner-shell__content" aria-label="@Title" tabindex="-1">
+        <main id="planner-workspace-content"
+              class="planner-shell__content"
+              aria-label="@Title"
+              tabindex="-1"
+              @ref="MainContent">
             @ChildContent
         </main>
     </div>

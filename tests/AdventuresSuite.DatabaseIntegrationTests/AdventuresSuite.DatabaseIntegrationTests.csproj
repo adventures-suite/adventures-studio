@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../../src/AdventuresSuite.LocalAlphaBootstrap/AdventuresSuite.LocalAlphaBootstrap.csproj" />
     <Using Include="AdventuresSuite.Identity" />
     <Using Include="AdventuresSuite.Identity.Persistence" />
   </ItemGroup>

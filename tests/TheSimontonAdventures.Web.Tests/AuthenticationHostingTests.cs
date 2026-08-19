@@ -38,7 +38,6 @@ public sealed class AuthenticationHostingTests
 
     /// <summary>Ensures unknown or partial hosted modes fail rather than falling back.</summary>
     [Theory]
-    [InlineData("Development")]
     [InlineData("ExternalProvider")]
     [InlineData("unexpected")]
     public void AddAuthentication_UnsupportedOrPartialConfiguration_Throws(string mode)
@@ -48,6 +47,53 @@ public sealed class AuthenticationHostingTests
 
         Assert.Throws<InvalidOperationException>(() =>
             builder.AddAdventuresSuiteAuthentication());
+    }
+
+    /// <summary>Ensures Development mode is rejected outside the exact Development environment.</summary>
+    [Fact]
+    public void AddAuthentication_DevelopmentModeOutsideDevelopment_Throws()
+    {
+        var builder = DevelopmentBuilder("Production", enabled: true);
+
+        Assert.Throws<InvalidOperationException>(() => builder.AddAdventuresSuiteAuthentication());
+    }
+
+    /// <summary>Ensures Development mode requires a second explicit enablement control.</summary>
+    [Fact]
+    public void AddAuthentication_DevelopmentModeWithoutEnablement_Throws()
+    {
+        var builder = DevelopmentBuilder("Development", enabled: false);
+
+        Assert.Throws<InvalidOperationException>(() => builder.AddAdventuresSuiteAuthentication());
+    }
+
+    /// <summary>Ensures the approved local mode composes the fixed adapter and normal session services.</summary>
+    [Fact]
+    public void AddAuthentication_ApprovedDevelopmentMode_RegistersFixedIdentity()
+    {
+        var builder = DevelopmentBuilder("Development", enabled: true);
+
+        var configuration = builder.AddAdventuresSuiteAuthentication();
+        using var services = builder.Services.BuildServiceProvider();
+        var identity = services.GetRequiredService<DevelopmentAuthenticationIdentity>();
+        var generator = services.GetRequiredService<IAuthenticationIdentityGenerator>();
+
+        Assert.Equal(AuthenticationMode.Development, configuration.Mode);
+        Assert.Equal("local-alpha-planner", identity.ExternalIdentity.Subject.Value);
+        Assert.Equal("user_local_alpha_planner", generator.CreateUserId().Value);
+        Assert.Equal("identity_local_alpha_planner", generator.CreateExternalIdentityId().Value);
+        Assert.NotEqual(generator.CreateSessionId(), generator.CreateSessionId());
+    }
+
+    /// <summary>Ensures local SQL cannot point at Azure, a shared database, or relaxed credentials.</summary>
+    [Theory]
+    [InlineData("Server=tcp:shared.database.windows.net,1433;Database=AdventuresSuiteLocalAlpha;User ID=adventures_alpha_app;Password=x;Encrypt=True;TrustServerCertificate=True")]
+    [InlineData("Server=localhost,1433;Database=AdventuresSuiteDev;User ID=adventures_alpha_app;Password=x;Encrypt=True;TrustServerCertificate=True")]
+    [InlineData("Server=localhost,1433;Database=AdventuresSuiteLocalAlpha;Integrated Security=True;Encrypt=True;TrustServerCertificate=True")]
+    public void LocalSqlConfiguration_UnapprovedTarget_Throws(string value)
+    {
+        Assert.Throws<InvalidOperationException>(() => LocalDevelopmentSqlConfiguration.Validate(
+            value, "AdventuresSuiteLocalAlpha", "Development", explicitlyEnabled: true));
     }
 
     /// <summary>Ensures ExternalProvider readiness can resolve the concrete remote signer.</summary>
@@ -161,5 +207,32 @@ public sealed class AuthenticationHostingTests
         public override ValueTask<AccessToken> GetTokenAsync(
             TokenRequestContext requestContext,
             CancellationToken cancellationToken) => throw new NotSupportedException();
+    }
+
+    private static WebApplicationBuilder DevelopmentBuilder(string environment, bool enabled)
+    {
+        var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+        {
+            EnvironmentName = environment
+        });
+        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Authentication:Mode"] = "Development",
+            ["Authentication:Development:Enabled"] = enabled.ToString(),
+            ["Authentication:WorkspaceOrigin"] = "https://localhost:7041",
+            ["Authentication:ProviderId"] = "local_alpha_development",
+            ["Authentication:AbsoluteSessionLifetime"] = "08:00:00",
+            ["Authentication:IdleSessionTimeout"] = "00:30:00",
+            ["Authentication:ActivityTouchInterval"] = "00:05:00",
+            ["Authentication:CircuitRevalidationInterval"] = "00:05:00",
+            ["Authentication:SqlConnectionString"] =
+                "Server=localhost,1433;Database=AdventuresSuiteLocalAlpha;User ID=adventures_alpha_app;Password=local-test-only;Encrypt=True;TrustServerCertificate=True",
+            ["Authentication:SqlDatabaseName"] = "AdventuresSuiteLocalAlpha",
+            ["Authentication:Development:Issuer"] = "https://identity.localhost/adventures-suite",
+            ["Authentication:Development:Subject"] = "local-alpha-planner",
+            ["Authentication:Development:UserId"] = "user_local_alpha_planner",
+            ["Authentication:Development:ExternalIdentityId"] = "identity_local_alpha_planner"
+        });
+        return builder;
     }
 }

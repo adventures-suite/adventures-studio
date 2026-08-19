@@ -211,6 +211,53 @@ from local times in different time zones.
 Existing accommodations can be corrected in place by changing only their name,
 inclusive start and end dates, and IANA time zone while preserving identity and
 planning status.
+The itinerary board keeps plan records read-first by placing contextual creation
+and supported edit forms in one native, mutually exclusive disclosure group.
+
+The approved contextual-ideas direction keeps that itinerary board as the
+authoritative canvas and adds a destination-aware FootSteps rail. Delivery begins
+with a presentation-only, deterministic rail and then one reviewed
+**Add to plan** operation before accessible drag and drop. See
+`docs/architecture/planner-contextual-ideas.md`. Do not introduce provider
+search, AI ranking, templates, or direct drop mutation in the first rail slice.
+
+The rail may be prepopulated only after the curated FootSteps Library contracts and
+reviewed import boundary in
+`docs/architecture/planner-curated-idea-library.md` are approved. Production
+FootSteps remain Content Engine data consumed through `ITravelContentService` or a
+narrower approved contract; they are never compiled into Razor, application
+conditionals, SQL migration seed rows, or development fixtures.
+
+Near-term FootSteps slice priority:
+
+1. establish the authorized provider-neutral catalog/query boundary;
+2. immediately add deterministic multi-facet filtering and paging over that
+   boundary, including context defaults, removable chips, result counts,
+   country/region, idea kind, duration, transportation, category, pace,
+   route style, terrain/surface, daily distance or travel time, season,
+   accessibility, equipment needs, budget, traveler composition, source, and
+   language;
+3. deliver the reviewed curated launch collection;
+4. prove one explicit reviewed Add-to-plan operation; and
+5. add accessible drag and drop only as an equivalent enhancement.
+
+Facet identifiers and persisted preferences are locale-independent. The UI
+localizes labels and formatting, while Creator visibility, authorization,
+entitlement, licensing, and publication rules are enforced before returning
+cards or facet counts. Mobile filtering uses an accessible drawer or sheet.
+Ranking, AI personalization, provider search, and booking claims remain outside
+the filtering slice.
+
+The query and filtering slices must use motorcycle touring as a required
+non-conventional-travel acceptance scenario. Prove that the vocabulary can
+express motorcycle, scenic/direct routing, paved/gravel/off-road surfaces,
+daily distance or riding-time limits, countries, duration, ferry use, secure
+parking or stay needs, and preparation categories without adding a rigid
+behavior-controlling `TripType`. Also test that the same capability-composition
+model can describe at least RV, cycling, trekking, sailing, rail, cruise, and
+overland examples. Current weather, closures, fuel access, border rules,
+safety, price, availability, and bookings remain attributable external facts,
+not inferred plan state.
 
 Scope:
 
@@ -222,6 +269,15 @@ Scope:
 - activities, transportation, accommodations, and reservations
 - notes, tasks, packing, and budget items
 - private read-only preview
+- presentation-only contextual FootSteps rail with destination/day selection,
+  responsive states, and no authoritative mutation
+- deterministic contextual FootSteps filtering with combined facets, removable
+  chips, result counts, paging integration, localized labels, and an accessible
+  mobile filter surface
+- composable Adventure-mode facets proven with a motorcycle touring reference
+  scenario and reusable across non-conventional travel styles
+- reviewed curated FootSteps Library foundation and environment-specific launch
+  collection before production rail population
 - authorized layered Adventure map with overview, segment, destination, day,
   selected-place, and candidate-point-of-interest views
 - deterministic private Adventure Travel Playbook preview and first PDF export
@@ -256,6 +312,33 @@ Exit gate:
   map privacy/accessibility/provider-failure, and prohibited-data tests pass
 
 ## Phase 4A: Adventure Template Foundation
+
+Delivery status (August 19, 2026): the first durable instantiation boundary is
+implemented for review. Provider-neutral immutable blueprint contracts,
+authorized source-use resolution, deterministic creation of independent
+customer Creator-owned plan aggregates, exact template/version provenance,
+Creator-scoped retry safety, and required audit intent share one SQL
+transaction. Migration `0011` adds the append-only provenance record and the
+template-instantiation idempotency operation. Clean-install and exact
+`0010 -> 0011` SQL proofs cover replay, concurrency, missing provenance, and
+rollback when provenance persistence fails.
+
+This foundation does not yet provide a production template catalog adapter,
+catalog persistence, template authoring, entitlement or licensing stores, the
+Planner's “Use this Journey” endpoint/UI, parameter editing, reporting
+projections, or protected production migration execution. Those remain
+separate reviewed slices; the existing protected `0009 -> 0010` migration
+operation is intentionally not broadened by the Planner feature slice.
+
+The next stacked customer-workflow slice adds the first direct “Use this
+Journey” consumer of that boundary. In local Alpha only, a JSON-driven fictional
+curated catalog is queried after customer Creator authorization. The user can
+review the complete destinations, itinerary, transportation, and stay patterns,
+choose a start date, and explicitly create the complete independent private
+plan. The UI uses the antiforgery-protected retry-safe endpoint and no longer
+pretends that title/description prefilling or unsupported customization copied
+the Journey. External-provider environments remain fail-closed until a
+production catalog, entitlement, and licensing adapter is reviewed.
 
 Scope:
 

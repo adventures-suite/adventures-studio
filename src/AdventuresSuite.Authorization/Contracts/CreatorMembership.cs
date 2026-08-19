@@ -56,6 +56,7 @@ public static class CreatorRolePermissionBundles
     private static readonly FrozenSet<Permission> AdministratorPermissions = PlannerPermissions
         .Concat([
             Permissions.CreatorManageMembers,
+            Permissions.AdventurePlanManageCompanionPolicy,
             Permissions.PlanningEngagementInvite,
             Permissions.PlanningEngagementManage,
             Permissions.AuditView

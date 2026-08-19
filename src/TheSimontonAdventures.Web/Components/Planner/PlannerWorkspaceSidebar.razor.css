@@ -11,7 +11,7 @@
     box-shadow: var(--planner-shell-shadow);
 }
 
-.planner-sidebar--collapsed { width: 5.25rem; }
+.planner-sidebar--collapsed { gap: .65rem; padding: .75rem .45rem; width: 3.75rem; }
 .planner-sidebar__header, .planner-sidebar__brand, .planner-sidebar__controls,
 .planner-sidebar__resize-controls, .planner-sidebar__current, .planner-sidebar__controls button {
     display: flex;
@@ -31,10 +31,15 @@
 .planner-sidebar button svg, .planner-sidebar__mobile-close svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
 .planner-sidebar__resize-controls { justify-content: space-between; gap: .4rem; font-size: .8rem; }
 .planner-sidebar__resize-controls button { width: 2.5rem; }
-.planner-sidebar__separator { position: absolute; top: 0; right: -.35rem; width: .7rem; height: 100%; cursor: ew-resize; }
+.planner-sidebar__separator { position: absolute; top: 0; right: -.35rem; width: .7rem; height: 100%; cursor: ew-resize; touch-action: none; user-select: none; }
 .planner-sidebar__mobile-close { display: none; }
 .planner-sidebar--collapsed .planner-sidebar__current, .planner-sidebar--collapsed .planner-sidebar__controls button { justify-content: center; }
-.planner-sidebar--collapsed .planner-sidebar__resize-controls { display: none; }
+.planner-sidebar--collapsed .planner-sidebar__header { min-height: 0; }
+.planner-sidebar--collapsed .planner-sidebar__brand { display: none; }
+.planner-sidebar--collapsed .planner-sidebar__nav { padding-top: 0; }
+.planner-sidebar--collapsed .planner-sidebar__current, .planner-sidebar--collapsed .planner-sidebar__controls button { height: 2.75rem; padding: 0; width: 2.75rem; }
+.planner-sidebar--collapsed .planner-sidebar__icon { height: 1.35rem; width: 1.35rem; }
+.planner-sidebar--collapsed .planner-sidebar__controls { justify-items: center; }
 
 @media (max-width: 52rem) {
     .planner-sidebar {

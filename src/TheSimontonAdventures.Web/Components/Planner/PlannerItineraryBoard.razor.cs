@@ -12,10 +12,18 @@ public partial class PlannerItineraryBoard : ComponentBase
     [Parameter, EditorRequired] public AdventurePlanDetail Plan { get; set; } = null!;
     /// <summary>Gets or sets whether existing mutation forms may be presented.</summary>
     [Parameter] public bool CanEdit { get; set; }
+    /// <summary>Gets or sets the current transient FootSteps context.</summary>
+    [Parameter] public PlannerIdeasContext? SelectedContext { get; set; }
+    /// <summary>Gets or sets the callback raised when destination or day context is selected.</summary>
+    [Parameter] public EventCallback<PlannerIdeasContext> OnContextSelected { get; set; }
     /// <summary>Gets or sets the existing destination POST path.</summary>
     [Parameter, EditorRequired] public string AddDestinationPath { get; set; } = string.Empty;
     /// <summary>Gets or sets the existing itinerary-day POST path.</summary>
     [Parameter, EditorRequired] public string AddDayPath { get; set; } = string.Empty;
+    /// <summary>Gets or sets the itinerary-day edit POST path prefix.</summary>
+    [Parameter, EditorRequired] public string EditDayPathPrefix { get; set; } = string.Empty;
+    /// <summary>Gets or sets the safe plan-detail path used to cancel day editing.</summary>
+    [Parameter, EditorRequired] public string DayCancelPath { get; set; } = string.Empty;
     /// <summary>Gets or sets the existing activity POST path.</summary>
     [Parameter, EditorRequired] public string AddActivityPath { get; set; } = string.Empty;
     /// <summary>Gets or sets the activity-edit POST path prefix.</summary>
@@ -40,6 +48,8 @@ public partial class PlannerItineraryBoard : ComponentBase
     [Parameter] public string? DestinationStatusMessage { get; set; }
     /// <summary>Gets or sets the allowlisted day PRG message.</summary>
     [Parameter] public string? DayStatusMessage { get; set; }
+    /// <summary>Gets or sets the allowlisted itinerary-day edit PRG message.</summary>
+    [Parameter] public string? DayEditStatusMessage { get; set; }
     /// <summary>Gets or sets the allowlisted activity PRG message.</summary>
     [Parameter] public string? ActivityStatusMessage { get; set; }
     /// <summary>Gets or sets the allowlisted activity-edit PRG message.</summary>
@@ -59,14 +69,43 @@ public partial class PlannerItineraryBoard : ComponentBase
         ? null
         : Plan.Destinations.FirstOrDefault(item => item.Id == id)?.Name;
 
+    private bool IsSelected(DestinationVisitDetail destination) =>
+        SelectedContext?.Kind == PlannerIdeasContextKind.Destination
+        && SelectedContext.Id == destination.Id.Value;
+
+    private bool IsSelected(ItineraryDayDetail day) =>
+        SelectedContext?.Kind == PlannerIdeasContextKind.Day
+        && SelectedContext.Id == day.Id.Value;
+
+    private Task SelectDestination(DestinationVisitDetail destination) =>
+        OnContextSelected.InvokeAsync(new PlannerIdeasContext(PlannerIdeasContextKind.Destination, destination.Id.Value, destination.Name));
+
+    private Task SelectDay(ItineraryDayDetail day) =>
+        OnContextSelected.InvokeAsync(new PlannerIdeasContext(PlannerIdeasContextKind.Day, day.Id.Value, day.Title));
+
     private string EditActivityPath(PlannedActivityId activityId) =>
         $"{EditActivityPathPrefix}/{activityId.Value}/edit";
+
+    private string EditDayPath(ItineraryDayId dayId) =>
+        $"{EditDayPathPrefix}/{dayId.Value}/edit";
 
     private string EditTransportationPath(TransportationSegmentId segmentId) =>
         $"{EditTransportationPathPrefix}/{segmentId.Value}/edit";
 
     private string EditAccommodationPath(AccommodationId accommodationId) =>
         $"{EditAccommodationPathPrefix}/{accommodationId.Value}/edit";
+
+    private static string DayFieldId(ItineraryDayId dayId, string field) =>
+        $"day-{dayId.Value}-{field}";
+
+    private static string ActivityFieldId(PlannedActivityId activityId, string field) =>
+        $"activity-{activityId.Value}-{field}";
+
+    private static string TransportationFieldId(TransportationSegmentId segmentId, string field) =>
+        $"transportation-{segmentId.Value}-{field}";
+
+    private static string AccommodationFieldId(AccommodationId accommodationId, string field) =>
+        $"accommodation-{accommodationId.Value}-{field}";
 
     private static RenderFragment Status(string? message) => builder =>
     {

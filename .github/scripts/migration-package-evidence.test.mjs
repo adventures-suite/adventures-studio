@@ -19,7 +19,7 @@ async function fixture() {
 test('creates exact deterministic package contract', async () => {
   const { root } = await fixture();
   const evidence = await createEvidence({ sourceSha: 'a'.repeat(40), buildRunId: '123',
-    sdkVersion: '10.0.302', packagePath: join(root, 'package.tar.gz'),
+    sdkVersion: '10.0.303', packagePath: join(root, 'package.tar.gz'),
     catalogPath: join(root, 'catalog.txt'), lockPaths: REQUIRED_LOCK_PATHS,
     artifactName: 'database-migrator-a', rootDir: root });
   assert.match(evidence.packageSha256, /^[0-9a-f]{64}$/);
@@ -33,7 +33,7 @@ for (const [name, value, message] of [
   ['sdkVersion', '10.0.x', /SDK version/]
 ]) test(`rejects invalid ${name}`, async () => {
   const { root } = await fixture();
-  const input = { sourceSha: 'a'.repeat(40), buildRunId: '123', sdkVersion: '10.0.302',
+  const input = { sourceSha: 'a'.repeat(40), buildRunId: '123', sdkVersion: '10.0.303',
     packagePath: join(root, 'package.tar.gz'), catalogPath: join(root, 'catalog.txt'),
     lockPaths: REQUIRED_LOCK_PATHS, artifactName: 'database-migrator-a', rootDir: root, [name]: value };
   await assert.rejects(() => createEvidence(input), message);
@@ -41,7 +41,7 @@ for (const [name, value, message] of [
 
 test('rejects missing, duplicate, or non-runtime-lock dependency evidence', async () => {
   const { root } = await fixture();
-  const base = { sourceSha: 'a'.repeat(40), buildRunId: '123', sdkVersion: '10.0.302',
+  const base = { sourceSha: 'a'.repeat(40), buildRunId: '123', sdkVersion: '10.0.303',
     packagePath: join(root, 'package.tar.gz'), catalogPath: join(root, 'catalog.txt'),
     artifactName: 'database-migrator-a', rootDir: root };
   await assert.rejects(() => createEvidence({ ...base, lockPaths: [] }), /dependency lock/);
@@ -52,7 +52,7 @@ test('rejects missing, duplicate, or non-runtime-lock dependency evidence', asyn
 test('accepts only the exact ordered six-path lock catalog and matching digests', async () => {
   const { root } = await fixture();
   const evidence = await createEvidence({ sourceSha: 'a'.repeat(40), buildRunId: '123',
-    sdkVersion: '10.0.302', packagePath: join(root, 'package.tar.gz'),
+    sdkVersion: '10.0.303', packagePath: join(root, 'package.tar.gz'),
     catalogPath: join(root, 'catalog.txt'), lockPaths: REQUIRED_LOCK_PATHS,
     artifactName: 'database-migrator-a', rootDir: root });
   assert.equal(await validateEvidenceLocks(evidence, root), true);

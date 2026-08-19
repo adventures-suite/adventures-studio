@@ -78,6 +78,9 @@ public sealed class AuthorizationContractTests
     public void Permissions_UseApprovedDistinctVocabulary()
     {
         Assert.Equal("AdventurePlan.ViewArchived", Permissions.AdventurePlanViewArchived.Value);
+        Assert.Equal(
+            "AdventurePlan.ManageCompanionPolicy",
+            Permissions.AdventurePlanManageCompanionPolicy.Value);
         Assert.NotEqual(Permissions.PlanningProposalSubmit, Permissions.PlanningEngagementDirectEdit);
         Assert.Throws<ArgumentException>(() => new Permission("AdventurePlan"));
         Assert.Throws<ArgumentException>(() => new Permission(" AdventurePlan.View"));

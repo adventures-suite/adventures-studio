@@ -9,7 +9,8 @@ namespace AdventuresSuite.Companion.Application;
 public sealed class DeterministicCompanionProjectionService(
     TimeProvider timeProvider,
     IAuthorizationPolicyEvaluator authorization,
-    ICompanionTodayQuery today) : ICompanionProjectionService
+    ICompanionTodayQuery today,
+    ICompanionItineraryQuery itinerary) : ICompanionProjectionService
 {
     /// <summary>Gets the only fictional user identity authorized by the fixture.</summary>
     public const string DemoUserId = "usr_demo_traveler";
@@ -150,6 +151,54 @@ public sealed class DeterministicCompanionProjectionService(
         return await Available(dto!);
     }
 
+    /// <inheritdoc />
+    public async Task<CompanionQueryResult<CompanionItineraryDto>> GetItineraryAsync(
+        CompanionAccessContext access,
+        string adventureId,
+        string supportId,
+        CancellationToken cancellationToken)
+    {
+        if (access.IsRevoked
+            || !access.Actor.UserId.HasValue
+            || access.MembershipVersion < 1
+            || !access.Scopes.Contains(RequiredScope))
+        {
+            return await Unavailable<CompanionItineraryDto>();
+        }
+
+        var now = timeProvider.GetUtcNow();
+        var source = await itinerary.GetAsync(
+            new CompanionItineraryReadScope(
+                access.CreatorId,
+                access.Actor.UserId.Value,
+                access.TravelerId,
+                access.MembershipVersion,
+                now),
+            adventureId,
+            cancellationToken);
+        if (source is null)
+            return await Unavailable<CompanionItineraryDto>();
+
+        var decision = await authorization.AuthorizeAsync(
+            new AuthorizationRequest(
+                access.Actor,
+                Permissions.AdventurePlanView,
+                AuthorizationResourceScope.ForInstance(
+                    access.CreatorId,
+                    AuthorizationResourceTypes.AdventurePlan,
+                    source.Adventure.AdventureId),
+                membershipVersion: access.MembershipVersion),
+            cancellationToken);
+        if (!decision.IsAllowed
+            || !CompanionDtoMapper.TryMapItinerary(
+                source, access.CreatorId.Value, access.TravelerId, adventureId, now, supportId, out var dto))
+        {
+            return await Unavailable<CompanionItineraryDto>();
+        }
+
+        return await Available(dto!);
+    }
+
     private static Task<CompanionQueryResult<T>> Available<T>(T value) where T : CompanionProjectionDto =>
         Task.FromResult(new CompanionQueryResult<T>(value, value.ProjectionVersion));
 
@@ -282,6 +331,84 @@ public sealed class DeterministicCompanionTodayQuery : ICompanionTodayQuery
             return false;
         }
     }
+}
+
+/// <summary>Provides deterministic fictional Itinerary data only for the explicitly enabled Test host.</summary>
+public sealed class DeterministicCompanionItineraryQuery : ICompanionItineraryQuery
+{
+    /// <inheritdoc />
+    public Task<CompanionItineraryProjection?> GetAsync(
+        CompanionItineraryReadScope scope,
+        string adventureId,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (scope.UserId != new UserId(DeterministicCompanionProjectionService.DemoUserId)
+            || scope.MembershipVersion != DeterministicCompanionAuthorizationFacts.MembershipVersion)
+        {
+            return Task.FromResult<CompanionItineraryProjection?>(null);
+        }
+
+        var source = AdventureFixtures.All.FirstOrDefault(value =>
+            string.Equals(value.Id, adventureId, StringComparison.Ordinal)
+            && string.Equals(value.CreatorId, scope.CreatorId.Value, StringComparison.Ordinal)
+            && string.Equals(value.TravelerId, scope.TravelerId, StringComparison.Ordinal));
+        if (source is null)
+            return Task.FromResult<CompanionItineraryProjection?>(null);
+
+        var adventure = new CompanionAdventureSummaryProjection(
+            source.Id, source.TravelerId, source.Title, MapLifecycle(source.Status),
+            source.StartDate, source.EndDate, source.TimeZone, 7, 3,
+            new DateTimeOffset(2026, 8, 9, 18, 0, 0, TimeSpan.Zero));
+        var days = source.Items.GroupBy(value => value.Date).OrderBy(value => value.Key)
+            .Select((group, index) =>
+            {
+                var destination = source.Destinations.FirstOrDefault(value =>
+                    group.Key >= value.StartDate && group.Key <= value.EndDate);
+                if (destination is null) return null;
+                var items = group.OrderBy(value => value.Sequence).Select(MapScheduleItem).ToArray();
+                var changed = items.Any(value => value.RequiresAcknowledgment);
+                return new CompanionItineraryDayProjection(
+                    $"day_{source.Id}_{index + 1}", group.Key, destination.TimeZone, index + 1,
+                    destination.Name, destination.Id, destination.Name, items, null, changed,
+                    changed ? $"ack_{source.Id}_{index + 1}" : null);
+            }).ToArray();
+        if (days.Any(value => value is null))
+            return Task.FromResult<CompanionItineraryProjection?>(null);
+
+        return Task.FromResult<CompanionItineraryProjection?>(new(
+            adventure, "info_demo_01", days.Select(value => value!).ToArray()));
+    }
+
+    private static CompanionScheduleItemProjection MapScheduleItem(ScheduleFixture source) => new(
+        source.Id, source.Type, source.Title, source.Summary, source.Date, source.StartTime, source.EndTime,
+        source.TimeZone, source.TimeStatus switch
+        {
+            CompanionTimeStatus.Scheduled => CompanionScheduleTimeState.Scheduled,
+            CompanionTimeStatus.AllDay => CompanionScheduleTimeState.AllDay,
+            CompanionTimeStatus.ToBeConfirmed => CompanionScheduleTimeState.ToBeConfirmed,
+            CompanionTimeStatus.Cancelled => CompanionScheduleTimeState.Cancelled,
+            _ => throw new ArgumentOutOfRangeException(nameof(source))
+        }, source.OperationalStatus switch
+        {
+            CompanionOperationalStatus.Proposed => CompanionScheduleOperationalState.Proposed,
+            CompanionOperationalStatus.Reserved => CompanionScheduleOperationalState.Reserved,
+            CompanionOperationalStatus.Confirmed => CompanionScheduleOperationalState.Confirmed,
+            CompanionOperationalStatus.Changed => CompanionScheduleOperationalState.Changed,
+            CompanionOperationalStatus.Cancelled => CompanionScheduleOperationalState.Cancelled,
+            CompanionOperationalStatus.Completed => CompanionScheduleOperationalState.Completed,
+            _ => throw new ArgumentOutOfRangeException(nameof(source))
+        }, source.Place, source.Transportation,
+        source.Sequence, source.RequiresAcknowledgment);
+
+    private static CompanionAdventureLifecycle MapLifecycle(CompanionAdventureStatus status) => status switch
+    {
+        CompanionAdventureStatus.Planned => CompanionAdventureLifecycle.Planned,
+        CompanionAdventureStatus.Committed => CompanionAdventureLifecycle.Committed,
+        CompanionAdventureStatus.InProgress => CompanionAdventureLifecycle.InProgress,
+        CompanionAdventureStatus.Completed => CompanionAdventureLifecycle.Completed,
+        _ => throw new ArgumentOutOfRangeException(nameof(status))
+    };
 }
 
 /// <summary>Provides fixed membership facts for the deterministic Test-only vertical slice.</summary>

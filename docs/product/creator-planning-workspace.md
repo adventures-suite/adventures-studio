@@ -21,6 +21,22 @@ trans-Atlantic Adventure. It exercises multiple destinations, cruise and land
 segments, changing time zones, sea days, accommodations, activities, and
 transportation without inventing a synthetic product scenario.
 
+The product must also prove itself beyond conventional destination vacations.
+Motorcycle touring is the first additional reference scenario, followed by RV,
+cycling, trekking, sailing, rail, cruise, overland, winter, diving, pilgrimage,
+accessible, multigenerational, festival, and sporting-event Adventures. A plan
+may combine several modes; the experience must not force the user into one
+behavior-controlling trip type.
+
+For a motorcycle Journey, the Planner and Ideas experience should be capable of
+expressing route stages, scenic or direct routing, surface preferences, daily
+distance or riding-time limits, fuel and rest planning, ferry and border
+considerations, motorcycle-friendly stays and secure parking, gear,
+maintenance, vehicle-document readiness, weather or closure contingencies, and
+different rider experience or endurance. These are planning inputs and sourced
+guidance, never unsupported assurances of safety, legality, passability,
+availability, or booking.
+
 ## Primary User
 
 An authorized member acting for a Creator who needs to organize a real future
@@ -118,9 +134,75 @@ defined in `docs/architecture/experience-design-system.md`.
   and IANA time zones without changing its identity or planning status
 - correction of an existing accommodation's name, inclusive start and end
   dates, and IANA time zone without changing its identity or planning status
+- read-first contextual Add and Edit disclosures with only one Planner board
+  action expanded at a time
 - transportation and accommodations
 - reservation linkage
 - conflict and missing-information indicators
+
+### Contextual FootSteps Rail
+
+- keep the selected Adventure Plan and itinerary board as the authoritative
+  central canvas
+- show a compact right-side rail of relevant Journeys, Destinations, itinerary
+  FootSteps, activities, and route patterns based on the selected destination or
+  day
+- default to whole-Adventure Journeys and Destinations, then change the visible
+  FootStep types and filters as the user selects a destination visit or itinerary
+  day; later segment, accommodation, activity, and route-position contexts use
+  the same model
+- let users combine country or region, idea kind, duration, transportation,
+  category, pace, season, accessibility, budget, traveler composition, source,
+  and language filters; show active filters as removable chips with a result
+  count and **Clear all** action
+- preserve applied filters while paging and allow a user-selected page size;
+  context may provide explainable defaults, but users can broaden or replace
+  them
+- present filters in an accessible drawer or sheet on narrow screens and use
+  stable locale-independent facet identifiers with localized display labels
+- use inspirational licensed imagery, concise summaries, source, freshness,
+  and an understandable reason for each match
+- present customer-facing **FootStep** language while keeping internal
+  template, catalog, suggestion, and projection responsibilities distinct;
+  FootSteps remains the product name in every locale
+- show concise attribution and only evidence-backed discovery tags such as
+  duration, destination count, and transportation modes; do not infer country,
+  pace, style, accessibility, price, or availability from descriptive text
+- preserve each user's selected cards-per-page preference separately for the
+  Journey browser and contextual rail
+- support honest Included, Premium, Promotional, Separately licensed,
+  Unavailable, and Already used states once supplied by the authorized catalog;
+  never derive access state in Razor
+- let pointer users drag a FootStep to an eligible destination or day while also
+  providing an equivalent keyboard-, touch-, and screen-reader-accessible
+  **Add to plan** action
+- treat add and drop as requests for a review preview, never as direct Planning
+  mutations
+- distinguish curated content, templates, research, provider candidates, AI or
+  professional proposals, and accepted plan state
+- collapse or hide the rail on desktop and present it as an explicit drawer on
+  narrow screens so it does not crowd the itinerary
+- keep manual planning fully functional when suggestions are empty,
+  unavailable, subscription-locked, stale, or offline
+
+The rail is an authorized and entitlement-aware projection. Its source records
+do not gain plan authority, and its client state does not bypass Creator,
+instance, lifecycle, concurrency, audit, or Platform Capability enforcement.
+See `docs/architecture/planner-contextual-ideas.md`.
+
+AdventuresSuite launches with a deliberately curated FootSteps Library so early
+customers receive useful inspiration before a contributor ecosystem develops.
+Launch FootSteps may be authored by Adventures Studio, intentionally transformed
+from approved Content Engine stories, or commissioned and licensed from
+Creators and travel professionals. Each item retains ownership, attribution,
+rights, version, freshness, visibility, and review state. Traveler suggestions
+remain private to their Adventure unless separately submitted, licensed,
+reviewed, and published. Travel professionals may later author and license
+FootSteps through a dedicated professional product surface, with immutable
+version provenance, attribution, rights evidence, and privacy-safe usage
+reporting. Compensation is a deliberate future business decision and never
+grants the author access to a customer plan. See
+`docs/architecture/planner-curated-idea-library.md`.
 
 ### Adventure Map
 

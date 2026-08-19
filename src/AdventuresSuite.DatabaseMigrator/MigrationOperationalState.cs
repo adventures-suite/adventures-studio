@@ -29,9 +29,10 @@ internal static class MigrationOperationalState
                           objects.type_desc COLLATE DATABASE_DEFAULT)
             FROM sys.objects AS objects
             INNER JOIN sys.schemas AS schemas ON schemas.schema_id = objects.schema_id
-            WHERE (schemas.name = N'planning' AND objects.name IN
+            WHERE objects.type = N'U'
+              AND ((schemas.name = N'planning' AND objects.name IN
                   (N'TravelerParticipations', N'AdventurePlanCreateResults'))
-               OR objects.name LIKE N'%Companion%'
+               OR objects.name LIKE N'%Companion%')
             ORDER BY schemas.name, objects.name, objects.type_desc;
             """);
         var permissions = await ReadStringsAsync(connection, """
@@ -66,6 +67,22 @@ internal static class MigrationOperationalState
             WHERE principals.name = N'AdventuresSuitePlanningRuntime'
             ORDER BY permissions.class, schemas.name, objects.name, permissions.permission_name;
             """);
+        var policyPermissions = await ReadStringsAsync(connection, """
+            SELECT CONCAT(permissions.state_desc COLLATE DATABASE_DEFAULT, N'|',
+                          permissions.permission_name COLLATE DATABASE_DEFAULT, N'|',
+                          COALESCE(schemas.name COLLATE DATABASE_DEFAULT, N''), N'|',
+                          COALESCE(objects.name COLLATE DATABASE_DEFAULT, N''))
+            FROM sys.database_permissions AS permissions
+            INNER JOIN sys.database_principals AS principals
+                ON principals.principal_id = permissions.grantee_principal_id
+            LEFT JOIN sys.objects AS objects
+                ON permissions.class = 1 AND objects.object_id = permissions.major_id
+            LEFT JOIN sys.schemas AS schemas
+                ON (permissions.class = 1 AND schemas.schema_id = objects.schema_id)
+                OR (permissions.class = 3 AND schemas.schema_id = permissions.major_id)
+            WHERE principals.name = N'AdventuresSuiteCompanionPolicyRuntime'
+            ORDER BY permissions.class, schemas.name, objects.name, permissions.permission_name;
+            """);
         var fingerprints = await ReadStringsAsync(connection, """
             SELECT CONCAT(N'planning.AdventurePlans|', COUNT_BIG(*), N'|',
                           COALESCE(CHECKSUM_AGG(BINARY_CHECKSUM(*)), 0))
@@ -94,6 +111,7 @@ internal static class MigrationOperationalState
             objects,
             permissions,
             planningPermissions,
+            policyPermissions,
             fingerprints,
             Hash(fingerprints),
             await ObjectExistsAsync(connection, "planning.TravelerParticipations"),
@@ -158,7 +176,28 @@ internal static class MigrationOperationalState
                 SELECT COUNT(*) FROM sys.indexes
                 WHERE object_id = OBJECT_ID(N'planning.AdventurePlanCreateResults')
                   AND name = N'IX_AdventurePlanCreateResults_Expiry';
-                """) == 1);
+                """) == 1,
+            await ObjectExistsAsync(connection, "planning.CompanionInformationPolicyAssignments"),
+            await ObjectExistsAsync(connection, "audit.CompanionInformationPolicyAssignmentEvents"),
+            await PrincipalExistsAsync(connection, "AdventuresSuiteCompanionPolicyRuntime"),
+            await ScalarAsync(connection, """
+                SELECT COUNT(*) FROM sys.database_role_members AS memberships
+                INNER JOIN sys.database_principals AS roles
+                    ON roles.principal_id = memberships.role_principal_id
+                WHERE roles.name = N'AdventuresSuiteCompanionPolicyRuntime';
+                """),
+            await ScalarAsync(connection, """
+                SELECT COUNT(*) FROM sys.database_role_members AS memberships
+                INNER JOIN sys.database_principals AS members
+                    ON members.principal_id = memberships.member_principal_id
+                WHERE members.name = N'AdventuresSuiteCompanionPolicyRuntime';
+                """),
+            await ScalarStringAsync(connection, """
+                SELECT COALESCE(owners.name, N'') FROM sys.database_principals AS roles
+                LEFT JOIN sys.database_principals AS owners
+                    ON owners.principal_id = roles.owning_principal_id
+                WHERE roles.name = N'AdventuresSuiteCompanionPolicyRuntime';
+                """));
     }
 
     internal static MigrationJournalOutcome Classify(IReadOnlyList<string> journal)
@@ -169,6 +208,8 @@ internal static class MigrationOperationalState
         if (journal.SequenceEqual(catalog.Take(7), StringComparer.Ordinal)) return MigrationJournalOutcome.At0007;
         if (journal.SequenceEqual(catalog.Take(8), StringComparer.Ordinal)) return MigrationJournalOutcome.At0008;
         if (journal.SequenceEqual(catalog.Take(9), StringComparer.Ordinal)) return MigrationJournalOutcome.At0009;
+        if (journal.SequenceEqual(catalog.Take(10), StringComparer.Ordinal)) return MigrationJournalOutcome.At0010;
+        if (journal.SequenceEqual(catalog.Take(11), StringComparer.Ordinal)) return MigrationJournalOutcome.At0011;
         return MigrationJournalOutcome.Unexpected;
     }
 
@@ -218,6 +259,7 @@ internal sealed record MigrationStateEvidence(
     IReadOnlyList<string> RelevantObjects,
     IReadOnlyList<string> CompanionPermissions,
     IReadOnlyList<string> PlanningPermissions,
+    IReadOnlyList<string> PolicyPermissions,
     IReadOnlyList<string> ApplicationDataSignatures,
     string ApplicationFingerprint,
     bool TravelerParticipationsExists,
@@ -233,7 +275,13 @@ internal sealed record MigrationStateEvidence(
     int PlanningParentRoleCount,
     string PlanningRoleOwner,
     int AdventurePlanCreateResultConstraintCount,
-    bool AdventurePlanCreateResultExpiryIndexExists);
+    bool AdventurePlanCreateResultExpiryIndexExists,
+    bool CompanionPolicyAssignmentsExists,
+    bool CompanionPolicyAssignmentEventsExists,
+    bool CompanionPolicyRoleExists,
+    int CompanionPolicyRoleMemberCount,
+    int CompanionPolicyParentRoleCount,
+    string CompanionPolicyRoleOwner);
 
 internal enum MigrationJournalOutcome
 {
@@ -241,5 +289,7 @@ internal enum MigrationJournalOutcome
     At0007,
     At0008,
     At0009,
+    At0010,
+    At0011,
     Unexpected
 }

@@ -969,6 +969,12 @@
           "Microsoft.Data.SqlClient.Extensions.Azure": "[7.0.2, )"
         }
       },
+      "adventuressuite.localalphabootstrap": {
+        "type": "Project",
+        "dependencies": {
+          "Microsoft.Data.SqlClient": "[7.0.2, )"
+        }
+      },
       "adventuressuite.planning": {
         "type": "Project",
         "dependencies": {

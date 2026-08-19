@@ -27,7 +27,7 @@ public sealed class PlanningRepositoryIntegrationTests
 
         try
         {
-            DatabaseMigratorRunner.Migrate(databaseConnectionString);
+            await CompanionPolicyMigrationTestHarness.MigrateAllAsync(databaseConnectionString);
             var factory = new SqlPlanningTransactionFactory(databaseConnectionString);
             var creator = new CreatorId("creator_destination");
             var original = CreatePlan(creator, 1, "Destination append");
@@ -97,9 +97,9 @@ public sealed class PlanningRepositoryIntegrationTests
         }
     }
 
-    /// <summary>Proves an itinerary-day append, version, and audit commit atomically.</summary>
+    /// <summary>Proves itinerary-day append and title edit version and audit behavior atomically.</summary>
     [Fact]
-    public async Task AddItineraryDay_RealSqlServer_IsAtomicAndConcurrent()
+    public async Task ItineraryDayMutations_RealSqlServer_AreAtomicAndConcurrent()
     {
         var masterConnectionString = Environment.GetEnvironmentVariable(ConnectionVariable);
         Assert.False(string.IsNullOrWhiteSpace(masterConnectionString),
@@ -110,7 +110,7 @@ public sealed class PlanningRepositoryIntegrationTests
 
         try
         {
-            DatabaseMigratorRunner.Migrate(databaseConnectionString);
+            await CompanionPolicyMigrationTestHarness.MigrateAllAsync(databaseConnectionString);
             var factory = new SqlPlanningTransactionFactory(databaseConnectionString);
             var creator = new CreatorId("creator_itinerary_day");
             var original = CreatePlan(creator, 1, "Itinerary day append");
@@ -173,6 +173,56 @@ public sealed class PlanningRepositoryIntegrationTests
                 Assert.DoesNotContain(loaded.ItineraryDays, item => item.Id == rollbackDay.Id);
                 await transaction.CommitAsync();
             }
+
+            var originalDay = updated.ItineraryDays.Single(item => item.Id == new ItineraryDayId("day_madrid"));
+            var originalActivity = updated.Activities.Single(item => item.ItineraryDayId == originalDay.Id);
+            var editedPlan = updated.WithEditedItineraryDayTitle(
+                originalDay.Id, "Madrid arrival corrected", updated.Audit.UpdatedAtUtc.AddMinutes(2));
+            var editedDay = editedPlan.ItineraryDays.Single(item => item.Id == originalDay.Id);
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                await transaction.AdventurePlans.UpdateItineraryDayAsync(
+                    creator, editedPlan, editedDay, 2);
+                transaction.RequiredAuditIntents.AddRequired(Audit(
+                    creator, original.Id, Permissions.AdventurePlanEdit, 2, 3));
+                await transaction.CommitAsync();
+            }
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                var loaded = await transaction.AdventurePlans.GetAsync(creator, original.Id);
+                var persisted = loaded!.ItineraryDays.Single(item => item.Id == originalDay.Id);
+                Assert.Equal(3, loaded.Audit.Version);
+                Assert.Equal("Madrid arrival corrected", persisted.Title);
+                Assert.Equal(originalDay.Id, persisted.Id);
+                Assert.Equal(originalDay.Date, persisted.Date);
+                Assert.Equal(originalDay.DestinationVisitId, persisted.DestinationVisitId);
+                Assert.Equal(originalDay.TimeZone, persisted.TimeZone);
+                Assert.Equal(originalActivity,
+                    loaded.Activities.Single(item => item.Id == originalActivity.Id));
+                await Assert.ThrowsAsync<PlanningConcurrencyException>(() =>
+                    transaction.AdventurePlans.UpdateItineraryDayAsync(
+                        creator, editedPlan, editedDay, 2));
+            }
+
+            var rollbackEditPlan = editedPlan.WithEditedItineraryDayTitle(
+                originalDay.Id, "Must roll back", editedPlan.Audit.UpdatedAtUtc.AddMinutes(1));
+            var rollbackEditedDay = rollbackEditPlan.ItineraryDays.Single(item => item.Id == originalDay.Id);
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                await transaction.AdventurePlans.UpdateItineraryDayAsync(
+                    creator, rollbackEditPlan, rollbackEditedDay, 3);
+                await Assert.ThrowsAsync<InvalidOperationException>(() => transaction.CommitAsync());
+            }
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                var loaded = await transaction.AdventurePlans.GetAsync(creator, original.Id);
+                Assert.Equal(3, loaded!.Audit.Version);
+                Assert.Equal("Madrid arrival corrected",
+                    loaded.ItineraryDays.Single(item => item.Id == originalDay.Id).Title);
+                Assert.Equal(originalActivity,
+                    loaded.Activities.Single(item => item.Id == originalActivity.Id));
+                await transaction.CommitAsync();
+            }
         }
         finally
         {
@@ -194,7 +244,7 @@ public sealed class PlanningRepositoryIntegrationTests
 
         try
         {
-            DatabaseMigratorRunner.Migrate(databaseConnectionString);
+            await CompanionPolicyMigrationTestHarness.MigrateAllAsync(databaseConnectionString);
             var factory = new SqlPlanningTransactionFactory(databaseConnectionString);
             var creator = new CreatorId("creator_activity");
             var original = CreatePlan(creator, 1, "Activity append");
@@ -299,7 +349,7 @@ public sealed class PlanningRepositoryIntegrationTests
         await ExecuteAsync(master, $"CREATE DATABASE [{databaseName}];");
         try
         {
-            DatabaseMigratorRunner.Migrate(connectionString);
+            await CompanionPolicyMigrationTestHarness.MigrateAllAsync(connectionString);
             var factory = new SqlPlanningTransactionFactory(connectionString);
             var creator = new CreatorId("creator_transportation");
             var original = CreatePlan(creator, 1, "Transportation append");
@@ -412,7 +462,7 @@ public sealed class PlanningRepositoryIntegrationTests
         await ExecuteAsync(master, $"CREATE DATABASE [{databaseName}];");
         try
         {
-            DatabaseMigratorRunner.Migrate(connectionString);
+            await CompanionPolicyMigrationTestHarness.MigrateAllAsync(connectionString);
             var factory = new SqlPlanningTransactionFactory(connectionString);
             var creator = new CreatorId("creator_accommodation");
             var original = CreatePlan(creator, 1, "Accommodation append");
@@ -555,7 +605,7 @@ public sealed class PlanningRepositoryIntegrationTests
         await ExecuteAsync(master, $"CREATE DATABASE [{databaseName}];");
         try
         {
-            DatabaseMigratorRunner.Migrate(connectionString);
+            await CompanionPolicyMigrationTestHarness.MigrateAllAsync(connectionString);
             var factory = new SqlPlanningTransactionFactory(connectionString);
             var creator = new CreatorId("creator_reservation");
             var original = CreatePlan(creator, 1, "Reservation append");
@@ -636,7 +686,7 @@ public sealed class PlanningRepositoryIntegrationTests
 
         try
         {
-            DatabaseMigratorRunner.Migrate(databaseConnectionString);
+            await CompanionPolicyMigrationTestHarness.MigrateAllAsync(databaseConnectionString);
             var factory = new SqlPlanningTransactionFactory(databaseConnectionString);
             var alpha = new CreatorId("creator_alpha");
             var beta = new CreatorId("creator_beta");

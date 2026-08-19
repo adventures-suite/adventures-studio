@@ -67,7 +67,9 @@ builder.Services.AddScoped<ITrustedRequestHostContextAccessor>(services =>
 // startup instead of falling back to public-only or development identity.
 builder.AddAdventuresSuiteAuthentication();
 var authenticationMode = builder.Configuration["Authentication:Mode"];
-if (string.Equals(authenticationMode, nameof(AuthenticationMode.ExternalProvider), StringComparison.OrdinalIgnoreCase))
+if (authenticationMode is not null
+    && (string.Equals(authenticationMode, nameof(AuthenticationMode.ExternalProvider), StringComparison.OrdinalIgnoreCase)
+        || string.Equals(authenticationMode, nameof(AuthenticationMode.Development), StringComparison.OrdinalIgnoreCase)))
 {
     var planningConnectionString = builder.Configuration["Authentication:SqlConnectionString"];
     if (string.IsNullOrWhiteSpace(planningConnectionString))
@@ -88,9 +90,18 @@ if (string.Equals(authenticationMode, nameof(AuthenticationMode.ExternalProvider
     builder.Services.AddScoped<IPlannerWorkspaceQueryService, PlannerWorkspaceQueryService>();
     builder.Services.AddSingleton<IPlanningCreationIdentityGenerator, GuidPlanningCreationIdentityGenerator>();
     builder.Services.AddScoped<IManualAdventurePlanCreateService, ManualAdventurePlanCreateService>();
+    builder.Services.AddSingleton<IAdventureTemplateCatalogSource>(services =>
+        string.Equals(authenticationMode, nameof(AuthenticationMode.Development), StringComparison.OrdinalIgnoreCase)
+            ? new DevelopmentAdventureTemplateCatalogSource(
+                services.GetRequiredService<IHostEnvironment>())
+            : new UnavailableAdventureTemplateCatalogSource());
+    builder.Services.AddScoped<IAdventureTemplateCatalogQueryService, AdventureTemplateCatalogQueryService>();
+    builder.Services.AddScoped<IAdventureTemplateUseResolver, AdventureTemplateUseResolver>();
+    builder.Services.AddScoped<IAdventureTemplateInstantiateService, AdventureTemplateInstantiateService>();
     builder.Services.AddScoped<IAdventurePlanOverviewEditService, AdventurePlanOverviewEditService>();
     builder.Services.AddScoped<IDestinationVisitAddService, DestinationVisitAddService>();
     builder.Services.AddScoped<IItineraryDayAddService, ItineraryDayAddService>();
+    builder.Services.AddScoped<IItineraryDayEditService, ItineraryDayEditService>();
     builder.Services.AddScoped<IPlannedActivityAddService, PlannedActivityAddService>();
     builder.Services.AddScoped<IPlannedActivityEditService, PlannedActivityEditService>();
     builder.Services.AddScoped<ITransportationSegmentAddService, TransportationSegmentAddService>();
@@ -316,10 +327,20 @@ app.MapGet(
 if (authenticationConfiguration.Mode == AuthenticationMode.ExternalProvider)
 {
     app.MapAdventuresSuiteExternalIdEndpoints(authenticationConfiguration);
+}
+else if (authenticationConfiguration.Mode == AuthenticationMode.Development)
+{
+    app.MapAdventuresSuiteDevelopmentAuthenticationEndpoints(authenticationConfiguration);
+}
+
+if (authenticationConfiguration.Mode is AuthenticationMode.ExternalProvider or AuthenticationMode.Development)
+{
     app.MapManualAdventurePlanCreateEndpoint();
+    app.MapAdventureTemplateInstantiateEndpoint();
     app.MapAdventurePlanOverviewEditEndpoint();
     app.MapDestinationVisitAddEndpoint();
     app.MapItineraryDayAddEndpoint();
+    app.MapItineraryDayEditEndpoint();
     app.MapPlannedActivityAddEndpoint();
     app.MapPlannedActivityEditEndpoint();
     app.MapTransportationSegmentAddEndpoint();

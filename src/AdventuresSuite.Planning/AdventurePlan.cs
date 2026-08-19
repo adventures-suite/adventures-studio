@@ -212,6 +212,28 @@ public sealed class AdventurePlan
     }
 
     /// <summary>
+    /// Creates the next aggregate version with only one existing itinerary day's title changed.
+    /// Its identity, date, destination association, time zone, ordering, and activities are preserved.
+    /// </summary>
+    public AdventurePlan WithEditedItineraryDayTitle(
+        ItineraryDayId itineraryDayId,
+        string title,
+        DateTimeOffset updatedAtUtc)
+    {
+        var existing = ItineraryDays.SingleOrDefault(item => item.Id == itineraryDayId)
+            ?? throw new ArgumentException(
+                "The itinerary day must belong to this plan.", nameof(itineraryDayId));
+        var replacement = existing with { Title = title };
+        var itineraryDays = ItineraryDays.Select(
+            item => item.Id == itineraryDayId ? replacement : item).ToArray();
+        return new(
+            Id, CreatorId, Title, WorkingDescription, LifecycleStage, Status, Dates,
+            new PlanAudit(checked(Audit.Version + 1), Audit.CreatedAtUtc, updatedAtUtc),
+            Travelers, DestinationVisits, itineraryDays, Activities, Transportation,
+            Accommodations, Reservations, Notes, Tasks, BudgetItems, PackingItems);
+    }
+
+    /// <summary>
     /// Creates the next validated aggregate version with one proposed activity appended.
     /// Existing plan fields and child records are preserved.
     /// </summary>

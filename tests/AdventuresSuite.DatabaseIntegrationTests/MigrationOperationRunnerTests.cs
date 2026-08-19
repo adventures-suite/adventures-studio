@@ -42,14 +42,16 @@ public sealed class MigrationOperationRunnerTests
     }
 
     [Fact]
-    public void CompleteRequires0009SchemaPermissionsAndUnchangedFingerprint()
+    public void CompleteRequires0010SchemaPermissionsAndUnchangedFingerprint()
     {
-        var before = State(MigrationJournalOutcome.At0006, fingerprint: "SAME");
-        var after = State(MigrationJournalOutcome.At0009, fingerprint: "SAME", complete: true);
+        var before = State(MigrationJournalOutcome.At0009, fingerprint: "SAME", complete: true,
+            policyPrerequisite: true);
+        var after = State(MigrationJournalOutcome.At0010, fingerprint: "SAME", complete: true,
+            policyComplete: true);
 
         Assert.Equal(
             MigrationOperationClassification.Complete,
-            MigrationOperationRunner.ClassifyResult(before, after, MigrationJournalOutcome.At0009, null));
+            MigrationOperationRunner.ClassifyResult(before, after, MigrationJournalOutcome.At0010, null));
     }
 
     [Fact]
@@ -180,41 +182,31 @@ public sealed class MigrationOperationRunnerTests
     }
 
     [Fact]
-    public void Bootstrapped0006RequiresExactEmptyDboOwnedFutureRoles()
+    public void Exact0009RequiresAuthorityFreePolicyRole()
     {
-        var state = State(MigrationJournalOutcome.At0006, fingerprint: "SAME") with
-        {
-            CompanionRoleExists = true,
-            CompanionRoleOwner = "dbo",
-            PlanningRoleExists = true,
-            PlanningRoleOwner = "dbo"
-        };
+        var state = State(MigrationJournalOutcome.At0009, fingerprint: "SAME", complete: true,
+            policyPrerequisite: true);
 
         MigrationOperationRunner.ValidatePreMigrationState(
-            state, MigrationJournalOutcome.At0006);
+            state, MigrationJournalOutcome.At0009);
 
         foreach (var malformed in new[]
                  {
-                     state with { CompanionRoleExists = false, CompanionRoleOwner = string.Empty },
-                     state with { PlanningRoleExists = false, PlanningRoleOwner = string.Empty },
-                     state with { CompanionRoleOwner = "substituted_owner" },
-                     state with { PlanningRoleOwner = "substituted_owner" },
-                     state with { CompanionRoleMemberCount = 1 },
-                     state with { PlanningRoleMemberCount = 1 },
-                     state with { CompanionParentRoleCount = 1 },
-                     state with { PlanningParentRoleCount = 1 },
-                     state with { CompanionPermissions = ["GRANT|SELECT|planning|AdventurePlans"] },
-                     state with { PlanningPermissions = ["GRANT|SELECT|planning|AdventurePlanCreateResults"] }
+                     state with { CompanionPolicyRoleExists = false, CompanionPolicyRoleOwner = string.Empty },
+                     state with { CompanionPolicyRoleOwner = "substituted_owner" },
+                     state with { CompanionPolicyRoleMemberCount = 1 },
+                     state with { CompanionPolicyParentRoleCount = 1 },
+                     state with { PolicyPermissions = ["GRANT|SELECT|planning|AdventurePlans"] }
                  })
         {
             Assert.Throws<InvalidOperationException>(() =>
                 MigrationOperationRunner.ValidatePreMigrationState(
-                    malformed, MigrationJournalOutcome.At0006));
+                    malformed, MigrationJournalOutcome.At0009));
         }
 
         Assert.Throws<InvalidOperationException>(() =>
             MigrationOperationRunner.ValidatePreMigrationState(
-                state, MigrationJournalOutcome.At0007));
+                state, MigrationJournalOutcome.At0008));
     }
 
     private static MigrationStateEvidence State(
@@ -222,7 +214,9 @@ public sealed class MigrationOperationRunnerTests
         string fingerprint,
         bool complete = false,
         bool migration0008 = false,
-        bool migration0007 = false) =>
+        bool migration0007 = false,
+        bool policyPrerequisite = false,
+        bool policyComplete = false) =>
         new(
             Journal(outcome switch
             {
@@ -230,13 +224,20 @@ public sealed class MigrationOperationRunnerTests
                 MigrationJournalOutcome.At0007 => 7,
                 MigrationJournalOutcome.At0008 => 8,
                 MigrationJournalOutcome.At0009 => 9,
+                MigrationJournalOutcome.At0010 => 10,
                 _ => 5
             }),
-            complete
+            policyComplete
+                ? ["audit.CompanionInformationPolicyAssignmentEvents|USER_TABLE",
+                    "planning.AdventurePlanCreateResults|USER_TABLE",
+                    "planning.CompanionInformationPolicyAssignments|USER_TABLE",
+                    "planning.TravelerParticipations|USER_TABLE"]
+                : complete
                 ? ["planning.AdventurePlanCreateResults|USER_TABLE", "planning.TravelerParticipations|USER_TABLE"]
                 : migration0008 || migration0007 ? ["planning.TravelerParticipations|USER_TABLE"] : [],
-            complete || migration0008 ? ExpectedPermissions() : [],
+            complete || migration0008 ? ExpectedPermissions(policyComplete) : [],
             complete ? ExpectedPlanningPermissions() : [],
+            policyComplete ? ExpectedPolicyPermissions() : [],
             ["planning.AdventurePlans|0|0"],
             fingerprint,
             complete || migration0008 || migration0007,
@@ -252,14 +253,20 @@ public sealed class MigrationOperationRunnerTests
             0,
             complete ? "dbo" : string.Empty,
             complete ? 7 : 0,
-            complete);
+            complete,
+            policyComplete,
+            policyComplete,
+            policyPrerequisite || policyComplete,
+            0,
+            0,
+            policyPrerequisite || policyComplete ? "dbo" : string.Empty);
 
     private static IReadOnlyList<string> Journal(int count) =>
         MigrationCatalog.GetOrderedResourceNames(typeof(MigrationCatalog).Assembly)
             .Take(count)
             .ToArray();
 
-    private static IReadOnlyList<string> ExpectedPermissions()
+    private static IReadOnlyList<string> ExpectedPermissions(bool includePolicyAssignment = false)
     {
         var permissions = new List<string>();
         foreach (var target in new[]
@@ -277,6 +284,13 @@ public sealed class MigrationOperationRunnerTests
         }
         permissions.Add("DENY|ALTER|auth|");
         permissions.Add("DENY|ALTER|planning|");
+        if (includePolicyAssignment)
+        {
+            permissions.Add("GRANT|SELECT|planning|CompanionInformationPolicyAssignments");
+            permissions.Add("DENY|INSERT|planning|CompanionInformationPolicyAssignments");
+            permissions.Add("DENY|UPDATE|planning|CompanionInformationPolicyAssignments");
+            permissions.Add("DENY|DELETE|planning|CompanionInformationPolicyAssignments");
+        }
         return permissions;
     }
 
@@ -287,5 +301,21 @@ public sealed class MigrationOperationRunnerTests
         "DENY|UPDATE|planning|AdventurePlanCreateResults",
         "DENY|DELETE|planning|AdventurePlanCreateResults",
         "DENY|ALTER|planning|"
+    ];
+
+    private static IReadOnlyList<string> ExpectedPolicyPermissions() =>
+    [
+        "GRANT|INSERT|audit|AuditEvents", "DENY|UPDATE|audit|AuditEvents",
+        "DENY|DELETE|audit|AuditEvents",
+        "GRANT|INSERT|audit|CompanionInformationPolicyAssignmentEvents",
+        "DENY|UPDATE|audit|CompanionInformationPolicyAssignmentEvents",
+        "DENY|DELETE|audit|CompanionInformationPolicyAssignmentEvents",
+        "GRANT|SELECT|planning|AdventurePlans",
+        "GRANT|SELECT|planning|TravelerParticipations",
+        "GRANT|SELECT|planning|CompanionInformationPolicyAssignments",
+        "GRANT|INSERT|planning|CompanionInformationPolicyAssignments",
+        "GRANT|UPDATE|planning|CompanionInformationPolicyAssignments",
+        "DENY|DELETE|planning|CompanionInformationPolicyAssignments",
+        "DENY|ALTER|audit|", "DENY|ALTER|planning|"
     ];
 }

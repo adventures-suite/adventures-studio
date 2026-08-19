@@ -106,10 +106,15 @@
                     </section>
                 }
 
+                <div class="planner-contextual-layout" style="--planner-ideas-width: @(IdeasWidthPixels)px">
                 <PlannerItineraryBoard Plan="@Plan"
                                        CanEdit="@PlanCanEdit"
+                                       SelectedContext="@SelectedIdeasContext"
+                                       OnContextSelected="SelectIdeasContextAsync"
                                        AddDestinationPath="@AddDestinationPath"
                                        AddDayPath="@AddDayPath"
+                                       EditDayPathPrefix="@AddDayPath"
+                                       DayCancelPath="@PlanPath(Plan.Id)"
                                        AddActivityPath="@AddActivityPath"
                                        EditActivityPathPrefix="@AddActivityPath"
                                        ActivityCancelPath="@PlanPath(Plan.Id)"
@@ -122,6 +127,7 @@
                                        AddReservationPath="@AddReservationPath"
                                        DestinationStatusMessage="@DestinationStatusMessage"
                                        DayStatusMessage="@DayStatusMessage"
+                                       DayEditStatusMessage="@DayEditStatusMessage"
                                        ActivityStatusMessage="@ActivityStatusMessage"
                                        ActivityEditStatusMessage="@ActivityEditStatusMessage"
                                        TransportationStatusMessage="@TransportationStatusMessage"
@@ -129,15 +135,30 @@
                                        AccommodationStatusMessage="@AccommodationStatusMessage"
                                        AccommodationEditStatusMessage="@AccommodationEditStatusMessage"
                                        ReservationStatusMessage="@ReservationStatusMessage" />
+                <PlannerContextualIdeasRail Context="@SelectedIdeasContext"
+                                            EnableDevelopmentIdeas="@IsDevelopmentAuthentication"
+                                            WidthPixels="@IdeasWidthPixels"
+                                            OnAdventureContextRequested="SelectAdventureIdeasContextAsync"
+                                            OnResizeRequested="ResizeIdeasAsync" />
+                </div>
 
                 <p class="workspace-private">Sensitive confirmation references, private notes, budgets, packing lists, and traveler identities are not included in this view.</p>
             </article>
         }
         else
         {
+            @if (TemplateStatusMessage is not null)
+            {
+                <p class="plan-create-status" role="status">@TemplateStatusMessage</p>
+            }
+            <PlannerJourneyStarter Templates="@AdventureTemplates"
+                                   CreateFromTemplatePath="@CreateFromTemplatePath"
+                                   OnTemplateModeChanged="SetTemplateModeAsync" />
+            @if (!IsTemplateMode)
+            {
             <section class="plan-create" aria-labelledby="create-plan">
-                <p class="workspace-eyebrow">Manual planning</p>
-                <h2 id="create-plan">Create an Adventure Plan</h2>
+                <p class="workspace-eyebrow">Private plan</p>
+                <h2 id="create-plan">Review and create your plan</h2>
                 <p>Start a private draft with a title and inclusive travel dates.</p>
                 @if (CreateStatusMessage is not null)
                 {
@@ -167,6 +188,7 @@
                     <button type="submit">Create private plan</button>
                 </form>
             </section>
+            }
 
             @if (Plans.Count == 0)
             {
@@ -214,9 +236,19 @@
             <p class="workspace-sign-in__description">
                 Dream, plan, preserve, and publish meaningful adventures in one private workspace.
             </p>
-            <a class="workspace-sign-in__action"
-               href="@ExternalIdBrowserEndpoints.SignInPath"
-               data-enhance-nav="false">Sign in to your workspace</a>
+            @if (IsDevelopmentAuthentication)
+            {
+                <form method="post" action="@DevelopmentSignInPath">
+                    <AntiforgeryToken />
+                    <button class="workspace-sign-in__action" type="submit">Sign in as the local alpha planner</button>
+                </form>
+            }
+            else
+            {
+                <a class="workspace-sign-in__action"
+                   href="@ExternalIdBrowserEndpoints.SignInPath"
+                   data-enhance-nav="false">Sign in to your workspace</a>
+            }
         </section>
     }
     </div>

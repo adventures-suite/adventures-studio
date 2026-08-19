@@ -3,6 +3,7 @@
 @inject ICompanionContentProvider ContentProvider
 @inject ICompanionAdventureDetailProvider DetailProvider
 @inject ICompanionTodayProvider TodayProvider
+@inject ICompanionItineraryProvider ItineraryProvider
 @inject PlaybookContentService PlaybookService
 @inject ICompanionAppearanceService Appearance
 @inject TransientBackNavigationService BackNavigation
@@ -112,7 +113,9 @@ else
                                            OnRetry="RetryTodayAsync" />
                                 break;
                             case CompanionTab.Itinerary:
-                                <JourneyTab Adventure="_adventure" />
+                                <JourneyTab IsLoading="@(_itineraryState?.IsLoading == true)"
+                                            Result="@_itineraryState?.Current"
+                                            OnRetry="RetryItineraryAsync" />
                                 break;
                             case CompanionTab.Readiness:
                                 <ReadinessTab Adventure="_adventure" OnFeedback="ShowToast" />
@@ -173,6 +176,7 @@ else
     private string? _supportId;
     private CompanionAdventureDetailPresentationState? _detailState;
     private CompanionTodayPresentationState? _todayState;
+    private CompanionItineraryPresentationState? _itineraryState;
     private IDisposable? _detailBackRegistration;
     private bool _restoreDetailFocus;
 
@@ -181,6 +185,7 @@ else
 		Appearance.Changed += OnAppearanceChanged;
         _detailState = new CompanionAdventureDetailPresentationState(DetailProvider);
         _todayState = new CompanionTodayPresentationState(TodayProvider);
+        _itineraryState = new CompanionItineraryPresentationState(ItineraryProvider);
         await LoadAsync();
         _timer = new PeriodicTimer(TimeSpan.FromMinutes(1));
         _timerCancellation = new CancellationTokenSource();
@@ -200,7 +205,7 @@ else
         _supportId = result.SupportId;
         if (_adventure is not null && _todayState is not null)
         {
-            await _todayState.LoadAsync(_adventure.Id);
+            await Task.WhenAll(_todayState.LoadAsync(_adventure.Id), _itineraryState!.LoadAsync(_adventure.Id));
         }
     }
 
@@ -233,7 +238,7 @@ else
         _selectedTab = CompanionTab.Home;
         if (_todayState is not null)
         {
-            var load = _todayState.LoadAsync(adventure.Id);
+            var load = Task.WhenAll(_todayState.LoadAsync(adventure.Id), _itineraryState!.LoadAsync(adventure.Id));
             StateHasChanged();
             await load;
             StateHasChanged();
@@ -245,8 +250,17 @@ else
         _adventure = adventure;
         if (_todayState is not null)
         {
-            await _todayState.LoadAsync(adventure.Id);
+            await Task.WhenAll(_todayState.LoadAsync(adventure.Id), _itineraryState!.LoadAsync(adventure.Id));
         }
+    }
+
+    private async Task RetryItineraryAsync()
+    {
+        if (_itineraryState is null) return;
+        var load = _itineraryState.RetryAsync();
+        StateHasChanged();
+        await load;
+        StateHasChanged();
     }
 
     private async Task RetryTodayAsync()
@@ -351,6 +365,7 @@ else
         _detailBackRegistration?.Dispose();
         _detailState?.Dispose();
         _todayState?.Dispose();
+        _itineraryState?.Dispose();
         _timerCancellation?.Cancel();
         _timerCancellation?.Dispose();
         _timer?.Dispose();

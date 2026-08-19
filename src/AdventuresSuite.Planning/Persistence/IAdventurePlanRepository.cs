@@ -100,6 +100,17 @@ public interface IAdventurePlanRepository
         long expectedVersion,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Updates only one itinerary day's title and advances the plan at the expected version.</summary>
+    /// <exception cref="PlanningConcurrencyException">
+    /// The persisted plan changed since <paramref name="expectedVersion"/>.
+    /// </exception>
+    Task UpdateItineraryDayAsync(
+        CreatorId creatorId,
+        AdventurePlan plan,
+        ItineraryDay itineraryDay,
+        long expectedVersion,
+        CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Appends one planned activity and advances the owning plan when the
     /// persisted version matches the expected version.

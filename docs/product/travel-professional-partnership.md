@@ -63,6 +63,28 @@ AdventuresSuite presents templates and collaboration; it does not claim live
 availability, guarantee prices, sell travel, or displace the professional's
 booking and fulfillment role.
 
+### Professional FootSteps
+
+Travel professionals may eventually use a dedicated AdventuresSuite authoring
+and catalog experience to contribute approved FootSteps: complete Journey
+FootSteps backed by Adventure Templates, plus Destination, itinerary, activity,
+transportation, stay, and guidance FootSteps. This gives professionals another
+way to productize expertise, earn attribution, reach prospective customers, and
+create a natural path to a separately accepted professional engagement.
+
+AdventuresSuite may compensate professionals through a future reviewed model,
+such as commissioned content, licensing, revenue sharing, per-use royalties, or
+qualified professional-service leads. Pricing, payouts, tax treatment, refunds,
+fraud controls, and commercial contracts remain explicitly undecided. Product
+and architecture must preserve those options through immutable version
+provenance, rights evidence, privacy-safe adoption reporting, and separate
+provider-neutral commerce boundaries.
+
+Authorship, attribution, licensing, compensation, or use of a FootStep never
+gives its author access to a customer's private plan. The customer Creator owns
+the resulting plan, and ongoing professional help requires a separate accepted,
+active, plan-scoped Planning Engagement.
+
 ## Primary Experiences
 
 ### Agency Onboarding

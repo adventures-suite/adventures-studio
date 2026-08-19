@@ -1,3 +1,5 @@
+using System.Net;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Http;
@@ -43,7 +45,25 @@ public sealed class PlannerItineraryBoardTests
         {
             Assert.Contains($"action=\"{path}\"", html, StringComparison.Ordinal);
         }
-        Assert.Equal(9, Count(html, "name=\"expectedVersion\" value=\"17\""));
+        Assert.Equal(10, Count(html, "method=\"post\""));
+        Assert.Equal(10, Count(html, "name=\"expectedVersion\" value=\"17\""));
+        Assert.Equal(10, Count(html, "<details"));
+        Assert.Equal(10, Count(html, "name=\"planner-board-action\""));
+        Assert.DoesNotContain("name=\"activity-editor\"", html);
+        Assert.DoesNotContain("name=\"transportation-editor\"", html);
+        Assert.DoesNotContain("name=\"accommodation-editor\"", html);
+        Assert.DoesNotContain("<details open", html);
+        Assert.DoesNotContain("aria-expanded", html);
+        Assert.Contains(">Add destination</summary>", html);
+        Assert.Contains(">Add itinerary day</summary>", html);
+        Assert.Contains("Edit itinerary day: Arrival day", html);
+        Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/days/day_madrid_01/edit\"", html);
+        Assert.Contains("name=\"title\" value=\"Arrival day\"", html);
+        Assert.DoesNotContain("name=\"date\" value=\"2027-10-25\"", html);
+        Assert.Contains(">Add activity to Arrival day</summary>", html);
+        Assert.Contains(">Add transportation</summary>", html);
+        Assert.Contains(">Add accommodation</summary>", html);
+        Assert.Contains(">Add reservation summary</summary>", html);
         Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/activities/activity_prado_01/edit\"", html);
         Assert.Contains("Edit activity: Prado Museum", html);
         Assert.Contains("href=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027\"", html);
@@ -51,6 +71,8 @@ public sealed class PlannerItineraryBoardTests
         Assert.Contains("name=\"title\" value=\"Prado Museum\"", html);
         Assert.Contains("name=\"itineraryDayId\" value=\"day_madrid_01\"", html);
         Assert.Contains("name=\"destinationVisitId\"", html);
+        Assert.Contains("name=\"date\" min=\"2027-10-25\" max=\"2027-11-05\" required", html);
+        Assert.Contains("name=\"title\" required maxlength=\"200\" autocomplete=\"off\" placeholder=\"Arrival in Rome\"", html);
         Assert.Contains("name=\"departureTimeZoneId\"", html);
         Assert.Contains("name=\"arrivalTimeZoneId\"", html);
         Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/transportation/transport_phx_mad/edit\"", html);
@@ -59,7 +81,6 @@ public sealed class PlannerItineraryBoardTests
         Assert.Contains("name=\"departureDate\" value=\"2027-10-24\"", html);
         Assert.Contains("name=\"departureTimeZoneId\" value=\"America/Phoenix\"", html);
         Assert.Contains("name=\"arrivalTimeZoneId\" value=\"Europe/Madrid\"", html);
-        Assert.Contains("name=\"transportation-editor\"", html);
         Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/accommodations/stay_madrid_01/edit\"", html);
         Assert.Contains("Edit accommodation: Hotel Central", html);
         Assert.Contains("name=\"name\" value=\"Hotel Central\"", html);
@@ -70,8 +91,8 @@ public sealed class PlannerItineraryBoardTests
         Assert.Contains("name=\"startDate\" value=\"2027-10-25\"", html);
         Assert.Contains("name=\"endDate\" value=\"2027-10-29\"", html);
         Assert.Contains("name=\"timeZoneId\" value=\"Europe/Madrid\"", html);
-        Assert.Contains("name=\"accommodation-editor\"", html);
         Assert.Contains("name=\"subject\" required", html);
+        Assert.Contains("name=\"subject\" required maxlength=\"200\" autocomplete=\"off\" placeholder=\"Hotel, tour, or transportation hold\"", html);
         Assert.Contains("Confirmation references are added through a separate protected workflow.", html);
     }
 
@@ -83,6 +104,7 @@ public sealed class PlannerItineraryBoardTests
 
         Assert.Contains("Destination status", html);
         Assert.Contains("Day status", html);
+        Assert.Contains("Day edit status", html);
         Assert.Contains("Activity status", html);
         Assert.Contains("Activity edit status", html);
         Assert.Contains("Transportation status", html);
@@ -90,7 +112,7 @@ public sealed class PlannerItineraryBoardTests
         Assert.Contains("Accommodation status", html);
         Assert.Contains("Accommodation edit status", html);
         Assert.Contains("Reservation status", html);
-        Assert.Equal(9, Count(html, "role=\"status\""));
+        Assert.Equal(10, Count(html, "role=\"status\""));
         Assert.DoesNotContain("PRIVATE-QUERY-VALUE", html, StringComparison.Ordinal);
     }
 
@@ -112,6 +134,47 @@ public sealed class PlannerItineraryBoardTests
         Assert.Contains(">Proposed<", html);
     }
 
+    /// <summary>Every visible form control has one visible, explicit, contextual label.</summary>
+    [Fact]
+    public async Task Board_Editable_AssociatesVisibleLabelsWithEveryControl()
+    {
+        var html = await RenderAsync(canEdit: true);
+        var controls = Regex.Matches(
+            html,
+            "<(input|select|textarea)\\b(?<attributes>[^>]*)>",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        var controlIds = new List<string>();
+
+        foreach (Match control in controls)
+        {
+            var attributes = control.Groups["attributes"].Value;
+            if (Regex.IsMatch(attributes, "\\btype=\"hidden\"", RegexOptions.IgnoreCase))
+            {
+                continue;
+            }
+
+            var idMatch = Regex.Match(attributes, "\\bid=\"(?<id>[^\"]+)\"", RegexOptions.IgnoreCase);
+            Assert.True(idMatch.Success, $"Visible control lacks an id: {control.Value}");
+            var id = idMatch.Groups["id"].Value;
+            controlIds.Add(id);
+
+            var labelMatch = Regex.Match(
+                html,
+                $"<label\\b[^>]*\\bfor=\"{Regex.Escape(id)}\"[^>]*>(?<text>.*?)</label>",
+                RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.CultureInvariant);
+            Assert.True(labelMatch.Success, $"Control '{id}' lacks an explicit label association.");
+            var labelText = Regex.Replace(labelMatch.Groups["text"].Value, "<[^>]+>", " ");
+            Assert.False(string.IsNullOrWhiteSpace(WebUtility.HtmlDecode(labelText)));
+        }
+
+        Assert.NotEmpty(controlIds);
+        Assert.Equal(controlIds.Count, controlIds.Distinct(StringComparer.Ordinal).Count());
+        Assert.Contains(">Day title for Oct 25</label>", html);
+        Assert.Contains(">Activity title for Prado Museum</label>", html);
+        Assert.Contains(">Mode for Phoenix to Madrid</label>", html);
+        Assert.Contains(">Accommodation name for Hotel Central</label>", html);
+    }
+
     /// <summary>All empty categories provide explicit, non-disclosing text.</summary>
     [Fact]
     public async Task Board_EmptyProjection_RendersEveryEmptyState()
@@ -123,6 +186,63 @@ public sealed class PlannerItineraryBoardTests
         Assert.Contains("No transportation has been added.", html);
         Assert.Contains("No accommodations have been added.", html);
         Assert.Contains("No reservation summaries have been added.", html);
+    }
+
+    /// <summary>An editable empty plan exposes only immediately valid contextual actions.</summary>
+    [Fact]
+    public async Task Board_EmptyEditablePlan_PreservesDiscoverabilityAndDependencies()
+    {
+        var html = await RenderAsync(canEdit: true, plan: EmptyPlan());
+
+        Assert.Contains(">Add destination</summary>", html);
+        Assert.Contains(">Add transportation</summary>", html);
+        Assert.Contains(">Add accommodation</summary>", html);
+        Assert.Contains(">Add reservation summary</summary>", html);
+        Assert.Contains("Add a destination before adding an itinerary day.", html);
+        Assert.DoesNotContain(">Add itinerary day</summary>", html);
+        Assert.DoesNotContain("Add activity to", html);
+        Assert.Equal(4, Count(html, "name=\"planner-board-action\""));
+        Assert.Equal(4, Count(html, "<form"));
+        Assert.DoesNotContain("<details open", html);
+    }
+
+    /// <summary>Activity creation remains scoped to the authoritative enclosing itinerary day.</summary>
+    [Fact]
+    public async Task Board_MultipleDays_ContextsEachActivityCreationForm()
+    {
+        var plan = FullPlan() with
+        {
+            Days =
+            [
+                new(new("day_madrid_01"), new DestinationVisitId("visit_madrid_01"),
+                    new(2027, 10, 25), new("Europe/Madrid"), "Arrival day", []),
+                new(new("day_barcelona_01"), new DestinationVisitId("visit_barcelona_01"),
+                    new(2027, 10, 30), new("Europe/Madrid"), "Barcelona day", [])
+            ]
+        };
+
+        var html = await RenderAsync(canEdit: true, plan: plan);
+        var madridArticle = Between(html, ">Arrival day</h5>", "</article>");
+        var barcelonaArticle = Between(html, ">Barcelona day</h5>", "</article>");
+
+        Assert.Contains(">Add activity to Arrival day</summary>", madridArticle);
+        Assert.Contains("name=\"itineraryDayId\" value=\"day_madrid_01\"", madridArticle);
+        Assert.Contains($"action=\"{Paths["activity"]}\"", madridArticle);
+        Assert.Contains(">Add activity to Barcelona day</summary>", barcelonaArticle);
+        Assert.Contains("name=\"itineraryDayId\" value=\"day_barcelona_01\"", barcelonaArticle);
+        Assert.Contains($"action=\"{Paths["activity"]}\"", barcelonaArticle);
+        Assert.Equal(2, Count(html, "Add activity to"));
+    }
+
+    /// <summary>PRG status rendering never opens an ambiguous creation or edit disclosure.</summary>
+    [Fact]
+    public async Task Board_PrgMessages_LeaveEveryDisclosureClosed()
+    {
+        var html = await RenderAsync(canEdit: true, includeMessages: true);
+
+        Assert.Equal(10, Count(html, "role=\"status\""));
+        Assert.Equal(10, Count(html, "name=\"planner-board-action\""));
+        Assert.DoesNotContain("<details open", html);
     }
 
     private static readonly IReadOnlyDictionary<string, string> Paths = new Dictionary<string, string>
@@ -152,6 +272,9 @@ public sealed class PlannerItineraryBoardTests
                 [nameof(PlannerItineraryBoard.CanEdit)] = canEdit,
                 [nameof(PlannerItineraryBoard.AddDestinationPath)] = Paths["destination"],
                 [nameof(PlannerItineraryBoard.AddDayPath)] = Paths["day"],
+                [nameof(PlannerItineraryBoard.EditDayPathPrefix)] = Paths["day"],
+                [nameof(PlannerItineraryBoard.DayCancelPath)] =
+                    "/workspace/creators/creator_alpha_01/plans/plan_spain_2027",
                 [nameof(PlannerItineraryBoard.AddActivityPath)] = Paths["activity"],
                 [nameof(PlannerItineraryBoard.EditActivityPathPrefix)] = Paths["activity"],
                 [nameof(PlannerItineraryBoard.ActivityCancelPath)] =
@@ -170,6 +293,7 @@ public sealed class PlannerItineraryBoardTests
             {
                 parameters[nameof(PlannerItineraryBoard.DestinationStatusMessage)] = "Destination status";
                 parameters[nameof(PlannerItineraryBoard.DayStatusMessage)] = "Day status";
+                parameters[nameof(PlannerItineraryBoard.DayEditStatusMessage)] = "Day edit status";
                 parameters[nameof(PlannerItineraryBoard.ActivityStatusMessage)] = "Activity status";
                 parameters[nameof(PlannerItineraryBoard.ActivityEditStatusMessage)] = "Activity edit status";
                 parameters[nameof(PlannerItineraryBoard.TransportationStatusMessage)] = "Transportation status";
@@ -217,4 +341,13 @@ public sealed class PlannerItineraryBoardTests
     };
 
     private static int Count(string value, string search) => value.Split(search, StringSplitOptions.None).Length - 1;
+
+    private static string Between(string value, string start, string end)
+    {
+        var startIndex = value.IndexOf(start, StringComparison.Ordinal);
+        Assert.True(startIndex >= 0, $"Expected start marker '{start}'.");
+        var endIndex = value.IndexOf(end, startIndex, StringComparison.Ordinal);
+        Assert.True(endIndex > startIndex, $"Expected end marker '{end}'.");
+        return value[startIndex..endIndex];
+    }
 }

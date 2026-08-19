@@ -1,0 +1,84 @@
+[
+  {
+    "templateId": "platform.portugal-by-rail",
+    "version": "1.0",
+    "ownerType": "Platform",
+    "ownerId": "adventures-suite",
+    "sourceLocale": "en-US",
+    "attribution": "AdventuresSuite curated Alpha collection",
+    "title": "Portugal by rail",
+    "workingDescription": "Pair Lisbon's neighborhoods with Coimbra's historic center and Porto's riverfront at a comfortable rail-first pace.",
+    "durationDays": 8,
+    "destinations": [
+      { "key": "lisbon", "name": "Lisbon", "startDayOffset": 0, "endDayOffset": 2, "timeZone": "Europe/Lisbon", "guidance": "Neighborhood walks, viewpoints, and flexible arrival time" },
+      { "key": "coimbra", "name": "Coimbra", "startDayOffset": 3, "endDayOffset": 3, "timeZone": "Europe/Lisbon", "guidance": "A slower university-city pause between major stops" },
+      { "key": "porto", "name": "Porto", "startDayOffset": 4, "endDayOffset": 7, "timeZone": "Europe/Lisbon", "guidance": "Riverfront exploration and an unhurried final stay" }
+    ],
+    "days": [
+      { "key": "day-1", "dayOffset": 0, "destinationKey": "lisbon", "timeZone": "Europe/Lisbon", "title": "Arrive and settle in" },
+      { "key": "day-2", "dayOffset": 1, "destinationKey": "lisbon", "timeZone": "Europe/Lisbon", "title": "Lisbon perspectives" },
+      { "key": "day-3", "dayOffset": 2, "destinationKey": "lisbon", "timeZone": "Europe/Lisbon", "title": "A flexible Lisbon day" },
+      { "key": "day-4", "dayOffset": 3, "destinationKey": "coimbra", "timeZone": "Europe/Lisbon", "title": "Pause in Coimbra" },
+      { "key": "day-5", "dayOffset": 4, "destinationKey": "porto", "timeZone": "Europe/Lisbon", "title": "Porto at the river" },
+      { "key": "day-6", "dayOffset": 5, "destinationKey": "porto", "timeZone": "Europe/Lisbon", "title": "Porto neighborhoods" },
+      { "key": "day-7", "dayOffset": 6, "destinationKey": "porto", "timeZone": "Europe/Lisbon", "title": "An open northern day" },
+      { "key": "day-8", "dayOffset": 7, "destinationKey": "porto", "timeZone": "Europe/Lisbon", "title": "A gentle departure" }
+    ],
+    "activities": [
+      { "dayKey": "day-2", "title": "Choose one Lisbon neighborhood walk" },
+      { "dayKey": "day-4", "title": "Explore Coimbra's historic center" },
+      { "dayKey": "day-6", "title": "Follow the Porto riverfront" }
+    ],
+    "transportation": [
+      { "mode": "Intercity rail", "from": "Lisbon", "to": "Coimbra", "departureDayOffset": 3, "departureTimeZone": "Europe/Lisbon", "arrivalDayOffset": 3, "arrivalTimeZone": "Europe/Lisbon" },
+      { "mode": "Intercity rail", "from": "Coimbra", "to": "Porto", "departureDayOffset": 4, "departureTimeZone": "Europe/Lisbon", "arrivalDayOffset": 4, "arrivalTimeZone": "Europe/Lisbon" }
+    ],
+    "accommodations": [
+      { "name": "Lisbon central stay pattern", "startDayOffset": 0, "endDayOffset": 2, "timeZone": "Europe/Lisbon" },
+      { "name": "Coimbra historic-center stay pattern", "startDayOffset": 3, "endDayOffset": 3, "timeZone": "Europe/Lisbon" },
+      { "name": "Porto river-access stay pattern", "startDayOffset": 4, "endDayOffset": 7, "timeZone": "Europe/Lisbon" }
+    ]
+  },
+  {
+    "templateId": "platform.adriatic-coast-islands",
+    "version": "1.0",
+    "ownerType": "Platform",
+    "ownerId": "adventures-suite",
+    "sourceLocale": "en-US",
+    "attribution": "AdventuresSuite curated Alpha collection",
+    "title": "Adriatic coast and islands",
+    "workingDescription": "Balance historic coastal cities with slower island time and flexible, weather-aware sea days.",
+    "durationDays": 10,
+    "destinations": [
+      { "key": "split", "name": "Split", "startDayOffset": 0, "endDayOffset": 2, "timeZone": "Europe/Zagreb", "guidance": "Old-town exploration with time beyond the palace" },
+      { "key": "hvar", "name": "Hvar", "startDayOffset": 3, "endDayOffset": 5, "timeZone": "Europe/Zagreb", "guidance": "Island pace with weather-flexible choices" },
+      { "key": "dubrovnik", "name": "Dubrovnik", "startDayOffset": 6, "endDayOffset": 9, "timeZone": "Europe/Zagreb", "guidance": "Historic walls and a slower final chapter" }
+    ],
+    "days": [
+      { "key": "day-1", "dayOffset": 0, "destinationKey": "split", "timeZone": "Europe/Zagreb", "title": "Settle into Split" },
+      { "key": "day-2", "dayOffset": 1, "destinationKey": "split", "timeZone": "Europe/Zagreb", "title": "Split beyond the palace" },
+      { "key": "day-3", "dayOffset": 2, "destinationKey": "split", "timeZone": "Europe/Zagreb", "title": "A flexible coast day" },
+      { "key": "day-4", "dayOffset": 3, "destinationKey": "hvar", "timeZone": "Europe/Zagreb", "title": "Cross to Hvar" },
+      { "key": "day-5", "dayOffset": 4, "destinationKey": "hvar", "timeZone": "Europe/Zagreb", "title": "Island rhythm" },
+      { "key": "day-6", "dayOffset": 5, "destinationKey": "hvar", "timeZone": "Europe/Zagreb", "title": "Weather-flexible Hvar" },
+      { "key": "day-7", "dayOffset": 6, "destinationKey": "dubrovnik", "timeZone": "Europe/Zagreb", "title": "Continue to Dubrovnik" },
+      { "key": "day-8", "dayOffset": 7, "destinationKey": "dubrovnik", "timeZone": "Europe/Zagreb", "title": "Dubrovnik perspectives" },
+      { "key": "day-9", "dayOffset": 8, "destinationKey": "dubrovnik", "timeZone": "Europe/Zagreb", "title": "A slower final chapter" },
+      { "key": "day-10", "dayOffset": 9, "destinationKey": "dubrovnik", "timeZone": "Europe/Zagreb", "title": "Depart at an easy pace" }
+    ],
+    "activities": [
+      { "dayKey": "day-2", "title": "Explore Split beyond Diocletian's Palace" },
+      { "dayKey": "day-5", "title": "Choose an island experience" },
+      { "dayKey": "day-8", "title": "Walk Dubrovnik's historic walls" }
+    ],
+    "transportation": [
+      { "mode": "Passenger ferry", "from": "Split", "to": "Hvar", "departureDayOffset": 3, "departureTimeZone": "Europe/Zagreb", "arrivalDayOffset": 3, "arrivalTimeZone": "Europe/Zagreb" },
+      { "mode": "Passenger ferry", "from": "Hvar", "to": "Dubrovnik", "departureDayOffset": 6, "departureTimeZone": "Europe/Zagreb", "arrivalDayOffset": 6, "arrivalTimeZone": "Europe/Zagreb" }
+    ],
+    "accommodations": [
+      { "name": "Split port-access stay pattern", "startDayOffset": 0, "endDayOffset": 2, "timeZone": "Europe/Zagreb" },
+      { "name": "Hvar walkable stay pattern", "startDayOffset": 3, "endDayOffset": 5, "timeZone": "Europe/Zagreb" },
+      { "name": "Dubrovnik quieter-evening stay pattern", "startDayOffset": 6, "endDayOffset": 9, "timeZone": "Europe/Zagreb" }
+    ]
+  }
+]
