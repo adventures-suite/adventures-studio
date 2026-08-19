@@ -33,6 +33,7 @@
 
         <!-- App Identifier -->
         <ApplicationId>com.adventuresstudio.companion</ApplicationId>
+        <ApplicationId Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">com.adventuressuite.companion</ApplicationId>
 
         <!-- Versions -->
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>

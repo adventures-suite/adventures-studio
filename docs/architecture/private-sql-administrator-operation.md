@@ -66,6 +66,35 @@ Readback never falls through to bootstrap. Failure, timeout, cancellation,
 runner loss, ambiguous output, schema mismatch, protected-main advance, or
 partial cleanup ends the operation without retry.
 
+### Companion policy runtime-role prerequisite
+
+The finite administrator boundary also supports the separately approved
+`bootstrap-policy-role` operation. Its implementation owns one compile-time
+constant only: `AdventuresSuiteCompanionPolicyRuntime`. It creates that role
+only when absent with `AUTHORIZATION dbo` and grants no permission or
+membership. A conforming pre-existing role is idempotently accepted.
+
+Before commit, the operation requires the exact principal to be a non-fixed
+database role owned by `dbo`, with zero members, zero parent-role memberships,
+zero explicit permissions, and zero owned schemas or objects. A case-altered or
+same-name non-role principal, different owner, direct or inherited authority,
+or ambiguous metadata fails closed for human remediation. The operation never
+drops, renames, re-owns, revokes, grants, repairs, or adds membership. It also
+captures the existing `AdventuresSuiteCompanionReadRuntime` state before and
+after and requires it to remain equivalent.
+
+The role operation runs only through this administrator workflow after its own
+exact approval. It is not reachable from application or API startup, ordinary
+deployment, or the migration principal. Its bounded v1 evidence contains only
+the fixed operation and role names, created/pre-existing outcome, `dbo`
+ownership, zero authority/membership counts, unchanged-read-role result,
+bounded support/correlation/operation identifiers, and UTC occurrence time.
+Tokens, connections, SQL parameters, and private content are prohibited.
+
+Creating the empty role does not authorize migration `0010`; a later migration
+preflight must independently re-read the role and every documented
+prerequisite.
+
 ## Baseline allowlist and evidence
 
 The query reads only catalog metadata needed to classify the DbUp journal and

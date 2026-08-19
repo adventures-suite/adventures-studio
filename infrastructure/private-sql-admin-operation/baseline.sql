@@ -14,7 +14,8 @@ LEFT JOIN sys.database_role_members AS memberships ON memberships.role_principal
 LEFT JOIN sys.database_principals AS members ON members.principal_id = memberships.member_principal_id
 WHERE roles.type = N'R'
   AND roles.name IN (N'AdventuresSuiteAuthenticationRuntime', N'AdventuresSuiteMembershipRuntime',
-                     N'AdventuresSuiteCompanionReadRuntime', N'AdventuresSuitePlanningRuntime')
+                     N'AdventuresSuiteCompanionReadRuntime', N'AdventuresSuiteCompanionPolicyRuntime',
+                     N'AdventuresSuitePlanningRuntime')
 ORDER BY roles.name, member_sid_sha256;
 
 SELECT name, type_desc, authentication_type_desc, default_schema_name,
@@ -28,9 +29,9 @@ SELECT grantee.name AS grantee, permissions.state_desc,
        CASE WHEN permissions.class_desc IN (N'DATABASE', N'SCHEMA', N'OBJECT_OR_COLUMN', N'DATABASE_PRINCIPAL') THEN permissions.class_desc ELSE N'unexpected-redacted' END AS class_desc,
        CASE permissions.class
          WHEN 0 THEN DB_NAME()
-         WHEN 1 THEN CASE WHEN OBJECT_SCHEMA_NAME(permissions.major_id) IN (N'dbo', N'planning', N'auth', N'audit') AND OBJECT_NAME(permissions.major_id) IN (N'AdventuresSuiteSchemaVersions', N'AuditEvents', N'CreatorMembershipPermissionGrants', N'CreatorMembershipRoles', N'CreatorMemberships', N'ExternalIdentities', N'UserSessions', N'Users', N'Accommodations', N'AdventurePlanCreateResults', N'AdventurePlans', N'BudgetItems', N'DestinationVisits', N'ItineraryDays', N'PackingItems', N'PlannedActivities', N'PlanningNotes', N'PlanningTasks', N'Reservations', N'TransportationSegments', N'TravelerParticipations', N'TravelerPreferences', N'Travelers') THEN QUOTENAME(OBJECT_SCHEMA_NAME(permissions.major_id)) + N'.' + QUOTENAME(OBJECT_NAME(permissions.major_id)) ELSE N'unexpected-redacted' END
+         WHEN 1 THEN CASE WHEN OBJECT_SCHEMA_NAME(permissions.major_id) IN (N'dbo', N'planning', N'auth', N'audit') AND OBJECT_NAME(permissions.major_id) IN (N'AdventuresSuiteSchemaVersions', N'AuditEvents', N'CompanionInformationPolicyAssignmentEvents', N'CreatorMembershipPermissionGrants', N'CreatorMembershipRoles', N'CreatorMemberships', N'ExternalIdentities', N'UserSessions', N'Users', N'Accommodations', N'AdventurePlanCreateResults', N'AdventurePlanTemplateOrigins', N'AdventurePlans', N'BudgetItems', N'CompanionInformationPolicyAssignments', N'DestinationVisits', N'ItineraryDays', N'PackingItems', N'PlannedActivities', N'PlanningNotes', N'PlanningTasks', N'Reservations', N'TransportationSegments', N'TravelerParticipations', N'TravelerPreferences', N'Travelers') THEN QUOTENAME(OBJECT_SCHEMA_NAME(permissions.major_id)) + N'.' + QUOTENAME(OBJECT_NAME(permissions.major_id)) ELSE N'unexpected-redacted' END
          WHEN 3 THEN CASE WHEN SCHEMA_NAME(permissions.major_id) IN (N'dbo', N'planning', N'auth', N'audit') THEN QUOTENAME(SCHEMA_NAME(permissions.major_id)) ELSE N'unexpected-redacted' END
-         WHEN 4 THEN CASE WHEN USER_NAME(permissions.major_id) IN (N'AdventuresSuiteAuthenticationRuntime', N'AdventuresSuiteMembershipRuntime', N'AdventuresSuiteCompanionReadRuntime', N'AdventuresSuitePlanningRuntime', N'AdventuresSuiteMigrationDev-ffc9a') THEN QUOTENAME(USER_NAME(permissions.major_id)) ELSE N'unexpected-redacted' END
+         WHEN 4 THEN CASE WHEN USER_NAME(permissions.major_id) IN (N'AdventuresSuiteAuthenticationRuntime', N'AdventuresSuiteMembershipRuntime', N'AdventuresSuiteCompanionReadRuntime', N'AdventuresSuiteCompanionPolicyRuntime', N'AdventuresSuitePlanningRuntime', N'AdventuresSuiteMigrationDev-ffc9a') THEN QUOTENAME(USER_NAME(permissions.major_id)) ELSE N'unexpected-redacted' END
          ELSE N'unexpected-redacted'
        END AS securable
 FROM sys.database_permissions AS permissions
@@ -38,7 +39,8 @@ INNER JOIN sys.database_principals AS grantee ON grantee.principal_id = permissi
 WHERE grantee.name IN (
   N'AdventuresSuiteMigrationDev-ffc9a',
   N'AdventuresSuiteAuthenticationRuntime', N'AdventuresSuiteMembershipRuntime',
-  N'AdventuresSuiteCompanionReadRuntime', N'AdventuresSuitePlanningRuntime')
+  N'AdventuresSuiteCompanionReadRuntime', N'AdventuresSuiteCompanionPolicyRuntime',
+  N'AdventuresSuitePlanningRuntime')
 ORDER BY grantee.name, permissions.class, securable, permissions.permission_name, permissions.state;
 
 SELECT CASE WHEN OBJECT_ID(N'dbo.AdventuresSuiteSchemaVersions', N'U') IS NULL THEN CAST(0 AS bit) ELSE CAST(1 AS bit) END AS journal_exists;

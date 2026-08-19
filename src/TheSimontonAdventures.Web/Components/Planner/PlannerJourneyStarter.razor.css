@@ -1,0 +1,41 @@
+.journey-starter { background: var(--planner-shell-surface); border: 1px solid var(--planner-shell-border); border-radius: 1rem; box-shadow: var(--planner-shell-shadow); margin-bottom: 1.5rem; padding: clamp(1.25rem, 3vw, 2rem); }
+.journey-starter h2, .journey-starter h3, .journey-starter h4 { font-family: Georgia, serif; margin: 0; }
+.journey-starter > p:not(.journey-starter__eyebrow), .journey-starter__browser > div > p:last-child { color: var(--planner-shell-text-muted); }
+.journey-starter__eyebrow { color: var(--planner-shell-primary); font-size: .72rem; font-weight: 800; letter-spacing: .12em; margin: 0 0 .35rem; text-transform: uppercase; }
+.journey-starter__choices { display: grid; gap: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 1.25rem; }
+.journey-starter__choice { align-items: start; background: var(--planner-shell-surface-muted); border: 1px solid var(--planner-shell-border); border-radius: .8rem; color: var(--planner-shell-text); cursor: pointer; display: grid; gap: .3rem; min-width: 0; padding: 1.1rem; text-align: left; }
+.journey-starter__choice[aria-pressed="true"] { border-color: var(--planner-shell-primary); box-shadow: 0 0 0 2px color-mix(in srgb, var(--planner-shell-primary) 20%, transparent); }
+.journey-starter__choice > span { color: var(--planner-shell-primary); font-size: 1.3rem; }
+.journey-starter__choice small { color: var(--planner-shell-text-muted); font-size: .9rem; }
+.journey-starter__browser { border-top: 1px solid var(--planner-shell-border); margin-top: 1.5rem; padding-top: 1.5rem; }
+.journey-starter__ideas { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); list-style: none; margin: 1.25rem 0 0; padding: 0; }
+.journey-starter__idea { border: 1px solid var(--planner-shell-border); border-radius: .8rem; height: 100%; overflow: hidden; padding: 1rem; }
+.journey-starter__thumbnail { align-items: center; background: linear-gradient(135deg, var(--planner-shell-primary), #8a5b24); border-radius: .65rem; color: #fff; display: flex; font-family: Georgia, serif; font-size: 1.5rem; height: 7rem; justify-content: center; margin: -1rem -1rem 1rem; }
+.journey-starter__idea > p:not(.journey-starter__eyebrow) { color: var(--planner-shell-text-muted); }
+.journey-starter__route { font-weight: 700; }
+.journey-starter__attribution { font-size: .88rem; margin-bottom: .65rem; }
+.journey-starter__tags { display: flex; flex-wrap: wrap; gap: .4rem; list-style: none; margin: 0 0 1rem; padding: 0; }
+.journey-starter__tags li { background: var(--planner-shell-surface-muted); border: 1px solid var(--planner-shell-border); border-radius: 999px; color: var(--planner-shell-text); font-size: .78rem; font-weight: 700; padding: .25rem .55rem; }
+.journey-starter__idea button { background: var(--planner-shell-primary); border: 0; border-radius: 999px; color: var(--planner-shell-surface); cursor: pointer; font: inherit; font-weight: 800; padding: .65rem 1rem; }
+.journey-template { background: var(--planner-shell-surface-muted); border: 1px solid var(--planner-shell-border); border-radius: 1rem; margin-top: 1.5rem; padding: clamp(1rem, 3vw, 1.5rem); }
+.journey-template__header { align-items: start; display: grid; gap: 1.5rem; grid-template-columns: minmax(0, 1fr) minmax(13rem, auto); }
+.journey-template__header > div > p:last-child, .journey-template__sections section > p { color: var(--planner-shell-text-muted); }
+.journey-template__header dl { margin: 0; }
+.journey-template__header dl div { display: flex; gap: 1rem; justify-content: space-between; }
+.journey-template__header dd { font-weight: 700; margin: 0; text-align: right; }
+.journey-template__sections { display: grid; gap: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 1.5rem; }
+.journey-template__sections > section { background: var(--planner-shell-surface); border: 1px solid var(--planner-shell-border); border-radius: .75rem; min-width: 0; padding: 1rem; }
+.journey-template__plain-list li, .journey-template__days li { display: grid; gap: .2rem; }
+.journey-template__plain-list span, .journey-template__days span { color: var(--planner-shell-text-muted); }
+.journey-template__days, .journey-template__plain-list { display: grid; gap: .8rem; margin: .8rem 0 0; padding-left: 1.25rem; }
+.journey-template__boundary { border-left: 3px solid #8a5b24; color: var(--planner-shell-text-muted); padding: .15rem 1rem; }
+.journey-template__boundary p { margin: .35rem 0; }
+.journey-template__create { align-items: end; display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 1rem; }
+.journey-template__create label { display: grid; font-weight: 700; gap: .35rem; }
+.journey-template__create input { background: var(--planner-shell-surface); border: 1px solid var(--planner-shell-border); border-radius: .45rem; color: var(--planner-shell-text); font: inherit; min-height: 2.75rem; padding: .55rem; }
+.journey-template__continue { background: var(--planner-shell-primary); border: 0; border-radius: 999px; color: var(--planner-shell-surface); cursor: pointer; font: inherit; font-weight: 800; margin-top: 1rem; padding: .75rem 1.1rem; }
+.journey-template__create .journey-template__continue { margin-top: 0; min-height: 2.75rem; }
+.journey-template__after { color: var(--planner-shell-text-muted); font-size: .9rem; }
+.journey-starter button:focus-visible, .journey-starter input:focus-visible { outline: 3px solid var(--planner-shell-focus); outline-offset: 3px; }
+@media (max-width: 48rem) { .journey-template__header, .journey-template__sections { grid-template-columns: 1fr; } }
+@media (max-width: 36rem) { .journey-starter__choices { grid-template-columns: 1fr; } .journey-template__create, .journey-template__create label, .journey-template__create input, .journey-template__create button { width: 100%; } }

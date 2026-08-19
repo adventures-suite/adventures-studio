@@ -26,7 +26,11 @@ public sealed class PlatformLandingTests
                 ParameterView.FromDictionary(new Dictionary<string, object?>
                 {
                     [nameof(PlatformLanding.SignInUrl)] = "https://workspace.example.com/authentication/sign-in",
-                    [nameof(PlatformLanding.FeaturedAdventureUrl)] = "https://creator.example.com/"
+                    [nameof(PlatformLanding.FeaturedAdventureUrl)] = "https://creator.example.com/",
+                    [nameof(PlatformLanding.JourneyImageUrl)] = "/platform-journey.jpeg",
+                    [nameof(PlatformLanding.HeroImageUrl)] = "/platform-hero.jpeg",
+                    [nameof(PlatformLanding.StoryImageUrl)] = "/platform-story.jpeg",
+                    [nameof(PlatformLanding.FeaturedImageUrl)] = "/platform-featured.jpeg"
                 }));
             return output.ToHtmlString();
         });
@@ -39,6 +43,12 @@ public sealed class PlatformLandingTests
         Assert.Contains("https://workspace.example.com/authentication/sign-in", html);
         Assert.Contains("Explore The Simonton Adventures", html);
         Assert.Contains("https://creator.example.com/", html);
+        Assert.Contains("/platform-journey.jpeg", html);
+        Assert.Contains("Sometimes it starts with two passports", html);
+        Assert.Contains("/platform-hero.jpeg", html);
+        Assert.Contains("/platform-story.jpeg", html);
+        Assert.Contains("/platform-featured.jpeg", html);
+        Assert.Contains("See what a journey can become", html);
         Assert.DoesNotContain("creator_tsa_01", html);
     }
 }

@@ -374,7 +374,8 @@ public sealed class SqlCompanionAuthoritativeAccessContextResolver
                     'Creator.View', 'Creator.ManageMembers', 'AdventurePlan.View',
                     'AdventurePlan.Create', 'AdventurePlan.Edit', 'AdventurePlan.ViewArchived',
                     'AdventurePlan.Archive', 'AdventurePlan.Restore',
-                    'AdventurePlan.ViewSensitiveReservations', 'PlanningProposal.Submit',
+                    'AdventurePlan.ViewSensitiveReservations', 'AdventurePlan.ManageCompanionPolicy',
+                    'PlanningProposal.Submit',
                     'PlanningProposal.Review', 'PlanningProposal.ApplyApproved',
                     'PlanningEngagement.Invite', 'PlanningEngagement.Manage',
                     'PlanningEngagement.DirectEdit', 'Audit.View', 'Support.Impersonate'))

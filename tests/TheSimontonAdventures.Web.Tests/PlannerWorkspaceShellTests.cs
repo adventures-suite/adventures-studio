@@ -190,6 +190,28 @@ public sealed class PlannerWorkspaceShellTests
         Assert.Contains("aria-label=\"Widen Planner navigation\"", html, StringComparison.Ordinal);
     }
 
+    /// <summary>The collapsed desktop sidebar becomes a true icon rail without width controls or labels.</summary>
+    [Fact]
+    public async Task Sidebar_Collapsed_RendersOnlyIconTilesAndAccessibleNames()
+    {
+        var html = await RenderAsync<PlannerWorkspaceSidebar>(new()
+        {
+            [nameof(PlannerWorkspaceSidebar.IsCollapsed)] = true,
+            [nameof(PlannerWorkspaceSidebar.WidthPixels)] = 280,
+            [nameof(PlannerWorkspaceSidebar.MinimumWidthPixels)] = PlannerWorkspaceShell.MinimumSidebarWidthPixels,
+            [nameof(PlannerWorkspaceSidebar.MaximumWidthPixels)] = PlannerWorkspaceShell.MaximumSidebarWidthPixels
+        });
+
+        Assert.Contains("planner-sidebar--collapsed", html, StringComparison.Ordinal);
+        Assert.Contains("aria-label=\"Expand Planner navigation\"", html, StringComparison.Ordinal);
+        Assert.Contains("aria-label=\"Hide Planner navigation\"", html, StringComparison.Ordinal);
+        Assert.Contains("Planner overview</title>", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("AdventuresSuite Planner</title>", html, StringComparison.Ordinal);
+        Assert.DoesNotContain(">Planner workspace</span>", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Navigation width controls", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Resize Planner navigation", html, StringComparison.Ordinal);
+    }
+
     /// <summary>Every reusable state has a named region and appropriate live behavior.</summary>
     [Theory]
     [InlineData(PlannerWorkspaceStateKind.Loading, "status", "polite")]

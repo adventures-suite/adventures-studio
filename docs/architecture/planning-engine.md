@@ -4,7 +4,7 @@
 
 **Status:** Approved Direction
 
-**Last Updated:** August 9, 2026
+**Last Updated:** August 19, 2026
 
 ## Purpose
 
@@ -79,6 +79,39 @@ It may contain:
 
 Each child record receives a stable identity when it must be edited,
 referenced, proposed by AI, audited, or synchronized independently.
+
+## Diverse Adventure Modes
+
+AdventuresSuite plans Adventures rather than assuming a conventional
+flight-hotel-tour vacation. The model must support combinations of travel and
+experience capabilities needed by motorcycle touring, RV and campervan travel,
+cycling and bikepacking, hiking and trekking, sailing and private boating, rail
+journeys, cruises, overlanding and off-road travel, winter sports, diving and
+expeditions, pilgrimages, accessible and multigenerational travel, festivals,
+sporting events, and other emerging forms of travel.
+
+Do not introduce one rigid `TripType` whose value controls domain behavior.
+Describe an Adventure through composable, stable facets and capabilities such
+as transportation modes, route style, terrain and surface, activity intensity,
+daily distance or duration limits, accommodation patterns, equipment and
+readiness needs, accessibility, group composition, and traveler preferences.
+Facets support discovery and presentation; validated plan records remain the
+authority for actual routes, dates, tasks, and operational state.
+
+Motorcycle touring is the first proving scenario. The architecture must be
+able to represent scenic-versus-fast route preference, paved/gravel/off-road
+surface preference, daily distance and riding-time limits, fuel-range planning,
+rest days, weather and closure contingencies, ferries, tolls, borders and
+permits, vehicle-document readiness, motorcycle-friendly stays and secure
+parking, gear and maintenance tasks, group-rider differences, and transport to
+or from the riding route. These concepts must be introduced through reusable
+contracts rather than motorcycle-specific conditionals scattered through the
+Planner.
+
+Route, weather, closure, fuel, border, safety, accessibility, price, and
+availability information retains source, jurisdiction, freshness, assumptions,
+and confidence. An Idea or filter match never proves that a route or service is
+currently safe, legal, passable, accessible, available, or booked.
 
 ## Candidate Concepts
 

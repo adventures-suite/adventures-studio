@@ -1,13 +1,13 @@
 # Adventure Templates
 
-Status: Approved platform requirement and architecture direction
-Last updated: August 9, 2026
+Status: Approved platform requirement; durable instantiation foundation implemented for review
+Last updated: August 19, 2026
 
 ## Purpose
 
-Adventure Templates let Creators begin with a professionally designed,
-pre-planned Adventure and adapt it to real travelers, dates, time zones,
-budgets, preferences, and constraints.
+Adventure Templates, presented to customers as Journey FootSteps, let Creators
+begin with a professionally designed, pre-planned Adventure and adapt it to real
+travelers, dates, time zones, budgets, preferences, and constraints.
 
 Templates must strengthen AdventuresSuite's partnership with travel
 professionals. They are not a mechanism for AdventuresSuite to replace travel
@@ -121,6 +121,15 @@ professional encode expertise, demonstrate value, accelerate customer
 planning, and offer ongoing help without surrendering the customer relationship
 or forcing AdventuresSuite into the role of travel agency.
 
+The broader FootSteps product may eventually let professional Creators author,
+publish, license, and receive compensation for approved reusable expertise.
+Journey FootSteps are the complete-plan form backed by immutable Adventure
+Template versions; smaller Destination, itinerary, activity, transportation,
+stay, and guidance FootSteps remain distinct catalog content with their own
+review and application contracts. Commercial terms and payout mechanics are
+intentionally deferred, and none grants access to an instantiated customer
+plan.
+
 Product language should favor actions such as "Use this template" and
 "Request professional help." AdventuresSuite should not present itself as the
 travel seller through platform-owned "Book now" behavior. Booking and
@@ -179,6 +188,23 @@ reporting requires separate authority and privacy controls.
 No template database, marketplace, booking integration, or UI should be added
 before its preceding domain, authorization, privacy, and audit boundaries are
 implemented and tested.
+
+The first durable implementation deliberately stops at that boundary. It
+accepts only an already authorized immutable blueprint from a provider-neutral
+resolver, creates fresh identities for the complete private plan aggregate,
+and atomically persists the plan, exact source template/version provenance,
+Creator-scoped idempotency result, and required audit intent. The production
+catalog/licensing adapter and the user-facing “Use this Journey” workflow are
+the next consumers of this boundary, not alternative authorization or
+persistence paths.
+
+The first user-facing consumer keeps discovery and use separate. An authorized
+catalog query may show a complete preview, but pressing “Create my private
+Journey” performs a fresh exact-version use decision and the atomic
+instantiation operation. The customer selects only supported parameters; the
+interface must not show controls that are silently ignored. Local Alpha uses a
+fictional JSON catalog. Production remains empty and fail-closed until its
+catalog, entitlement, license, retention, and reporting adapters are approved.
 
 ## Definition of Done
 

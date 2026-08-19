@@ -169,6 +169,8 @@ jobs:
           0007_create_traveler_participations.sql
           0008_create_companion_read_role.sql
           0009_create_adventure_plan_create_results.sql
+          0010_create_companion_policy_assignments.sql
+          0011_create_adventure_plan_template_origins.sql
           EOF
 
           diff -u \

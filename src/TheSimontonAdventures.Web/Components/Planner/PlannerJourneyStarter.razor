@@ -1,0 +1,157 @@
+@namespace TheSimontonAdventures.Web.Components
+
+<section class="journey-starter" aria-labelledby="journey-starter-title">
+    <p class="journey-starter__eyebrow">Begin with confidence</p>
+    <h2 id="journey-starter-title">Start a journey</h2>
+    <p>Choose the starting point that fits how much you already know.</p>
+
+    <div class="journey-starter__choices" aria-label="Journey starting options">
+        <button type="button" class="journey-starter__choice" aria-pressed="@(!IsBrowsingIdeas)" @onclick="StartFromScratchAsync">
+            <span aria-hidden="true">＋</span>
+            <strong>Start from scratch</strong>
+            <small>Build a private plan from your own dates and inspiration.</small>
+        </button>
+        <button type="button" class="journey-starter__choice" aria-pressed="@IsBrowsingIdeas" @onclick="BrowseIdeasAsync">
+            <span aria-hidden="true">✦</span>
+            <strong>Browse Journey FootSteps</strong>
+            <small>Preview a complete Journey before creating your private copy.</small>
+        </button>
+    </div>
+
+    @if (IsBrowsingIdeas)
+    {
+        <div class="journey-starter__browser">
+            <div>
+                <p class="journey-starter__eyebrow">Journey FootSteps</p>
+                <h3>Find a shape for your Adventure</h3>
+                <p>FootSteps are starting points, not bookings, prices, or availability.</p>
+            </div>
+            @if (Templates.Count > 0)
+            {
+                <ul class="journey-starter__ideas">
+                    @foreach (var template in PagedTemplates)
+                    {
+                        <li>
+                            <article class="journey-starter__idea">
+                                <div class="journey-starter__thumbnail" aria-hidden="true">@Monogram(template.Title)</div>
+                                <p class="journey-starter__eyebrow">Journey FootStep</p>
+                                <h4>@template.Title</h4>
+                                <p>@template.WorkingDescription</p>
+                                <p class="journey-starter__route">@Route(template)</p>
+                                <p class="journey-starter__attribution">By @template.Attribution</p>
+                                <ul class="journey-starter__tags" aria-label="FootStep details">
+                                    @foreach (var tag in DiscoveryTags(template))
+                                    {
+                                        <li>@tag</li>
+                                    }
+                                </ul>
+                                <button type="button"
+                                        aria-expanded="@(SelectedTemplate?.VersionId == template.VersionId)"
+                                        aria-controls="journey-template-preview"
+                                        @onclick="() => PreviewTemplate(template)">Preview FootStep</button>
+                            </article>
+                        </li>
+                    }
+                </ul>
+                <PlannerIdeaPager TotalItems="@Templates.Count"
+                                  PageSize="@PageSize"
+                                  CurrentPage="@CurrentPage"
+                                  PageSizeOptions="@JourneyPageSizeOptions"
+                                  OnPageSizeChanged="ChangePageSizeAsync"
+                                  OnPageChanged="ChangePageAsync" />
+                @if (SelectedTemplate is not null)
+                {
+                    <section id="journey-template-preview" class="journey-template" aria-labelledby="journey-template-title">
+                        <header class="journey-template__header">
+                            <div>
+                                <p class="journey-starter__eyebrow">Complete Journey FootStep preview</p>
+                                <h3 id="journey-template-title">@SelectedTemplate.Title</h3>
+                                <p>@SelectedTemplate.WorkingDescription</p>
+                            </div>
+                            <dl>
+                                <div><dt>Duration</dt><dd>@SelectedTemplate.DurationDays days</dd></div>
+                                <div><dt>Source</dt><dd>@SelectedTemplate.Attribution</dd></div>
+                                <div><dt>Version</dt><dd>@SelectedTemplate.VersionId.Version</dd></div>
+                            </dl>
+                        </header>
+
+                        <div class="journey-template__sections">
+                            <section aria-labelledby="template-destinations">
+                                <h4 id="template-destinations">Destinations</h4>
+                                <ol class="journey-template__plain-list">
+                                    @foreach (var destination in SelectedTemplate.Destinations)
+                                    {
+                                        <li><strong>@destination.Name</strong><span>@destination.Guidance</span></li>
+                                    }
+                                </ol>
+                            </section>
+                            <section aria-labelledby="template-itinerary">
+                                <h4 id="template-itinerary">Itinerary</h4>
+                                <ol class="journey-template__days">
+                                    @foreach (var day in SelectedTemplate.Days)
+                                    {
+                                        <li><strong>Day @(day.DayOffset + 1): @day.Title</strong></li>
+                                    }
+                                </ol>
+                            </section>
+                            @if (SelectedTemplate.Activities.Count > 0)
+                            {
+                                <section aria-labelledby="template-activities">
+                                    <h4 id="template-activities">Activity FootSteps</h4>
+                                    <ul class="journey-template__plain-list">
+                                        @foreach (var activity in SelectedTemplate.Activities)
+                                        {
+                                            <li><strong>@activity.Title</strong><span>Proposed FootStep, not a reservation</span></li>
+                                        }
+                                    </ul>
+                                </section>
+                            }
+                            <section aria-labelledby="template-travel">
+                                <h4 id="template-travel">Travel methods</h4>
+                                <ul class="journey-template__plain-list">
+                                    @foreach (var segment in SelectedTemplate.Transportation)
+                                    {
+                                        <li><strong>@segment.From → @segment.To</strong><span>@segment.Mode · proposed, not booked</span></li>
+                                    }
+                                </ul>
+                            </section>
+                            <section aria-labelledby="template-stays">
+                                <h4 id="template-stays">Stay patterns</h4>
+                                <ul class="journey-template__plain-list">
+                                    @foreach (var stay in SelectedTemplate.Accommodations)
+                                    {
+                                        <li><strong>@stay.Name</strong><span>Proposed pattern, not a reservation</span></li>
+                                    }
+                                </ul>
+                            </section>
+                        </div>
+
+                        <div class="journey-template__boundary">
+                            <p><strong>Your private copy.</strong> Creating this Journey copies the complete template into a new plan owned by your Creator.</p>
+                            <p>Nothing is booked. Later template changes cannot alter your plan, and the template author receives no access.</p>
+                        </div>
+                        <form method="post" action="@CreateFromTemplatePath" class="journey-template__create">
+                            <AntiforgeryToken />
+                            <input type="hidden" name="idempotencyKey" value="@IdempotencyKey(SelectedTemplate.VersionId)" />
+                            <input type="hidden" name="templateId" value="@SelectedTemplate.VersionId.TemplateId" />
+                            <input type="hidden" name="templateVersion" value="@SelectedTemplate.VersionId.Version" />
+                            <input type="hidden" name="locale" value="@Locale" />
+                            <label>
+                                Start date
+                                <input type="date" name="startDate" required />
+                            </label>
+                            <button type="submit" class="journey-template__continue">Create my private Journey</button>
+                        </form>
+                        <p class="journey-template__after">After creation, adjust destinations, dates, itinerary items, transportation, and stays in your private plan.</p>
+                    </section>
+                }
+            }
+            else
+            {
+                <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Empty"
+                                       Title="Journey FootSteps are coming soon"
+                                       Message="Start from scratch remains available while the reviewed library is prepared." />
+            }
+        </div>
+    }
+</section>

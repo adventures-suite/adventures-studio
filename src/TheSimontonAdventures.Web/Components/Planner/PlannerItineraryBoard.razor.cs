@@ -12,6 +12,10 @@ public partial class PlannerItineraryBoard : ComponentBase
     [Parameter, EditorRequired] public AdventurePlanDetail Plan { get; set; } = null!;
     /// <summary>Gets or sets whether existing mutation forms may be presented.</summary>
     [Parameter] public bool CanEdit { get; set; }
+    /// <summary>Gets or sets the current transient FootSteps context.</summary>
+    [Parameter] public PlannerIdeasContext? SelectedContext { get; set; }
+    /// <summary>Gets or sets the callback raised when destination or day context is selected.</summary>
+    [Parameter] public EventCallback<PlannerIdeasContext> OnContextSelected { get; set; }
     /// <summary>Gets or sets the existing destination POST path.</summary>
     [Parameter, EditorRequired] public string AddDestinationPath { get; set; } = string.Empty;
     /// <summary>Gets or sets the existing itinerary-day POST path.</summary>
@@ -64,6 +68,20 @@ public partial class PlannerItineraryBoard : ComponentBase
     private string? DestinationName(ItineraryDayDetail day) => day.DestinationVisitId is not { } id
         ? null
         : Plan.Destinations.FirstOrDefault(item => item.Id == id)?.Name;
+
+    private bool IsSelected(DestinationVisitDetail destination) =>
+        SelectedContext?.Kind == PlannerIdeasContextKind.Destination
+        && SelectedContext.Id == destination.Id.Value;
+
+    private bool IsSelected(ItineraryDayDetail day) =>
+        SelectedContext?.Kind == PlannerIdeasContextKind.Day
+        && SelectedContext.Id == day.Id.Value;
+
+    private Task SelectDestination(DestinationVisitDetail destination) =>
+        OnContextSelected.InvokeAsync(new PlannerIdeasContext(PlannerIdeasContextKind.Destination, destination.Id.Value, destination.Name));
+
+    private Task SelectDay(ItineraryDayDetail day) =>
+        OnContextSelected.InvokeAsync(new PlannerIdeasContext(PlannerIdeasContextKind.Day, day.Id.Value, day.Title));
 
     private string EditActivityPath(PlannedActivityId activityId) =>
         $"{EditActivityPathPrefix}/{activityId.Value}/edit";

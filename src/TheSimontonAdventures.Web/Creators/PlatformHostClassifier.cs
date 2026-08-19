@@ -19,6 +19,18 @@ public sealed class PlatformHostOptions
 
     /// <summary>Gets the canonical Creator workspace sign-in URL shown on the public platform.</summary>
     public string WorkspaceSignInUrl { get; init; } = string.Empty;
+
+    /// <summary>Gets the public platform image illustrating the beginning of an Adventure.</summary>
+    public string JourneyImageUrl { get; init; } = "/images/platform/adventures-begin-passports.jpeg";
+
+    /// <summary>Gets the public photograph shown in the platform hero.</summary>
+    public string HeroImageUrl { get; init; } = "/images/platform/platform-hero-santorini.jpeg";
+
+    /// <summary>Gets the public photograph accompanying the Adventures Studio story.</summary>
+    public string StoryImageUrl { get; init; } = "/images/platform/adventures-studio-founders.jpeg";
+
+    /// <summary>Gets the public preview image for the featured Creator experience.</summary>
+    public string FeaturedImageUrl { get; init; } = "/images/platform/simonton-featured-experience.jpeg";
 }
 
 /// <summary>Classifies an exact request host as the public platform entrance.</summary>

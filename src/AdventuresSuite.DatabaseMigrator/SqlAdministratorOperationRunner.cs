@@ -12,6 +12,9 @@ internal static class SqlAdministratorOperationRunner
 {
     private const string SqlScope = "https://database.windows.net/.default";
     private const string DbUpJournalPrefix = "AdventuresSuite.DatabaseMigrator.Database.Migrations.";
+    internal const string CompanionPolicyRuntimeRoleName = "AdventuresSuiteCompanionPolicyRuntime";
+    private const string CompanionReadRuntimeRoleName = "AdventuresSuiteCompanionReadRuntime";
+    private const string CompanionPolicyRoleOperationVersion = "companion-policy-runtime-role-bootstrap-v1";
 
     private static readonly string[] ApprovedScripts =
     [
@@ -19,7 +22,9 @@ internal static class SqlAdministratorOperationRunner
         "0003_create_planning_children.sql", "0004_create_authentication_persistence.sql",
         "0005_bind_sessions_to_external_identities.sql", "0006_create_creator_memberships.sql",
         "0007_create_traveler_participations.sql", "0008_create_companion_read_role.sql",
-        "0009_create_adventure_plan_create_results.sql"
+        "0009_create_adventure_plan_create_results.sql",
+        "0010_create_companion_policy_assignments.sql",
+        "0011_create_adventure_plan_template_origins.sql"
     ];
 
     private static readonly string[] At0006PermissionSignatures =
@@ -79,9 +84,201 @@ internal static class SqlAdministratorOperationRunner
         {
             "baseline" => await CaptureBaselineAsync(connection, context),
             "bootstrap" => await BootstrapAsync(connection, context),
+            "bootstrap-policy-role" => await BootstrapCompanionPolicyRuntimeRoleAsync(
+                connection,
+                context,
+                RequireBoundedIdentifier("ADVENTURESSUITE_ADMIN_SUPPORT_ID"),
+                RequireBoundedIdentifier("ADVENTURESSUITE_ADMIN_CORRELATION_ID")),
             "cleanup" => await CleanupAsync(connection, context),
             _ => throw new InvalidOperationException("The SQL administrator operation is not approved.")
         };
+    }
+
+    /// <summary>
+    /// Creates only the fixed, authority-free Companion policy runtime role or
+    /// verifies that an exact pre-existing role is already conforming.
+    /// </summary>
+    internal static async Task<int> BootstrapCompanionPolicyRuntimeRoleAsync(
+        SqlConnection connection,
+        Context context,
+        string supportId,
+        string correlationId,
+        TextWriter? evidenceWriter = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(connection);
+        ArgumentNullException.ThrowIfNull(context);
+        supportId = RequireBoundedIdentifier(supportId, nameof(supportId));
+        correlationId = RequireBoundedIdentifier(correlationId, nameof(correlationId));
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (connection.State != System.Data.ConnectionState.Open)
+            await connection.OpenAsync(cancellationToken);
+
+        await using var transaction = (SqlTransaction)await connection.BeginTransactionAsync(cancellationToken);
+        var committed = false;
+        try
+        {
+            await AcquirePolicyRoleLockAsync(connection, transaction, cancellationToken);
+            var readBefore = await ReadRoleStateAsync(
+                connection, transaction, CompanionReadRuntimeRoleName, cancellationToken);
+            RequireConformingReadRole(readBefore);
+
+            var policyRole = await ReadRoleStateAsync(
+                connection, transaction, CompanionPolicyRuntimeRoleName, cancellationToken);
+            var created = false;
+            if (policyRole is null)
+            {
+                await using var create = new SqlCommand(
+                    $"CREATE ROLE [{CompanionPolicyRuntimeRoleName}] AUTHORIZATION [dbo];",
+                    connection,
+                    transaction);
+                await create.ExecuteNonQueryAsync(cancellationToken);
+                created = true;
+                policyRole = await ReadRoleStateAsync(
+                    connection, transaction, CompanionPolicyRuntimeRoleName, cancellationToken);
+            }
+
+            RequireAuthorityFreePolicyRole(policyRole);
+            var readAfter = await ReadRoleStateAsync(
+                connection, transaction, CompanionReadRuntimeRoleName, cancellationToken);
+            if (readBefore != readAfter)
+                throw new InvalidOperationException("The Companion read runtime role changed during the operation.");
+
+            var occurredAtUtc = DateTimeOffset.UtcNow;
+            var payload = JsonSerializer.Serialize(new
+            {
+                schemaVersion = 1,
+                operation = CompanionPolicyRoleOperationVersion,
+                roleName = CompanionPolicyRuntimeRoleName,
+                outcome = created ? "created" : "preexisting",
+                owner = "dbo",
+                databaseRole = true,
+                memberCount = 0,
+                parentRoleCount = 0,
+                explicitPermissionCount = 0,
+                ownedSecurableCount = 0,
+                inheritedApplicationAuthorityCount = 0,
+                readRuntimeRoleUnchanged = true,
+                supportId,
+                correlationId,
+                operationId = context.OperationId,
+                occurredAtUtc
+            });
+            if (Encoding.UTF8.GetByteCount(payload) > 4096)
+                throw new InvalidOperationException("The policy-role bootstrap evidence exceeded its size bound.");
+
+            await transaction.CommitAsync(cancellationToken);
+            committed = true;
+            await (evidenceWriter ?? Console.Out).WriteLineAsync(payload);
+            return 0;
+        }
+        catch
+        {
+            if (committed)
+                throw;
+            try
+            {
+                await transaction.RollbackAsync(CancellationToken.None);
+            }
+            catch
+            {
+                throw new InvalidOperationException(
+                    "The policy-role bootstrap failed and transaction rollback was not conclusive.");
+            }
+            throw;
+        }
+    }
+
+    private static async Task AcquirePolicyRoleLockAsync(
+        SqlConnection connection,
+        SqlTransaction transaction,
+        CancellationToken cancellationToken)
+    {
+        await using var command = new SqlCommand("""
+            DECLARE @Result int;
+            EXEC @Result = sys.sp_getapplock
+                @Resource = N'AdventuresSuite.SqlAdministrator.CompanionPolicyRuntimeRole.v1',
+                @LockMode = N'Exclusive',
+                @LockOwner = N'Transaction',
+                @LockTimeout = 0;
+            IF @Result < 0 THROW 51000, 'The policy-role administrator lock is unavailable.', 1;
+            """, connection, transaction);
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    private static async Task<RoleState?> ReadRoleStateAsync(
+        SqlConnection connection,
+        SqlTransaction transaction,
+        string exactRoleName,
+        CancellationToken cancellationToken)
+    {
+        await using var command = new SqlCommand("""
+            SELECT principal.name, principal.type, principal.is_fixed_role,
+                   COALESCE(owner.name, N''),
+                   (SELECT COUNT_BIG(*) FROM sys.database_role_members AS membership
+                    WHERE membership.role_principal_id = principal.principal_id),
+                   (SELECT COUNT_BIG(*) FROM sys.database_role_members AS membership
+                    WHERE membership.member_principal_id = principal.principal_id),
+                   (SELECT COUNT_BIG(*) FROM sys.database_permissions AS permission
+                    WHERE permission.grantee_principal_id = principal.principal_id),
+                   ((SELECT COUNT_BIG(*) FROM sys.schemas AS schemaValue
+                     WHERE schemaValue.principal_id = principal.principal_id)
+                    + (SELECT COUNT_BIG(*) FROM sys.objects AS objectValue
+                       WHERE objectValue.principal_id = principal.principal_id))
+            FROM sys.database_principals AS principal
+            LEFT JOIN sys.database_principals AS owner
+              ON owner.principal_id = principal.owning_principal_id
+            WHERE principal.name COLLATE Latin1_General_100_CI_AS = @RoleName
+            ORDER BY principal.principal_id;
+            """, connection, transaction);
+        command.Parameters.Add("@RoleName", System.Data.SqlDbType.NVarChar, 128).Value = exactRoleName;
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        var states = new List<RoleState>(2);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            states.Add(new(
+                reader.GetString(0), reader.GetString(1), reader.GetBoolean(2), reader.GetString(3),
+                reader.GetInt64(4), reader.GetInt64(5), reader.GetInt64(6), reader.GetInt64(7)));
+        }
+
+        if (states.Count > 1)
+            throw new InvalidOperationException("The administrator role identity is ambiguous.");
+        if (states.Count == 0)
+            return null;
+        if (!string.Equals(states[0].Name, exactRoleName, StringComparison.Ordinal))
+            throw new InvalidOperationException("A case-altered administrator role identity already exists.");
+        return states[0];
+    }
+
+    private static void RequireAuthorityFreePolicyRole(RoleState? role)
+    {
+        if (role is null
+            || role.Type != "R"
+            || role.IsFixedRole
+            || !string.Equals(role.Owner, "dbo", StringComparison.Ordinal)
+            || role.MemberCount != 0
+            || role.ParentRoleCount != 0
+            || role.ExplicitPermissionCount != 0
+            || role.OwnedSecurableCount != 0)
+        {
+            throw new InvalidOperationException(
+                "The existing Companion policy runtime role is not the exact authority-free prerequisite.");
+        }
+    }
+
+    private static void RequireConformingReadRole(RoleState? role)
+    {
+        if (role is null
+            || role.Type != "R"
+            || role.IsFixedRole
+            || !string.Equals(role.Owner, "dbo", StringComparison.Ordinal)
+            || role.MemberCount != 0
+            || role.ParentRoleCount != 0
+            || role.OwnedSecurableCount != 0)
+        {
+            throw new InvalidOperationException("The Companion read runtime role is not conforming.");
+        }
     }
 
     private static async Task<int> BootstrapAsync(SqlConnection connection, Context context)
@@ -206,8 +403,8 @@ internal static class SqlAdministratorOperationRunner
             objectCounts.Add(new { schema, type, count });
             objectCountSignatures.Add($"{schema}|{type}|{count}");
         }
-        if (schemas.Count > 3 || roles.Length > 4 || principals.Count > 2
-            || permissions.Count > 128 || rawScripts.Count > 9 || objectCounts.Count > 24)
+        if (schemas.Count > 3 || roles.Length > 5 || principals.Count > 2
+            || permissions.Count > 164 || rawScripts.Count > 11 || objectCounts.Count > 24)
             throw new InvalidOperationException("The SQL administrator baseline evidence exceeded its bounds.");
 
         var journalIsValid = TryNormalizeJournal(rawScripts, out var scripts);
@@ -235,8 +432,9 @@ internal static class SqlAdministratorOperationRunner
             && schemaJson.Contains("\"audit\",\"owner\":\"db_ddladmin\"", StringComparison.Ordinal)
             && roleNames.SequenceEqual(new[]
             {
-                "AdventuresSuiteAuthenticationRuntime", "AdventuresSuiteCompanionReadRuntime",
-                "AdventuresSuiteMembershipRuntime", "AdventuresSuitePlanningRuntime"
+                "AdventuresSuiteAuthenticationRuntime", "AdventuresSuiteCompanionPolicyRuntime",
+                "AdventuresSuiteCompanionReadRuntime", "AdventuresSuiteMembershipRuntime",
+                "AdventuresSuitePlanningRuntime"
             }, StringComparer.Ordinal)
             && roles.All(role => !JsonSerializer.Serialize(role).Contains("unexpected-redacted", StringComparison.Ordinal))
             && principals.Count == 1
@@ -359,6 +557,22 @@ internal static class SqlAdministratorOperationRunner
             ? Environment.GetEnvironmentVariable(name)!.Trim()
             : throw new InvalidOperationException($"Set {name} for the reviewed administrator operation.");
 
+    private static string RequireBoundedIdentifier(string name) =>
+        RequireBoundedIdentifier(Require(name), name);
+
+    private static string RequireBoundedIdentifier(string value, string parameterName)
+    {
+        if (string.IsNullOrWhiteSpace(value)
+            || value.Length is < 8 or > 64
+            || value != value.Trim()
+            || value.Any(character => character is not (>= 'a' and <= 'z')
+                and not (>= 'A' and <= 'Z')
+                and not (>= '0' and <= '9')
+                and not '-' and not '_' and not '.'))
+            throw new ArgumentException("A bounded operation identifier is required.", parameterName);
+        return value;
+    }
+
     private static string RequireHex(string name, int length)
     {
         var value = Require(name);
@@ -377,4 +591,14 @@ internal static class SqlAdministratorOperationRunner
         string WorkflowSha256, long PackageRunId, long PackageArtifactId,
         string PackageSha256, string CatalogSha256, string AdministratorIdentityResourceId,
         string SqlServerResourceId, string PrivateEndpointResourceId);
+
+    private sealed record RoleState(
+        string Name,
+        string Type,
+        bool IsFixedRole,
+        string Owner,
+        long MemberCount,
+        long ParentRoleCount,
+        long ExplicitPermissionCount,
+        long OwnedSecurableCount);
 }

@@ -17,7 +17,7 @@ public sealed class LocalAlphaBootstrapIntegrationTests
         await ExecuteAsync(master!, $"CREATE DATABASE [{databaseName}];");
         try
         {
-            DatabaseMigratorRunner.Migrate(database);
+            await CompanionPolicyMigrationTestHarness.MigrateAllAsync(database);
             await LocalAlphaBootstrap.BootstrapApprovedTargetAsync(database);
             var first = await SignatureAsync(database);
             await LocalAlphaBootstrap.BootstrapApprovedTargetAsync(database);

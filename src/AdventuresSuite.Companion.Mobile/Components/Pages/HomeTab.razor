@@ -1,6 +1,7 @@
 @using Microsoft.AspNetCore.Components
 @inject CompanionTextCatalog TextCatalog
 
+<div class="home-overview">
 <article class="hero-card">
     @if (!string.IsNullOrWhiteSpace(Adventure.HeroImagePath))
     {
@@ -60,6 +61,7 @@
         <button aria-label="Review readiness" @onclick="OnOpenReadiness">›</button>
     </div>
 </section>
+</div>
 
 @code {
     [Parameter, EditorRequired]
