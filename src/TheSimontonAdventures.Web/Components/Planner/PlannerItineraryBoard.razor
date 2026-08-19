@@ -21,9 +21,9 @@
             <ol class="planner-board__route-list">
                 @foreach (var destination in Plan.Destinations.OrderBy(item => item.Sequence))
                 {
-                    <li>
+                    <li class="@(IsSelected(destination) ? "planner-board__selected" : null)">
                         <span class="planner-board__sequence" aria-hidden="true">@destination.Sequence</span>
-                        <div><strong>@destination.Name</strong><span><time datetime="@DateValue(destination.Dates.Start)">@FormatDate(destination.Dates.Start)</time>–<time datetime="@DateValue(destination.Dates.End)">@FormatDate(destination.Dates.End)</time> · @destination.TimeZone</span></div>
+                        <div><button type="button" class="planner-board__context-button" aria-pressed="@IsSelected(destination)" @onclick="() => SelectDestination(destination)"><strong>@destination.Name</strong><span><time datetime="@DateValue(destination.Dates.Start)">@FormatDate(destination.Dates.Start)</time>–<time datetime="@DateValue(destination.Dates.End)">@FormatDate(destination.Dates.End)</time> · @destination.TimeZone</span></button></div>
                     </li>
                 }
             </ol>
@@ -61,8 +61,9 @@
             <ol class="planner-board__day-list">
                 @foreach (var day in Plan.Days)
                 {
-                    <li><article class="planner-board__day">
+                    <li><article class="planner-board__day @(IsSelected(day) ? "planner-board__selected" : null)">
                         <header><p><time datetime="@DateValue(day.Date)">@day.Date.ToString("ddd, MMM d, yyyy")</time> · @day.TimeZone</p><h5>@day.Title</h5>@if (DestinationName(day) is { } destinationName){<span>@destinationName</span>}</header>
+                        <button type="button" class="planner-board__context-button planner-board__day-context" aria-pressed="@IsSelected(day)" @onclick="() => SelectDay(day)">Explore ideas for @day.Title</button>
                         @if (CanEdit)
                         {
                             <details class="planner-board__disclosure planner-board__day-editor" name="planner-board-action">

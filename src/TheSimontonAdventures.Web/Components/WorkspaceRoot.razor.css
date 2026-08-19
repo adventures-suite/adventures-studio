@@ -32,6 +32,8 @@
 .plan-card dd { font-weight: 700; margin: 0; text-align: right; }
 .plan-link, .workspace-back { color: #294b38; display: inline-block; font-weight: 700; margin-top: 1rem; }
 .plan-detail { display: grid; gap: 2.5rem; }
+.planner-contextual-layout { display: grid; grid-template-columns: minmax(0, 1fr) var(--planner-ideas-width); gap: 1.25rem; align-items: start; }
+@media (max-width: 72rem) { .planner-contextual-layout { display: block; } }
 .plan-detail-header { align-items: start; display: grid; gap: 2rem; grid-template-columns: minmax(0, 1fr) minmax(15rem, auto); }
 .plan-detail-header h2 { font-size: clamp(1.8rem, 4vw, 3rem); }
 .plan-detail-header > div > p:last-child { color: var(--planner-shell-text-muted); font-size: 1.05rem; max-width: 52rem; }

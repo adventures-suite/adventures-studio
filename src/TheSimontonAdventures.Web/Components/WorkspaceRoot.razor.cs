@@ -36,6 +36,23 @@ public partial class WorkspaceRoot
     private CreatorId AddressedCreatorId { get; set; }
     private WorkspaceLoadState LoadState { get; set; } = WorkspaceLoadState.Landing;
     private string CreateIdempotencyKey { get; } = $"request_{Guid.NewGuid():N}";
+    private PlannerIdeasContext? SelectedIdeasContext { get; set; }
+    private int IdeasWidthPixels { get; set; } = 320;
+
+    private Task SelectIdeasContextAsync(PlannerIdeasContext context)
+    {
+        SelectedIdeasContext = context;
+        return Task.CompletedTask;
+    }
+
+    private Task ResizeIdeasAsync(int requestedWidthPixels)
+    {
+        IdeasWidthPixels = Math.Clamp(
+            requestedWidthPixels,
+            PlannerContextualIdeasRail.MinimumWidthPixels,
+            PlannerContextualIdeasRail.MaximumWidthPixels);
+        return Task.CompletedTask;
+    }
 
     private bool IsAuthenticated =>
         HttpContextAccessor.HttpContext?.User.Identity?.IsAuthenticated is true;
