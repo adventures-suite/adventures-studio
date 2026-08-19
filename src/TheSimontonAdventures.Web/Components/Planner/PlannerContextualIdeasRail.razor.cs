@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
 
 namespace TheSimontonAdventures.Web.Components;
 
@@ -16,10 +17,10 @@ public enum PlannerIdeasContextKind
     Day
 }
 
-/// <summary>Describes transient Planner context selected for Ideas presentation.</summary>
+/// <summary>Describes transient Planner context selected for FootSteps presentation.</summary>
 public sealed record PlannerIdeasContext
 {
-    /// <summary>Initializes a transient Ideas context.</summary>
+    /// <summary>Initializes a transient FootSteps context.</summary>
     public PlannerIdeasContext(PlannerIdeasContextKind kind, string id, string label) =>
         (Kind, Id, Label) = (kind, id, label);
 
@@ -33,13 +34,13 @@ public sealed record PlannerIdeasContext
     public string Label { get; }
 }
 
-/// <summary>Defines safe presentation states for the contextual Ideas rail.</summary>
+/// <summary>Defines safe presentation states for the contextual FootSteps rail.</summary>
 public enum PlannerIdeasState
 {
     /// <summary>No canvas context is selected.</summary>
     NoSelection,
 
-    /// <summary>Ideas are loading.</summary>
+    /// <summary>FootSteps are loading.</summary>
     Loading,
 
     /// <summary>No suggestions matched.</summary>
@@ -56,18 +57,23 @@ public enum PlannerIdeasState
 }
 
 /// <summary>Renders a responsive, presentation-only projection beside the authoritative itinerary.</summary>
-public partial class PlannerContextualIdeasRail : ComponentBase
+public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposable
 {
     private static readonly IReadOnlyList<int> RailPageSizeOptions = [1, 2, 3];
-    /// <summary>Gets the minimum supported Ideas rail width in pixels.</summary>
+    private const string PageSizePreferenceKey = "adventures-suite.planner.footsteps.rail-page-size";
+    /// <summary>Gets the minimum supported FootSteps rail width in pixels.</summary>
     public const int MinimumWidthPixels = 272;
-    /// <summary>Gets the maximum supported Ideas rail width in pixels.</summary>
+    /// <summary>Gets the maximum supported FootSteps rail width in pixels.</summary>
     public const int MaximumWidthPixels = 400;
 
     private double? PointerStartX { get; set; }
     private int PointerStartWidth { get; set; }
     private bool FocusCloseAfterRender { get; set; }
     private bool FocusOpenAfterRender { get; set; }
+    private IJSObjectReference? PreferenceModule { get; set; }
+
+    [Inject]
+    private IJSRuntime JavaScript { get; set; } = null!;
     private static readonly IReadOnlyDictionary<PlannerIdeasContextKind, IReadOnlyList<PlannerIdeaCard>> DevelopmentIdeas =
         new Dictionary<PlannerIdeasContextKind, IReadOnlyList<PlannerIdeaCard>>
         {
@@ -85,7 +91,7 @@ public partial class PlannerContextualIdeasRail : ComponentBase
             [
                 new("Activity", "One memorable local anchor", "Choose one meaningful experience and preserve room around it.", "Fictional local Alpha demo", "Demo snapshot", "Fits the selected itinerary day.", "AC"),
                 new("Meal rhythm", "Protect an unhurried meal", "Reserve a flexible meal window instead of filling every hour.", "Fictional local Alpha demo", "Demo snapshot", "Supports a realistic daily pace.", "MR"),
-                new("Pacing", "Keep nearby discoveries flexible", "Group optional ideas near the day's anchor to avoid unnecessary transfers.", "Fictional local Alpha demo", "Demo snapshot", "Uses the selected day as context.", "PC")
+                new("Pacing", "Keep nearby discoveries flexible", "Group optional discoveries near the day's anchor to avoid unnecessary transfers.", "Fictional local Alpha demo", "Demo snapshot", "Uses the selected day as context.", "PC")
             ]
         };
 
@@ -127,16 +133,16 @@ public partial class PlannerContextualIdeasRail : ComponentBase
         || !DevelopmentIdeas.TryGetValue(Context.Kind, out var ideas)
             ? []
             : ideas;
-    /// <summary>Gets the idea types available for the selected context.</summary>
+    /// <summary>Gets the FootStep types available for the selected context.</summary>
     internal IReadOnlyList<string> AvailableTypes => Ideas
         .Select(idea => idea.Type)
         .Distinct(StringComparer.Ordinal)
         .ToArray();
-    /// <summary>Gets the ideas matching the transient type filter.</summary>
+    /// <summary>Gets the FootSteps matching the transient type filter.</summary>
     internal IReadOnlyList<PlannerIdeaCard> FilteredIdeas => SelectedType is null
         ? Ideas
         : Ideas.Where(idea => idea.Type == SelectedType).ToArray();
-    /// <summary>Gets the ideas visible on the selected page.</summary>
+    /// <summary>Gets the FootSteps visible on the selected page.</summary>
     internal IReadOnlyList<PlannerIdeaCard> PagedIdeas => FilteredIdeas
         .Skip((CurrentPage - 1) * PageSize)
         .Take(PageSize)
@@ -165,11 +171,14 @@ public partial class PlannerContextualIdeasRail : ComponentBase
             CurrentPage = 1;
         }
     }
-    private Task ChangePageSizeAsync(int pageSize)
+    private async Task ChangePageSizeAsync(int pageSize)
     {
         PageSize = pageSize;
         CurrentPage = 1;
-        return Task.CompletedTask;
+        if (PreferenceModule is not null)
+        {
+            await PreferenceModule.InvokeVoidAsync("writePageSize", PageSizePreferenceKey, pageSize);
+        }
     }
 
     private Task ChangePageAsync(int page)
@@ -194,6 +203,20 @@ public partial class PlannerContextualIdeasRail : ComponentBase
     /// <inheritdoc />
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (firstRender)
+        {
+            PreferenceModule = await JavaScript.InvokeAsync<IJSObjectReference>(
+                "import", "./js/plannerPreferences.js");
+            var savedPageSize = await PreferenceModule.InvokeAsync<int?>(
+                "readPageSize", PageSizePreferenceKey);
+            if (savedPageSize is { } value && RailPageSizeOptions.Contains(value) && value != PageSize)
+            {
+                PageSize = value;
+                CurrentPage = 1;
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+
         if (FocusCloseAfterRender)
         {
             FocusCloseAfterRender = false;
@@ -243,6 +266,24 @@ public partial class PlannerContextualIdeasRail : ComponentBase
         : OnResizeRequested.InvokeAsync(PointerStartWidth - (int)Math.Round(args.ClientX - startX));
 
     private void EndPointerResize() => PointerStartX = null;
+
+    /// <summary>Releases the browser preference module owned by this component.</summary>
+    public async ValueTask DisposeAsync()
+    {
+        if (PreferenceModule is not null)
+        {
+            try
+            {
+                await PreferenceModule.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+                // Browser teardown already owns the disconnected module.
+            }
+        }
+
+        GC.SuppressFinalize(this);
+    }
 }
 
 /// <summary>Describes one narrow, non-authoritative suggestion card.</summary>

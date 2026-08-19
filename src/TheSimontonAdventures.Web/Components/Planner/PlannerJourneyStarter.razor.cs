@@ -1,116 +1,51 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
+using TheSimontonAdventures.Web.Planning;
 
 namespace TheSimontonAdventures.Web.Components;
 
-/// <summary>Describes a non-authoritative Journey idea selected before private plan creation.</summary>
-public sealed record PlannerJourneySeed
-{
-    /// <summary>Initializes a reviewable pre-creation Journey seed.</summary>
-    public PlannerJourneySeed(string title, string description) =>
-        (Title, Description) = (title, description);
-
-    /// <summary>Gets the suggested private-plan title.</summary>
-    public string Title { get; }
-
-    /// <summary>Gets the suggested private-plan working description.</summary>
-    public string Description { get; }
-}
-
-/// <summary>Renders the pre-plan choice between manual creation and Journey discovery.</summary>
-public partial class PlannerJourneyStarter : ComponentBase
+/// <summary>Renders the pre-plan choice between manual creation and authorized Journey Templates.</summary>
+public partial class PlannerJourneyStarter : ComponentBase, IAsyncDisposable
 {
     private static readonly IReadOnlyList<int> JourneyPageSizeOptions = [1, 2, 4];
-    private static readonly IReadOnlyList<DevelopmentJourneyIdea> DevelopmentIdeas =
-    [
-        new(
-            "portugal-rail",
-            "Portugal by rail",
-            "Pair Lisbon's neighborhoods with Porto's riverfront at a comfortable pace.",
-            "Lisbon → Coimbra → Porto",
-            "8–10 days",
-            "PT",
-            "AdventuresSuite curated Alpha collection",
-            "1.0",
-            [
-                new("lisbon", "Lisbon", 3, "Neighborhood walks, viewpoints, and flexible arrival time"),
-                new("coimbra", "Coimbra", 1, "A slower university-city pause between major stops"),
-                new("porto", "Porto", 3, "Riverfront exploration and an unhurried final stay")
-            ],
-            [
-                new("Arrive and settle in", "Lisbon", "A gentle neighborhood orientation"),
-                new("Lisbon perspectives", "Lisbon", "One anchor experience with flexible discoveries"),
-                new("Pause in Coimbra", "Coimbra", "Rail arrival and a compact historic-center day"),
-                new("Porto at the river", "Porto", "Ribeira, viewpoints, and an open evening")
-            ],
-            [
-                new("Lisbon → Coimbra", "Intercity rail", "Reserve seats after dates are confirmed"),
-                new("Coimbra → Porto", "Intercity rail", "Keep the arrival afternoon lightly planned")
-            ],
-            [
-                new("Lisbon", "A walkable central base for three nights"),
-                new("Coimbra", "One convenient overnight near the historic center"),
-                new("Porto", "A river-accessible base for the final three nights")
-            ]),
-        new(
-            "adriatic-coast",
-            "Adriatic coast and islands",
-            "Balance historic coastal cities with slower island time and flexible sea days.",
-            "Split → Hvar → Dubrovnik",
-            "9–12 days",
-            "AC",
-            "AdventuresSuite curated Alpha collection",
-            "1.0",
-            [
-                new("split", "Split", 3, "Old-town exploration with time beyond the palace"),
-                new("hvar", "Hvar", 3, "Island pace with weather-flexible choices"),
-                new("dubrovnik", "Dubrovnik", 3, "Historic walls and a slower final chapter")
-            ],
-            [
-                new("Settle into Split", "Split", "A light arrival and waterfront evening"),
-                new("Island rhythm", "Hvar", "One chosen experience with flexible beach time"),
-                new("Dubrovnik perspectives", "Dubrovnik", "Walls, neighborhoods, and an open evening")
-            ],
-            [
-                new("Split → Hvar", "Passenger ferry", "Schedules remain seasonal and unconfirmed"),
-                new("Hvar → Dubrovnik", "Passenger ferry", "Retain a weather-aware alternative")
-            ],
-            [
-                new("Split", "A central base with simple port access"),
-                new("Hvar", "A quieter base within walking distance of town"),
-                new("Dubrovnik", "A base balancing old-city access and calmer evenings")
-            ])
-    ];
+    private const string PageSizePreferenceKey = "adventures-suite.planner.footsteps.journey-page-size";
+    private readonly Dictionary<AdventureTemplateVersionId, string> idempotencyKeys = [];
+    private IJSObjectReference? PreferenceModule { get; set; }
 
-    /// <summary>Gets or sets whether fictional deterministic Journey ideas may appear.</summary>
-    [Parameter]
-    public bool EnableDevelopmentIdeas { get; set; }
+    [Inject]
+    private IJSRuntime JavaScript { get; set; } = null!;
 
-    /// <summary>Gets or sets the callback for a reviewed Journey idea selection.</summary>
+    /// <summary>Gets or sets the authorized immutable Journey Templates.</summary>
     [Parameter]
-    public EventCallback<PlannerJourneySeed> OnJourneySelected { get; set; }
+    public IReadOnlyList<AdventureTemplateBlueprint> Templates { get; set; } = [];
 
-    /// <summary>Gets or sets the callback that clears a previously selected Journey idea.</summary>
+    /// <summary>Gets or sets the antiforgery-protected template creation path.</summary>
     [Parameter]
-    public EventCallback OnStartFromScratch { get; set; }
+    public string CreateFromTemplatePath { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the requested BCP 47 catalog locale.</summary>
+    [Parameter]
+    public string Locale { get; set; } = "en-US";
+
+    /// <summary>Gets or sets the callback indicating whether template discovery is active.</summary>
+    [Parameter]
+    public EventCallback<bool> OnTemplateModeChanged { get; set; }
 
     /// <summary>Gets or sets whether Journey discovery is initially expanded.</summary>
     [Parameter]
     public bool StartWithIdeasOpen { get; set; }
 
-    /// <summary>Gets or sets the optional deterministic template initially shown in preview.</summary>
+    /// <summary>Gets or sets the optional exact template identity initially shown in preview.</summary>
     [Parameter]
-    public string? InitialPreviewKey { get; set; }
+    public string? InitialPreviewTemplateId { get; set; }
 
     /// <summary>Gets whether the Journey discovery panel is open.</summary>
     public bool IsBrowsingIdeas { get; private set; }
 
-    private DevelopmentJourneyIdea? SelectedIdea { get; set; }
-    private HashSet<string> SelectedDestinationKeys { get; } = new(StringComparer.Ordinal);
-    private string SelectedPace { get; set; } = "Balanced";
-    private string SelectedTransport { get; set; } = "Recommended mix";
+    private AdventureTemplateBlueprint? SelectedTemplate { get; set; }
     private int PageSize { get; set; } = 2;
     private int CurrentPage { get; set; } = 1;
-    private IReadOnlyList<DevelopmentJourneyIdea> PagedDevelopmentIdeas => DevelopmentIdeas
+    private IReadOnlyList<AdventureTemplateBlueprint> PagedTemplates => Templates
         .Skip((CurrentPage - 1) * PageSize)
         .Take(PageSize)
         .ToArray();
@@ -119,104 +54,112 @@ public partial class PlannerJourneyStarter : ComponentBase
     protected override void OnInitialized()
     {
         IsBrowsingIdeas = StartWithIdeasOpen;
-        if (EnableDevelopmentIdeas && InitialPreviewKey is not null)
+        if (InitialPreviewTemplateId is not null)
         {
-            var idea = DevelopmentIdeas.FirstOrDefault(candidate => candidate.Key == InitialPreviewKey);
-            if (idea is not null)
-            {
-                PreviewIdea(idea);
-            }
+            SelectedTemplate = Templates.FirstOrDefault(candidate =>
+                candidate.VersionId.TemplateId == InitialPreviewTemplateId);
         }
     }
 
-    private void BrowseIdeas()
+    private async Task BrowseIdeasAsync()
     {
         IsBrowsingIdeas = true;
         CurrentPage = 1;
+        await OnTemplateModeChanged.InvokeAsync(true);
     }
 
     private async Task StartFromScratchAsync()
     {
         IsBrowsingIdeas = false;
-        SelectedIdea = null;
-        SelectedDestinationKeys.Clear();
-        await OnStartFromScratch.InvokeAsync();
+        SelectedTemplate = null;
+        await OnTemplateModeChanged.InvokeAsync(false);
     }
 
-    private void PreviewIdea(DevelopmentJourneyIdea idea)
-    {
-        SelectedIdea = idea;
-        SelectedDestinationKeys.Clear();
-        foreach (var destination in idea.Destinations)
-        {
-            SelectedDestinationKeys.Add(destination.Key);
-        }
+    private void PreviewTemplate(AdventureTemplateBlueprint template) =>
+        SelectedTemplate = template;
 
-        SelectedPace = "Balanced";
-        SelectedTransport = "Recommended mix";
-    }
-
-    private Task ChangePageSizeAsync(int pageSize)
+    private async Task ChangePageSizeAsync(int pageSize)
     {
         PageSize = pageSize;
         CurrentPage = 1;
-        return Task.CompletedTask;
+        if (PreferenceModule is not null)
+        {
+            await PreferenceModule.InvokeVoidAsync("writePageSize", PageSizePreferenceKey, pageSize);
+        }
     }
 
     private Task ChangePageAsync(int page)
     {
         CurrentPage = page;
-        SelectedIdea = null;
-        SelectedDestinationKeys.Clear();
+        SelectedTemplate = null;
         return Task.CompletedTask;
     }
 
-    private void ToggleDestination(string key, ChangeEventArgs args)
+    private string IdempotencyKey(AdventureTemplateVersionId versionId)
     {
-        if (args.Value is true)
+        if (!idempotencyKeys.TryGetValue(versionId, out var key))
         {
-            SelectedDestinationKeys.Add(key);
+            key = $"request_{Guid.NewGuid():N}";
+            idempotencyKeys.Add(versionId, key);
         }
-        else
+
+        return key;
+    }
+
+    private static string Monogram(string title) => string.Concat(
+        title.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Take(2)
+            .Select(word => char.ToUpperInvariant(word[0])));
+
+    private static string Route(AdventureTemplateBlueprint template) =>
+        string.Join(" → ", template.Destinations.Select(destination => destination.Name));
+
+    private static IReadOnlyList<string> DiscoveryTags(AdventureTemplateBlueprint template) =>
+        new[]
         {
-            SelectedDestinationKeys.Remove(key);
+            $"{template.DurationDays} days",
+            $"{template.Destinations.Count} {(template.Destinations.Count == 1 ? "destination" : "destinations")}"
+        }
+        .Concat(template.Transportation
+            .Select(segment => segment.Mode)
+            .Distinct(StringComparer.OrdinalIgnoreCase))
+        .ToArray();
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        PreferenceModule = await JavaScript.InvokeAsync<IJSObjectReference>(
+            "import", "./js/plannerPreferences.js");
+        var savedPageSize = await PreferenceModule.InvokeAsync<int?>(
+            "readPageSize", PageSizePreferenceKey);
+        if (savedPageSize is { } value && JourneyPageSizeOptions.Contains(value) && value != PageSize)
+        {
+            PageSize = value;
+            CurrentPage = 1;
+            await InvokeAsync(StateHasChanged);
         }
     }
 
-    private Task UseSelectedIdeaAsync()
+    /// <summary>Releases the browser preference module owned by this component.</summary>
+    public async ValueTask DisposeAsync()
     {
-        if (SelectedIdea is null)
+        if (PreferenceModule is not null)
         {
-            return Task.CompletedTask;
+            try
+            {
+                await PreferenceModule.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+                // Browser teardown already owns the disconnected module.
+            }
         }
 
-        var includedDestinations = SelectedIdea.Destinations
-            .Where(destination => SelectedDestinationKeys.Contains(destination.Key))
-            .Select(destination => destination.Name)
-            .ToArray();
-        var route = includedDestinations.Length == 0
-            ? "No template destinations selected"
-            : string.Join(" → ", includedDestinations);
-        var description = $"{SelectedIdea.Summary} Proposed route: {route}. Pace: {SelectedPace}. Transportation: {SelectedTransport}.";
-        return OnJourneySelected.InvokeAsync(new PlannerJourneySeed(SelectedIdea.Title, description));
+        GC.SuppressFinalize(this);
     }
-
-    private sealed record DevelopmentJourneyIdea(
-        string Key,
-        string Title,
-        string Summary,
-        string Route,
-        string Duration,
-        string Monogram,
-        string Source,
-        string Version,
-        IReadOnlyList<DevelopmentDestination> Destinations,
-        IReadOnlyList<DevelopmentDay> Days,
-        IReadOnlyList<DevelopmentTravelSegment> TravelSegments,
-        IReadOnlyList<DevelopmentStayPattern> StayPatterns);
-
-    private sealed record DevelopmentDestination(string Key, string Name, int Nights, string Highlight);
-    private sealed record DevelopmentDay(string Title, string Destination, string Summary);
-    private sealed record DevelopmentTravelSegment(string Route, string Method, string Guidance);
-    private sealed record DevelopmentStayPattern(string Destination, string Guidance);
 }

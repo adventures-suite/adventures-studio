@@ -1,4 +1,4 @@
-# Planner Curated Idea Library
+# Planner Curated FootSteps Library
 
 **Status:** Approved Product and Architecture Direction
 
@@ -7,8 +7,9 @@
 ## Purpose
 
 AdventuresSuite should launch with a useful, trustworthy collection of travel
-ideas rather than waiting for a community marketplace to develop. The curated
-Idea Library supplies reusable inspiration to the Planner Ideas rail while
+FootSteps rather than waiting for a contributor ecosystem to develop. The
+curated FootSteps Library supplies reusable inspiration to the Planner
+FootSteps rail while
 preserving content ownership, Creator isolation, licensing, provenance,
 freshness, and the Planning review boundary.
 
@@ -19,19 +20,20 @@ The governing principle is:
 
 ## Ownership Boundary
 
-An Idea Library entry is reusable content owned by the Content Engine. It is not
-an `AdventurePlan`, plan child, booking, live inventory record, AI proposal, or
-Adventure Template. Planning consumes authorized idea projections and creates
-new plan-owned records only after a separate reviewed Planning operation.
+A FootStep Library entry is reusable content owned by the Content Engine. It is
+not an `AdventurePlan`, plan child, booking, live inventory record, AI proposal,
+or Adventure Template. Planning consumes authorized idea projections and
+creates new plan-owned records only after a separate reviewed Planning
+operation.
 
-Every idea has an explicit owning `CreatorId`. Adventures Studio-authored launch
+Every FootStep has an explicit owning `CreatorId`. Adventures Studio-authored launch
 content uses a named Adventures Studio Creator identity; it does not use a
 default, missing, or implicitly privileged Creator. Creator attribution,
 platform curation, catalog visibility, and authorization remain separate facts.
 
-Publishing an idea does not grant its owner access to a consuming Creator's
-plan. Adding an idea to a plan does not transfer ownership of the source or keep
-the plan live-linked to future revisions.
+Publishing a FootStep does not grant its owner access to a consuming Creator's
+plan. Applying a FootStep to a plan does not transfer ownership of the source
+or keep the plan live-linked to future revisions.
 
 ## Launch Library
 
@@ -167,11 +169,19 @@ private source is normally omitted rather than presented as a commercial lock.
 An approved catalog item may be shown as an upgrade only when product policy
 permits its existence to be disclosed.
 
+The customer-facing catalog may describe an authorized item as Included,
+Premium, Promotional, Separately licensed, Unavailable, or Already used. These
+are localized presentation labels over stable catalog-state identifiers, not
+authorization decisions or subscription-plan names. The authorized query must
+supply the state explicitly; Razor must never infer it from source, owner,
+content, or URL. Time-bounded promotions retain their exact grant and expiry
+evidence below the UI.
+
 ## Creator, Professional, and Traveler Contributions
 
 Creator and professional submissions may later enter a review queue with exact
 authorship, ownership, license, attribution, and commercial terms. Agency
-membership and idea authorship never grant customer-plan access. Continued
+membership and FootStep authorship never grant customer-plan access. Continued
 professional collaboration requires the separate plan-scoped engagement.
 
 Traveler suggestions inside one Adventure remain private, Adventure-scoped
@@ -180,6 +190,40 @@ Reusing a traveler contribution requires an explicit submission, contributor
 rights and consent, privacy review, editorial transformation, and publication
 decision. Completing or publishing an Adventure likewise does not silently
 convert its plan into reusable content.
+
+## Professional Authoring and Compensation Direction
+
+Travel professionals are a first-class future source of FootSteps. An agency
+Creator may author Journey, Destination, itinerary, activity, transportation,
+stay, or guidance FootSteps from expertise it owns or is licensed to reuse.
+This is a potential AdventuresSuite product surface for professional authoring,
+editorial review, catalog distribution, attribution, audience reach, and
+commercial participation; it is not merely another panel inside Planner.
+
+The initial architecture must preserve options for compensation without
+selecting a business model prematurely. Possible later models include a fixed
+commissioned-authoring fee, licensed catalog inclusion, subscription revenue
+sharing, per-use royalties, promotional sponsorship with clear disclosure, or
+professional-service leads. No model is approved by this document, and no
+usage event becomes payable until commercial, tax, refund, fraud, privacy,
+accounting, and reporting policies define that obligation.
+
+Future compensation requires separate, durable evidence for:
+
+- the owning agency Creator and credited professional author;
+- the exact immutable published FootStep version used;
+- rights, license, territory, effective dates, and required attribution;
+- the authorized discovery and use decision;
+- privacy-safe adoption events that do not reveal customer-plan content;
+- corrections, retirement, disputes, refunds, and legal holds; and
+- an explainable statement or settlement projection scoped to the payee.
+
+FootStep authorship, licensing, promotion, compensation, or adoption never
+grants access to the resulting customer plan. The customer Creator owns the
+instantiated plan. A professional who helps afterward still needs a separate,
+accepted, active, plan-scoped Planning Engagement. Payment capabilities must
+remain behind provider-neutral billing or payout adapters and must not be
+embedded in Planning, Content, or Razor contracts.
 
 ## Content, Resource, and Planning Integration
 

@@ -90,6 +90,14 @@ if (authenticationMode is not null
     builder.Services.AddScoped<IPlannerWorkspaceQueryService, PlannerWorkspaceQueryService>();
     builder.Services.AddSingleton<IPlanningCreationIdentityGenerator, GuidPlanningCreationIdentityGenerator>();
     builder.Services.AddScoped<IManualAdventurePlanCreateService, ManualAdventurePlanCreateService>();
+    builder.Services.AddSingleton<IAdventureTemplateCatalogSource>(services =>
+        string.Equals(authenticationMode, nameof(AuthenticationMode.Development), StringComparison.OrdinalIgnoreCase)
+            ? new DevelopmentAdventureTemplateCatalogSource(
+                services.GetRequiredService<IHostEnvironment>())
+            : new UnavailableAdventureTemplateCatalogSource());
+    builder.Services.AddScoped<IAdventureTemplateCatalogQueryService, AdventureTemplateCatalogQueryService>();
+    builder.Services.AddScoped<IAdventureTemplateUseResolver, AdventureTemplateUseResolver>();
+    builder.Services.AddScoped<IAdventureTemplateInstantiateService, AdventureTemplateInstantiateService>();
     builder.Services.AddScoped<IAdventurePlanOverviewEditService, AdventurePlanOverviewEditService>();
     builder.Services.AddScoped<IDestinationVisitAddService, DestinationVisitAddService>();
     builder.Services.AddScoped<IItineraryDayAddService, ItineraryDayAddService>();
@@ -328,6 +336,7 @@ else if (authenticationConfiguration.Mode == AuthenticationMode.Development)
 if (authenticationConfiguration.Mode is AuthenticationMode.ExternalProvider or AuthenticationMode.Development)
 {
     app.MapManualAdventurePlanCreateEndpoint();
+    app.MapAdventureTemplateInstantiateEndpoint();
     app.MapAdventurePlanOverviewEditEndpoint();
     app.MapDestinationVisitAddEndpoint();
     app.MapItineraryDayAddEndpoint();

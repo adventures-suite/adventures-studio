@@ -6,7 +6,7 @@ using TheSimontonAdventures.Web.Components;
 
 namespace TheSimontonAdventures.Web.Tests;
 
-/// <summary>Verifies the presentation-only Planner Ideas rail contract.</summary>
+/// <summary>Verifies the presentation-only Planner FootSteps rail contract.</summary>
 public sealed class PlannerContextualIdeasRailTests
 {
     /// <summary>The rail begins with an announced prompt and no fictional cards.</summary>
@@ -32,16 +32,16 @@ public sealed class PlannerContextualIdeasRailTests
             [nameof(PlannerContextualIdeasRail.EnableDevelopmentIdeas)] = true
         });
 
-        Assert.Contains("No ideas for this context", productionHtml, StringComparison.Ordinal);
+        Assert.Contains("No FootSteps for this context", productionHtml, StringComparison.Ordinal);
         Assert.DoesNotContain("Fictional local Alpha demo", productionHtml, StringComparison.Ordinal);
-        Assert.Contains("Ideas for", developmentHtml, StringComparison.Ordinal);
+        Assert.Contains("FootSteps for", developmentHtml, StringComparison.Ordinal);
         Assert.Contains("Example coast", developmentHtml, StringComparison.Ordinal);
         Assert.Contains("Fictional local Alpha demo", developmentHtml, StringComparison.Ordinal);
         Assert.Contains("not booked, available, or added to your plan", developmentHtml, StringComparison.Ordinal);
         Assert.Contains("Cards per page", developmentHtml, StringComparison.Ordinal);
     }
 
-    /// <summary>Development ideas change type and content with the selected planning context.</summary>
+    /// <summary>Development FootSteps change type and content with the selected planning context.</summary>
     [Fact]
     public async Task Rail_DevelopmentIdeas_AreContextSensitive()
     {
@@ -72,7 +72,7 @@ public sealed class PlannerContextualIdeasRailTests
         var adventureHtml = await RenderDevelopmentContextAsync(
             new PlannerIdeasContext(PlannerIdeasContextKind.Adventure, "plan-1", "Atlantic light"));
 
-        Assert.Contains("aria-label=\"Idea types for Example coast\"", destinationHtml, StringComparison.Ordinal);
+        Assert.Contains("aria-label=\"FootStep types for Example coast\"", destinationHtml, StringComparison.Ordinal);
         Assert.Contains("aria-pressed=\"true\"", destinationHtml, StringComparison.Ordinal);
         Assert.Contains("Whole Adventure", destinationHtml, StringComparison.Ordinal);
         Assert.DoesNotContain("Whole Adventure", adventureHtml, StringComparison.Ordinal);
@@ -80,10 +80,10 @@ public sealed class PlannerContextualIdeasRailTests
 
     /// <summary>Every non-populated state has explicit accessible status content.</summary>
     [Theory]
-    [InlineData(PlannerIdeasState.Loading, "Finding ideas")]
-    [InlineData(PlannerIdeasState.Empty, "No ideas for this context")]
-    [InlineData(PlannerIdeasState.Unavailable, "Ideas temporarily unavailable")]
-    [InlineData(PlannerIdeasState.Denied, "Ideas unavailable")]
+    [InlineData(PlannerIdeasState.Loading, "Finding FootSteps")]
+    [InlineData(PlannerIdeasState.Empty, "No FootSteps for this context")]
+    [InlineData(PlannerIdeasState.Unavailable, "FootSteps temporarily unavailable")]
+    [InlineData(PlannerIdeasState.Denied, "FootSteps unavailable")]
     public async Task Rail_RendersExplicitState(PlannerIdeasState state, string title)
     {
         var html = await RenderAsync(new() { [nameof(PlannerContextualIdeasRail.StateOverride)] = state });
@@ -118,6 +118,7 @@ public sealed class PlannerContextualIdeasRailTests
     {
         var services = new ServiceCollection();
         services.AddLogging();
+        services.AddSingleton<Microsoft.JSInterop.IJSRuntime, StaticTestJavaScriptRuntime>();
         await using var provider = services.BuildServiceProvider();
         await using var renderer = new HtmlRenderer(provider, provider.GetRequiredService<ILoggerFactory>());
         return await renderer.Dispatcher.InvokeAsync(async () =>

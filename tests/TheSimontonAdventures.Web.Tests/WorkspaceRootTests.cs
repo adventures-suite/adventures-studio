@@ -141,7 +141,7 @@ public sealed class WorkspaceRootTests
 
         Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/create\"", html);
         Assert.Contains("Start a journey", html);
-        Assert.Contains("Browse journey ideas", html);
+        Assert.Contains("Browse Journey FootSteps", html);
         Assert.Contains("Review and create your plan", html);
         Assert.Contains("name=\"idempotencyKey\"", html);
         Assert.Contains("name=\"title\"", html);

@@ -2,7 +2,7 @@
 
 @if (TotalItems > 0)
 {
-    <div class="idea-pager" aria-label="Idea pages">
+    <div class="idea-pager" aria-label="FootStep pages">
         <label>
             Cards per page
             <select value="@PageSize" @onchange="ChangePageSizeAsync">
@@ -12,7 +12,7 @@
                 }
             </select>
         </label>
-        <p aria-live="polite">Page @EffectivePage of @TotalPages · @TotalItems @(TotalItems == 1 ? "idea" : "ideas")</p>
+        <p aria-live="polite">Page @EffectivePage of @TotalPages · @TotalItems @(TotalItems == 1 ? "FootStep" : "FootSteps")</p>
         <div>
             <button type="button" disabled="@(EffectivePage <= 1)" @onclick="PreviousPageAsync">Previous</button>
             <button type="button" disabled="@(EffectivePage >= TotalPages)" @onclick="NextPageAsync">Next</button>
