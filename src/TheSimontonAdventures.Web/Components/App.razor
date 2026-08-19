@@ -34,7 +34,7 @@
 <body>
     @if (HostType == TrustedRequestHostType.PlatformWorkspace)
     {
-        <WorkspaceRoot />
+        <WorkspaceRoot @rendermode="InteractiveServer" />
     }
     else if (HostType == TrustedRequestHostType.PublicPlatform)
     {

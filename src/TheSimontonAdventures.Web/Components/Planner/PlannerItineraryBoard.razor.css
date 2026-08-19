@@ -41,5 +41,6 @@
 .planner-board__form-actions .planner-board__secondary-button:focus-visible { outline: 3px solid var(--planner-shell-focus); outline-offset: 2px; }
 .planner-board__form button:focus-visible, .planner-board__form input:focus-visible, .planner-board__form select:focus-visible { outline: 3px solid var(--planner-shell-focus); outline-offset: 2px; }
 .planner-board__form-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.planner-board__form-columns > div { display: grid; gap: .35rem; }
 @media (max-width: 56rem) { .planner-board__card { grid-column: 1 / -1; } .planner-board__header { align-items: flex-start; flex-direction: column; } .planner-board__header > p { text-align: left; } }
 @media (max-width: 36rem) { .planner-board__form-columns, .planner-board__activity-list li { grid-template-columns: 1fr; } }

@@ -15,6 +15,18 @@ namespace TheSimontonAdventures.Web.Tests;
 /// <summary>Verifies the Creator-independent workspace landing surface.</summary>
 public sealed class WorkspaceRootTests
 {
+    /// <summary>The workspace subtree is composed with the registered Interactive Server render mode.</summary>
+    [Fact]
+    public void WorkspaceHost_ComposesInteractiveServerBoundary()
+    {
+        var applicationRoot = FindApplicationRoot();
+        var appMarkup = File.ReadAllText(Path.Combine(applicationRoot, "Components", "App.razor"));
+        var workspaceMarkup = File.ReadAllText(Path.Combine(applicationRoot, "Components", "WorkspaceRoot.razor"));
+
+        Assert.Contains("<WorkspaceRoot @rendermode=\"InteractiveServer\" />", appMarkup);
+        Assert.Contains("<PlannerWorkspaceShell", workspaceMarkup);
+    }
+
     /// <summary>
     /// Ensures sign-in uses a full navigation so the browser can follow the
     /// cross-origin External ID challenge instead of an enhanced fetch.
@@ -336,6 +348,23 @@ public sealed class WorkspaceRootTests
 
     private static int Count(string value, string search) =>
         value.Split(search, StringSplitOptions.None).Length - 1;
+
+    private static string FindApplicationRoot()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null)
+        {
+            var candidate = Path.Combine(directory.FullName, "src", "TheSimontonAdventures.Web");
+            if (Directory.Exists(candidate))
+            {
+                return candidate;
+            }
+
+            directory = directory.Parent;
+        }
+
+        throw new DirectoryNotFoundException("Could not locate the web application root.");
+    }
 
     private static async Task<string> RenderAsync(
         ClaimsPrincipal user,
