@@ -150,6 +150,16 @@ do not gain plan authority, and its client state does not bypass Creator,
 instance, lifecycle, concurrency, audit, or Platform Capability enforcement.
 See `docs/architecture/planner-contextual-ideas.md`.
 
+AdventuresSuite launches with a deliberately curated Idea Library so early
+customers receive useful inspiration before a contributor ecosystem develops.
+Launch ideas may be authored by Adventures Studio, intentionally transformed
+from approved Content Engine stories, or commissioned and licensed from
+Creators and travel professionals. Each item retains ownership, attribution,
+rights, version, freshness, visibility, and review state. Traveler suggestions
+remain private to their Adventure unless separately submitted, licensed,
+reviewed, and published. See
+`docs/architecture/planner-curated-idea-library.md`.
+
 ### Adventure Map
 
 - whole-Adventure overview with ordered destinations and major travel legs

@@ -221,6 +221,13 @@ with a presentation-only, deterministic rail and then one reviewed
 `docs/architecture/planner-contextual-ideas.md`. Do not introduce provider
 search, AI ranking, templates, or direct drop mutation in the first rail slice.
 
+The rail may be prepopulated only after the curated Idea Library contracts and
+reviewed import boundary in
+`docs/architecture/planner-curated-idea-library.md` are approved. Production
+ideas remain Content Engine data consumed through `ITravelContentService` or a
+narrower approved contract; they are never compiled into Razor, application
+conditionals, SQL migration seed rows, or development fixtures.
+
 Scope:
 
 - Adventure dashboard
@@ -233,6 +240,8 @@ Scope:
 - private read-only preview
 - presentation-only contextual Ideas rail with destination/day selection,
   responsive states, and no authoritative mutation
+- reviewed curated Idea Library foundation and environment-specific launch
+  collection before production rail population
 - authorized layered Adventure map with overview, segment, destination, day,
   selected-place, and candidate-point-of-interest views
 - deterministic private Adventure Travel Playbook preview and first PDF export

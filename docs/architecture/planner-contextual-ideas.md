@@ -69,6 +69,12 @@ structurally distinct:
 - grounded research with source evidence; and
 - AI or professional proposals awaiting review.
 
+AdventuresSuite should prepopulate a reviewed launch collection through the
+Content Engine rather than waiting for community supply. Its ownership,
+immutable versions, editorial lifecycle, attribution, licensing, freshness,
+visibility, entitlement, Resource, moderation, import, and environment rules
+are defined in `docs/architecture/planner-curated-idea-library.md`.
+
 Published editorial records, templates, provider candidates, and AI proposals
 do not become Planning records merely because they appear beside a plan. The UI
 must distinguish curated, suggested, stale, unavailable, already added, and
@@ -172,15 +178,17 @@ the owning Planning command's idempotency rules.
 2. Add an authorized provider-neutral query contract backed first by existing
    published content through `ITravelContentService`; do not hardcode
    destination content.
-3. Add the explicit **Add to plan** preview for one existing Planning command
+3. Establish the reviewed curated Idea Library foundation and a small
+   environment-specific launch collection.
+4. Add the explicit **Add to plan** preview for one existing Planning command
    and prove authorization, concurrency, audit, idempotency, and source
    provenance.
-4. Add accessible drag and drop as an equivalent enhancement to that proven
+5. Add accessible drag and drop as an equivalent enhancement to that proven
    action.
-5. Add template, private reusable idea, grounded research, map/place, and AI or
+6. Add template, private reusable idea, grounded research, map/place, and AI or
    professional sources only after each owning architecture and permission
    boundary is implemented.
-6. Add measured ranking and personalization only after consent, classification,
+7. Add measured ranking and personalization only after consent, classification,
    evaluation, reporting, retention, and cost policies are approved.
 
 ## Definition of Done
