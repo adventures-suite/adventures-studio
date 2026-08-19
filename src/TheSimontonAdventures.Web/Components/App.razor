@@ -84,7 +84,7 @@
             {
                 SignInUrl = PlatformHostConfiguration.Value.WorkspaceSignInUrl;
             }
-            else if (AuthenticationConfiguration.Mode == AuthenticationMode.ExternalProvider
+            else if (AuthenticationConfiguration.Mode is AuthenticationMode.ExternalProvider or AuthenticationMode.Development
                 && Uri.TryCreate(AuthenticationConfiguration.WorkspaceOrigin, UriKind.Absolute, out var workspace))
             {
                 SignInUrl = new Uri(workspace, AdventuresSuite.Identity.ExternalId.ExternalIdBrowserEndpoints.SignInPath)

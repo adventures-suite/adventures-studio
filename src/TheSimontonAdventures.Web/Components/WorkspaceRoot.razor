@@ -217,9 +217,19 @@
             <p class="workspace-sign-in__description">
                 Dream, plan, preserve, and publish meaningful adventures in one private workspace.
             </p>
-            <a class="workspace-sign-in__action"
-               href="@ExternalIdBrowserEndpoints.SignInPath"
-               data-enhance-nav="false">Sign in to your workspace</a>
+            @if (IsDevelopmentAuthentication)
+            {
+                <form method="post" action="@DevelopmentSignInPath">
+                    <AntiforgeryToken />
+                    <button class="workspace-sign-in__action" type="submit">Sign in as the local alpha planner</button>
+                </form>
+            }
+            else
+            {
+                <a class="workspace-sign-in__action"
+                   href="@ExternalIdBrowserEndpoints.SignInPath"
+                   data-enhance-nav="false">Sign in to your workspace</a>
+            }
         </section>
     }
     </div>

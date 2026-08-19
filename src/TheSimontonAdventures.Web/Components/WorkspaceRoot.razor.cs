@@ -1,4 +1,5 @@
 using AdventuresSuite.Identity;
+using AdventuresSuite.Identity.ExternalId;
 using AdventuresSuite.Planning;
 using Microsoft.AspNetCore.Components;
 using TheSimontonAdventures.Web.Authorization;
@@ -25,6 +26,16 @@ public partial class WorkspaceRoot
 
     private bool IsAuthenticated =>
         HttpContextAccessor.HttpContext?.User.Identity?.IsAuthenticated is true;
+
+    private string CurrentLocalPath =>
+        HttpContextAccessor.HttpContext?.Request.Path.Value ?? "/";
+
+    private string DevelopmentSignInPath =>
+        $"{ExternalIdBrowserEndpoints.SignInPath}?returnUrl={Uri.EscapeDataString(CurrentLocalPath)}";
+
+    private bool IsDevelopmentAuthentication =>
+        HttpContextAccessor.HttpContext?.RequestServices
+            .GetService<AuthenticationConfiguration>()?.Mode == AuthenticationMode.Development;
 
     protected override async Task OnInitializedAsync()
     {

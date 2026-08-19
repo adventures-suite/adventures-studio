@@ -36,6 +36,11 @@ public static class AuthenticationHosting
             return disabled;
         }
 
+        if (string.Equals(modeValue, nameof(AuthenticationMode.Development), StringComparison.OrdinalIgnoreCase))
+        {
+            return AddDevelopmentAuthentication(builder, section);
+        }
+
         if (!string.Equals(
                 modeValue,
                 nameof(AuthenticationMode.ExternalProvider),
@@ -126,6 +131,65 @@ public static class AuthenticationHosting
         return configuration;
     }
 
+    private static AuthenticationConfiguration AddDevelopmentAuthentication(
+        WebApplicationBuilder builder,
+        IConfiguration section)
+    {
+        if (!builder.Environment.IsDevelopment()
+            || !section.GetValue<bool>("Development:Enabled"))
+        {
+            throw new InvalidOperationException(
+                "Development authentication requires the exact Development environment and explicit enablement.");
+        }
+
+        var configuration = new AuthenticationConfiguration(
+            AuthenticationMode.Development,
+            Require(section, "WorkspaceOrigin"),
+            new ExternalIdentityProviderId(Require(section, "ProviderId")),
+            null, null, null, null, null,
+            RequireDuration(section, "AbsoluteSessionLifetime"),
+            RequireDuration(section, "IdleSessionTimeout"),
+            RequireDuration(section, "ActivityTouchInterval"),
+            RequireDuration(section, "CircuitRevalidationInterval"));
+        var connectionString = LocalDevelopmentSqlConfiguration.Validate(
+            Require(section, "SqlConnectionString"),
+            Require(section, "SqlDatabaseName"),
+            builder.Environment.EnvironmentName,
+            section.GetValue<bool>("Development:Enabled"));
+        var identity = new DevelopmentAuthenticationIdentity(new ExternalIdentityKey(
+            configuration.ProviderId,
+            new ExternalIdentityIssuer(Require(section, "Development:Issuer")),
+            new ExternalIdentitySubject(Require(section, "Development:Subject"))));
+
+        builder.Services.AddSingleton(configuration);
+        builder.Services.AddSingleton(identity);
+        builder.Services.AddSingleton<IAuthenticationClock, SystemAuthenticationClock>();
+        builder.Services.AddSingleton<IAuthenticationIdentityGenerator>(new DevelopmentIdentityGenerator(
+            new UserId(Require(section, "Development:UserId")),
+            new ExternalIdentityId(Require(section, "Development:ExternalIdentityId"))));
+        builder.Services.AddSingleton<IAuthenticationPersistenceTransactionFactory>(
+            new SqlAuthenticationTransactionFactory(connectionString));
+        builder.Services.AddSingleton(new SqlAuthenticationReadinessProbe(connectionString));
+        builder.Services.AddScoped<DevelopmentAuthenticationAdapter>(services => new(
+            builder.Environment.EnvironmentName,
+            configuration,
+            identity,
+            services.GetRequiredService<IAuthenticationPersistenceTransactionFactory>(),
+            services.GetRequiredService<IAuthenticationIdentityGenerator>(),
+            services.GetRequiredService<IAuthenticationClock>()));
+        builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = ExternalIdAuthenticationExtensions.SessionScheme;
+                options.DefaultChallengeScheme = ExternalIdAuthenticationExtensions.SessionScheme;
+                options.DefaultSignInScheme = ExternalIdAuthenticationExtensions.SessionScheme;
+            })
+            .AddAdventuresSuiteDevelopmentAuthentication(configuration);
+        builder.Services.AddDataProtection().SetApplicationName("AdventuresSuite.LocalAlpha.Authentication");
+        builder.Services.AddSingleton<AuthenticationReadinessState>();
+        builder.Services.AddHostedService<DevelopmentAuthenticationReadinessHostedService>();
+        return configuration;
+    }
+
     private static string Require(IConfiguration section, string key) =>
         !string.IsNullOrWhiteSpace(section[key]) && section[key] == section[key]!.Trim()
             ? section[key]!
@@ -180,6 +244,21 @@ public sealed class CryptographicAuthenticationIdentityGenerator : IAuthenticati
     public UserSessionId CreateSessionId() => new($"session_{Guid.NewGuid():N}");
 }
 
+/// <summary>Uses fixed server-owned user identities and unpredictable session identities.</summary>
+public sealed class DevelopmentIdentityGenerator(
+    UserId userId,
+    ExternalIdentityId externalIdentityId) : IAuthenticationIdentityGenerator
+{
+    /// <inheritdoc />
+    public UserId CreateUserId() => userId;
+
+    /// <inheritdoc />
+    public ExternalIdentityId CreateExternalIdentityId() => externalIdentityId;
+
+    /// <inheritdoc />
+    public UserSessionId CreateSessionId() => new($"session_{Guid.NewGuid():N}");
+}
+
 /// <summary>Tracks safe authentication dependency readiness.</summary>
 public sealed class AuthenticationReadinessState
 {
@@ -206,6 +285,26 @@ internal sealed class AuthenticationReadinessHostedService(
 
         await persistenceProbe.VerifyAsync(cancellationToken);
         await signedAssertionProvider.VerifyAsync(cancellationToken);
+        readinessState.MarkReady();
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+}
+
+internal sealed class DevelopmentAuthenticationReadinessHostedService(
+    IDataProtectionProvider dataProtectionProvider,
+    SqlAuthenticationReadinessProbe persistenceProbe,
+    AuthenticationReadinessState readinessState) : IHostedService
+{
+    public async Task StartAsync(CancellationToken cancellationToken)
+    {
+        var protector = dataProtectionProvider.CreateProtector("LocalAlpha.Readiness.v1");
+        if (protector.Unprotect(protector.Protect("ready")) != "ready")
+        {
+            throw new InvalidOperationException("Development authentication dependencies are unavailable.");
+        }
+
+        await persistenceProbe.VerifyAsync(cancellationToken);
         readinessState.MarkReady();
     }
 
