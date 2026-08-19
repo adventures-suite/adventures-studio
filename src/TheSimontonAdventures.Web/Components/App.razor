@@ -40,7 +40,12 @@
     }
     else if (HostType == TrustedRequestHostType.PublicPlatform)
     {
-        <PlatformLanding SignInUrl="@SignInUrl" FeaturedAdventureUrl="@FeaturedAdventureUrl" />
+        <PlatformLanding SignInUrl="@SignInUrl"
+                         FeaturedAdventureUrl="@FeaturedAdventureUrl"
+                         JourneyImageUrl="@JourneyImageUrl"
+                         HeroImageUrl="@HeroImageUrl"
+                         StoryImageUrl="@StoryImageUrl"
+                         FeaturedImageUrl="@FeaturedImageUrl" />
     }
     else
     {
@@ -62,6 +67,10 @@
     private TrustedRequestHostType HostType { get; set; }
     private string SignInUrl { get; set; } = "#returning-creators";
     private string FeaturedAdventureUrl { get; set; } = string.Empty;
+    private string JourneyImageUrl { get; set; } = string.Empty;
+    private string HeroImageUrl { get; set; } = string.Empty;
+    private string StoryImageUrl { get; set; } = string.Empty;
+    private string FeaturedImageUrl { get; set; } = string.Empty;
     private string Locale { get; set; } = "en-US";
     private string WorkspacePath { get; set; } = "/";
     private string WorkspaceQueryString { get; set; } = string.Empty;
@@ -86,6 +95,10 @@
         if (HostType == TrustedRequestHostType.PublicPlatform)
         {
             FeaturedAdventureUrl = PlatformHostConfiguration.Value.FeaturedAdventureUrl;
+            JourneyImageUrl = PlatformHostConfiguration.Value.JourneyImageUrl;
+            HeroImageUrl = PlatformHostConfiguration.Value.HeroImageUrl;
+            StoryImageUrl = PlatformHostConfiguration.Value.StoryImageUrl;
+            FeaturedImageUrl = PlatformHostConfiguration.Value.FeaturedImageUrl;
             if (!string.IsNullOrWhiteSpace(PlatformHostConfiguration.Value.WorkspaceSignInUrl))
             {
                 SignInUrl = PlatformHostConfiguration.Value.WorkspaceSignInUrl;

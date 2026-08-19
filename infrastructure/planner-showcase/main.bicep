@@ -15,6 +15,9 @@ param featuredAdventureUrl string
 @description('Canonical HTTPS sign-in endpoint on the existing Creator workspace.')
 param workspaceSignInUrl string
 
+@description('Creator used only to initialize the Azure host resolver before platform classification.')
+param showcaseCreatorId string
+
 @description('Object ID of the GitHub dev-environment deployment principal.')
 param deploymentPrincipalObjectId string
 
@@ -54,7 +57,7 @@ resource showcaseApp 'Microsoft.Web/sites@2023-12-01' = {
       appSettings: [
         {
           name: 'ASPNETCORE_ENVIRONMENT'
-          value: 'Showcase'
+          value: 'Production'
         }
         {
           name: 'ASPNETCORE_FORWARDEDHEADERS_ENABLED'
@@ -67,6 +70,10 @@ resource showcaseApp 'Microsoft.Web/sites@2023-12-01' = {
         {
           name: 'Authentication__Mode'
           value: 'Disabled'
+        }
+        {
+          name: 'CreatorResolution__AzureDefaultCreatorId'
+          value: showcaseCreatorId
         }
         {
           name: 'PlatformHosts__Hosts__0'
