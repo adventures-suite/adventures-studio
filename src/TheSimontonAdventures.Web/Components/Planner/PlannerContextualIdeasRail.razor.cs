@@ -58,6 +58,7 @@ public enum PlannerIdeasState
 /// <summary>Renders a responsive, presentation-only projection beside the authoritative itinerary.</summary>
 public partial class PlannerContextualIdeasRail : ComponentBase
 {
+    private static readonly IReadOnlyList<int> RailPageSizeOptions = [1, 2, 3];
     /// <summary>Gets the minimum supported Ideas rail width in pixels.</summary>
     public const int MinimumWidthPixels = 272;
     /// <summary>Gets the maximum supported Ideas rail width in pixels.</summary>
@@ -90,6 +91,8 @@ public partial class PlannerContextualIdeasRail : ComponentBase
 
     private string? PreviousContextKey { get; set; }
     private string? SelectedType { get; set; }
+    private int PageSize { get; set; } = 3;
+    private int CurrentPage { get; set; } = 1;
 
     /// <summary>Gets or sets the selected authorized canvas context.</summary>
     [Parameter]
@@ -133,13 +136,22 @@ public partial class PlannerContextualIdeasRail : ComponentBase
     internal IReadOnlyList<PlannerIdeaCard> FilteredIdeas => SelectedType is null
         ? Ideas
         : Ideas.Where(idea => idea.Type == SelectedType).ToArray();
+    /// <summary>Gets the ideas visible on the selected page.</summary>
+    internal IReadOnlyList<PlannerIdeaCard> PagedIdeas => FilteredIdeas
+        .Skip((CurrentPage - 1) * PageSize)
+        .Take(PageSize)
+        .ToArray();
     /// <summary>Gets the CSS classes representing rail state.</summary>
     public string RailClasses => $"planner-ideas{(IsCollapsed ? " planner-ideas--collapsed" : string.Empty)}{(IsDrawerOpen ? " planner-ideas--drawer-open" : string.Empty)}";
 
     private ElementReference OpenButton { get; set; }
     private ElementReference CloseButton { get; set; }
     private void ToggleCollapsed() => IsCollapsed = !IsCollapsed;
-    private void SelectType(string? type) => SelectedType = type;
+    private void SelectType(string? type)
+    {
+        SelectedType = type;
+        CurrentPage = 1;
+    }
     private Task ShowWholeAdventureAsync() => OnAdventureContextRequested.InvokeAsync();
 
     /// <inheritdoc />
@@ -150,7 +162,20 @@ public partial class PlannerContextualIdeasRail : ComponentBase
         {
             PreviousContextKey = contextKey;
             SelectedType = null;
+            CurrentPage = 1;
         }
+    }
+    private Task ChangePageSizeAsync(int pageSize)
+    {
+        PageSize = pageSize;
+        CurrentPage = 1;
+        return Task.CompletedTask;
+    }
+
+    private Task ChangePageAsync(int page)
+    {
+        CurrentPage = page;
+        return Task.CompletedTask;
     }
     private Task OpenDrawerAsync()
     {

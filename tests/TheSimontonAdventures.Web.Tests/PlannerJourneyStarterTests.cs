@@ -46,6 +46,8 @@ public sealed class PlannerJourneyStarterTests
         Assert.Contains("Coimbra", html, StringComparison.Ordinal);
         Assert.Contains("Porto", html, StringComparison.Ordinal);
         Assert.Contains("Preview and customize", html, StringComparison.Ordinal);
+        Assert.Contains("Cards per page", html, StringComparison.Ordinal);
+        Assert.Contains("Page 1 of 1 · 2 ideas", html, StringComparison.Ordinal);
         Assert.Contains("not bookings, availability, or changes to a plan", html, StringComparison.Ordinal);
     }
 

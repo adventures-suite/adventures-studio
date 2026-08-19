@@ -38,6 +38,7 @@ public sealed class PlannerContextualIdeasRailTests
         Assert.Contains("Example coast", developmentHtml, StringComparison.Ordinal);
         Assert.Contains("Fictional local Alpha demo", developmentHtml, StringComparison.Ordinal);
         Assert.Contains("not booked, available, or added to your plan", developmentHtml, StringComparison.Ordinal);
+        Assert.Contains("Cards per page", developmentHtml, StringComparison.Ordinal);
     }
 
     /// <summary>Development ideas change type and content with the selected planning context.</summary>

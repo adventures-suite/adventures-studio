@@ -11,12 +11,12 @@
        @onpointerleave="EndPointerResize">
     <div class="planner-sidebar__header">
         <div class="planner-sidebar__brand">
-            <svg class="planner-sidebar__brand-mark" viewBox="0 0 32 32" role="img" aria-labelledby="planner-brand-title">
-                <title id="planner-brand-title">AdventuresSuite Planner</title>
-                <path d="M5 26 16 5l11 21M10 18h12" />
-            </svg>
             @if (!IsCollapsed)
             {
+                <svg class="planner-sidebar__brand-mark" viewBox="0 0 32 32" role="img" aria-labelledby="planner-brand-title">
+                    <title id="planner-brand-title">AdventuresSuite Planner</title>
+                    <path d="M5 26 16 5l11 21M10 18h12" />
+                </svg>
                 <span class="planner-sidebar__brand-name">AdventuresSuite</span>
             }
         </div>
@@ -62,27 +62,30 @@
         </button>
     </div>
 
-    <div class="planner-sidebar__resize-controls" aria-label="Navigation width controls">
-        <button type="button"
-                aria-label="Narrow Planner navigation"
-                disabled="@(WidthPixels <= MinimumWidthPixels)"
-                @onclick="DecreaseWidthAsync">−</button>
-        <span aria-hidden="true">Width</span>
-        <button type="button"
-                aria-label="Widen Planner navigation"
-                disabled="@(WidthPixels >= MaximumWidthPixels)"
-                @onclick="IncreaseWidthAsync">+</button>
-    </div>
+    @if (!IsCollapsed)
+    {
+        <div class="planner-sidebar__resize-controls" aria-label="Navigation width controls">
+            <button type="button"
+                    aria-label="Narrow Planner navigation"
+                    disabled="@(WidthPixels <= MinimumWidthPixels)"
+                    @onclick="DecreaseWidthAsync">−</button>
+            <span aria-hidden="true">Width</span>
+            <button type="button"
+                    aria-label="Widen Planner navigation"
+                    disabled="@(WidthPixels >= MaximumWidthPixels)"
+                    @onclick="IncreaseWidthAsync">+</button>
+        </div>
 
-    <div class="planner-sidebar__separator"
-         role="separator"
-         aria-label="Resize Planner navigation"
-         aria-orientation="vertical"
-         aria-valuemin="@MinimumWidthPixels"
-         aria-valuemax="@MaximumWidthPixels"
-         aria-valuenow="@WidthPixels"
-         tabindex="0"
-         @onkeydown="HandleResizeKeyAsync"
-         @onpointerdown="BeginPointerResizeAsync"
-         @onpointerdown:preventDefault="true"></div>
+        <div class="planner-sidebar__separator"
+             role="separator"
+             aria-label="Resize Planner navigation"
+             aria-orientation="vertical"
+             aria-valuemin="@MinimumWidthPixels"
+             aria-valuemax="@MaximumWidthPixels"
+             aria-valuenow="@WidthPixels"
+             tabindex="0"
+             @onkeydown="HandleResizeKeyAsync"
+             @onpointerdown="BeginPointerResizeAsync"
+             @onpointerdown:preventDefault="true"></div>
+    }
 </aside>

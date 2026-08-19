@@ -19,6 +19,7 @@ public sealed record PlannerJourneySeed
 /// <summary>Renders the pre-plan choice between manual creation and Journey discovery.</summary>
 public partial class PlannerJourneyStarter : ComponentBase
 {
+    private static readonly IReadOnlyList<int> JourneyPageSizeOptions = [1, 2, 4];
     private static readonly IReadOnlyList<DevelopmentJourneyIdea> DevelopmentIdeas =
     [
         new(
@@ -107,6 +108,12 @@ public partial class PlannerJourneyStarter : ComponentBase
     private HashSet<string> SelectedDestinationKeys { get; } = new(StringComparer.Ordinal);
     private string SelectedPace { get; set; } = "Balanced";
     private string SelectedTransport { get; set; } = "Recommended mix";
+    private int PageSize { get; set; } = 2;
+    private int CurrentPage { get; set; } = 1;
+    private IReadOnlyList<DevelopmentJourneyIdea> PagedDevelopmentIdeas => DevelopmentIdeas
+        .Skip((CurrentPage - 1) * PageSize)
+        .Take(PageSize)
+        .ToArray();
 
     /// <inheritdoc />
     protected override void OnInitialized()
@@ -122,7 +129,11 @@ public partial class PlannerJourneyStarter : ComponentBase
         }
     }
 
-    private void BrowseIdeas() => IsBrowsingIdeas = true;
+    private void BrowseIdeas()
+    {
+        IsBrowsingIdeas = true;
+        CurrentPage = 1;
+    }
 
     private async Task StartFromScratchAsync()
     {
@@ -143,6 +154,21 @@ public partial class PlannerJourneyStarter : ComponentBase
 
         SelectedPace = "Balanced";
         SelectedTransport = "Recommended mix";
+    }
+
+    private Task ChangePageSizeAsync(int pageSize)
+    {
+        PageSize = pageSize;
+        CurrentPage = 1;
+        return Task.CompletedTask;
+    }
+
+    private Task ChangePageAsync(int page)
+    {
+        CurrentPage = page;
+        SelectedIdea = null;
+        SelectedDestinationKeys.Clear();
+        return Task.CompletedTask;
     }
 
     private void ToggleDestination(string key, ChangeEventArgs args)

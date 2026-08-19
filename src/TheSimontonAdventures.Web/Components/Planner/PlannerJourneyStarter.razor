@@ -29,7 +29,7 @@
             @if (EnableDevelopmentIdeas)
             {
                 <ul class="journey-starter__ideas">
-                    @foreach (var idea in DevelopmentIdeas)
+                    @foreach (var idea in PagedDevelopmentIdeas)
                     {
                         <li>
                             <article class="journey-starter__idea">
@@ -46,6 +46,12 @@
                         </li>
                     }
                 </ul>
+                <PlannerIdeaPager TotalItems="@DevelopmentIdeas.Count"
+                                  PageSize="@PageSize"
+                                  CurrentPage="@CurrentPage"
+                                  PageSizeOptions="@JourneyPageSizeOptions"
+                                  OnPageSizeChanged="ChangePageSizeAsync"
+                                  OnPageChanged="ChangePageAsync" />
                 @if (SelectedIdea is not null)
                 {
                     <section id="journey-template-preview" class="journey-template" aria-labelledby="journey-template-title">

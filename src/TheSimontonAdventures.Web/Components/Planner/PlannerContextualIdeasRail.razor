@@ -49,7 +49,7 @@
                     }
                 </nav>
                 <ul class="planner-ideas__list">
-                    @foreach (var idea in FilteredIdeas)
+                    @foreach (var idea in PagedIdeas)
                     {
                         <li><article class="planner-ideas__card">
                             <div class="planner-ideas__thumbnail" aria-hidden="true">@idea.Monogram</div>
@@ -61,6 +61,12 @@
                         </article></li>
                     }
                 </ul>
+                <PlannerIdeaPager TotalItems="@FilteredIdeas.Count"
+                                  PageSize="@PageSize"
+                                  CurrentPage="@CurrentPage"
+                                  PageSizeOptions="@RailPageSizeOptions"
+                                  OnPageSizeChanged="ChangePageSizeAsync"
+                                  OnPageChanged="ChangePageAsync" />
             }
         </div>
         <div class="planner-ideas__resize" role="separator" aria-label="Resize Ideas rail" aria-orientation="vertical" tabindex="0" aria-valuemin="272" aria-valuemax="400" aria-valuenow="@WidthPixels" @onkeydown="HandleResizeKeyAsync" @onpointerdown="BeginPointerResizeAsync" @onpointermove="ContinuePointerResizeAsync" @onpointerup="EndPointerResize" @onpointercancel="EndPointerResize"></div>

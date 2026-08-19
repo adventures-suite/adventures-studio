@@ -1,0 +1,8 @@
+.idea-pager { align-items: center; border-top: 1px solid var(--planner-shell-border); display: flex; flex-wrap: wrap; gap: .75rem 1rem; justify-content: space-between; margin-top: 1rem; padding-top: 1rem; }
+.idea-pager label { align-items: center; display: flex; font-size: .82rem; font-weight: 700; gap: .5rem; }
+.idea-pager select, .idea-pager button { background: var(--planner-shell-surface); border: 1px solid var(--planner-shell-border); border-radius: .5rem; color: var(--planner-shell-text); font: inherit; min-height: 2.5rem; padding: .45rem .65rem; }
+.idea-pager p { color: var(--planner-shell-text-muted); font-size: .82rem; margin: 0; }
+.idea-pager > div { display: flex; gap: .5rem; }
+.idea-pager button { cursor: pointer; font-weight: 700; }
+.idea-pager button:disabled { cursor: default; opacity: .48; }
+.idea-pager button:focus-visible, .idea-pager select:focus-visible { outline: 3px solid var(--planner-shell-focus); outline-offset: 2px; }
