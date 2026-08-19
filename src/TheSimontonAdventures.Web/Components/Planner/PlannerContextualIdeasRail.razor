@@ -1,0 +1,59 @@
+@namespace TheSimontonAdventures.Web.Components
+
+<button type="button" class="planner-ideas__mobile-open" @ref="OpenButton" aria-haspopup="dialog" @onclick="OpenDrawerAsync">Ideas</button>
+<aside class="@RailClasses" role="@(IsDrawerOpen ? "dialog" : "complementary")" aria-modal="@(IsDrawerOpen ? "true" : null)" aria-labelledby="planner-ideas-title" @onkeydown="HandleKeyAsync">
+    <header class="planner-ideas__header">
+        <div><p>Contextual inspiration</p><h3 id="planner-ideas-title">Ideas</h3></div>
+        <div class="planner-ideas__controls">
+            <button type="button" class="planner-ideas__collapse" aria-expanded="@(!IsCollapsed)" @onclick="ToggleCollapsed">@(IsCollapsed ? "Expand" : "Collapse")</button>
+            <button type="button" class="planner-ideas__close" @ref="CloseButton" @onclick="CloseDrawerAsync">Close</button>
+        </div>
+    </header>
+    @if (!IsCollapsed)
+    {
+        <div class="planner-ideas__body" aria-live="polite">
+            @if (EffectiveState == PlannerIdeasState.NoSelection)
+            {
+                <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Empty" Title="Choose a destination or day" Message="Select context on the itinerary board to explore related suggestions." />
+            }
+            else if (EffectiveState == PlannerIdeasState.Loading)
+            {
+                <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Loading" Title="Finding ideas…" />
+            }
+            else if (EffectiveState == PlannerIdeasState.Denied)
+            {
+                <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Denied" Title="Ideas unavailable" Message="This context is not available to your workspace." />
+            }
+            else if (EffectiveState == PlannerIdeasState.Unavailable)
+            {
+                <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Unavailable" Title="Ideas temporarily unavailable" Message="Manual planning remains available." />
+            }
+            else if (EffectiveState == PlannerIdeasState.Empty)
+            {
+                <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Empty" Title="No ideas for this context" Message="Your plan is unchanged. Try another destination or day." />
+            }
+            else
+            {
+                <p class="planner-ideas__context">Suggestions for <strong>@Context!.Label</strong></p>
+                <ul class="planner-ideas__list">
+                    @foreach (var idea in Ideas)
+                    {
+                        <li><article class="planner-ideas__card">
+                            <div class="planner-ideas__thumbnail" aria-hidden="true">@idea.Monogram</div>
+                            <p class="planner-ideas__type">@idea.Type · suggestion</p>
+                            <h4>@idea.Title</h4>
+                            <p>@idea.Summary</p>
+                            <dl><div><dt>Source</dt><dd>@idea.Source</dd></div><div><dt>Freshness</dt><dd>@idea.Freshness</dd></div><div><dt>Why</dt><dd>@idea.Reason</dd></div></dl>
+                            <p class="planner-ideas__boundary">Inspiration only — not booked, available, or added to your plan.</p>
+                        </article></li>
+                    }
+                </ul>
+            }
+        </div>
+        <div class="planner-ideas__resize" role="separator" aria-label="Resize Ideas rail" aria-orientation="vertical" tabindex="0" aria-valuemin="272" aria-valuemax="400" aria-valuenow="@WidthPixels" @onkeydown="HandleResizeKeyAsync" @onpointerdown="BeginPointerResizeAsync" @onpointermove="ContinuePointerResizeAsync" @onpointerup="EndPointerResize" @onpointercancel="EndPointerResize"></div>
+    }
+</aside>
+@if (IsDrawerOpen)
+{
+    <button type="button" class="planner-ideas__backdrop" aria-label="Close Ideas" @onclick="CloseDrawerAsync"></button>
+}

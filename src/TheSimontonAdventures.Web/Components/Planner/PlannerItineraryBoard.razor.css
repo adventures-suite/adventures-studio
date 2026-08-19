@@ -1,4 +1,4 @@
-.planner-board { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 1.25rem; }
+.planner-board { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 1.25rem; min-width: 0; }
 .planner-board__header { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 1.5rem; align-items: end; }
 .planner-board__header h3, .planner-board__card h4, .planner-board__day h5 { margin: 0; font-family: Georgia, serif; }
 .planner-board__header > p { max-width: 34rem; margin: 0; color: var(--planner-shell-text-muted); text-align: right; }
@@ -9,6 +9,10 @@
 .planner-board__route-list, .planner-board__day-list, .planner-board__activity-list, .planner-board__summary-list { list-style: none; margin: 0; padding: 0; }
 .planner-board__route-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: .75rem; counter-reset: route; }
 .planner-board__route-list li { display: flex; gap: .7rem; align-items: flex-start; border-radius: .65rem; background: var(--planner-shell-surface-muted); padding: .8rem; }
+.planner-board__context-button { appearance: none; border: 0; background: transparent; color: inherit; cursor: pointer; font: inherit; padding: .2rem; text-align: left; }
+.planner-board__context-button:focus-visible { outline: 3px solid var(--planner-shell-focus); outline-offset: 2px; }
+.planner-board__day-context { color: var(--planner-shell-primary); font-weight: 700; margin-top: .65rem; }
+.planner-board__selected { box-shadow: 0 0 0 3px var(--planner-shell-focus); }
 .planner-board__route-list strong, .planner-board__route-list span { display: block; }
 .planner-board__route-list span { color: var(--planner-shell-text-muted); }
 .planner-board__sequence { display: grid !important; place-items: center; flex: 0 0 1.7rem; height: 1.7rem; border-radius: 999px; background: var(--planner-shell-primary); color: var(--planner-shell-surface) !important; font-weight: 700; }
