@@ -42,10 +42,10 @@
                     }
                 </div>
                 <nav class="planner-ideas__types" aria-label="Idea types for @Context.Label">
-                    <button type="button" aria-pressed="@(SelectedType is null)" @onclick="() => SelectType(null)">All</button>
+                    <button type="button" aria-pressed="@(SelectedType is null ? "true" : "false")" @onclick="() => SelectType(null)">All</button>
                     @foreach (var type in AvailableTypes)
                     {
-                        <button type="button" aria-pressed="@(SelectedType == type)" @onclick="() => SelectType(type)">@type</button>
+                        <button type="button" aria-pressed="@(SelectedType == type ? "true" : "false")" @onclick="() => SelectType(type)">@type</button>
                     }
                 </nav>
                 <ul class="planner-ideas__list">
