@@ -37,11 +37,37 @@ public partial class WorkspaceRoot
     private WorkspaceLoadState LoadState { get; set; } = WorkspaceLoadState.Landing;
     private string CreateIdempotencyKey { get; } = $"request_{Guid.NewGuid():N}";
     private PlannerIdeasContext? SelectedIdeasContext { get; set; }
+    private PlannerJourneySeed? SelectedJourneySeed { get; set; }
     private int IdeasWidthPixels { get; set; } = 320;
+
+    private Task SelectJourneySeedAsync(PlannerJourneySeed seed)
+    {
+        SelectedJourneySeed = seed;
+        return Task.CompletedTask;
+    }
+
+    private Task StartJourneyFromScratchAsync()
+    {
+        SelectedJourneySeed = null;
+        return Task.CompletedTask;
+    }
 
     private Task SelectIdeasContextAsync(PlannerIdeasContext context)
     {
         SelectedIdeasContext = context;
+        return Task.CompletedTask;
+    }
+
+    private Task SelectAdventureIdeasContextAsync()
+    {
+        if (Plan is not null)
+        {
+            SelectedIdeasContext = new PlannerIdeasContext(
+                PlannerIdeasContextKind.Adventure,
+                Plan.Id.Value,
+                Plan.Title);
+        }
+
         return Task.CompletedTask;
     }
 
@@ -99,6 +125,10 @@ public partial class WorkspaceRoot
                 Plan = result.Plan;
                 PlanCanEdit = result.CanEdit;
                 LoadState = result.IsAllowed ? WorkspaceLoadState.Ready : WorkspaceLoadState.Unavailable;
+                if (result.IsAllowed && Plan is not null)
+                {
+                    await SelectAdventureIdeasContextAsync();
+                }
             }
             else
             {

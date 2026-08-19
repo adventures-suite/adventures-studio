@@ -34,9 +34,22 @@
             }
             else
             {
-                <p class="planner-ideas__context">Suggestions for <strong>@Context!.Label</strong></p>
+                <div class="planner-ideas__context">
+                    <p>Ideas for <strong>@Context!.Label</strong></p>
+                    @if (Context.Kind != PlannerIdeasContextKind.Adventure)
+                    {
+                        <button type="button" @onclick="ShowWholeAdventureAsync">Whole Adventure</button>
+                    }
+                </div>
+                <nav class="planner-ideas__types" aria-label="Idea types for @Context.Label">
+                    <button type="button" aria-pressed="@(SelectedType is null ? "true" : "false")" @onclick="() => SelectType(null)">All</button>
+                    @foreach (var type in AvailableTypes)
+                    {
+                        <button type="button" aria-pressed="@(SelectedType == type ? "true" : "false")" @onclick="() => SelectType(type)">@type</button>
+                    }
+                </nav>
                 <ul class="planner-ideas__list">
-                    @foreach (var idea in Ideas)
+                    @foreach (var idea in PagedIdeas)
                     {
                         <li><article class="planner-ideas__card">
                             <div class="planner-ideas__thumbnail" aria-hidden="true">@idea.Monogram</div>
@@ -48,6 +61,12 @@
                         </article></li>
                     }
                 </ul>
+                <PlannerIdeaPager TotalItems="@FilteredIdeas.Count"
+                                  PageSize="@PageSize"
+                                  CurrentPage="@CurrentPage"
+                                  PageSizeOptions="@RailPageSizeOptions"
+                                  OnPageSizeChanged="ChangePageSizeAsync"
+                                  OnPageChanged="ChangePageAsync" />
             }
         </div>
         <div class="planner-ideas__resize" role="separator" aria-label="Resize Ideas rail" aria-orientation="vertical" tabindex="0" aria-valuemin="272" aria-valuemax="400" aria-valuenow="@WidthPixels" @onkeydown="HandleResizeKeyAsync" @onpointerdown="BeginPointerResizeAsync" @onpointermove="ContinuePointerResizeAsync" @onpointerup="EndPointerResize" @onpointercancel="EndPointerResize"></div>

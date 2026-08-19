@@ -55,6 +55,7 @@ internal sealed class SqlPlanningTransaction : IPlanningTransaction
     private bool completed;
     private readonly PlanningMutationAuditTracker auditTracker;
     private readonly AdventurePlanCreateIdempotencyTracker idempotencyTracker;
+    private readonly AdventurePlanTemplateOriginTracker templateOriginTracker;
 
     public SqlPlanningTransaction(
         CreatorId creatorId,
@@ -66,10 +67,13 @@ internal sealed class SqlPlanningTransaction : IPlanningTransaction
         this.transaction = transaction;
         auditTracker = new PlanningMutationAuditTracker(creatorId);
         idempotencyTracker = new AdventurePlanCreateIdempotencyTracker();
+        templateOriginTracker = new AdventurePlanTemplateOriginTracker();
         AdventurePlans = new DapperAdventurePlanRepository(
             creatorId, connection, transaction, auditTracker);
         AdventurePlanCreateIdempotency = new SqlAdventurePlanCreateIdempotencyStore(
             creatorId, connection, transaction, idempotencyTracker);
+        AdventurePlanTemplateOrigins = new SqlAdventurePlanTemplateOriginStore(
+            creatorId, connection, transaction, templateOriginTracker);
     }
 
     public CreatorId CreatorId { get; }
@@ -78,13 +82,15 @@ internal sealed class SqlPlanningTransaction : IPlanningTransaction
 
     public IAdventurePlanCreateIdempotencyStore AdventurePlanCreateIdempotency { get; }
 
+    public IAdventurePlanTemplateOriginStore AdventurePlanTemplateOrigins { get; }
+
     public IRequiredAuditIntentCollector RequiredAuditIntents => auditTracker;
 
     public async Task CommitAsync(CancellationToken cancellationToken = default)
     {
         ObjectDisposedException.ThrowIf(completed, this);
         var auditEvents = auditTracker.ValidateForCommit();
-        idempotencyTracker.ValidateForCommit(auditTracker);
+        idempotencyTracker.ValidateForCommit(auditTracker, templateOriginTracker);
         foreach (var auditEvent in auditEvents)
         {
             await connection.ExecuteAsync(new CommandDefinition("""
@@ -244,22 +250,42 @@ internal sealed class PlanningMutationAuditTracker(CreatorId creatorId)
 
 internal sealed class AdventurePlanCreateIdempotencyTracker
 {
-    private readonly List<(AdventurePlanId PlanId, long ResultingVersion)> reservations = [];
+    private readonly List<(string Operation, AdventurePlanId PlanId, long ResultingVersion)> reservations = [];
 
-    public void Record(AdventurePlanId planId, long resultingVersion) =>
-        reservations.Add((planId, resultingVersion));
+    public void Record(string operation, AdventurePlanId planId, long resultingVersion) =>
+        reservations.Add((operation, planId, resultingVersion));
 
-    public void ValidateForCommit(PlanningMutationAuditTracker auditTracker)
+    public void ValidateForCommit(
+        PlanningMutationAuditTracker auditTracker,
+        AdventurePlanTemplateOriginTracker templateOriginTracker)
     {
         foreach (var reservation in reservations)
         {
             if (!auditTracker.HasExactlyOneAuditedCreate(
                     reservation.PlanId,
-                    reservation.ResultingVersion))
+                    reservation.ResultingVersion)
+                || (string.Equals(
+                        reservation.Operation,
+                        PlanningIdempotencyOperations.AdventurePlanTemplateInstantiateV1,
+                        StringComparison.Ordinal)
+                    ? !templateOriginTracker.HasExactlyOne(reservation.PlanId)
+                    : templateOriginTracker.HasAny(reservation.PlanId)))
             {
                 throw new InvalidOperationException(
                     "A new idempotency reservation must match exactly one created and audited Adventure Plan.");
             }
+        }
+
+        if (!templateOriginTracker.AllMatch(
+                reservations
+                    .Where(item => string.Equals(
+                        item.Operation,
+                        PlanningIdempotencyOperations.AdventurePlanTemplateInstantiateV1,
+                        StringComparison.Ordinal))
+                    .Select(item => item.PlanId)))
+        {
+            throw new InvalidOperationException(
+                "Template provenance must match exactly one template-instantiation reservation.");
         }
 
         if (reservations.Select(item => item.PlanId).Distinct().Count() != reservations.Count)
@@ -268,4 +294,19 @@ internal sealed class AdventurePlanCreateIdempotencyTracker
                 "An Adventure Plan creation cannot satisfy multiple idempotency reservations.");
         }
     }
+}
+
+internal sealed class AdventurePlanTemplateOriginTracker
+{
+    private readonly List<AdventurePlanId> planIds = [];
+
+    public void Record(AdventurePlanId planId) => planIds.Add(planId);
+
+    public bool HasExactlyOne(AdventurePlanId planId) => planIds.Count(item => item == planId) == 1;
+
+    public bool HasAny(AdventurePlanId planId) => planIds.Contains(planId);
+
+    public bool AllMatch(IEnumerable<AdventurePlanId> expectedPlanIds) =>
+        planIds.OrderBy(item => item.Value, StringComparer.Ordinal).SequenceEqual(
+            expectedPlanIds.OrderBy(item => item.Value, StringComparer.Ordinal));
 }

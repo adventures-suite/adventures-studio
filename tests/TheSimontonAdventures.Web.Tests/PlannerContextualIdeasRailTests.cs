@@ -34,10 +34,48 @@ public sealed class PlannerContextualIdeasRailTests
 
         Assert.Contains("No ideas for this context", productionHtml, StringComparison.Ordinal);
         Assert.DoesNotContain("Fictional local Alpha demo", productionHtml, StringComparison.Ordinal);
-        Assert.Contains("Suggestions for", developmentHtml, StringComparison.Ordinal);
+        Assert.Contains("Ideas for", developmentHtml, StringComparison.Ordinal);
         Assert.Contains("Example coast", developmentHtml, StringComparison.Ordinal);
         Assert.Contains("Fictional local Alpha demo", developmentHtml, StringComparison.Ordinal);
         Assert.Contains("not booked, available, or added to your plan", developmentHtml, StringComparison.Ordinal);
+        Assert.Contains("Cards per page", developmentHtml, StringComparison.Ordinal);
+    }
+
+    /// <summary>Development ideas change type and content with the selected planning context.</summary>
+    [Fact]
+    public async Task Rail_DevelopmentIdeas_AreContextSensitive()
+    {
+        var adventureHtml = await RenderDevelopmentContextAsync(
+            new PlannerIdeasContext(PlannerIdeasContextKind.Adventure, "plan-1", "Atlantic light"));
+        var destinationHtml = await RenderDevelopmentContextAsync(
+            new PlannerIdeasContext(PlannerIdeasContextKind.Destination, "destination-1", "Example coast"));
+        var dayHtml = await RenderDevelopmentContextAsync(
+            new PlannerIdeasContext(PlannerIdeasContextKind.Day, "day-1", "Arrival day"));
+
+        Assert.Contains("Destination", adventureHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("Journey · suggestion", adventureHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("Sample day", adventureHtml, StringComparison.Ordinal);
+        Assert.Contains("Sample day", destinationHtml, StringComparison.Ordinal);
+        Assert.Contains("Stay pattern", destinationHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("Journey", destinationHtml, StringComparison.Ordinal);
+        Assert.Contains("Meal rhythm", dayHtml, StringComparison.Ordinal);
+        Assert.Contains("Pacing", dayHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("Stay pattern", dayHtml, StringComparison.Ordinal);
+    }
+
+    /// <summary>Populated contexts expose a labeled type filter and a route back to the whole Adventure.</summary>
+    [Fact]
+    public async Task Rail_ContextMenu_UsesPressedButtonsAndAdventureReset()
+    {
+        var destinationHtml = await RenderDevelopmentContextAsync(
+            new PlannerIdeasContext(PlannerIdeasContextKind.Destination, "destination-1", "Example coast"));
+        var adventureHtml = await RenderDevelopmentContextAsync(
+            new PlannerIdeasContext(PlannerIdeasContextKind.Adventure, "plan-1", "Atlantic light"));
+
+        Assert.Contains("aria-label=\"Idea types for Example coast\"", destinationHtml, StringComparison.Ordinal);
+        Assert.Contains("aria-pressed=\"true\"", destinationHtml, StringComparison.Ordinal);
+        Assert.Contains("Whole Adventure", destinationHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("Whole Adventure", adventureHtml, StringComparison.Ordinal);
     }
 
     /// <summary>Every non-populated state has explicit accessible status content.</summary>
@@ -88,6 +126,12 @@ public sealed class PlannerContextualIdeasRailTests
             return output.ToHtmlString();
         });
     }
+
+    private static Task<string> RenderDevelopmentContextAsync(PlannerIdeasContext context) => RenderAsync(new()
+    {
+        [nameof(PlannerContextualIdeasRail.Context)] = context,
+        [nameof(PlannerContextualIdeasRail.EnableDevelopmentIdeas)] = true
+    });
 
     private static string FindApplicationRoot()
     {

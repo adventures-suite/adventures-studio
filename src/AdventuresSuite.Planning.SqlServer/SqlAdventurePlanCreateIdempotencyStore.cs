@@ -73,6 +73,11 @@ internal sealed class SqlAdventurePlanCreateIdempotencyStore(
                        AND auditEvents.Outcome='Succeeded'
                        AND auditEvents.PreviousVersion IS NULL
                        AND auditEvents.ResultingVersion=results.ResultingVersion) AS AuditCount
+                  ,(SELECT COUNT_BIG(*)
+                      FROM planning.AdventurePlanTemplateOrigins AS origins
+                     WHERE origins.CreatorId COLLATE Latin1_General_100_BIN2=results.CreatorId
+                       AND origins.AdventurePlanId COLLATE Latin1_General_100_BIN2=results.AdventurePlanId)
+                     AS TemplateOriginCount
               FROM planning.AdventurePlanCreateResults AS results
               LEFT JOIN planning.AdventurePlans AS plans
                 ON plans.CreatorId COLLATE Latin1_General_100_BIN2=results.CreatorId
@@ -97,7 +102,13 @@ internal sealed class SqlAdventurePlanCreateIdempotencyStore(
             if (existing.PlanExists != 1
                 || existing.PlanVersion != existing.ResultingVersion
                 || existing.ResultingVersion != 1
-                || existing.AuditCount != 1)
+                || existing.AuditCount != 1
+                || (string.Equals(
+                        reservation.Operation,
+                        PlanningIdempotencyOperations.AdventurePlanTemplateInstantiateV1,
+                        StringComparison.Ordinal)
+                    ? existing.TemplateOriginCount != 1
+                    : existing.TemplateOriginCount != 0))
             {
                 throw new InvalidOperationException(
                     "The durable Adventure Plan creation result does not match authoritative state.");
@@ -117,7 +128,10 @@ internal sealed class SqlAdventurePlanCreateIdempotencyStore(
               (@CreatorId,@Operation,@IdempotencyKey,@FingerprintVersion,@RequestFingerprint,
                @AdventurePlanId,@ResultingVersion,@CreatedAtUtc,@ExpiresAtUtc);
             """, parameters, cancellationToken));
-        tracker.Record(reservation.AdventurePlanId, reservation.ResultingVersion);
+        tracker.Record(
+            reservation.Operation,
+            reservation.AdventurePlanId,
+            reservation.ResultingVersion);
         return new(
             AdventurePlanCreateIdempotencyOutcome.Reserved,
             reservation.AdventurePlanId,
@@ -137,5 +151,6 @@ internal sealed class SqlAdventurePlanCreateIdempotencyStore(
         long ResultingVersion,
         int PlanExists,
         long? PlanVersion,
-        long AuditCount);
+        long AuditCount,
+        long TemplateOriginCount);
 }
