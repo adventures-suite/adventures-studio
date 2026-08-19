@@ -76,10 +76,10 @@ internal static partial class MigrationOperationRunner
         IReadOnlyList<string> selectedScripts = [];
         try
         {
-            // This operation is explicitly bounded to the reviewed 0006 -> 0009 transition.
+            // This operation is explicitly bounded to the reviewed 0009 -> 0010 transition.
             selectedScripts = DatabaseMigratorRunner.MigrateWithLockHeld(
                 connectionFactory.CreateConnection,
-                maximumMigrationNumber: "0009");
+                maximumMigrationNumber: "0010");
         }
         catch (Exception exception)
         {
@@ -152,9 +152,12 @@ internal static partial class MigrationOperationRunner
     {
         if (!string.Equals(before.ApplicationFingerprint, after.ApplicationFingerprint, StringComparison.Ordinal))
             return MigrationOperationClassification.Unexpected;
-        if (migrationFailure is null && afterOutcome == MigrationJournalOutcome.At0009
+        if (migrationFailure is null && afterOutcome == MigrationJournalOutcome.At0010
             && VerifyExpectedPostState(after))
             return MigrationOperationClassification.Complete;
+        if (migrationFailure is not null && afterOutcome == MigrationJournalOutcome.At0009
+            && VerifyExpected0009PrerequisiteState(after))
+            return MigrationOperationClassification.NoScriptCommitted;
         if (migrationFailure is not null && afterOutcome == MigrationJournalOutcome.At0008
             && VerifyExpected0008State(after))
             return MigrationOperationClassification.Migration0008Committed;
@@ -167,16 +170,26 @@ internal static partial class MigrationOperationRunner
         return MigrationOperationClassification.Unexpected;
     }
 
-    /// <summary>Requires the exact administrator-bootstrapped 0006 state before DbUp selection.</summary>
+    /// <summary>Requires the exact reviewed 0009 state and authority-free policy role.</summary>
     internal static void ValidatePreMigrationState(
         MigrationStateEvidence state,
         MigrationJournalOutcome outcome)
     {
-        if (outcome != MigrationJournalOutcome.At0006
-            || !VerifyExpectedBootstrapped0006State(state))
+        if (outcome != MigrationJournalOutcome.At0009
+            || !VerifyExpected0009PrerequisiteState(state))
             throw new InvalidOperationException(
-                "The pre-migration database state is not the approved bootstrapped 0006 baseline.");
+                "The pre-migration database state is not the approved 0009 policy-assignment baseline.");
     }
+
+    private static bool VerifyExpected0009PrerequisiteState(MigrationStateEvidence state) =>
+        !state.CompanionPolicyAssignmentsExists
+        && !state.CompanionPolicyAssignmentEventsExists
+        && state.CompanionPolicyRoleExists
+        && state.CompanionPolicyRoleMemberCount == 0
+        && state.CompanionPolicyParentRoleCount == 0
+        && string.Equals(state.CompanionPolicyRoleOwner, "dbo", StringComparison.Ordinal)
+        && state.PolicyPermissions.Count == 0
+        && VerifyExpected0009State(state);
 
     internal static bool VerifyExpectedBootstrapped0006State(MigrationStateEvidence state) =>
         !state.TravelerParticipationsExists
@@ -199,6 +212,41 @@ internal static partial class MigrationOperationRunner
 
     internal static bool VerifyExpectedPostState(MigrationStateEvidence state)
     {
+        if (!VerifyExpected0009State(state)
+            || !state.CompanionPolicyAssignmentsExists
+            || !state.CompanionPolicyAssignmentEventsExists
+            || !state.CompanionPolicyRoleExists
+            || state.CompanionPolicyRoleMemberCount != 0
+            || state.CompanionPolicyParentRoleCount != 0
+            || !string.Equals(state.CompanionPolicyRoleOwner, "dbo", StringComparison.Ordinal)
+            || !state.RelevantObjects.SequenceEqual(
+                ["audit.CompanionInformationPolicyAssignmentEvents|USER_TABLE",
+                 "planning.AdventurePlanCreateResults|USER_TABLE",
+                 "planning.CompanionInformationPolicyAssignments|USER_TABLE",
+                 "planning.TravelerParticipations|USER_TABLE"], StringComparer.Ordinal))
+            return false;
+
+        return new HashSet<string>(StringComparer.Ordinal)
+        {
+            "GRANT|INSERT|audit|AuditEvents",
+            "DENY|UPDATE|audit|AuditEvents",
+            "DENY|DELETE|audit|AuditEvents",
+            "GRANT|INSERT|audit|CompanionInformationPolicyAssignmentEvents",
+            "DENY|UPDATE|audit|CompanionInformationPolicyAssignmentEvents",
+            "DENY|DELETE|audit|CompanionInformationPolicyAssignmentEvents",
+            "GRANT|SELECT|planning|AdventurePlans",
+            "GRANT|SELECT|planning|TravelerParticipations",
+            "GRANT|SELECT|planning|CompanionInformationPolicyAssignments",
+            "GRANT|INSERT|planning|CompanionInformationPolicyAssignments",
+            "GRANT|UPDATE|planning|CompanionInformationPolicyAssignments",
+            "DENY|DELETE|planning|CompanionInformationPolicyAssignments",
+            "DENY|ALTER|audit|",
+            "DENY|ALTER|planning|"
+        }.SetEquals(state.PolicyPermissions);
+    }
+
+    internal static bool VerifyExpected0009State(MigrationStateEvidence state)
+    {
         if (!state.TravelerParticipationsExists
             || state.TravelerConstraintCount != 7
             || !state.TravelerAuthorizedListIndexExists
@@ -213,7 +261,9 @@ internal static partial class MigrationOperationRunner
             || !string.Equals(state.PlanningRoleOwner, "dbo", StringComparison.Ordinal)
             || state.AdventurePlanCreateResultConstraintCount != 7
             || !state.AdventurePlanCreateResultExpiryIndexExists
-            || !state.RelevantObjects.SequenceEqual(
+            || !state.RelevantObjects.Where(value =>
+                    !value.Contains("CompanionInformationPolicy", StringComparison.Ordinal))
+                .SequenceEqual(
                 ["planning.AdventurePlanCreateResults|USER_TABLE",
                  "planning.TravelerParticipations|USER_TABLE"], StringComparer.Ordinal))
             return false;
@@ -233,6 +283,17 @@ internal static partial class MigrationOperationRunner
         }
         expectedPermissions.Add("DENY|ALTER|auth|");
         expectedPermissions.Add("DENY|ALTER|planning|");
+        expectedPermissions.Add("GRANT|SELECT|planning|CompanionInformationPolicyAssignments");
+        expectedPermissions.Add("DENY|INSERT|planning|CompanionInformationPolicyAssignments");
+        expectedPermissions.Add("DENY|UPDATE|planning|CompanionInformationPolicyAssignments");
+        expectedPermissions.Add("DENY|DELETE|planning|CompanionInformationPolicyAssignments");
+        if (!state.CompanionPolicyAssignmentsExists)
+        {
+            expectedPermissions.Remove("GRANT|SELECT|planning|CompanionInformationPolicyAssignments");
+            expectedPermissions.Remove("DENY|INSERT|planning|CompanionInformationPolicyAssignments");
+            expectedPermissions.Remove("DENY|UPDATE|planning|CompanionInformationPolicyAssignments");
+            expectedPermissions.Remove("DENY|DELETE|planning|CompanionInformationPolicyAssignments");
+        }
         return expectedPermissions.SetEquals(state.CompanionPermissions)
             && new HashSet<string>(StringComparer.Ordinal)
             {
@@ -311,6 +372,7 @@ internal static partial class MigrationOperationRunner
             state.RelevantObjects,
             state.CompanionPermissions,
             state.PlanningPermissions,
+            state.PolicyPermissions,
             state.ApplicationDataSignatures,
             state.ApplicationFingerprint,
             state.TravelerParticipationsExists,
@@ -327,6 +389,13 @@ internal static partial class MigrationOperationRunner
             state.PlanningRoleOwner,
             state.AdventurePlanCreateResultConstraintCount,
             state.AdventurePlanCreateResultExpiryIndexExists
+            ,
+            state.CompanionPolicyAssignmentsExists,
+            state.CompanionPolicyAssignmentEventsExists,
+            state.CompanionPolicyRoleExists,
+            state.CompanionPolicyRoleMemberCount,
+            state.CompanionPolicyParentRoleCount,
+            state.CompanionPolicyRoleOwner
         });
 
     private static void WriteEvidence(object value) =>

@@ -30,7 +30,7 @@ public sealed class AdventurePlanCreateIdempotencyIntegrationTests
 
         try
         {
-            DatabaseMigratorRunner.Migrate(connectionString);
+            await CompanionPolicyMigrationTestHarness.MigrateAllAsync(connectionString);
             var factory = new SqlPlanningTransactionFactory(connectionString);
             var alpha = new CreatorId("creator_alpha");
             var beta = new CreatorId("creator_beta");

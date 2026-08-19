@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Companion policy runtime-role bootstrap evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "operation", "roleName", "outcome", "owner",
+    "databaseRole", "memberCount", "parentRoleCount",
+    "explicitPermissionCount", "ownedSecurableCount",
+    "inheritedApplicationAuthorityCount", "readRuntimeRoleUnchanged",
+    "supportId", "correlationId", "operationId", "occurredAtUtc"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "operation": { "const": "companion-policy-runtime-role-bootstrap-v1" },
+    "roleName": { "const": "AdventuresSuiteCompanionPolicyRuntime" },
+    "outcome": { "enum": ["created", "preexisting"] },
+    "owner": { "const": "dbo" },
+    "databaseRole": { "const": true },
+    "memberCount": { "const": 0 },
+    "parentRoleCount": { "const": 0 },
+    "explicitPermissionCount": { "const": 0 },
+    "ownedSecurableCount": { "const": 0 },
+    "inheritedApplicationAuthorityCount": { "const": 0 },
+    "readRuntimeRoleUnchanged": { "const": true },
+    "supportId": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{7,63}$" },
+    "correlationId": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{7,63}$" },
+    "operationId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{7,31}$" },
+    "occurredAtUtc": { "type": "string", "format": "date-time" }
+  }
+}

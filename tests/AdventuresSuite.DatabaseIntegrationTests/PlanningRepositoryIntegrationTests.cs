@@ -27,7 +27,7 @@ public sealed class PlanningRepositoryIntegrationTests
 
         try
         {
-            DatabaseMigratorRunner.Migrate(databaseConnectionString);
+            await CompanionPolicyMigrationTestHarness.MigrateAllAsync(databaseConnectionString);
             var factory = new SqlPlanningTransactionFactory(databaseConnectionString);
             var creator = new CreatorId("creator_destination");
             var original = CreatePlan(creator, 1, "Destination append");
@@ -110,7 +110,7 @@ public sealed class PlanningRepositoryIntegrationTests
 
         try
         {
-            DatabaseMigratorRunner.Migrate(databaseConnectionString);
+            await CompanionPolicyMigrationTestHarness.MigrateAllAsync(databaseConnectionString);
             var factory = new SqlPlanningTransactionFactory(databaseConnectionString);
             var creator = new CreatorId("creator_itinerary_day");
             var original = CreatePlan(creator, 1, "Itinerary day append");
@@ -244,7 +244,7 @@ public sealed class PlanningRepositoryIntegrationTests
 
         try
         {
-            DatabaseMigratorRunner.Migrate(databaseConnectionString);
+            await CompanionPolicyMigrationTestHarness.MigrateAllAsync(databaseConnectionString);
             var factory = new SqlPlanningTransactionFactory(databaseConnectionString);
             var creator = new CreatorId("creator_activity");
             var original = CreatePlan(creator, 1, "Activity append");
@@ -349,7 +349,7 @@ public sealed class PlanningRepositoryIntegrationTests
         await ExecuteAsync(master, $"CREATE DATABASE [{databaseName}];");
         try
         {
-            DatabaseMigratorRunner.Migrate(connectionString);
+            await CompanionPolicyMigrationTestHarness.MigrateAllAsync(connectionString);
             var factory = new SqlPlanningTransactionFactory(connectionString);
             var creator = new CreatorId("creator_transportation");
             var original = CreatePlan(creator, 1, "Transportation append");
@@ -462,7 +462,7 @@ public sealed class PlanningRepositoryIntegrationTests
         await ExecuteAsync(master, $"CREATE DATABASE [{databaseName}];");
         try
         {
-            DatabaseMigratorRunner.Migrate(connectionString);
+            await CompanionPolicyMigrationTestHarness.MigrateAllAsync(connectionString);
             var factory = new SqlPlanningTransactionFactory(connectionString);
             var creator = new CreatorId("creator_accommodation");
             var original = CreatePlan(creator, 1, "Accommodation append");
@@ -605,7 +605,7 @@ public sealed class PlanningRepositoryIntegrationTests
         await ExecuteAsync(master, $"CREATE DATABASE [{databaseName}];");
         try
         {
-            DatabaseMigratorRunner.Migrate(connectionString);
+            await CompanionPolicyMigrationTestHarness.MigrateAllAsync(connectionString);
             var factory = new SqlPlanningTransactionFactory(connectionString);
             var creator = new CreatorId("creator_reservation");
             var original = CreatePlan(creator, 1, "Reservation append");
@@ -686,7 +686,7 @@ public sealed class PlanningRepositoryIntegrationTests
 
         try
         {
-            DatabaseMigratorRunner.Migrate(databaseConnectionString);
+            await CompanionPolicyMigrationTestHarness.MigrateAllAsync(databaseConnectionString);
             var factory = new SqlPlanningTransactionFactory(databaseConnectionString);
             var alpha = new CreatorId("creator_alpha");
             var beta = new CreatorId("creator_beta");

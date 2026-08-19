@@ -32,7 +32,16 @@ arm_id_equals "$SQL_SERVER_RESOURCE_ID" "/subscriptions/$subscription/resourceGr
 [[ "$SQL_DATABASE_NAME" == AdventuresSuiteDevelopment ]] || exit 1
 arm_id_equals "$SQL_PRIVATE_ENDPOINT_RESOURCE_ID" "/subscriptions/$subscription/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.Network/privateEndpoints/pe-adventures-suite-dev-sql" || exit 1
 case "$OPERATION_MODE" in
-  baseline) [[ -z "${OPERATION_APPROVAL_SHA256:-}" ]] || exit 1 ;;
-  bootstrap|cleanup|denial-proof) [[ "${OPERATION_APPROVAL_SHA256:-}" =~ ^[0-9a-f]{64}$ ]] || exit 1 ;;
+  baseline)
+    [[ -z "${OPERATION_APPROVAL_SHA256:-}" && -z "${SUPPORT_ID:-}" && -z "${CORRELATION_ID:-}" ]] || exit 1
+    ;;
+  bootstrap|cleanup|denial-proof)
+    [[ "${OPERATION_APPROVAL_SHA256:-}" =~ ^[0-9a-f]{64}$ && -z "${SUPPORT_ID:-}" && -z "${CORRELATION_ID:-}" ]] || exit 1
+    ;;
+  bootstrap-policy-role)
+    [[ "${OPERATION_APPROVAL_SHA256:-}" =~ ^[0-9a-f]{64}$ ]] || exit 1
+    [[ "${SUPPORT_ID:-}" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{7,63}$ ]] || exit 1
+    [[ "${CORRELATION_ID:-}" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{7,63}$ ]] || exit 1
+    ;;
   *) exit 1 ;;
 esac

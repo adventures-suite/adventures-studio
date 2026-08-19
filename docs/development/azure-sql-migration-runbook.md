@@ -112,6 +112,14 @@ schema ownership, role administration, schema creation, journal
 only their separately verified application DML grants and denials. Live
 bootstrap remains a later, exact approval boundary.
 
+The future Companion policy mutation role is a separate administrator-owned
+prerequisite. Repository support for the fixed
+`AdventuresSuiteCompanionPolicyRuntime` role creates only an absent, dbo-owned,
+empty role and otherwise verifies exact zero authority. It never grants future
+migration-0010 permissions. Repository review and merge do not execute the
+operation; persistent-database execution requires separate approval and
+readback before migration-0010 preparation.
+
 The repository-only administrator path is documented at
 `docs/architecture/private-sql-administrator-operation.md`. Its mandatory
 first mode is a statically allowlisted metadata baseline using the dedicated

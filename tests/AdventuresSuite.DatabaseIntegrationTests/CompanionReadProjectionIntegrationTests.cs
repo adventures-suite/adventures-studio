@@ -30,7 +30,7 @@ public sealed class CompanionReadProjectionIntegrationTests
 
         try
         {
-            DatabaseMigratorRunner.Migrate(connectionString);
+            await CompanionPolicyMigrationTestHarness.MigrateAllAsync(connectionString);
             await SeedAsync(connectionString);
             var queries = new SqlCompanionAdventureQueries(connectionString);
             var now = new DateTimeOffset(2026, 8, 10, 12, 0, 0, TimeSpan.Zero);

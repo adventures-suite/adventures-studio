@@ -261,7 +261,7 @@ public sealed class CompanionAuthoritativeAccessContextIntegrationTests
         await ExecuteAsync(master, $"CREATE DATABASE [{databaseName}];");
         try
         {
-            DatabaseMigratorRunner.Migrate(connectionString);
+            await CompanionPolicyMigrationTestHarness.MigrateAllAsync(connectionString);
             await test(connectionString);
         }
         finally

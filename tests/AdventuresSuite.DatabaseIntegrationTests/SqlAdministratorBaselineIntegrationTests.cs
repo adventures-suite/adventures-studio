@@ -27,7 +27,7 @@ public sealed class SqlAdministratorBaselineIntegrationTests
             await connection.OpenAsync();
 
             var result = await CaptureBaselineAsync(connection, databaseName);
-            Assert.Equal(0, result.ExitCode);
+            Assert.True(result.ExitCode == 0, result.Evidence.RootElement.ToString());
             Assert.Equal("absent", result.Evidence.RootElement.GetProperty("outcome").GetString());
         }
         finally
@@ -112,13 +112,14 @@ public sealed class SqlAdministratorBaselineIntegrationTests
             await ExecuteParameterizedAsync(connectionString,
                 AzureDevelopmentBootstrapper.BuildMigrationGrants($"[{MigrationPrincipalName}]"),
                 MigrationPrincipalName);
-            Assert.Equal(9, DatabaseMigratorRunner.Migrate(connectionString).Count);
+            Assert.Equal(10,
+                (await CompanionPolicyMigrationTestHarness.MigrateAllAsync(connectionString)).Count);
 
             await using var connection = new SqlConnection(connectionString);
             await connection.OpenAsync();
 
             var result = await CaptureBaselineAsync(connection, databaseName);
-            Assert.Equal(0, result.ExitCode);
+            Assert.True(result.ExitCode == 0, result.Evidence.RootElement.ToString());
             Assert.Equal("complete", result.Evidence.RootElement.GetProperty("outcome").GetString());
         }
         finally

@@ -22,7 +22,7 @@ public sealed class AuthenticationRepositoryIntegrationTests
         await ExecuteAsync(master, $"CREATE DATABASE [{databaseName}];");
         try
         {
-            DatabaseMigratorRunner.Migrate(connectionString);
+            await CompanionPolicyMigrationTestHarness.MigrateAllAsync(connectionString);
             var factory = new SqlAuthenticationTransactionFactory(connectionString);
             var first = Proposed("user_first", "identity_first", "Customer-A");
             var second = Proposed("user_second", "identity_second", "Customer-A");
