@@ -497,6 +497,66 @@ internal sealed class DapperAdventurePlanRepository(
     }
 
     /// <inheritdoc />
+    public async Task UpdateItineraryDayAsync(
+        CreatorId creatorId,
+        AdventurePlan plan,
+        ItineraryDay itineraryDay,
+        long expectedVersion,
+        CancellationToken cancellationToken = default)
+    {
+        RequirePlanScope(creatorId, plan);
+        ArgumentNullException.ThrowIfNull(itineraryDay);
+        if (expectedVersion < 1 || plan.Audit.Version != expectedVersion + 1
+            || !plan.ItineraryDays.Contains(itineraryDay))
+        {
+            throw new ArgumentException(
+                "An itinerary day update must advance the expected version by exactly one.",
+                nameof(expectedVersion));
+        }
+
+        try
+        {
+            var updated = await connection.ExecuteAsync(Command(AdvancePlanVersionSql,
+                new
+                {
+                    CreatorId = creatorId.Value,
+                    PlanId = plan.Id.Value,
+                    Version = plan.Audit.Version,
+                    plan.Audit.UpdatedAtUtc,
+                    ExpectedVersion = expectedVersion
+                }, cancellationToken));
+            if (updated == 0)
+            {
+                throw new PlanningConcurrencyException(plan.Id, expectedVersion);
+            }
+
+            var dayRows = await connection.ExecuteAsync(Command("""
+                UPDATE planning.ItineraryDays
+                   SET Title=@Title
+                 WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId
+                   AND ItineraryDayId=@Id;
+                """, new
+            {
+                CreatorId = creatorId.Value,
+                PlanId = plan.Id.Value,
+                Id = itineraryDay.Id.Value,
+                itineraryDay.Title
+            }, cancellationToken));
+            if (dayRows != 1)
+            {
+                throw new PlanningConcurrencyException(plan.Id, expectedVersion);
+            }
+
+            auditTracker.RecordMutation(plan.Id, expectedVersion, plan.Audit.Version);
+        }
+        catch
+        {
+            auditTracker.RecordFailure();
+            throw;
+        }
+    }
+
+    /// <inheritdoc />
     public async Task UpdatePlannedActivityAsync(
         CreatorId creatorId,
         AdventurePlan plan,

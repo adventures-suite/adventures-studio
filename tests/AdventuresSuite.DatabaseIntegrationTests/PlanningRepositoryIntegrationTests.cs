@@ -97,9 +97,9 @@ public sealed class PlanningRepositoryIntegrationTests
         }
     }
 
-    /// <summary>Proves an itinerary-day append, version, and audit commit atomically.</summary>
+    /// <summary>Proves itinerary-day append and title edit version and audit behavior atomically.</summary>
     [Fact]
-    public async Task AddItineraryDay_RealSqlServer_IsAtomicAndConcurrent()
+    public async Task ItineraryDayMutations_RealSqlServer_AreAtomicAndConcurrent()
     {
         var masterConnectionString = Environment.GetEnvironmentVariable(ConnectionVariable);
         Assert.False(string.IsNullOrWhiteSpace(masterConnectionString),
@@ -171,6 +171,56 @@ public sealed class PlanningRepositoryIntegrationTests
                 var loaded = await transaction.AdventurePlans.GetAsync(creator, original.Id);
                 Assert.Equal(2, loaded!.Audit.Version);
                 Assert.DoesNotContain(loaded.ItineraryDays, item => item.Id == rollbackDay.Id);
+                await transaction.CommitAsync();
+            }
+
+            var originalDay = updated.ItineraryDays.Single(item => item.Id == new ItineraryDayId("day_madrid"));
+            var originalActivity = updated.Activities.Single(item => item.ItineraryDayId == originalDay.Id);
+            var editedPlan = updated.WithEditedItineraryDayTitle(
+                originalDay.Id, "Madrid arrival corrected", updated.Audit.UpdatedAtUtc.AddMinutes(2));
+            var editedDay = editedPlan.ItineraryDays.Single(item => item.Id == originalDay.Id);
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                await transaction.AdventurePlans.UpdateItineraryDayAsync(
+                    creator, editedPlan, editedDay, 2);
+                transaction.RequiredAuditIntents.AddRequired(Audit(
+                    creator, original.Id, Permissions.AdventurePlanEdit, 2, 3));
+                await transaction.CommitAsync();
+            }
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                var loaded = await transaction.AdventurePlans.GetAsync(creator, original.Id);
+                var persisted = loaded!.ItineraryDays.Single(item => item.Id == originalDay.Id);
+                Assert.Equal(3, loaded.Audit.Version);
+                Assert.Equal("Madrid arrival corrected", persisted.Title);
+                Assert.Equal(originalDay.Id, persisted.Id);
+                Assert.Equal(originalDay.Date, persisted.Date);
+                Assert.Equal(originalDay.DestinationVisitId, persisted.DestinationVisitId);
+                Assert.Equal(originalDay.TimeZone, persisted.TimeZone);
+                Assert.Equal(originalActivity,
+                    loaded.Activities.Single(item => item.Id == originalActivity.Id));
+                await Assert.ThrowsAsync<PlanningConcurrencyException>(() =>
+                    transaction.AdventurePlans.UpdateItineraryDayAsync(
+                        creator, editedPlan, editedDay, 2));
+            }
+
+            var rollbackEditPlan = editedPlan.WithEditedItineraryDayTitle(
+                originalDay.Id, "Must roll back", editedPlan.Audit.UpdatedAtUtc.AddMinutes(1));
+            var rollbackEditedDay = rollbackEditPlan.ItineraryDays.Single(item => item.Id == originalDay.Id);
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                await transaction.AdventurePlans.UpdateItineraryDayAsync(
+                    creator, rollbackEditPlan, rollbackEditedDay, 3);
+                await Assert.ThrowsAsync<InvalidOperationException>(() => transaction.CommitAsync());
+            }
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                var loaded = await transaction.AdventurePlans.GetAsync(creator, original.Id);
+                Assert.Equal(3, loaded!.Audit.Version);
+                Assert.Equal("Madrid arrival corrected",
+                    loaded.ItineraryDays.Single(item => item.Id == originalDay.Id).Title);
+                Assert.Equal(originalActivity,
+                    loaded.Activities.Single(item => item.Id == originalActivity.Id));
                 await transaction.CommitAsync();
             }
         }

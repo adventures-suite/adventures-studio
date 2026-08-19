@@ -520,6 +520,7 @@ public sealed class AdventurePlanOverviewEditServiceTests
         public Task AddItineraryDayAsync(CreatorId creatorId, AdventurePlan plan,
             ItineraryDay itineraryDay, long expectedVersion,
             CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task UpdateItineraryDayAsync(CreatorId c, AdventurePlan p, ItineraryDay d, long v, CancellationToken x = default) => throw new NotSupportedException();
         public Task AddPlannedActivityAsync(CreatorId creatorId, AdventurePlan plan,
             PlannedActivity activity, long expectedVersion,
             CancellationToken cancellationToken = default) => throw new NotSupportedException();

@@ -43,10 +43,10 @@ public sealed class PlannerItineraryBoardTests
         {
             Assert.Contains($"action=\"{path}\"", html, StringComparison.Ordinal);
         }
-        Assert.Equal(9, Count(html, "method=\"post\""));
-        Assert.Equal(9, Count(html, "name=\"expectedVersion\" value=\"17\""));
-        Assert.Equal(9, Count(html, "<details"));
-        Assert.Equal(9, Count(html, "name=\"planner-board-action\""));
+        Assert.Equal(10, Count(html, "method=\"post\""));
+        Assert.Equal(10, Count(html, "name=\"expectedVersion\" value=\"17\""));
+        Assert.Equal(10, Count(html, "<details"));
+        Assert.Equal(10, Count(html, "name=\"planner-board-action\""));
         Assert.DoesNotContain("name=\"activity-editor\"", html);
         Assert.DoesNotContain("name=\"transportation-editor\"", html);
         Assert.DoesNotContain("name=\"accommodation-editor\"", html);
@@ -54,6 +54,10 @@ public sealed class PlannerItineraryBoardTests
         Assert.DoesNotContain("aria-expanded", html);
         Assert.Contains(">Add destination</summary>", html);
         Assert.Contains(">Add itinerary day</summary>", html);
+        Assert.Contains("Edit itinerary day: Arrival day", html);
+        Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/days/day_madrid_01/edit\"", html);
+        Assert.Contains("name=\"title\" value=\"Arrival day\"", html);
+        Assert.DoesNotContain("name=\"date\" value=\"2027-10-25\"", html);
         Assert.Contains(">Add activity to Arrival day</summary>", html);
         Assert.Contains(">Add transportation</summary>", html);
         Assert.Contains(">Add accommodation</summary>", html);
@@ -98,6 +102,7 @@ public sealed class PlannerItineraryBoardTests
 
         Assert.Contains("Destination status", html);
         Assert.Contains("Day status", html);
+        Assert.Contains("Day edit status", html);
         Assert.Contains("Activity status", html);
         Assert.Contains("Activity edit status", html);
         Assert.Contains("Transportation status", html);
@@ -105,7 +110,7 @@ public sealed class PlannerItineraryBoardTests
         Assert.Contains("Accommodation status", html);
         Assert.Contains("Accommodation edit status", html);
         Assert.Contains("Reservation status", html);
-        Assert.Equal(9, Count(html, "role=\"status\""));
+        Assert.Equal(10, Count(html, "role=\"status\""));
         Assert.DoesNotContain("PRIVATE-QUERY-VALUE", html, StringComparison.Ordinal);
     }
 
@@ -192,8 +197,8 @@ public sealed class PlannerItineraryBoardTests
     {
         var html = await RenderAsync(canEdit: true, includeMessages: true);
 
-        Assert.Equal(9, Count(html, "role=\"status\""));
-        Assert.Equal(9, Count(html, "name=\"planner-board-action\""));
+        Assert.Equal(10, Count(html, "role=\"status\""));
+        Assert.Equal(10, Count(html, "name=\"planner-board-action\""));
         Assert.DoesNotContain("<details open", html);
     }
 
@@ -224,6 +229,9 @@ public sealed class PlannerItineraryBoardTests
                 [nameof(PlannerItineraryBoard.CanEdit)] = canEdit,
                 [nameof(PlannerItineraryBoard.AddDestinationPath)] = Paths["destination"],
                 [nameof(PlannerItineraryBoard.AddDayPath)] = Paths["day"],
+                [nameof(PlannerItineraryBoard.EditDayPathPrefix)] = Paths["day"],
+                [nameof(PlannerItineraryBoard.DayCancelPath)] =
+                    "/workspace/creators/creator_alpha_01/plans/plan_spain_2027",
                 [nameof(PlannerItineraryBoard.AddActivityPath)] = Paths["activity"],
                 [nameof(PlannerItineraryBoard.EditActivityPathPrefix)] = Paths["activity"],
                 [nameof(PlannerItineraryBoard.ActivityCancelPath)] =
@@ -242,6 +250,7 @@ public sealed class PlannerItineraryBoardTests
             {
                 parameters[nameof(PlannerItineraryBoard.DestinationStatusMessage)] = "Destination status";
                 parameters[nameof(PlannerItineraryBoard.DayStatusMessage)] = "Day status";
+                parameters[nameof(PlannerItineraryBoard.DayEditStatusMessage)] = "Day edit status";
                 parameters[nameof(PlannerItineraryBoard.ActivityStatusMessage)] = "Activity status";
                 parameters[nameof(PlannerItineraryBoard.ActivityEditStatusMessage)] = "Activity edit status";
                 parameters[nameof(PlannerItineraryBoard.TransportationStatusMessage)] = "Transportation status";

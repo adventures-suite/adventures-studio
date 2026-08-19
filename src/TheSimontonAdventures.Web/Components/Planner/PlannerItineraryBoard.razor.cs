@@ -16,6 +16,10 @@ public partial class PlannerItineraryBoard : ComponentBase
     [Parameter, EditorRequired] public string AddDestinationPath { get; set; } = string.Empty;
     /// <summary>Gets or sets the existing itinerary-day POST path.</summary>
     [Parameter, EditorRequired] public string AddDayPath { get; set; } = string.Empty;
+    /// <summary>Gets or sets the itinerary-day edit POST path prefix.</summary>
+    [Parameter, EditorRequired] public string EditDayPathPrefix { get; set; } = string.Empty;
+    /// <summary>Gets or sets the safe plan-detail path used to cancel day editing.</summary>
+    [Parameter, EditorRequired] public string DayCancelPath { get; set; } = string.Empty;
     /// <summary>Gets or sets the existing activity POST path.</summary>
     [Parameter, EditorRequired] public string AddActivityPath { get; set; } = string.Empty;
     /// <summary>Gets or sets the activity-edit POST path prefix.</summary>
@@ -40,6 +44,8 @@ public partial class PlannerItineraryBoard : ComponentBase
     [Parameter] public string? DestinationStatusMessage { get; set; }
     /// <summary>Gets or sets the allowlisted day PRG message.</summary>
     [Parameter] public string? DayStatusMessage { get; set; }
+    /// <summary>Gets or sets the allowlisted itinerary-day edit PRG message.</summary>
+    [Parameter] public string? DayEditStatusMessage { get; set; }
     /// <summary>Gets or sets the allowlisted activity PRG message.</summary>
     [Parameter] public string? ActivityStatusMessage { get; set; }
     /// <summary>Gets or sets the allowlisted activity-edit PRG message.</summary>
@@ -61,6 +67,9 @@ public partial class PlannerItineraryBoard : ComponentBase
 
     private string EditActivityPath(PlannedActivityId activityId) =>
         $"{EditActivityPathPrefix}/{activityId.Value}/edit";
+
+    private string EditDayPath(ItineraryDayId dayId) =>
+        $"{EditDayPathPrefix}/{dayId.Value}/edit";
 
     private string EditTransportationPath(TransportationSegmentId segmentId) =>
         $"{EditTransportationPathPrefix}/{segmentId.Value}/edit";
