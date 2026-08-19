@@ -34,6 +34,36 @@ Mobile presentation state remains local to the Companion shell and shared
 host-independent components. It does not enter Companion API DTOs, Planning
 state, synchronization cursors, or server authorization decisions.
 
+### Language and Localization
+
+The initial release locale is United States English (`en-US`). The supported
+language direction then adds neutral Spanish (`es`), French (`fr`), and Italian
+(`it`) resources. Regional preferences such as `es-MX`, `fr-CA`, and `it-IT`
+use the reviewed neutral-language resource until a distinct regional variant is
+approved. Unsupported or malformed preferences fall back to `en-US`.
+
+Interface language remains distinct from Creator locale, authored-content
+language, destination language and time zone, currency, and measurement unit.
+The Companion resolves presentation language in this order: explicit traveler
+preference, device preferences in their declared order, Creator default, then
+`en-US`. Choosing an interface language never translates or mutates private
+Planning content, traveler text, protected Resources, or published content.
+
+Shared and native presentation obtains product-owned text from versioned
+resources rather than hardcoded component strings. Dates, times, numbers,
+plural forms, and accessible labels use the resolved presentation culture;
+API dates, local times, UTC timestamps, IANA zones, money, units, identifiers,
+enums, cache keys, and persistence remain in their explicit culture-neutral
+formats. Missing resource keys fail tests, and a missing translation uses the
+reviewed English fallback rather than displaying a key or guessing a
+translation.
+
+Machine or AI translation is an untrusted proposal. Legal, privacy, safety,
+permission, emergency, booking, accessibility, and store-disclosure language
+requires human review before release. Localization acceptance tests cover text
+expansion, truncation, dynamic type, screen-reader output, pluralization,
+offline availability, and locale changes without cross-Creator cache leakage.
+
 An injected appearance service owns two distinct values:
 
 - the traveler's preference: `System`, `Light`, or `Dark`; and

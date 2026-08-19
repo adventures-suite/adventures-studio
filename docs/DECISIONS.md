@@ -922,3 +922,30 @@ Status:
 
 Approved; runner implementation and all Azure/SQL operations remain separately
 blocked.
+
+## 2026-08-18
+
+### AdventuresCompanion Is Localization-Ready from Its First Release
+
+Decision:
+
+AdventuresCompanion launches in United States English (`en-US`) and establishes
+Spanish (`es`), French (`fr`), and Italian (`it`) as the next supported language
+resources. Presentation uses a shared, resource-backed locale catalog with
+deterministic regional and English fallback. Interface language remains
+separate from Creator locale, destination time zone, currency, units, API wire
+formats, authored content, and Planning state. AI translation is an untrusted
+proposal, and sensitive product language requires human review.
+
+Reason:
+
+Establishing resource keys, fallback behavior, culture-aware formatting, and
+test boundaries before the production mobile shell prevents hardcoded English
+from becoming a costly cross-platform dependency while avoiding premature or
+silent translation of private traveler content.
+
+Status:
+
+Approved
+
+---

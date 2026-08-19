@@ -1,7 +1,7 @@
 # Creator Ecosystem Vision
 
 **Version:** 1.0 Draft  
-**Company:** Adventures Studio  
+**Company:** Adventures Studio
 **Last Updated:** August 2026
 
 ---

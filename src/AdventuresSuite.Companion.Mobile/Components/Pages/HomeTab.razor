@@ -11,7 +11,7 @@
     <div class="hero-content">
         <div class="hero-status-row">
             <span class="status-pill">@Adventure.Status</span>
-            <span class="sync-pill on-photo"><i></i> Offline</span>
+            <span class="sync-pill on-photo"><i></i> @TextCatalog.Get(CompanionStringKeys.Offline, Locale)</span>
         </div>
         <div class="hero-summary">
             <p class="hero-kicker">@Adventure.Subtitle</p>
@@ -88,7 +88,6 @@
     public EventCallback<string> OnFeedback { get; set; }
 
     private ElementReference _detailButton;
-
     private int CountdownValue => Math.Max(0, Adventure.StartDate.DayNumber - DateOnly.FromDateTime(DateTime.Now).DayNumber);
     private string CountdownUnit => CountdownValue == 1 ? "day" : "days";
     private string CountdownAccessibleText => $"{CountdownValue} {CountdownUnit} until {Adventure.Title} begins on {Adventure.StartDate:MMMM d, yyyy}";

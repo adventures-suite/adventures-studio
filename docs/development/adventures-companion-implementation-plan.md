@@ -157,6 +157,20 @@ projects. Add navigation, design tokens, accessibility foundations, environment
 separation, secure configuration, deep-link policy, and deterministic device
 fakes.
 
+Use the shared localization foundation for product-owned UI text. Ship `en-US`
+first and retain reviewed resource sets and deterministic fallback for `es`,
+`fr`, and `it`. Resolve explicit traveler preference before ordered device
+preferences and Creator default, with `en-US` as the final fallback. Keep
+interface language out of Companion API authority, wire formatting, Creator
+authorization, and private authored content. Locale switching must invalidate
+only presentation caches and must remain functional for downloaded offline UI.
+
+Required localization tests prove supported and regional fallback, missing-key
+fallback, culture-aware formatting and pluralization, text expansion, accessible
+names, offline startup, and a live locale change without changing authoritative
+plan data. Human review is required before non-English legal, privacy, safety,
+permission, emergency, booking, accessibility, or store-disclosure text ships.
+
 Implement an injected appearance-preference service with `System`, `Light`, and
 `Dark` choices. Default to System, persist only explicit user preference, react
 to live OS appearance changes while System is active, and expose one effective

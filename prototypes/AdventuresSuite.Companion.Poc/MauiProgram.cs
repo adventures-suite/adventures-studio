@@ -25,6 +25,7 @@ public static class MauiProgram
 			metadata.GetValueOrDefault("AdventuresCompanion.ApiBaseAddress"));
 
 		builder.Services.AddMauiBlazorWebView();
+		builder.Services.AddSingleton<AdventuresSuite.Localization.CompanionTextCatalog>();
 		if (providerSettings.Provider == Models.CompanionContentProviderKind.Demo)
 		{
 			builder.Services.AddSingleton<Services.CompanionContentService>();

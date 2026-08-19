@@ -98,6 +98,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\AdventuresSuite.Companion.Client\AdventuresSuite.Companion.Client.csproj" />
+        <ProjectReference Include="..\AdventuresSuite.Localization\AdventuresSuite.Localization.csproj" />
     </ItemGroup>
 
     <!-- Non-secret values supplied with -p: at package time for installed apps. -->
