@@ -182,7 +182,7 @@ the selected provider contract confirms them.
 
 Bay Photo currently presents professional print products, direct-to-customer
 drop shipping, integrated ecommerce partners, and unbranded or white-label
-delivery options. A public general-purpose API and custom AdventuresSuite or
+delivery options. A public general-purpose API and custom Adventures Studio or
 Creator-branded packaging have not been established. Those capabilities require
 direct partner validation before implementation.
 

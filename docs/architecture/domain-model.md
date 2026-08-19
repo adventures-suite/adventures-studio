@@ -10,7 +10,7 @@
 
 # Purpose
 
-The Domain Model defines the core business concepts of AdventuresSuite.
+The Domain Model defines the core business concepts of Adventures Studio.
 
 Every feature, service, API, AI workflow, mobile application, publishing capability, and user interface should build upon these concepts.
 
@@ -22,13 +22,13 @@ User interfaces will evolve.
 
 Artificial Intelligence will evolve.
 
-The language of AdventuresSuite should remain consistent.
+The language of Adventures Studio should remain consistent.
 
 ---
 
 # Philosophy
 
-AdventuresSuite is not organized around books.
+Adventures Studio is not organized around books.
 
 It is not organized around websites.
 
@@ -76,8 +76,7 @@ Experience
 
 Memory
 
-Every future capability within AdventuresSuite should naturally fit somewhere
-within this hierarchy.
+Every future capability within Adventures Studio should naturally fit somewhere within this hierarchy.
 
 ---
 

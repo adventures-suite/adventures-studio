@@ -9,7 +9,7 @@
 ## Purpose
 
 Platform Billing and Entitlements govern how Creators, agencies, organizations,
-and future enterprise customers pay TechTock, LLC to use AdventuresSuite
+and future enterprise customers pay Adventures Studio to use AdventuresSuite
 and which platform capabilities they receive.
 
 This is separate from the Commerce Engine, which lets a Creator sell books,
@@ -17,7 +17,7 @@ prints, licenses, and other products to the Creator's customers.
 
 ```text
 Platform Billing
-    Customer pays TechTock, LLC for AdventuresSuite capabilities
+    Customer pays Adventures Studio for AdventuresSuite capabilities
 
 Creator Commerce
     Customer pays a Creator for a Publication, Resource, or service

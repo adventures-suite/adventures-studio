@@ -1,5 +1,4 @@
 @using Microsoft.AspNetCore.Components
-@inject CompanionTextCatalog TextCatalog
 
 <article class="hero-card">
     @if (!string.IsNullOrWhiteSpace(Adventure.HeroImagePath))
@@ -87,7 +86,6 @@
     public EventCallback<string> OnFeedback { get; set; }
 
     private ElementReference _detailButton;
-    private CompanionLocale Locale => CompanionLocales.Resolve([System.Globalization.CultureInfo.CurrentUICulture.Name]);
     private int CountdownValue => Math.Max(0, Adventure.StartDate.DayNumber - DateOnly.FromDateTime(DateTime.Now).DayNumber);
     private string CountdownUnit => CountdownValue == 1 ? "day" : "days";
     private string CountdownAccessibleText => $"{CountdownValue} {CountdownUnit} until {Adventure.Title} begins on {Adventure.StartDate:MMMM d, yyyy}";

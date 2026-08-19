@@ -7,7 +7,6 @@
 @inject PlaybookContentService PlaybookService
 @inject ICompanionAppearanceService Appearance
 @inject TransientBackNavigationService BackNavigation
-@inject CompanionTextCatalog TextCatalog
 
 @if (_state is null)
 {
@@ -180,10 +179,6 @@ else
     private CompanionItineraryPresentationState? _itineraryState;
     private IDisposable? _detailBackRegistration;
     private bool _restoreDetailFocus;
-    private readonly CompanionLocale _locale = CompanionLocales.Resolve([System.Globalization.CultureInfo.CurrentUICulture.Name]);
-
-    private string Text(string key) => TextCatalog.Get(key, _locale);
-
     protected override async Task OnInitializedAsync()
     {
 		Appearance.Changed += OnAppearanceChanged;

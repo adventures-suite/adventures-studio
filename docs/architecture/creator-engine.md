@@ -11,7 +11,7 @@ The Creator Engine identifies the Creator associated with an AdventuresSuite
 operation and establishes the tenancy context consumed by other platform
 capabilities.
 
-TechTock, LLC owns and operates AdventuresSuite.
+Adventures Studio is the company that owns and operates AdventuresSuite.
 The Simonton Adventures is the first Creator and flagship implementation.
 
 The first implementation remains JSON-backed and supports one real Creator. It

@@ -10,8 +10,7 @@
 
 # Vision Statement
 
-AdventuresSuite exists to help people dream, discover, plan, experience,
-capture, preserve, publish, and share meaningful adventures.
+Adventures Studio exists to help people dream, discover, plan, experience, capture, preserve, publish, and share meaningful adventures.
 
 The platform transforms travel experiences into lasting stories through beautiful publishing, intelligent planning, photography, journals, maps, books, and interactive digital experiences.
 
@@ -55,7 +54,7 @@ After every trip people are left with:
 
 Most of those memories are eventually forgotten.
 
-AdventuresSuite exists to solve that problem.
+Adventures Studio exists to solve that problem.
 
 ---
 
@@ -97,7 +96,7 @@ The platform exists to support the traveler—not distract from the adventure.
 
 ---
 
-# What Makes AdventuresSuite Different
+# What Makes Adventures Studio Different
 
 We are not building:
 
@@ -159,7 +158,7 @@ The platform should support every stage.
 
 # Primary Markets
 
-AdventuresSuite is designed for:
+Adventures Studio is designed for:
 
 - Families
 - Travel enthusiasts
@@ -228,7 +227,7 @@ Everything we build should help people create better adventures and preserve bet
 
 # The Flagship Customer
 
-The first implementation of AdventuresSuite is:
+The first implementation of Adventures Studio is:
 
 **The Simonton Adventures**
 
@@ -240,7 +239,7 @@ Once validated, it becomes part of the platform for everyone.
 
 # Long-Term Vision
 
-AdventuresSuite becomes the platform where adventures are:
+Adventures Studio becomes the platform where adventures are:
 
 - Planned
 - Experienced
@@ -311,7 +310,7 @@ The traveler always owns the story.
 
 # Success
 
-AdventuresSuite succeeds when people say:
+Adventures Studio succeeds when people say:
 
 "I will always remember this adventure."
 
@@ -325,4 +324,4 @@ Because the software helped preserve something that mattered.
 
 Every meaningful adventure deserves to become a lasting legacy.
 
-AdventuresSuite exists to make that possible.
+Adventures Studio exists to make that possible.

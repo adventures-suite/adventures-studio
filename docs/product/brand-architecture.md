@@ -1,17 +1,16 @@
 # Brand Architecture
 
-**Version:** 1.1
+**Version:** 1.0
 
 **Status:** Approved
 
-**Last Updated:** August 16, 2026
+**Last Updated:** July 31, 2026
 
 ---
 
 # Purpose
 
-This document defines the brand architecture of the AdventuresSuite ecosystem
-owned and operated by TechTock, LLC.
+This document defines the brand architecture of the AdventuresSuite ecosystem operated by Adventures Studio.
 
 It establishes the relationship between the company, the products, and flagship customer implementations.
 
@@ -40,7 +39,7 @@ It should feel inspiring.
 
 # Brand Hierarchy
 
-TechTock, LLC
+Adventures Studio
 
 ↓
 
@@ -82,12 +81,7 @@ Destinations
 
 AdventuresSuite is the complete software platform and product ecosystem.
 
-TechTock, LLC is the legal company. AdventuresSuite is its customer-facing
-master brand, platform, and family of software capabilities.
-
-Adventures Studio is not a separate company. `Studio` may be used as
-descriptive workspace terminology or as a future product name only after
-appropriate name and trademark clearance.
+Adventures Studio is the company. AdventuresSuite is its platform and family of software capabilities.
 
 It is never responsible for one specific task.
 
@@ -103,8 +97,7 @@ Tagline (working)
 
 ## Creator Workspace
 
-TechTock, LLC creates and operates AdventuresSuite. Its primary creator
-experience is provided through the AdventuresSuite workspace.
+Adventures Studio creates and operates AdventuresSuite. Its primary creator experience is provided through the AdventuresSuite workspace.
 
 It is where customers:
 

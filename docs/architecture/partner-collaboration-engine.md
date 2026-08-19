@@ -68,7 +68,7 @@ customer records.
   derived from the Adventure unless a separate legal agreement says otherwise.
 - The agency Creator owns its brand, templates, internal methods, reusable
   recommendations, and professional resources.
-- TechTock, LLC owns and operates AdventuresSuite.
+- Adventures Studio owns and operates AdventuresSuite.
 - A travel professional receives only permissions explicitly granted through
   an accepted, active engagement.
 - Ending an engagement revokes future access without erasing required audit
