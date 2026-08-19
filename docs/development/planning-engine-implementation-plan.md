@@ -214,6 +214,13 @@ planning status.
 The itinerary board keeps plan records read-first by placing contextual creation
 and supported edit forms in one native, mutually exclusive disclosure group.
 
+The approved contextual-ideas direction keeps that itinerary board as the
+authoritative canvas and adds a destination-aware Ideas rail. Delivery begins
+with a presentation-only, deterministic rail and then one reviewed
+**Add to plan** operation before accessible drag and drop. See
+`docs/architecture/planner-contextual-ideas.md`. Do not introduce provider
+search, AI ranking, templates, or direct drop mutation in the first rail slice.
+
 Scope:
 
 - Adventure dashboard
@@ -224,6 +231,8 @@ Scope:
 - activities, transportation, accommodations, and reservations
 - notes, tasks, packing, and budget items
 - private read-only preview
+- presentation-only contextual Ideas rail with destination/day selection,
+  responsive states, and no authoritative mutation
 - authorized layered Adventure map with overview, segment, destination, day,
   selected-place, and candidate-point-of-interest views
 - deterministic private Adventure Travel Playbook preview and first PDF export
