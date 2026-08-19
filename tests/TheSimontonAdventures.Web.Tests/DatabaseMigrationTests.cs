@@ -14,7 +14,7 @@ public sealed class DatabaseMigrationTests
     {
         var migrations = MigrationCatalog.GetOrderedResourceNames(MigratorAssembly);
 
-        Assert.Equal(10, migrations.Count);
+        Assert.Equal(11, migrations.Count);
         Assert.EndsWith("0001_create_planning_schema.sql", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("0002_create_adventure_plans.sql", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("0003_create_planning_children.sql", migrations[2], StringComparison.Ordinal);
@@ -25,7 +25,25 @@ public sealed class DatabaseMigrationTests
         Assert.EndsWith("0008_create_companion_read_role.sql", migrations[7], StringComparison.Ordinal);
         Assert.EndsWith("0009_create_adventure_plan_create_results.sql", migrations[8], StringComparison.Ordinal);
         Assert.EndsWith("0010_create_companion_policy_assignments.sql", migrations[9], StringComparison.Ordinal);
+        Assert.EndsWith("0011_create_adventure_plan_template_origins.sql", migrations[10], StringComparison.Ordinal);
         Assert.Equal(migrations.Count, migrations.Distinct(StringComparer.Ordinal).Count());
+    }
+
+    /// <summary>Ensures template provenance is Creator-scoped, append-only, and version exact.</summary>
+    [Fact]
+    public void AdventurePlanTemplateOrigins_DeclareImmutableCreationEvidence()
+    {
+        var migration = ReadMigration("0011_create_adventure_plan_template_origins.sql");
+
+        Assert.Contains("PRIMARY KEY (CreatorId, AdventurePlanId)", migration, StringComparison.Ordinal);
+        Assert.Contains("TemplateId nvarchar(64) COLLATE Latin1_General_100_BIN2", migration, StringComparison.Ordinal);
+        Assert.Contains("TemplateVersion nvarchar(32) COLLATE Latin1_General_100_BIN2", migration, StringComparison.Ordinal);
+        Assert.Contains("SourceLocale varchar(35)", migration, StringComparison.Ordinal);
+        Assert.Contains("UseDecisionReference", migration, StringComparison.Ordinal);
+        Assert.Contains("AdventurePlan.TemplateInstantiate.v1", migration, StringComparison.Ordinal);
+        Assert.Contains("DENY UPDATE, DELETE ON OBJECT::planning.AdventurePlanTemplateOrigins", migration, StringComparison.Ordinal);
+        Assert.DoesNotContain("Traveler", migration, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Reservation", migration, StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>Ensures Companion policy assignments preserve scope, audit, and least privilege.</summary>

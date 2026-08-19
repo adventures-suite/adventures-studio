@@ -7,6 +7,14 @@ public static class PlanningIdempotencyOperations
 {
     /// <summary>Identifies version one of manual Adventure Plan creation.</summary>
     public const string AdventurePlanCreateV1 = "AdventurePlan.Create.v1";
+
+    /// <summary>Identifies version one of Adventure Plan creation from a published template.</summary>
+    public const string AdventurePlanTemplateInstantiateV1 = "AdventurePlan.TemplateInstantiate.v1";
+
+    /// <summary>Determines whether an operation is an approved Adventure Plan creation operation.</summary>
+    public static bool IsAllowed(string operation) =>
+        string.Equals(operation, AdventurePlanCreateV1, StringComparison.Ordinal)
+        || string.Equals(operation, AdventurePlanTemplateInstantiateV1, StringComparison.Ordinal);
 }
 
 /// <summary>Identifies one retryable Planning request within a Creator and operation.</summary>
@@ -76,10 +84,7 @@ public sealed record AdventurePlanCreateReservation
         DateTimeOffset createdAtUtc,
         DateTimeOffset expiresAtUtc)
     {
-        if (!string.Equals(
-                operation,
-                PlanningIdempotencyOperations.AdventurePlanCreateV1,
-                StringComparison.Ordinal))
+        if (!PlanningIdempotencyOperations.IsAllowed(operation))
         {
             throw new ArgumentException("The Planning idempotency operation is not allowlisted.", nameof(operation));
         }

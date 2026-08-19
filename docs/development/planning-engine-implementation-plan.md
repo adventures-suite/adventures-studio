@@ -313,6 +313,23 @@ Exit gate:
 
 ## Phase 4A: Adventure Template Foundation
 
+Delivery status (August 19, 2026): the first durable instantiation boundary is
+implemented for review. Provider-neutral immutable blueprint contracts,
+authorized source-use resolution, deterministic creation of independent
+customer Creator-owned plan aggregates, exact template/version provenance,
+Creator-scoped retry safety, and required audit intent share one SQL
+transaction. Migration `0011` adds the append-only provenance record and the
+template-instantiation idempotency operation. Clean-install and exact
+`0010 -> 0011` SQL proofs cover replay, concurrency, missing provenance, and
+rollback when provenance persistence fails.
+
+This foundation does not yet provide a production template catalog adapter,
+catalog persistence, template authoring, entitlement or licensing stores, the
+Planner's “Use this Journey” endpoint/UI, parameter editing, reporting
+projections, or protected production migration execution. Those remain
+separate reviewed slices; the existing protected `0009 -> 0010` migration
+operation is intentionally not broadened by the Planner feature slice.
+
 Scope:
 
 - framework-independent template, immutable version, parameter, provenance,

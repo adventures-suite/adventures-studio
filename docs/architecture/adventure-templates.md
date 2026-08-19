@@ -1,7 +1,7 @@
 # Adventure Templates
 
-Status: Approved platform requirement and architecture direction
-Last updated: August 9, 2026
+Status: Approved platform requirement; durable instantiation foundation implemented for review
+Last updated: August 19, 2026
 
 ## Purpose
 
@@ -179,6 +179,15 @@ reporting requires separate authority and privacy controls.
 No template database, marketplace, booking integration, or UI should be added
 before its preceding domain, authorization, privacy, and audit boundaries are
 implemented and tested.
+
+The first durable implementation deliberately stops at that boundary. It
+accepts only an already authorized immutable blueprint from a provider-neutral
+resolver, creates fresh identities for the complete private plan aggregate,
+and atomically persists the plan, exact source template/version provenance,
+Creator-scoped idempotency result, and required audit intent. The production
+catalog/licensing adapter and the user-facing “Use this Journey” workflow are
+the next consumers of this boundary, not alternative authorization or
+persistence paths.
 
 ## Definition of Done
 
