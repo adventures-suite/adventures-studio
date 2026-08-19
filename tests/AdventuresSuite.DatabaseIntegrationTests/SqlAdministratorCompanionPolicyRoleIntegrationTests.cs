@@ -228,7 +228,9 @@ public sealed class SqlAdministratorCompanionPolicyRoleIntegrationTests
         await ExecuteAsync(master, $"CREATE DATABASE [{databaseName}];");
         try
         {
-            Assert.Equal(9, DatabaseMigratorRunner.Migrate(connectionString).Count);
+            using (DatabaseMigratorRunner.AcquireMigrationLock(connectionString))
+                Assert.Equal(9, DatabaseMigratorRunner.MigrateWithLockHeld(
+                    connectionString, maximumMigrationNumber: "0009").Count);
             await test(connectionString);
         }
         finally

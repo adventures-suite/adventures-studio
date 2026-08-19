@@ -29,7 +29,7 @@ public sealed class CreatorMembershipRepositoryIntegrationTests
         await ExecuteAsync(master, $"CREATE DATABASE [{databaseName}];");
         try
         {
-            DatabaseMigratorRunner.Migrate(connectionString);
+            await CompanionPolicyMigrationTestHarness.MigrateAllAsync(connectionString);
             await SeedUsersAsync(connectionString);
             var factory = new SqlCreatorMembershipTransactionFactory(connectionString);
 

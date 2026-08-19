@@ -22,7 +22,8 @@ internal static class SqlAdministratorOperationRunner
         "0003_create_planning_children.sql", "0004_create_authentication_persistence.sql",
         "0005_bind_sessions_to_external_identities.sql", "0006_create_creator_memberships.sql",
         "0007_create_traveler_participations.sql", "0008_create_companion_read_role.sql",
-        "0009_create_adventure_plan_create_results.sql"
+        "0009_create_adventure_plan_create_results.sql",
+        "0010_create_companion_policy_assignments.sql"
     ];
 
     private static readonly string[] At0006PermissionSignatures =
@@ -401,8 +402,8 @@ internal static class SqlAdministratorOperationRunner
             objectCounts.Add(new { schema, type, count });
             objectCountSignatures.Add($"{schema}|{type}|{count}");
         }
-        if (schemas.Count > 3 || roles.Length > 4 || principals.Count > 2
-            || permissions.Count > 128 || rawScripts.Count > 9 || objectCounts.Count > 24)
+        if (schemas.Count > 3 || roles.Length > 5 || principals.Count > 2
+            || permissions.Count > 160 || rawScripts.Count > 10 || objectCounts.Count > 24)
             throw new InvalidOperationException("The SQL administrator baseline evidence exceeded its bounds.");
 
         var journalIsValid = TryNormalizeJournal(rawScripts, out var scripts);
@@ -430,8 +431,9 @@ internal static class SqlAdministratorOperationRunner
             && schemaJson.Contains("\"audit\",\"owner\":\"db_ddladmin\"", StringComparison.Ordinal)
             && roleNames.SequenceEqual(new[]
             {
-                "AdventuresSuiteAuthenticationRuntime", "AdventuresSuiteCompanionReadRuntime",
-                "AdventuresSuiteMembershipRuntime", "AdventuresSuitePlanningRuntime"
+                "AdventuresSuiteAuthenticationRuntime", "AdventuresSuiteCompanionPolicyRuntime",
+                "AdventuresSuiteCompanionReadRuntime", "AdventuresSuiteMembershipRuntime",
+                "AdventuresSuitePlanningRuntime"
             }, StringComparer.Ordinal)
             && roles.All(role => !JsonSerializer.Serialize(role).Contains("unexpected-redacted", StringComparison.Ordinal))
             && principals.Count == 1
