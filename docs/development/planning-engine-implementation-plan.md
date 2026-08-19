@@ -330,6 +330,16 @@ projections, or protected production migration execution. Those remain
 separate reviewed slices; the existing protected `0009 -> 0010` migration
 operation is intentionally not broadened by the Planner feature slice.
 
+The next stacked customer-workflow slice adds the first direct “Use this
+Journey” consumer of that boundary. In local Alpha only, a JSON-driven fictional
+curated catalog is queried after customer Creator authorization. The user can
+review the complete destinations, itinerary, transportation, and stay patterns,
+choose a start date, and explicitly create the complete independent private
+plan. The UI uses the antiforgery-protected retry-safe endpoint and no longer
+pretends that title/description prefilling or unsupported customization copied
+the Journey. External-provider environments remain fail-closed until a
+production catalog, entitlement, and licensing adapter is reviewed.
+
 Scope:
 
 - framework-independent template, immutable version, parameter, provenance,

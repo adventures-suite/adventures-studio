@@ -22,18 +22,17 @@
 .journey-template__header dd { font-weight: 700; margin: 0; text-align: right; }
 .journey-template__sections { display: grid; gap: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 1.5rem; }
 .journey-template__sections > section { background: var(--planner-shell-surface); border: 1px solid var(--planner-shell-border); border-radius: .75rem; min-width: 0; padding: 1rem; }
-.journey-template__destination { align-items: start; display: flex; gap: .65rem; margin-top: .75rem; }
-.journey-template__destination input { margin-top: .25rem; }
-.journey-template__destination span, .journey-template__plain-list li, .journey-template__days li { display: grid; gap: .2rem; }
-.journey-template__destination small, .journey-template__plain-list span, .journey-template__days span { color: var(--planner-shell-text-muted); }
+.journey-template__plain-list li, .journey-template__days li { display: grid; gap: .2rem; }
+.journey-template__plain-list span, .journey-template__days span { color: var(--planner-shell-text-muted); }
 .journey-template__days, .journey-template__plain-list { display: grid; gap: .8rem; margin: .8rem 0 0; padding-left: 1.25rem; }
-.journey-template__customize { border: 1px solid var(--planner-shell-border); border-radius: .75rem; display: grid; gap: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 1rem 0; padding: 1rem; }
-.journey-template__customize legend { font-family: Georgia, serif; font-size: 1.1rem; font-weight: 700; padding: 0 .4rem; }
-.journey-template__customize label { display: grid; font-weight: 700; gap: .35rem; }
-.journey-template__customize select { background: var(--planner-shell-surface); border: 1px solid var(--planner-shell-border); border-radius: .45rem; color: var(--planner-shell-text); font: inherit; min-width: 0; padding: .65rem; }
 .journey-template__boundary { border-left: 3px solid #8a5b24; color: var(--planner-shell-text-muted); padding: .15rem 1rem; }
 .journey-template__boundary p { margin: .35rem 0; }
+.journey-template__create { align-items: end; display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 1rem; }
+.journey-template__create label { display: grid; font-weight: 700; gap: .35rem; }
+.journey-template__create input { background: var(--planner-shell-surface); border: 1px solid var(--planner-shell-border); border-radius: .45rem; color: var(--planner-shell-text); font: inherit; min-height: 2.75rem; padding: .55rem; }
 .journey-template__continue { background: var(--planner-shell-primary); border: 0; border-radius: 999px; color: var(--planner-shell-surface); cursor: pointer; font: inherit; font-weight: 800; margin-top: 1rem; padding: .75rem 1.1rem; }
-.journey-starter button:focus-visible { outline: 3px solid var(--planner-shell-focus); outline-offset: 3px; }
+.journey-template__create .journey-template__continue { margin-top: 0; min-height: 2.75rem; }
+.journey-template__after { color: var(--planner-shell-text-muted); font-size: .9rem; }
+.journey-starter button:focus-visible, .journey-starter input:focus-visible { outline: 3px solid var(--planner-shell-focus); outline-offset: 3px; }
 @media (max-width: 48rem) { .journey-template__header, .journey-template__sections { grid-template-columns: 1fr; } }
-@media (max-width: 36rem) { .journey-starter__choices, .journey-template__customize { grid-template-columns: 1fr; } }
+@media (max-width: 36rem) { .journey-starter__choices { grid-template-columns: 1fr; } .journey-template__create, .journey-template__create label, .journey-template__create input, .journey-template__create button { width: 100%; } }

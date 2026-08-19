@@ -37,18 +37,13 @@ public partial class WorkspaceRoot
     private WorkspaceLoadState LoadState { get; set; } = WorkspaceLoadState.Landing;
     private string CreateIdempotencyKey { get; } = $"request_{Guid.NewGuid():N}";
     private PlannerIdeasContext? SelectedIdeasContext { get; set; }
-    private PlannerJourneySeed? SelectedJourneySeed { get; set; }
+    private IReadOnlyList<AdventureTemplateBlueprint> AdventureTemplates { get; set; } = [];
+    private bool IsTemplateMode { get; set; }
     private int IdeasWidthPixels { get; set; } = 320;
 
-    private Task SelectJourneySeedAsync(PlannerJourneySeed seed)
+    private Task SetTemplateModeAsync(bool isTemplateMode)
     {
-        SelectedJourneySeed = seed;
-        return Task.CompletedTask;
-    }
-
-    private Task StartJourneyFromScratchAsync()
-    {
-        SelectedJourneySeed = null;
+        IsTemplateMode = isTemplateMode;
         return Task.CompletedTask;
     }
 
@@ -135,6 +130,31 @@ public partial class WorkspaceRoot
                 var result = await query.ListAsync(actor, creatorId, context.RequestAborted);
                 Plans = result.Plans;
                 LoadState = result.IsAllowed ? WorkspaceLoadState.Ready : WorkspaceLoadState.Unavailable;
+                if (result.IsAllowed)
+                {
+                    var catalog = context.RequestServices
+                        .GetService<IAdventureTemplateCatalogQueryService>();
+                    if (catalog is not null)
+                    {
+                        try
+                        {
+                            var catalogResult = await catalog.ListAsync(
+                                actor, creatorId, "en-US", context.RequestAborted);
+                            AdventureTemplates = catalogResult.IsAllowed ? catalogResult.Templates : [];
+                        }
+                        catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+                        {
+                            throw;
+                        }
+                        catch (Exception exception)
+                        {
+                            context.RequestServices.GetService<ILogger<WorkspaceRoot>>()?.LogError(
+                                exception,
+                                "Planner Journey Template catalog failed; manual planning remains available.");
+                            AdventureTemplates = [];
+                        }
+                    }
+                }
             }
         }
         catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
@@ -185,6 +205,7 @@ public partial class WorkspaceRoot
 
     private string PlanListPath => $"/workspace/creators/{AddressedCreatorId.Value}/plans";
     private string CreatePlanPath => $"{PlanListPath}/create";
+    private string CreateFromTemplatePath => $"{PlanListPath}/create-from-template";
     private string EditPlanPath => $"{PlanListPath}/{Plan!.Id.Value}/overview";
     private string AddDestinationPath => $"{PlanListPath}/{Plan!.Id.Value}/destinations";
     private string AddDayPath => $"{PlanListPath}/{Plan!.Id.Value}/days";
@@ -204,6 +225,15 @@ public partial class WorkspaceRoot
             "conflict" => "This request no longer matches its original submission. Start a new request.",
             "validation" => "Review the plan details and try again.",
             "failure" => "The plan could not be created. Please try again.",
+            _ => null
+        };
+    private string? TemplateStatusMessage =>
+        GetQueryValue("template") switch
+        {
+            "denied" => "That Journey Template is not available to this workspace.",
+            "conflict" => "This template request no longer matches its original submission. Start a new request.",
+            "validation" => "Review the Journey Template and start date, then try again.",
+            "failure" => "The private Journey could not be created. Please try again.",
             _ => null
         };
     private string? EditStatusMessage =>

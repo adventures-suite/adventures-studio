@@ -189,6 +189,14 @@ catalog/licensing adapter and the user-facing “Use this Journey” workflow ar
 the next consumers of this boundary, not alternative authorization or
 persistence paths.
 
+The first user-facing consumer keeps discovery and use separate. An authorized
+catalog query may show a complete preview, but pressing “Create my private
+Journey” performs a fresh exact-version use decision and the atomic
+instantiation operation. The customer selects only supported parameters; the
+interface must not show controls that are silently ignored. Local Alpha uses a
+fictional JSON catalog. Production remains empty and fail-closed until its
+catalog, entitlement, license, retention, and reporting adapters are approved.
+
 ## Definition of Done
 
 Adventure Templates are production-ready only when:
