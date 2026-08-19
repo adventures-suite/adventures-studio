@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  DOTNET_VERSION: "10.0.x"
+  DOTNET_VERSION: "10.0.303"
   PROJECT: src/TheSimontonAdventures.Web/TheSimontonAdventures.Web.csproj
   PUBLISH_DIR: ./artifacts/public-preview/publish
   PACKAGE_DIR: ./artifacts/public-preview/package
