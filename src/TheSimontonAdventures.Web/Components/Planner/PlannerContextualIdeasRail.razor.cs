@@ -6,6 +6,9 @@ namespace TheSimontonAdventures.Web.Components;
 /// <summary>Identifies the selected Planner canvas context without conveying plan authority.</summary>
 public enum PlannerIdeasContextKind
 {
+    /// <summary>The whole Adventure Plan.</summary>
+    Adventure,
+
     /// <summary>A destination visit.</summary>
     Destination,
 
@@ -64,11 +67,30 @@ public partial class PlannerContextualIdeasRail : ComponentBase
     private int PointerStartWidth { get; set; }
     private bool FocusCloseAfterRender { get; set; }
     private bool FocusOpenAfterRender { get; set; }
-    private static readonly IReadOnlyList<PlannerIdeaCard> DevelopmentIdeas =
-    [
-        new("Activity", "A slower local morning", "Leave room for a neighborhood walk and an unhurried café stop.", "Fictional local Alpha demo", "Demo snapshot", "Matches the selected planning context.", "AM"),
-        new("Route pattern", "Pair one anchor with flexible time", "Balance one planned highlight with open time for discoveries nearby.", "Fictional local Alpha demo", "Demo snapshot", "Supports a calm day structure.", "RP")
-    ];
+    private static readonly IReadOnlyDictionary<PlannerIdeasContextKind, IReadOnlyList<PlannerIdeaCard>> DevelopmentIdeas =
+        new Dictionary<PlannerIdeasContextKind, IReadOnlyList<PlannerIdeaCard>>
+        {
+            [PlannerIdeasContextKind.Adventure] =
+            [
+                new("Journey", "A relaxed Atlantic pairing", "Shape a two-stop journey with generous time in each place.", "Fictional local Alpha demo", "Demo snapshot", "Fits the whole-Adventure planning stage.", "JR"),
+                new("Destination", "Add a contrasting second stop", "Pair the current route with a nearby destination that offers a different pace.", "Fictional local Alpha demo", "Demo snapshot", "Helps develop the Adventure route.", "DS")
+            ],
+            [PlannerIdeasContextKind.Destination] =
+            [
+                new("Sample day", "A gentle first day", "Combine one neighborhood anchor with flexible time to settle in.", "Fictional local Alpha demo", "Demo snapshot", "Matches the selected destination visit.", "SD"),
+                new("Activity", "A slower local morning", "Leave room for a neighborhood walk and an unhurried café stop.", "Fictional local Alpha demo", "Demo snapshot", "Matches the selected destination visit.", "AM"),
+                new("Stay pattern", "Choose a walkable home base", "Consider a central area that reduces transfers between planned days.", "Fictional local Alpha demo", "Demo snapshot", "Supports destination-level planning.", "ST")
+            ],
+            [PlannerIdeasContextKind.Day] =
+            [
+                new("Activity", "One memorable local anchor", "Choose one meaningful experience and preserve room around it.", "Fictional local Alpha demo", "Demo snapshot", "Fits the selected itinerary day.", "AC"),
+                new("Meal rhythm", "Protect an unhurried meal", "Reserve a flexible meal window instead of filling every hour.", "Fictional local Alpha demo", "Demo snapshot", "Supports a realistic daily pace.", "MR"),
+                new("Pacing", "Keep nearby discoveries flexible", "Group optional ideas near the day's anchor to avoid unnecessary transfers.", "Fictional local Alpha demo", "Demo snapshot", "Uses the selected day as context.", "PC")
+            ]
+        };
+
+    private string? PreviousContextKey { get; set; }
+    private string? SelectedType { get; set; }
 
     /// <summary>Gets or sets the selected authorized canvas context.</summary>
     [Parameter]
@@ -85,6 +107,9 @@ public partial class PlannerContextualIdeasRail : ComponentBase
     /// <summary>Gets or sets the parent-owned resize callback.</summary>
     [Parameter]
     public EventCallback<int> OnResizeRequested { get; set; }
+    /// <summary>Gets or sets the callback that restores whole-Adventure context.</summary>
+    [Parameter]
+    public EventCallback OnAdventureContextRequested { get; set; }
     /// <summary>Gets whether the desktop rail is collapsed.</summary>
     public bool IsCollapsed { get; private set; }
     /// <summary>Gets whether the narrow-screen drawer is open.</summary>
@@ -94,14 +119,40 @@ public partial class PlannerContextualIdeasRail : ComponentBase
         ? PlannerIdeasState.NoSelection
         : EnableDevelopmentIdeas ? PlannerIdeasState.Populated : PlannerIdeasState.Empty);
     /// <summary>Gets the rendered fictional cards only when the Development-only gate is active.</summary>
-    internal IReadOnlyList<PlannerIdeaCard> Ideas =>
-        EffectiveState == PlannerIdeasState.Populated && EnableDevelopmentIdeas ? DevelopmentIdeas : [];
+    internal IReadOnlyList<PlannerIdeaCard> Ideas => EffectiveState != PlannerIdeasState.Populated
+        || !EnableDevelopmentIdeas
+        || Context is null
+        || !DevelopmentIdeas.TryGetValue(Context.Kind, out var ideas)
+            ? []
+            : ideas;
+    /// <summary>Gets the idea types available for the selected context.</summary>
+    internal IReadOnlyList<string> AvailableTypes => Ideas
+        .Select(idea => idea.Type)
+        .Distinct(StringComparer.Ordinal)
+        .ToArray();
+    /// <summary>Gets the ideas matching the transient type filter.</summary>
+    internal IReadOnlyList<PlannerIdeaCard> FilteredIdeas => SelectedType is null
+        ? Ideas
+        : Ideas.Where(idea => idea.Type == SelectedType).ToArray();
     /// <summary>Gets the CSS classes representing rail state.</summary>
     public string RailClasses => $"planner-ideas{(IsCollapsed ? " planner-ideas--collapsed" : string.Empty)}{(IsDrawerOpen ? " planner-ideas--drawer-open" : string.Empty)}";
 
     private ElementReference OpenButton { get; set; }
     private ElementReference CloseButton { get; set; }
     private void ToggleCollapsed() => IsCollapsed = !IsCollapsed;
+    private void SelectType(string? type) => SelectedType = type;
+    private Task ShowWholeAdventureAsync() => OnAdventureContextRequested.InvokeAsync();
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        var contextKey = Context is null ? null : $"{Context.Kind}:{Context.Id}";
+        if (!string.Equals(contextKey, PreviousContextKey, StringComparison.Ordinal))
+        {
+            PreviousContextKey = contextKey;
+            SelectedType = null;
+        }
+    }
     private Task OpenDrawerAsync()
     {
         IsDrawerOpen = true;

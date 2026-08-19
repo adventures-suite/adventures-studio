@@ -131,6 +131,10 @@ defined in `docs/architecture/experience-design-system.md`.
 - show a compact right-side rail of relevant Journeys, Destinations, itinerary
   ideas, activities, and route patterns based on the selected destination or
   day
+- default to whole-Adventure Journeys and Destinations, then change the visible
+  idea types and filters as the user selects a destination visit or itinerary
+  day; later segment, accommodation, activity, and route-position contexts use
+  the same model
 - use inspirational licensed imagery, concise summaries, source, freshness,
   and an understandable reason for each match
 - let pointer users drag an idea to an eligible destination or day while also

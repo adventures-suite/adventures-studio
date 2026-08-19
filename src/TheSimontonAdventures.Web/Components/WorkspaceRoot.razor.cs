@@ -45,6 +45,19 @@ public partial class WorkspaceRoot
         return Task.CompletedTask;
     }
 
+    private Task SelectAdventureIdeasContextAsync()
+    {
+        if (Plan is not null)
+        {
+            SelectedIdeasContext = new PlannerIdeasContext(
+                PlannerIdeasContextKind.Adventure,
+                Plan.Id.Value,
+                Plan.Title);
+        }
+
+        return Task.CompletedTask;
+    }
+
     private Task ResizeIdeasAsync(int requestedWidthPixels)
     {
         IdeasWidthPixels = Math.Clamp(
@@ -99,6 +112,10 @@ public partial class WorkspaceRoot
                 Plan = result.Plan;
                 PlanCanEdit = result.CanEdit;
                 LoadState = result.IsAllowed ? WorkspaceLoadState.Ready : WorkspaceLoadState.Unavailable;
+                if (result.IsAllowed && Plan is not null)
+                {
+                    await SelectAdventureIdeasContextAsync();
+                }
             }
             else
             {

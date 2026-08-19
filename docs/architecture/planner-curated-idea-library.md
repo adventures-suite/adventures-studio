@@ -84,6 +84,38 @@ traveler identities, reservations, confirmation references, ticket codes,
 payment information, private notes, protected documents, precise breadcrumbs,
 raw research captures, raw AI exchanges, and permanent protected-Resource URLs.
 
+## Context Hierarchy
+
+The Ideas rail is a contextual catalog, not one static menu. Its authorized
+projection changes according to the currently selected Planning subject:
+
+| Selected context | Primary idea types |
+| --- | --- |
+| Whole Adventure | Journeys, destination combinations, templates, and route patterns |
+| Empty route position | Destinations, nearby additions, and logical next stops |
+| Destination visit | Sample days, activities, neighborhoods, stays, and local transportation |
+| Itinerary day | Activities, meal rhythm, pacing, nearby places, and flexible time |
+| Transportation segment | Modes, transfer patterns, stops, and timing considerations |
+| Accommodation | Neighborhood guidance, nearby activities, and transfer considerations |
+| Planned activity | Alternatives, nearby complements, and scheduling guidance |
+
+No selection defaults to the whole Adventure when an authorized plan is open.
+The rail names its current context, provides an accessible return to the whole
+Adventure, and exposes only relevant idea-type filters. A context change resets
+transient filters without mutating or persisting plan state.
+
+Plan dates, duration, existing schedule, approved traveler-preference
+projections, pace, transportation preferences, accessibility requirements, and
+budget may refine results only when authorized and appropriate for the source.
+Every match remains explainable. Personalization never broadens source access or
+turns a suggestion into an authoritative plan record.
+
+Each idea level maps to a different future review contract. An activity may
+propose one plan child; a Destination proposes a destination visit; a sample day
+may propose a day and activities; and a Journey may require configurable review
+of multiple destinations, dates, time zones, days, and transportation patterns.
+The rail never flattens a Journey into an unsafe one-click mutation.
+
 ## Editorial Lifecycle
 
 The initial lifecycle is:

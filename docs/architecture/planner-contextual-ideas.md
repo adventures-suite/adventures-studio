@@ -32,6 +32,14 @@ changing plan data. Cards use strong imagery when licensed media is available,
 short useful labels, source and freshness indicators, and an honest explanation
 of why the idea is relevant.
 
+An open plan begins at whole-Adventure context, emphasizing Journeys,
+Destinations, templates, and route patterns. Destination selection emphasizes
+sample days, activities, stays, and local movement. Day selection emphasizes
+activities, meals, pacing, and nearby possibilities. Future segment,
+accommodation, activity, and route-position contexts follow the hierarchy in
+`docs/architecture/planner-curated-idea-library.md`. Context and filters are
+transient presentation state; they never change the plan.
+
 The rail is collapsible and resizable within bounded limits. On narrow screens
 it becomes an explicitly opened drawer or sheet rather than permanently
 compressing the itinerary. Hiding or resizing the rail is a user preference,

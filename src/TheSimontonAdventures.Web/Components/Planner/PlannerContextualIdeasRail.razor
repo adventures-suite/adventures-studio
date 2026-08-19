@@ -34,9 +34,22 @@
             }
             else
             {
-                <p class="planner-ideas__context">Suggestions for <strong>@Context!.Label</strong></p>
+                <div class="planner-ideas__context">
+                    <p>Ideas for <strong>@Context!.Label</strong></p>
+                    @if (Context.Kind != PlannerIdeasContextKind.Adventure)
+                    {
+                        <button type="button" @onclick="ShowWholeAdventureAsync">Whole Adventure</button>
+                    }
+                </div>
+                <nav class="planner-ideas__types" aria-label="Idea types for @Context.Label">
+                    <button type="button" aria-pressed="@(SelectedType is null)" @onclick="() => SelectType(null)">All</button>
+                    @foreach (var type in AvailableTypes)
+                    {
+                        <button type="button" aria-pressed="@(SelectedType == type)" @onclick="() => SelectType(type)">@type</button>
+                    }
+                </nav>
                 <ul class="planner-ideas__list">
-                    @foreach (var idea in Ideas)
+                    @foreach (var idea in FilteredIdeas)
                     {
                         <li><article class="planner-ideas__card">
                             <div class="planner-ideas__thumbnail" aria-hidden="true">@idea.Monogram</div>
