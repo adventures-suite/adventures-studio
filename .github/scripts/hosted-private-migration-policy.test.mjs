@@ -42,7 +42,7 @@ const runPackageVerifier = async evidenceFiles => {
       packageSha256,
       orderedMigrationCatalogSha256: 'a'.repeat(64),
       buildRunId: '123',
-      toolchain: { dotnetSdkVersion: '10.0.302', runtimeIdentifier: 'linux-x64', selfContained: true },
+      toolchain: { dotnetSdkVersion: '10.0.303', runtimeIdentifier: 'linux-x64', selfContained: true },
       dependencyLocks: Array.from({ length: 6 }, (_, index) => ({ path: `lock-${index}`, sha256: 'b'.repeat(64) })),
       attestation: { required: true },
     });

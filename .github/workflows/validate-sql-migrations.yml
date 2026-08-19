@@ -45,7 +45,7 @@ jobs:
           - 1433:1433
 
     env:
-      DOTNET_VERSION: "10.0.302"
+      DOTNET_VERSION: "10.0.303"
       RESULTS_DIR: artifacts/sql-migration-results
       MIGRATOR_PUBLISH_DIR: artifacts/database-migrator
       MIGRATOR_PACKAGE_DIR: artifacts/database-migrator-package

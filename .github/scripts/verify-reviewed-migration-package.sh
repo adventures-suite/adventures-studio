@@ -20,7 +20,7 @@ jq -e --arg source "$EXPECTED_SOURCE_SHA" --arg package "$actual_sha" \
   --arg catalog "$EXPECTED_CATALOG_SHA256" --arg run "$EXPECTED_RUN_ID" '
   .schemaVersion==1 and .sourceSha==$source and .packageSha256==$package
   and .orderedMigrationCatalogSha256==$catalog and (.buildRunId|tostring)==$run
-  and .toolchain=={dotnetSdkVersion:"10.0.302",runtimeIdentifier:"linux-x64",selfContained:true}
+  and .toolchain=={dotnetSdkVersion:"10.0.303",runtimeIdentifier:"linux-x64",selfContained:true}
   and (.dependencyLocks|length)==6 and .attestation.required==true
 ' "$evidence" >/dev/null
 node .github/scripts/migration-package-evidence.mjs --verify-locks "$evidence" --root
