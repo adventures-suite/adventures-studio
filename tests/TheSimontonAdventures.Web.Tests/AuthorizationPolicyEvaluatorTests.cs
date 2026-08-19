@@ -31,6 +31,12 @@ public sealed class AuthorizationPolicyEvaluatorTests
             CreatorRolePermissionBundles.GetPermissions(CreatorRole.Planner));
         Assert.Contains(Permissions.CreatorManageMembers,
             CreatorRolePermissionBundles.GetPermissions(CreatorRole.Administrator));
+        Assert.Contains(Permissions.AdventurePlanManageCompanionPolicy,
+            CreatorRolePermissionBundles.GetPermissions(CreatorRole.Administrator));
+        Assert.Contains(Permissions.AdventurePlanManageCompanionPolicy,
+            CreatorRolePermissionBundles.GetPermissions(CreatorRole.Owner));
+        Assert.DoesNotContain(Permissions.AdventurePlanManageCompanionPolicy,
+            CreatorRolePermissionBundles.GetPermissions(CreatorRole.Planner));
         Assert.DoesNotContain(Permissions.SupportImpersonate,
             CreatorRolePermissionBundles.GetPermissions(CreatorRole.Owner));
         Assert.Throws<ArgumentOutOfRangeException>(() =>
