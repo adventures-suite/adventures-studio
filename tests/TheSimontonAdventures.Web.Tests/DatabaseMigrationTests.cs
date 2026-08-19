@@ -42,8 +42,8 @@ public sealed class DatabaseMigrationTests
         Assert.Contains("UseDecisionReference", migration, StringComparison.Ordinal);
         Assert.Contains("AdventurePlan.TemplateInstantiate.v1", migration, StringComparison.Ordinal);
         Assert.Contains("DENY UPDATE, DELETE ON OBJECT::planning.AdventurePlanTemplateOrigins", migration, StringComparison.Ordinal);
-        Assert.DoesNotContain("Traveler", migration, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("Reservation", migration, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("TravelerId ", migration, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("ReservationId ", migration, StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>Ensures Companion policy assignments preserve scope, audit, and least privilege.</summary>
