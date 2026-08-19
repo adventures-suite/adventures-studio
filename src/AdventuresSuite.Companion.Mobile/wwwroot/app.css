@@ -362,6 +362,35 @@ h1:focus { outline: none; }
 .theme-dark .poc-error { background: #412823; color: #ffd8d1; }
 
 @media (min-width: 700px) {
+    body { background: var(--surface-canvas); }
+    .companion-shell { width: 100%; max-width: 1120px; min-height: 100vh; }
+    .topbar { padding-right: max(28px, env(safe-area-inset-right)); padding-left: max(28px, env(safe-area-inset-left)); }
+    .adventure-switcher, .screen { width: min(100%, 960px); margin-right: auto; margin-left: auto; }
+    .adventure-switcher { padding: 12px 28px 14px; }
+    .adventure-menu { left: 28px; right: 28px; }
+    .screen { padding: 12px 28px 42px; }
+    .hero-card, .hero-content { min-height: 330px; }
+    .hero-card h1 { max-width: 520px; font-size: 36px; }
+    .detail-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .detail-destinations { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .detail-destinations h2 { grid-column: 1 / -1; }
+    .detail-destination + .detail-destination { margin-top: 0; }
+    .tabbar { width: min(720px, calc(100% - 48px)); bottom: max(18px, env(safe-area-inset-bottom)); }
+    .toast { width: min(620px, calc(100% - 56px)); }
+}
+
+@media (min-width: 900px) and (min-height: 600px) {
+    .home-overview { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(280px, .75fr); grid-template-rows: auto auto 1fr; gap: 14px 22px; align-items: start; }
+    .home-overview .hero-card { grid-column: 1; grid-row: 1 / span 3; height: 100%; }
+    .home-overview .detail-entry { grid-column: 2; grid-row: 1; margin: 0; }
+    .home-overview .adventure-tools { grid-column: 2; grid-row: 2; margin: 0; }
+    .home-overview > .section-block { grid-column: 2; grid-row: 3; margin: 4px 0 0; }
+    .today-panel { margin-top: 32px; }
+    .today-panel .today-item { grid-template-columns: 78px minmax(0, 1fr); padding: 18px; }
+    .route-card { padding: 20px 22px; }
+}
+
+@media (min-width: 1200px) {
     body { padding: 24px 0; background: #d9dfd8; }
     .companion-shell { min-height: calc(100vh - 48px); border-radius: 28px; overflow: hidden; box-shadow: 0 20px 70px rgba(27,47,39,.2); }
     .tabbar { bottom: 38px; }

@@ -51,3 +51,12 @@ The protected `testflight` GitHub Environment supplies signing material and an
 explicit `Demo` or `Api` provider selection. TestFlight publication does not by
 itself activate production data, authentication, synchronization, location,
 camera, calendar, or notification capabilities.
+
+## Android identity
+
+Android uses the owned AdventuresSuite package identity
+`com.adventuressuite.companion`. The existing Apple application retains
+`com.adventuresstudio.companion` so TestFlight updates continue targeting the
+established App Store Connect record. Do not reuse the legacy Apple identifier
+when creating the Google Play application because a Play package name becomes
+permanent after the first uploaded artifact.
