@@ -228,6 +228,24 @@ ideas remain Content Engine data consumed through `ITravelContentService` or a
 narrower approved contract; they are never compiled into Razor, application
 conditionals, SQL migration seed rows, or development fixtures.
 
+Near-term Ideas slice priority:
+
+1. establish the authorized provider-neutral catalog/query boundary;
+2. immediately add deterministic multi-facet filtering and paging over that
+   boundary, including context defaults, removable chips, result counts,
+   country/region, idea kind, duration, transportation, category, pace,
+   season, accessibility, budget, traveler composition, source, and language;
+3. deliver the reviewed curated launch collection;
+4. prove one explicit reviewed Add-to-plan operation; and
+5. add accessible drag and drop only as an equivalent enhancement.
+
+Facet identifiers and persisted preferences are locale-independent. The UI
+localizes labels and formatting, while Creator visibility, authorization,
+entitlement, licensing, and publication rules are enforced before returning
+cards or facet counts. Mobile filtering uses an accessible drawer or sheet.
+Ranking, AI personalization, provider search, and booking claims remain outside
+the filtering slice.
+
 Scope:
 
 - Adventure dashboard
@@ -240,6 +258,9 @@ Scope:
 - private read-only preview
 - presentation-only contextual Ideas rail with destination/day selection,
   responsive states, and no authoritative mutation
+- deterministic contextual Ideas filtering with combined facets, removable
+  chips, result counts, paging integration, localized labels, and an accessible
+  mobile filter surface
 - reviewed curated Idea Library foundation and environment-specific launch
   collection before production rail population
 - authorized layered Adventure map with overview, segment, destination, day,

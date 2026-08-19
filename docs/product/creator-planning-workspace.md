@@ -135,6 +135,15 @@ defined in `docs/architecture/experience-design-system.md`.
   idea types and filters as the user selects a destination visit or itinerary
   day; later segment, accommodation, activity, and route-position contexts use
   the same model
+- let users combine country or region, idea kind, duration, transportation,
+  category, pace, season, accessibility, budget, traveler composition, source,
+  and language filters; show active filters as removable chips with a result
+  count and **Clear all** action
+- preserve applied filters while paging and allow a user-selected page size;
+  context may provide explainable defaults, but users can broaden or replace
+  them
+- present filters in an accessible drawer or sheet on narrow screens and use
+  stable locale-independent facet identifiers with localized display labels
 - use inspirational licensed imagery, concise summaries, source, freshness,
   and an understandable reason for each match
 - let pointer users drag an idea to an eligible destination or day while also
