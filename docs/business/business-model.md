@@ -10,7 +10,8 @@
 
 # Purpose
 
-This document defines how Adventures Studio creates value for customers and how that value becomes a sustainable business.
+This document defines how TechTock, LLC creates value through AdventuresSuite
+and how that value becomes a sustainable business.
 
 Our purpose is not to maximize short-term revenue.
 
@@ -34,9 +35,10 @@ Create a sustainable business without compromising the customer experience.
 
 # Core Business
 
-Adventures Studio is a Software as a Service (SaaS) platform.
+AdventuresSuite is a Software as a Service (SaaS) platform owned and operated by
+TechTock, LLC.
 
-Customers use Adventures Studio to:
+Customers use AdventuresSuite to:
 
 - Dream
 - Discover
@@ -55,7 +57,7 @@ The platform continuously improves over time.
 
 # Customer Value
 
-Adventures Studio saves customers:
+AdventuresSuite saves customers:
 
 - Time
 - Organization
@@ -93,7 +95,7 @@ permission, paid entitlement, feature rollout, and service availability remain
 separate gates.
 
 Platform Billing is also separate from Creator Commerce: platform customers pay
-Adventures Studio for AdventuresSuite capabilities, while shoppers pay Creators
+TechTock, LLC for AdventuresSuite capabilities, while shoppers pay Creators
 for books, prints, licenses, and other products. See
 `docs/architecture/platform-billing-entitlements.md`.
 
@@ -101,7 +103,7 @@ for books, prints, licenses, and other products. See
 
 # Creator Economy
 
-Long term, Adventures Studio becomes more than a SaaS platform.
+Long term, AdventuresSuite becomes more than a SaaS platform.
 
 It becomes a Creator Ecosystem.
 
@@ -226,7 +228,7 @@ Creator storefronts should precede a broad marketplace. The first commercial
 experience should focus on products directly derived from a Creator's approved
 Publications and Resources.
 
-Before implementation, Adventures Studio must explicitly decide whether it or
+Before implementation, TechTock, LLC must explicitly decide whether it or
 each Creator is the merchant of record. That decision determines responsibility
 for tax, refunds, disputes, fraud, customer support, Creator payouts, financial
 reporting, and consumer protection.
@@ -268,7 +270,7 @@ Partnerships should always improve the customer experience.
 
 Print and fulfillment providers must be integrated through replaceable platform
 adapters. White-label claims must distinguish generic unbranded packaging from
-custom Adventures Studio or Creator-branded packaging.
+custom AdventuresSuite or Creator-branded packaging.
 
 Never interrupt it.
 
@@ -298,7 +300,7 @@ The platform must remain valuable without AI.
 
 # Hosting
 
-Adventures Studio should remain cloud-native.
+AdventuresSuite should remain cloud-native.
 
 Potential providers include:
 
@@ -320,7 +322,7 @@ small monthly cost."
 
 Word of mouth should remain the primary marketing channel.
 
-Every published Adventure becomes marketing for Adventures Studio.
+Every published Adventure becomes marketing for AdventuresSuite.
 
 Every creator becomes an ambassador for the platform.
 
@@ -330,7 +332,8 @@ The community becomes the engine of growth.
 
 # Long-Term Vision
 
-Adventures Studio becomes the world's leading platform for creating, preserving, publishing, discovering, and sharing meaningful adventures.
+AdventuresSuite becomes the world's leading platform for creating, preserving,
+publishing, discovering, and sharing meaningful adventures.
 
 Books become one expression of an adventure.
 
@@ -381,7 +384,8 @@ Communities follow trust.
 
 Platforms endure when creators succeed.
 
-If Adventures Studio helps people preserve meaningful adventures and empowers them to inspire others, a sustainable business will naturally follow.
+If AdventuresSuite helps people preserve meaningful adventures and empowers
+them to inspire others, a sustainable business will naturally follow.
 
 See `docs/product/workspace-experience-and-value.md` for the workspace,
 packaging, temporary-access, and customer-protection direction.

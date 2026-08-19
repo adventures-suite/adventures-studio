@@ -10,7 +10,8 @@
 
 # Vision Statement
 
-Adventures Studio exists to help people dream, discover, plan, experience, capture, preserve, publish, and share meaningful adventures.
+AdventuresSuite exists to help people dream, discover, plan, experience,
+capture, preserve, publish, and share meaningful adventures.
 
 The platform transforms travel experiences into lasting stories through beautiful publishing, intelligent planning, photography, journals, maps, books, and interactive digital experiences.
 
@@ -54,7 +55,7 @@ After every trip people are left with:
 
 Most of those memories are eventually forgotten.
 
-Adventures Studio exists to solve that problem.
+AdventuresSuite exists to solve that problem.
 
 ---
 
@@ -96,7 +97,7 @@ The platform exists to support the traveler—not distract from the adventure.
 
 ---
 
-# What Makes Adventures Studio Different
+# What Makes AdventuresSuite Different
 
 We are not building:
 
@@ -158,7 +159,7 @@ The platform should support every stage.
 
 # Primary Markets
 
-Adventures Studio is designed for:
+AdventuresSuite is designed for:
 
 - Families
 - Travel enthusiasts
@@ -227,7 +228,7 @@ Everything we build should help people create better adventures and preserve bet
 
 # The Flagship Customer
 
-The first implementation of Adventures Studio is:
+The first implementation of AdventuresSuite is:
 
 **The Simonton Adventures**
 
@@ -239,7 +240,7 @@ Once validated, it becomes part of the platform for everyone.
 
 # Long-Term Vision
 
-Adventures Studio becomes the platform where adventures are:
+AdventuresSuite becomes the platform where adventures are:
 
 - Planned
 - Experienced
@@ -310,7 +311,7 @@ The traveler always owns the story.
 
 # Success
 
-Adventures Studio succeeds when people say:
+AdventuresSuite succeeds when people say:
 
 "I will always remember this adventure."
 
@@ -324,4 +325,4 @@ Because the software helped preserve something that mattered.
 
 Every meaningful adventure deserves to become a lasting legacy.
 
-Adventures Studio exists to make that possible.
+AdventuresSuite exists to make that possible.

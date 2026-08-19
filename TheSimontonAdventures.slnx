@@ -12,6 +12,7 @@
     <Project Path="src/AdventuresSuite.Identity.ExternalId/AdventuresSuite.Identity.ExternalId.csproj" />
     <Project Path="src/AdventuresSuite.Identity.SqlServer/AdventuresSuite.Identity.SqlServer.csproj" />
     <Project Path="src/AdventuresSuite.LocalAlphaBootstrap/AdventuresSuite.LocalAlphaBootstrap.csproj" />
+    <Project Path="src/AdventuresSuite.Localization/AdventuresSuite.Localization.csproj" />
     <Project Path="src/AdventuresSuite.Planning.SqlServer/AdventuresSuite.Planning.SqlServer.csproj" />
     <Project Path="src/AdventuresSuite.Planning/AdventuresSuite.Planning.csproj" />
     <Project Path="src/TheSimontonAdventures.Web/TheSimontonAdventures.Web.csproj" />
@@ -23,6 +24,7 @@
     <Project Path="tests/AdventuresSuite.Companion.Client.Tests/AdventuresSuite.Companion.Client.Tests.csproj" />
     <Project Path="tests/AdventuresSuite.Companion.Mobile.Tests/AdventuresSuite.Companion.Mobile.Tests.csproj" />
     <Project Path="tests/AdventuresSuite.Companion.Poc.Tests/AdventuresSuite.Companion.Poc.Tests.csproj" />
+    <Project Path="tests/AdventuresSuite.Localization.Tests/AdventuresSuite.Localization.Tests.csproj" />
     <Project Path="tests/TheSimontonAdventures.Web.Tests/TheSimontonAdventures.Web.Tests.csproj" />
   </Folder>
 </Solution>

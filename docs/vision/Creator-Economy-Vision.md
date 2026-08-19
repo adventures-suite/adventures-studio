@@ -1,14 +1,15 @@
 # Creator Ecosystem Vision
 
 **Version:** 1.0 Draft  
-**Company:** Adventures Studio  
+**Company:** TechTock, LLC
 **Last Updated:** August 2026
 
 ---
 
 # Purpose
 
-Adventures Studio exists to help people dream, discover, plan, experience, capture, preserve, publish, and share meaningful adventures.
+AdventuresSuite exists to help people dream, discover, plan, experience,
+capture, preserve, publish, and share meaningful adventures.
 
 Our long-term vision extends beyond publishing our own adventures.
 
@@ -32,7 +33,7 @@ The platform should make that possible.
 
 Most travel platforms end when the trip is over.
 
-Adventures Studio begins a new chapter.
+AdventuresSuite begins a new chapter.
 
 A traveler becomes a creator.
 
@@ -86,7 +87,7 @@ The platform should support every stage of this journey.
 
 # Adventures Are Publishable Assets
 
-Within Adventures Studio, an Adventure is more than a trip.
+Within AdventuresSuite, an Adventure is more than a trip.
 
 It is a living asset.
 
@@ -115,7 +116,7 @@ The platform should eventually support multiple publishers.
 
 Examples include:
 
-- Adventures Studio Originals
+- AdventuresSuite Originals
 - Independent Travelers
 - Families
 - Professional Photographers
@@ -123,13 +124,14 @@ Examples include:
 - Tour Companies
 - Destination Organizations
 
-The platform should never assume Adventures Studio is the only publisher.
+The platform should never assume TechTock, LLC is the only publisher.
 
 ---
 
 # Community Marketplace
 
-One day Adventures Studio should become a marketplace where travelers discover adventures created by other people.
+One day AdventuresSuite should become a marketplace where travelers discover
+adventures created by other people.
 
 Examples:
 
@@ -204,7 +206,7 @@ Every published adventure increases the value of the ecosystem.
 
 # Architectural Principle
 
-Every architectural decision should assume that Adventures Studio will eventually support:
+Every architectural decision should assume that AdventuresSuite will eventually support:
 
 - Multiple publishers
 - Thousands of creators
@@ -212,13 +214,13 @@ Every architectural decision should assume that Adventures Studio will eventuall
 - Multiple adventures per creator
 - Multiple journeys per adventure
 
-The architecture should never assume Adventures Studio is the only source of content.
+The architecture should never assume TechTock, LLC is the only source of content.
 
 ---
 
 # Long-Term Vision
 
-Adventures Studio is not simply a travel website.
+AdventuresSuite is not simply a travel website.
 
 It is not merely a companion application.
 

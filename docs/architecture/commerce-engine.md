@@ -130,7 +130,7 @@ can purchase from more than one Creator. A Creator may see only its own catalog,
 orders, permitted customer information, fulfillment, and reporting.
 
 The storefront should be Creator-branded. AdventuresSuite powers the capability
-and Adventures Studio operates the platform, but neither should erase the
+and TechTock, LLC operates the platform, but neither should erase the
 Creator's public identity.
 
 ---
@@ -140,7 +140,7 @@ Creator's public identity.
 Implementation requires an explicit business decision about who is the merchant
 of record.
 
-If Adventures Studio is the merchant, it assumes substantial responsibility for
+If TechTock, LLC is the merchant, it assumes substantial responsibility for
 customer payments, tax, refunds, disputes, fraud, support, Creator payouts, and
 financial reporting.
 

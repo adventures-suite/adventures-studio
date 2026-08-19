@@ -1,3 +1,30 @@
+## 2026-08-18
+
+### AdventuresCompanion Is Localization-Ready from Its First Release
+
+Decision:
+
+AdventuresCompanion launches in United States English (`en-US`) and establishes
+Spanish (`es`), French (`fr`), and Italian (`it`) as the next supported language
+resources. Presentation uses a shared, resource-backed locale catalog with
+deterministic regional and English fallback. Interface language remains
+separate from Creator locale, destination time zone, currency, units, API wire
+formats, authored content, and Planning state. AI translation is an untrusted
+proposal, and sensitive product language requires human review.
+
+Reason:
+
+Establishing resource keys, fallback behavior, culture-aware formatting, and
+test boundaries before the production mobile shell prevents hardcoded English
+from becoming a costly cross-platform dependency while avoiding premature or
+silent translation of private traveler content.
+
+Status:
+
+Approved
+
+---
+
 ## 2026-08-01
 
 ### Shared Media Components
@@ -27,6 +54,44 @@ Approved
 
 ---
 
+## 2026-08-16
+
+### TechTock, LLC Is the AdventuresSuite Operating Entity
+
+Decision:
+
+The business direction is to use the existing **TechTock, LLC** rather than form
+a separate AdventuresSuite or Adventures Studio LLC, consistent with the
+founder's CPA and tax-advisor recommendation. The Arizona Corporation
+Commission record for business ID 23405592 was verified on August 16, 2026 as
+Active and In Good Standing.
+
+AdventuresSuite is the provisional customer-facing master brand and the name of
+the software platform. Product and capability names may use the AdventuresSuite
+brand architecture after appropriate name and trademark clearance. Adventures
+Studio is not the legal company name and must not be represented as a separate
+company or ownership boundary.
+
+Domains, software, documentation, brand assets, vendor accounts, contracts,
+insurance, payment relationships, and future trademark rights for the platform
+must be owned by or validly assigned or licensed to TechTock, LLC. Customer and
+partner agreements identify TechTock, LLC as the contracting party and may use
+"doing business as AdventuresSuite" only after the name is cleared and any
+appropriate trade-name registration is completed.
+
+Reason:
+
+Using the valid existing LLC avoids an unnecessary parallel entity and follows
+the founder's CPA and tax-advisor recommendation. Keeping the legal entity
+distinct from the public brand preserves accurate ownership, contracting,
+accounting, and tax records.
+
+Status:
+
+Approved
+
+---
+
 ## 2026-08-06
 
 ### Creator Is the Tenancy and Ownership Boundary
@@ -39,8 +104,9 @@ Every creator-owned object, content lookup, public address, resource, cache key,
 search document, analytics event, and background operation must be scoped by a
 stable Creator identity.
 
-Adventures Studio is the company that owns and operates AdventuresSuite. The
-Simonton Adventures is the first Creator and flagship implementation.
+TechTock, LLC owns and operates AdventuresSuite. AdventuresSuite is the
+customer-facing platform brand. The Simonton Adventures is the first Creator
+and flagship implementation.
 
 Publisher is a publishing role or capability of a Creator rather than a
 parallel tenancy boundary. A User is an authenticated person who may receive
@@ -234,10 +300,10 @@ approval requirements before sale or licensing. Paid artifacts and production
 files must not be exposed through public `wwwroot` storage.
 
 The first physical-print program should be a curated, manually fulfilled pilot.
-Automation follows only after Adventures Studio validates samples, quality,
+Automation follows only after TechTock, LLC validates samples, quality,
 packaging, damage handling, turnaround, customer support, margins, and demand.
 
-Before accepting payment, Adventures Studio must explicitly decide the merchant
+Before accepting payment, TechTock, LLC must explicitly decide the merchant
 of record and complete appropriate legal, tax, accounting, privacy, payment, and
 consumer-protection review.
 

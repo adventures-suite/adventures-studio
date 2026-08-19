@@ -10,7 +10,8 @@
 
 ## 1. Purpose
 
-AdventuresSuite is the technology platform created and operated by Adventures Studio.
+AdventuresSuite is the technology platform created and operated by TechTock,
+LLC.
 
 The platform enables creators to create, manage, publish, brand, address, render, discover, and share meaningful adventures and related content.
 
@@ -25,7 +26,7 @@ The platform architecture must support many creators over time without requiring
 The platform distinguishes between three primary concepts.
 
 ```text
-Adventures Studio
+TechTock, LLC
     owns and operates
 
 AdventuresSuite
@@ -35,9 +36,9 @@ Creators
     own their brands, content, resources, and audiences
 ```
 
-### Adventures Studio
+### TechTock, LLC
 
-Adventures Studio is the company responsible for:
+TechTock, LLC is the legal company responsible for:
 
 - Platform strategy
 - Product development
@@ -778,7 +779,7 @@ Detailed direction is defined in
 ### 10.17 Platform Billing and Entitlements Capability
 
 Platform Billing governs how Creators, agencies, organizations, and enterprise
-customers pay Adventures Studio for AdventuresSuite. It owns Billing Accounts,
+customers pay TechTock, LLC for AdventuresSuite. It owns Billing Accounts,
 Platform Products and Prices, versioned Plan Definitions, Platform
 Subscriptions, Platform Entitlements, seats, usage allowances, provider inbox,
 and reconciliation.
@@ -1192,7 +1193,7 @@ AdventuresSuite follows these principles:
 The current platform direction is:
 
 ```text
-Adventures Studio
+TechTock, LLC
     ↓
 AdventuresSuite
     ↓
