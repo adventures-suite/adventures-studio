@@ -38,11 +38,98 @@
                                 <h4>@idea.Title</h4>
                                 <p>@idea.Summary</p>
                                 <p class="journey-starter__route">@idea.Route</p>
-                                <button type="button" @onclick="() => SelectIdeaAsync(idea)">Plan this journey</button>
+                                <button type="button"
+                                        aria-expanded="@(SelectedIdea?.Key == idea.Key)"
+                                        aria-controls="journey-template-preview"
+                                        @onclick="() => PreviewIdea(idea)">Preview and customize</button>
                             </article>
                         </li>
                     }
                 </ul>
+                @if (SelectedIdea is not null)
+                {
+                    <section id="journey-template-preview" class="journey-template" aria-labelledby="journey-template-title">
+                        <header class="journey-template__header">
+                            <div>
+                                <p class="journey-starter__eyebrow">Complete Journey template preview</p>
+                                <h3 id="journey-template-title">@SelectedIdea.Title</h3>
+                                <p>@SelectedIdea.Summary</p>
+                            </div>
+                            <dl>
+                                <div><dt>Duration</dt><dd>@SelectedIdea.Duration</dd></div>
+                                <div><dt>Source</dt><dd>@SelectedIdea.Source</dd></div>
+                                <div><dt>Version</dt><dd>@SelectedIdea.Version</dd></div>
+                            </dl>
+                        </header>
+
+                        <div class="journey-template__sections">
+                            <section aria-labelledby="template-destinations">
+                                <h4 id="template-destinations">Destinations</h4>
+                                <p>Choose the stops to carry into the proposed route.</p>
+                                @foreach (var destination in SelectedIdea.Destinations)
+                                {
+                                    <label class="journey-template__destination">
+                                        <input type="checkbox"
+                                               checked="@SelectedDestinationKeys.Contains(destination.Key)"
+                                               @onchange="args => ToggleDestination(destination.Key, args)" />
+                                        <span><strong>@destination.Name</strong><small>@destination.Nights @(destination.Nights == 1 ? "night" : "nights") · @destination.Highlight</small></span>
+                                    </label>
+                                }
+                            </section>
+                            <section aria-labelledby="template-itinerary">
+                                <h4 id="template-itinerary">Sample itinerary</h4>
+                                <ol class="journey-template__days">
+                                    @foreach (var day in SelectedIdea.Days)
+                                    {
+                                        <li><strong>@day.Title</strong><span>@day.Destination · @day.Summary</span></li>
+                                    }
+                                </ol>
+                            </section>
+                            <section aria-labelledby="template-travel">
+                                <h4 id="template-travel">Travel methods</h4>
+                                <ul class="journey-template__plain-list">
+                                    @foreach (var segment in SelectedIdea.TravelSegments)
+                                    {
+                                        <li><strong>@segment.Route</strong><span>@segment.Method · @segment.Guidance</span></li>
+                                    }
+                                </ul>
+                            </section>
+                            <section aria-labelledby="template-stays">
+                                <h4 id="template-stays">Stay patterns</h4>
+                                <ul class="journey-template__plain-list">
+                                    @foreach (var stay in SelectedIdea.StayPatterns)
+                                    {
+                                        <li><strong>@stay.Destination</strong><span>@stay.Guidance</span></li>
+                                    }
+                                </ul>
+                            </section>
+                        </div>
+
+                        <fieldset class="journey-template__customize">
+                            <legend>Customize the starting point</legend>
+                            <label>Pace
+                                <select @bind="SelectedPace">
+                                    <option>Relaxed</option>
+                                    <option>Balanced</option>
+                                    <option>Full</option>
+                                </select>
+                            </label>
+                            <label>Preferred transportation
+                                <select @bind="SelectedTransport">
+                                    <option>Recommended mix</option>
+                                    <option>Rail first</option>
+                                    <option>Private transfer first</option>
+                                </select>
+                            </label>
+                        </fieldset>
+
+                        <div class="journey-template__boundary">
+                            <p><strong>Preview only.</strong> Nothing has been booked or added to a plan.</p>
+                            <p>This Alpha step prepares only the plan overview; it does not yet copy stops or itinerary items. That will arrive through the reviewed atomic template operation.</p>
+                        </div>
+                        <button type="button" class="journey-template__continue" @onclick="UseSelectedIdeaAsync">Use as a starting point</button>
+                    </section>
+                }
             }
             else
             {

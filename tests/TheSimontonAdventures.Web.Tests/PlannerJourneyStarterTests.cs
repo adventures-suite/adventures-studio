@@ -18,7 +18,8 @@ public sealed class PlannerJourneyStarterTests
         Assert.Contains("Start a journey", html, StringComparison.Ordinal);
         Assert.Contains("Start from scratch", html, StringComparison.Ordinal);
         Assert.Contains("Browse journey ideas", html, StringComparison.Ordinal);
-        Assert.DoesNotContain("Plan this journey", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Preview and customize", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Complete Journey template preview", html, StringComparison.Ordinal);
         Assert.DoesNotContain("Import", html, StringComparison.Ordinal);
         Assert.DoesNotContain("template", html, StringComparison.OrdinalIgnoreCase);
     }
@@ -44,11 +45,31 @@ public sealed class PlannerJourneyStarterTests
         Assert.Contains("Lisbon", html, StringComparison.Ordinal);
         Assert.Contains("Coimbra", html, StringComparison.Ordinal);
         Assert.Contains("Porto", html, StringComparison.Ordinal);
-        Assert.Contains("Plan this journey", html, StringComparison.Ordinal);
+        Assert.Contains("Preview and customize", html, StringComparison.Ordinal);
         Assert.Contains("not bookings, availability, or changes to a plan", html, StringComparison.Ordinal);
     }
 
-    private static async Task<string> RenderAsync(bool enableDevelopmentIdeas, bool browse = false)
+    /// <summary>A selected template previews its complete blueprint and preserves the Alpha mutation boundary.</summary>
+    [Fact]
+    public async Task Starter_SelectedTemplateRendersCompleteReviewWithoutClaimingInstantiation()
+    {
+        var html = await RenderAsync(enableDevelopmentIdeas: true, browse: true, previewKey: "portugal-rail");
+
+        Assert.Contains("Complete Journey template preview", html, StringComparison.Ordinal);
+        Assert.Contains("Destinations", html, StringComparison.Ordinal);
+        Assert.Contains("Sample itinerary", html, StringComparison.Ordinal);
+        Assert.Contains("Travel methods", html, StringComparison.Ordinal);
+        Assert.Contains("Stay patterns", html, StringComparison.Ordinal);
+        Assert.Contains("Lisbon", html, StringComparison.Ordinal);
+        Assert.Contains("Coimbra", html, StringComparison.Ordinal);
+        Assert.Contains("Porto", html, StringComparison.Ordinal);
+        Assert.Contains("Preview only", html, StringComparison.Ordinal);
+        Assert.Contains("does not yet copy stops or itinerary items", html, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Use as a starting point", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Book now", html, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static async Task<string> RenderAsync(bool enableDevelopmentIdeas, bool browse = false, string? previewKey = null)
     {
         var services = new ServiceCollection();
         services.AddLogging();
@@ -59,7 +80,8 @@ public sealed class PlannerJourneyStarterTests
                 new Dictionary<string, object?>
                 {
                     [nameof(PlannerJourneyStarter.EnableDevelopmentIdeas)] = enableDevelopmentIdeas,
-                    [nameof(PlannerJourneyStarter.StartWithIdeasOpen)] = browse
+                    [nameof(PlannerJourneyStarter.StartWithIdeasOpen)] = browse,
+                    [nameof(PlannerJourneyStarter.InitialPreviewKey)] = previewKey
                 })));
         return await renderer.Dispatcher.InvokeAsync(output.ToHtmlString);
     }
