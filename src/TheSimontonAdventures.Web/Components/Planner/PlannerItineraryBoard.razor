@@ -48,6 +48,7 @@
 
     <section class="planner-board__card planner-board__days" aria-labelledby="plan-itinerary">
         <h4 id="plan-itinerary">Daily itinerary</h4>
+        @Status(DayEditStatusMessage)
         @Status(ActivityEditStatusMessage)
         @Status(ActivityStatusMessage)
         @Status(DayStatusMessage)
@@ -62,6 +63,18 @@
                 {
                     <li><article class="planner-board__day">
                         <header><p><time datetime="@DateValue(day.Date)">@day.Date.ToString("ddd, MMM d, yyyy")</time> · @day.TimeZone</p><h5>@day.Title</h5>@if (DestinationName(day) is { } destinationName){<span>@destinationName</span>}</header>
+                        @if (CanEdit)
+                        {
+                            <details class="planner-board__disclosure planner-board__day-editor" name="planner-board-action">
+                                <summary>Edit itinerary day: @day.Title</summary>
+                                <form class="planner-board__form" method="post" action="@EditDayPath(day.Id)">
+                                    <AntiforgeryToken />
+                                    <input type="hidden" name="expectedVersion" value="@Plan.Version" />
+                                    <label>Day title<input name="title" value="@day.Title" required maxlength="200" autocomplete="off" /></label>
+                                    <div class="planner-board__form-actions"><button type="submit">Save itinerary day</button><a class="planner-board__secondary-button" href="@DayCancelPath">Cancel</a></div>
+                                </form>
+                            </details>
+                        }
                         @if (day.Activities.Count == 0)
                         {
                             <p class="planner-board__empty">No activities have been added.</p>

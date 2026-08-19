@@ -91,6 +91,7 @@ if (string.Equals(authenticationMode, nameof(AuthenticationMode.ExternalProvider
     builder.Services.AddScoped<IAdventurePlanOverviewEditService, AdventurePlanOverviewEditService>();
     builder.Services.AddScoped<IDestinationVisitAddService, DestinationVisitAddService>();
     builder.Services.AddScoped<IItineraryDayAddService, ItineraryDayAddService>();
+    builder.Services.AddScoped<IItineraryDayEditService, ItineraryDayEditService>();
     builder.Services.AddScoped<IPlannedActivityAddService, PlannedActivityAddService>();
     builder.Services.AddScoped<IPlannedActivityEditService, PlannedActivityEditService>();
     builder.Services.AddScoped<ITransportationSegmentAddService, TransportationSegmentAddService>();
@@ -320,6 +321,7 @@ if (authenticationConfiguration.Mode == AuthenticationMode.ExternalProvider)
     app.MapAdventurePlanOverviewEditEndpoint();
     app.MapDestinationVisitAddEndpoint();
     app.MapItineraryDayAddEndpoint();
+    app.MapItineraryDayEditEndpoint();
     app.MapPlannedActivityAddEndpoint();
     app.MapPlannedActivityEditEndpoint();
     app.MapTransportationSegmentAddEndpoint();

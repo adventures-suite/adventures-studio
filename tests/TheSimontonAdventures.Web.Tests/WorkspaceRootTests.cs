@@ -234,7 +234,7 @@ public sealed class WorkspaceRootTests
         Assert.Contains("Add proposed accommodation", html);
         Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/reservations\"", html);
         Assert.Contains("Add proposed reservation", html);
-        Assert.Equal(9, Count(html, "name=\"planner-board-action\""));
+        Assert.Equal(10, Count(html, "name=\"planner-board-action\""));
         Assert.DoesNotContain("<details open", html);
         Assert.Contains("This plan changed. Review the current values and try again.", html);
         Assert.Contains("This plan changed. Review the current route and try again.", html);

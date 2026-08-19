@@ -166,6 +166,17 @@ public partial class WorkspaceRoot
             "failure" => "The itinerary day could not be added. Please try again.",
             _ => null
         };
+    private string? DayEditStatusMessage =>
+        HttpContextAccessor.HttpContext?.Request.Query["day-edit"].ToString() switch
+        {
+            "updated" => "The itinerary day was updated.",
+            "unchanged" => "The itinerary day was already current.",
+            "denied" => "The itinerary day could not be updated.",
+            "conflict" => "This plan changed. Review the current itinerary day and try again.",
+            "validation" => "Review the itinerary-day title and try again.",
+            "failure" => "The itinerary day could not be updated. Please try again.",
+            _ => null
+        };
     private string? ActivityStatusMessage =>
         HttpContextAccessor.HttpContext?.Request.Query["activity"].ToString() switch
         {

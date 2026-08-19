@@ -206,6 +206,7 @@ public sealed class PlannedActivityAddServiceTests
         public bool ThrowConcurrency { get; set; }
         public Task<AdventurePlan?> GetAsync(CreatorId creatorId, AdventurePlanId planId,
             CancellationToken cancellationToken = default) => Task.FromResult(current);
+        public Task UpdateItineraryDayAsync(CreatorId c, AdventurePlan p, ItineraryDay d, long v, CancellationToken x = default) => throw new NotSupportedException();
         public Task AddPlannedActivityAsync(CreatorId creatorId, AdventurePlan plan,
             PlannedActivity activity, long expectedVersion,
             CancellationToken cancellationToken = default)

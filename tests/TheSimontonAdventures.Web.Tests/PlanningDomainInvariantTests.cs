@@ -221,6 +221,43 @@ public sealed class PlanningDomainInvariantTests
         Assert.Empty(plan.ItineraryDays);
     }
 
+    /// <summary>A day-title correction preserves every scheduling relationship and attached activity.</summary>
+    [Fact]
+    public void WithEditedItineraryDayTitle_ValidTitle_PreservesDayContextAndActivities()
+    {
+        var visit = ValidVisit();
+        var day = ValidDay(visit);
+        var activity = new PlannedActivity
+        {
+            Id = new("activity_prado_01"),
+            ItineraryDayId = day.Id,
+            Title = "Prado",
+            StartsAtLocal = new(10, 0),
+            EndsAtLocal = new(12, 0),
+            Status = PlanItemStatus.Confirmed
+        };
+        var plan = CreatePlan(destinationVisits: [visit], itineraryDays: [day], activities: [activity]);
+
+        var edited = plan.WithEditedItineraryDayTitle(
+            day.Id, "Madrid museums", Audit.UpdatedAtUtc.AddHours(1));
+
+        var editedDay = Assert.Single(edited.ItineraryDays);
+        Assert.Equal(day with { Title = "Madrid museums" }, editedDay);
+        Assert.Equal(plan.Activities, edited.Activities);
+        Assert.Equal(plan.DestinationVisits, edited.DestinationVisits);
+        Assert.Equal(plan.Dates, edited.Dates);
+        Assert.Equal(plan.Audit.Version + 1, edited.Audit.Version);
+    }
+
+    /// <summary>A title correction cannot target a day outside the aggregate.</summary>
+    [Fact]
+    public void WithEditedItineraryDayTitle_UnknownDay_Throws()
+    {
+        var plan = CreatePlan();
+        Assert.Throws<ArgumentException>(() => plan.WithEditedItineraryDayTitle(
+            new("day_unknown_01"), "Unknown", Audit.UpdatedAtUtc.AddHours(1)));
+    }
+
     /// <summary>Appending an activity preserves state and advances one plan version.</summary>
     [Fact]
     public void WithPlannedActivity_ValidActivity_AppendsAndAdvancesVersion()
