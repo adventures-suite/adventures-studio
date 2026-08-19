@@ -1,3 +1,5 @@
+using System.Net;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Http;
@@ -130,6 +132,47 @@ public sealed class PlannerItineraryBoardTests
         Assert.Contains("<ol", html);
         Assert.Contains("datetime=\"2027-10-25\"", html);
         Assert.Contains(">Proposed<", html);
+    }
+
+    /// <summary>Every visible form control has one visible, explicit, contextual label.</summary>
+    [Fact]
+    public async Task Board_Editable_AssociatesVisibleLabelsWithEveryControl()
+    {
+        var html = await RenderAsync(canEdit: true);
+        var controls = Regex.Matches(
+            html,
+            "<(input|select|textarea)\\b(?<attributes>[^>]*)>",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        var controlIds = new List<string>();
+
+        foreach (Match control in controls)
+        {
+            var attributes = control.Groups["attributes"].Value;
+            if (Regex.IsMatch(attributes, "\\btype=\"hidden\"", RegexOptions.IgnoreCase))
+            {
+                continue;
+            }
+
+            var idMatch = Regex.Match(attributes, "\\bid=\"(?<id>[^\"]+)\"", RegexOptions.IgnoreCase);
+            Assert.True(idMatch.Success, $"Visible control lacks an id: {control.Value}");
+            var id = idMatch.Groups["id"].Value;
+            controlIds.Add(id);
+
+            var labelMatch = Regex.Match(
+                html,
+                $"<label\\b[^>]*\\bfor=\"{Regex.Escape(id)}\"[^>]*>(?<text>.*?)</label>",
+                RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.CultureInvariant);
+            Assert.True(labelMatch.Success, $"Control '{id}' lacks an explicit label association.");
+            var labelText = Regex.Replace(labelMatch.Groups["text"].Value, "<[^>]+>", " ");
+            Assert.False(string.IsNullOrWhiteSpace(WebUtility.HtmlDecode(labelText)));
+        }
+
+        Assert.NotEmpty(controlIds);
+        Assert.Equal(controlIds.Count, controlIds.Distinct(StringComparer.Ordinal).Count());
+        Assert.Contains(">Day title for Oct 25</label>", html);
+        Assert.Contains(">Activity title for Prado Museum</label>", html);
+        Assert.Contains(">Mode for Phoenix to Madrid</label>", html);
+        Assert.Contains(">Accommodation name for Hotel Central</label>", html);
     }
 
     /// <summary>All empty categories provide explicit, non-disclosing text.</summary>

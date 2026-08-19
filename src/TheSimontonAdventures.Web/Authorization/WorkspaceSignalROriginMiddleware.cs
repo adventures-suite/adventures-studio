@@ -29,7 +29,7 @@ public sealed class WorkspaceSignalROriginMiddleware(
     private bool RequiresWorkspaceOrigin(HttpRequest request)
     {
         if (configuration.Mode == AuthenticationMode.Disabled
-            || !request.Path.StartsWithSegments("/_blazor"))
+            || !IsInteractiveTransport(request.Path))
         {
             return false;
         }
@@ -37,6 +37,10 @@ public sealed class WorkspaceSignalROriginMiddleware(
         return IsWorkspaceHost(request.Host)
             || request.Cookies.ContainsKey(BrowserAuthenticationDefaults.ApplicationCookieName);
     }
+
+    private static bool IsInteractiveTransport(PathString path) =>
+        path == "/_blazor"
+        || path == "/_blazor/negotiate";
 
     private bool HasExactWorkspaceOrigin(string? origin)
     {

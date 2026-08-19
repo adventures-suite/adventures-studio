@@ -67,7 +67,9 @@ builder.Services.AddScoped<ITrustedRequestHostContextAccessor>(services =>
 // startup instead of falling back to public-only or development identity.
 builder.AddAdventuresSuiteAuthentication();
 var authenticationMode = builder.Configuration["Authentication:Mode"];
-if (string.Equals(authenticationMode, nameof(AuthenticationMode.ExternalProvider), StringComparison.OrdinalIgnoreCase))
+if (authenticationMode is not null
+    && (string.Equals(authenticationMode, nameof(AuthenticationMode.ExternalProvider), StringComparison.OrdinalIgnoreCase)
+        || string.Equals(authenticationMode, nameof(AuthenticationMode.Development), StringComparison.OrdinalIgnoreCase)))
 {
     var planningConnectionString = builder.Configuration["Authentication:SqlConnectionString"];
     if (string.IsNullOrWhiteSpace(planningConnectionString))
@@ -317,6 +319,14 @@ app.MapGet(
 if (authenticationConfiguration.Mode == AuthenticationMode.ExternalProvider)
 {
     app.MapAdventuresSuiteExternalIdEndpoints(authenticationConfiguration);
+}
+else if (authenticationConfiguration.Mode == AuthenticationMode.Development)
+{
+    app.MapAdventuresSuiteDevelopmentAuthenticationEndpoints(authenticationConfiguration);
+}
+
+if (authenticationConfiguration.Mode is AuthenticationMode.ExternalProvider or AuthenticationMode.Development)
+{
     app.MapManualAdventurePlanCreateEndpoint();
     app.MapAdventurePlanOverviewEditEndpoint();
     app.MapDestinationVisitAddEndpoint();

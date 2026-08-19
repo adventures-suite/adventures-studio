@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +16,23 @@ namespace TheSimontonAdventures.Web.Tests;
 /// <summary>Verifies the Creator-independent workspace landing surface.</summary>
 public sealed class WorkspaceRootTests
 {
+    /// <summary>The workspace subtree is composed with the registered Interactive Server render mode.</summary>
+    [Fact]
+    public void WorkspaceHost_ComposesInteractiveServerBoundary()
+    {
+        var applicationRoot = FindApplicationRoot();
+        var appMarkup = File.ReadAllText(Path.Combine(applicationRoot, "Components", "App.razor"));
+        var workspaceMarkup = File.ReadAllText(Path.Combine(applicationRoot, "Components", "WorkspaceRoot.razor"));
+        var program = File.ReadAllText(Path.Combine(applicationRoot, "Program.cs"));
+
+        Assert.Contains("<WorkspaceRoot InitialPath=\"@WorkspacePath\"", appMarkup);
+        Assert.Contains("InitialQueryString=\"@WorkspaceQueryString\"", appMarkup);
+        Assert.Contains("@rendermode=\"InteractiveServer\" />", appMarkup);
+        Assert.Contains("<PlannerWorkspaceShell", workspaceMarkup);
+        Assert.Contains(".AddInteractiveServerComponents()", program);
+        Assert.Contains(".AddInteractiveServerRenderMode()", program);
+    }
+
     /// <summary>
     /// Ensures sign-in uses a full navigation so the browser can follow the
     /// cross-origin External ID challenge instead of an enhanced fetch.
@@ -73,6 +91,39 @@ public sealed class WorkspaceRootTests
         Assert.Contains("Spain and Atlantic", html);
         Assert.Contains("Plan version", html);
         Assert.Equal(new CreatorId("creator_alpha_01"), query.LastCreatorId);
+    }
+
+    /// <summary>
+    /// Ensures the interactive instance retains the initial workspace route
+    /// when the circuit request itself is addressed to the Blazor hub.
+    /// </summary>
+    [Fact]
+    public async Task InteractiveCircuit_RetainsInitialWorkspaceRoute()
+    {
+        var query = new StubPlannerWorkspaceQueryService(
+            PlannerWorkspaceResult.Allowed([new AdventurePlanDashboardItem
+            {
+                Id = new("plan_circuit_route"),
+                Title = "Circuit Route Adventure",
+                LifecycleStage = AdventureLifecycleStage.Plan,
+                Status = PlanningStatus.Draft,
+                Dates = new(new(2027, 3, 1), new(2027, 3, 8)),
+                Version = 1,
+                IsArchived = false
+            }]));
+        var html = await RenderAsync(
+            ApplicationPrincipal(),
+            "/workspace/creators/creator_alpha_01/plans?create=validation",
+            services =>
+            {
+                services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>();
+                services.AddSingleton<IPlannerWorkspaceQueryService>(query);
+            },
+            "/_blazor");
+
+        Assert.Contains("Circuit Route Adventure", html);
+        Assert.Contains("Review the plan details and try again.", html);
+        Assert.DoesNotContain("Choose a Creator workspace", html);
     }
 
     /// <summary>An authorized collection route renders only the approved manual creation fields.</summary>
@@ -337,15 +388,35 @@ public sealed class WorkspaceRootTests
     private static int Count(string value, string search) =>
         value.Split(search, StringSplitOptions.None).Length - 1;
 
+    private static string FindApplicationRoot()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null)
+        {
+            var candidate = Path.Combine(directory.FullName, "src", "TheSimontonAdventures.Web");
+            if (Directory.Exists(candidate))
+            {
+                return candidate;
+            }
+
+            directory = directory.Parent;
+        }
+
+        throw new DirectoryNotFoundException("Could not locate the web application root.");
+    }
+
     private static async Task<string> RenderAsync(
         ClaimsPrincipal user,
         string path = "/",
-        Action<ServiceCollection>? configure = null)
+        Action<ServiceCollection>? configure = null,
+        string? requestPathOverride = null)
     {
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddAntiforgery();
         services.AddHttpContextAccessor();
+        services.AddSingleton<Microsoft.JSInterop.IJSRuntime, StaticTestJavaScriptRuntime>();
+        services.AddSingleton<NavigationManager, StaticTestNavigationManager>();
         configure?.Invoke(services);
         await using var provider = services.BuildServiceProvider();
         var context = new DefaultHttpContext
@@ -353,12 +424,20 @@ public sealed class WorkspaceRootTests
             RequestServices = provider,
             User = user
         };
-        context.Request.Path = path;
+        var initialPath = path;
+        context.Request.Path = initialPath;
         var queryIndex = path.IndexOf('?', StringComparison.Ordinal);
         if (queryIndex >= 0)
         {
             context.Request.Path = path[..queryIndex];
             context.Request.QueryString = new QueryString(path[queryIndex..]);
+        }
+        var componentPath = context.Request.Path.Value ?? "/";
+        var componentQueryString = context.Request.QueryString.Value ?? string.Empty;
+        if (requestPathOverride is not null)
+        {
+            context.Request.Path = requestPathOverride;
+            context.Request.QueryString = QueryString.Empty;
         }
         provider.GetRequiredService<IHttpContextAccessor>().HttpContext = context;
 
@@ -367,7 +446,12 @@ public sealed class WorkspaceRootTests
             provider.GetRequiredService<ILoggerFactory>());
         var html = await renderer.Dispatcher.InvokeAsync(async () =>
         {
-            var output = await renderer.RenderComponentAsync<WorkspaceRoot>();
+            var output = await renderer.RenderComponentAsync<WorkspaceRoot>(
+                ParameterView.FromDictionary(new Dictionary<string, object?>
+                {
+                    [nameof(WorkspaceRoot.InitialPath)] = componentPath,
+                    [nameof(WorkspaceRoot.InitialQueryString)] = componentQueryString
+                }));
             return output.ToHtmlString();
         });
 

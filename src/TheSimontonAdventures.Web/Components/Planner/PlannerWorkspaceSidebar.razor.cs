@@ -6,6 +6,8 @@ namespace TheSimontonAdventures.Web.Components;
 /// <summary>Displays controlled navigation for the private Planner workspace.</summary>
 public partial class PlannerWorkspaceSidebar : ComponentBase
 {
+    private bool IsPointerResizeActive { get; set; }
+
     /// <summary>Gets or sets whether the authoritative shell has collapsed the sidebar.</summary>
     [Parameter]
     public bool IsCollapsed { get; set; }
@@ -67,4 +69,33 @@ public partial class PlannerWorkspaceSidebar : ComponentBase
             "End" => OnResizeRequested.InvokeAsync(MaximumWidthPixels),
             _ => Task.CompletedTask
         };
+
+    /// <summary>Begins a primary-pointer resize gesture at the requested width.</summary>
+    /// <param name="args">The pointer event containing the viewport position.</param>
+    public Task BeginPointerResizeAsync(PointerEventArgs args)
+    {
+        if (args.Button != 0)
+        {
+            return Task.CompletedTask;
+        }
+
+        IsPointerResizeActive = true;
+        return RequestPointerWidthAsync(args.ClientX);
+    }
+
+    /// <summary>Continues an active pointer resize gesture.</summary>
+    /// <param name="args">The pointer event containing the viewport position.</param>
+    public Task ContinuePointerResizeAsync(PointerEventArgs args) =>
+        IsPointerResizeActive
+            ? RequestPointerWidthAsync(args.ClientX)
+            : Task.CompletedTask;
+
+    /// <summary>Ends the current pointer resize gesture.</summary>
+    public void EndPointerResize()
+    {
+        IsPointerResizeActive = false;
+    }
+
+    private Task RequestPointerWidthAsync(double clientX) =>
+        OnResizeRequested.InvokeAsync((int)Math.Round(clientX, MidpointRounding.AwayFromZero));
 }

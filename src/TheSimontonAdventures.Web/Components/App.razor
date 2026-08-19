@@ -34,7 +34,9 @@
 <body>
     @if (HostType == TrustedRequestHostType.PlatformWorkspace)
     {
-        <WorkspaceRoot />
+        <WorkspaceRoot InitialPath="@WorkspacePath"
+                       InitialQueryString="@WorkspaceQueryString"
+                       @rendermode="InteractiveServer" />
     }
     else if (HostType == TrustedRequestHostType.PublicPlatform)
     {
@@ -61,6 +63,8 @@
     private string SignInUrl { get; set; } = "#returning-creators";
     private string FeaturedAdventureUrl { get; set; } = string.Empty;
     private string Locale { get; set; } = "en-US";
+    private string WorkspacePath { get; set; } = "/";
+    private string WorkspaceQueryString { get; set; } = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -74,6 +78,8 @@
         HostType = TrustedRequestHostContextAccessor.Current.Type;
         if (HostType == TrustedRequestHostType.PlatformWorkspace)
         {
+            WorkspacePath = httpContext.Request.Path.Value ?? "/";
+            WorkspaceQueryString = httpContext.Request.QueryString.Value ?? string.Empty;
             return;
         }
 
@@ -84,7 +90,7 @@
             {
                 SignInUrl = PlatformHostConfiguration.Value.WorkspaceSignInUrl;
             }
-            else if (AuthenticationConfiguration.Mode == AuthenticationMode.ExternalProvider
+            else if (AuthenticationConfiguration.Mode is AuthenticationMode.ExternalProvider or AuthenticationMode.Development
                 && Uri.TryCreate(AuthenticationConfiguration.WorkspaceOrigin, UriKind.Absolute, out var workspace))
             {
                 SignInUrl = new Uri(workspace, AdventuresSuite.Identity.ExternalId.ExternalIdBrowserEndpoints.SignInPath)

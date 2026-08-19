@@ -77,6 +77,18 @@ public partial class PlannerItineraryBoard : ComponentBase
     private string EditAccommodationPath(AccommodationId accommodationId) =>
         $"{EditAccommodationPathPrefix}/{accommodationId.Value}/edit";
 
+    private static string DayFieldId(ItineraryDayId dayId, string field) =>
+        $"day-{dayId.Value}-{field}";
+
+    private static string ActivityFieldId(PlannedActivityId activityId, string field) =>
+        $"activity-{activityId.Value}-{field}";
+
+    private static string TransportationFieldId(TransportationSegmentId segmentId, string field) =>
+        $"transportation-{segmentId.Value}-{field}";
+
+    private static string AccommodationFieldId(AccommodationId accommodationId, string field) =>
+        $"accommodation-{accommodationId.Value}-{field}";
+
     private static RenderFragment Status(string? message) => builder =>
     {
         if (message is null) return;

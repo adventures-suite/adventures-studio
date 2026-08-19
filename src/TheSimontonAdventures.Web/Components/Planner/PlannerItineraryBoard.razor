@@ -34,12 +34,12 @@
                 <summary>Add destination</summary>
                 <form class="planner-board__form" method="post" action="@AddDestinationPath">
                     <AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" />
-                    <label>Destination name<input name="name" required maxlength="200" autocomplete="off" /></label>
+                    <label for="add-destination-name">Destination name</label><input id="add-destination-name" name="name" required maxlength="200" autocomplete="off" />
                     <div class="planner-board__form-columns">
-                        <label>Arrival date<input type="date" name="startDate" min="@DateValue(Plan.Dates.Start)" max="@DateValue(Plan.Dates.End)" required /></label>
-                        <label>Departure date<input type="date" name="endDate" min="@DateValue(Plan.Dates.Start)" max="@DateValue(Plan.Dates.End)" required /></label>
+                        <div><label for="add-destination-start-date">Arrival date</label><input id="add-destination-start-date" type="date" name="startDate" min="@DateValue(Plan.Dates.Start)" max="@DateValue(Plan.Dates.End)" required /></div>
+                        <div><label for="add-destination-end-date">Departure date</label><input id="add-destination-end-date" type="date" name="endDate" min="@DateValue(Plan.Dates.Start)" max="@DateValue(Plan.Dates.End)" required /></div>
                     </div>
-                    <label>Destination time zone<input name="timeZoneId" required maxlength="100" placeholder="Europe/Rome" autocomplete="off" /></label>
+                    <label for="add-destination-time-zone">Destination time zone</label><input id="add-destination-time-zone" name="timeZoneId" required maxlength="100" placeholder="Europe/Rome" autocomplete="off" />
                     <button type="submit">Add destination</button>
                 </form>
             </details>
@@ -70,7 +70,7 @@
                                 <form class="planner-board__form" method="post" action="@EditDayPath(day.Id)">
                                     <AntiforgeryToken />
                                     <input type="hidden" name="expectedVersion" value="@Plan.Version" />
-                                    <label>Day title<input name="title" value="@day.Title" required maxlength="200" autocomplete="off" /></label>
+                                    <label for="@DayFieldId(day.Id, "title")">Day title for @day.Date.ToString("MMM d")</label><input id="@DayFieldId(day.Id, "title")" name="title" value="@day.Title" required maxlength="200" autocomplete="off" />
                                     <div class="planner-board__form-actions"><button type="submit">Save itinerary day</button><a class="planner-board__secondary-button" href="@DayCancelPath">Cancel</a></div>
                                 </form>
                             </details>
@@ -93,10 +93,10 @@
                                                 <form class="planner-board__form" method="post" action="@EditActivityPath(activity.Id)">
                                                     <AntiforgeryToken />
                                                     <input type="hidden" name="expectedVersion" value="@Plan.Version" />
-                                                    <label>Activity title<input name="title" value="@activity.Title" required maxlength="200" autocomplete="off" /></label>
+                                                    <label for="@ActivityFieldId(activity.Id, "title")">Activity title for @activity.Title</label><input id="@ActivityFieldId(activity.Id, "title")" name="title" value="@activity.Title" required maxlength="200" autocomplete="off" />
                                                     <div class="planner-board__form-columns">
-                                                        <label>Start time <span>(optional)</span><input type="time" name="startsAtLocal" value="@TimeValue(activity.StartsAtLocal)" /></label>
-                                                        <label>End time <span>(optional)</span><input type="time" name="endsAtLocal" value="@TimeValue(activity.EndsAtLocal)" /></label>
+                                                        <div><label for="@ActivityFieldId(activity.Id, "start-time")">Start time for @activity.Title <span>(optional)</span></label><input id="@ActivityFieldId(activity.Id, "start-time")" type="time" name="startsAtLocal" value="@TimeValue(activity.StartsAtLocal)" /></div>
+                                                        <div><label for="@ActivityFieldId(activity.Id, "end-time")">End time for @activity.Title <span>(optional)</span></label><input id="@ActivityFieldId(activity.Id, "end-time")" type="time" name="endsAtLocal" value="@TimeValue(activity.EndsAtLocal)" /></div>
                                                     </div>
                                                     <div class="planner-board__form-actions"><button type="submit">Save activity</button><a class="planner-board__secondary-button" href="@ActivityCancelPath">Cancel</a></div>
                                                 </form>
@@ -112,8 +112,8 @@
                                 <summary>Add activity to @day.Title</summary>
                                 <form class="planner-board__form" method="post" action="@AddActivityPath">
                                     <AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" /><input type="hidden" name="itineraryDayId" value="@day.Id.Value" />
-                                    <label>Proposed activity<input name="title" required maxlength="200" autocomplete="off" placeholder="Museum visit" /></label>
-                                    <div class="planner-board__form-columns"><label>Start time <span>(optional)</span><input type="time" name="startsAtLocal" /></label><label>End time <span>(optional)</span><input type="time" name="endsAtLocal" /></label></div>
+                                    <label for="@DayFieldId(day.Id, "new-activity-title")">Proposed activity for @day.Title</label><input id="@DayFieldId(day.Id, "new-activity-title")" name="title" required maxlength="200" autocomplete="off" placeholder="Museum visit" />
+                                    <div class="planner-board__form-columns"><div><label for="@DayFieldId(day.Id, "new-activity-start-time")">Start time for new activity on @day.Title <span>(optional)</span></label><input id="@DayFieldId(day.Id, "new-activity-start-time")" type="time" name="startsAtLocal" /></div><div><label for="@DayFieldId(day.Id, "new-activity-end-time")">End time for new activity on @day.Title <span>(optional)</span></label><input id="@DayFieldId(day.Id, "new-activity-end-time")" type="time" name="endsAtLocal" /></div></div>
                                     <button type="submit">Add proposed activity</button>
                                 </form>
                             </details>
@@ -128,9 +128,9 @@
                 <summary>Add itinerary day</summary>
                 <form class="planner-board__form" method="post" action="@AddDayPath">
                     <AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" />
-                    <label>Destination visit<select name="destinationVisitId" required>@foreach (var destination in Plan.Destinations.OrderBy(item => item.Sequence)){<option value="@destination.Id.Value">@destination.Name · @FormatDates(destination.Dates)</option>}</select></label>
-                    <label>Local date<input type="date" name="date" min="@DateValue(Plan.Dates.Start)" max="@DateValue(Plan.Dates.End)" required /></label>
-                    <label>Day title<input name="title" required maxlength="200" autocomplete="off" placeholder="Arrival in Rome" /></label>
+                    <label for="add-day-destination">Destination visit</label><select id="add-day-destination" name="destinationVisitId" required>@foreach (var destination in Plan.Destinations.OrderBy(item => item.Sequence)){<option value="@destination.Id.Value">@destination.Name · @FormatDates(destination.Dates)</option>}</select>
+                    <label for="add-day-date">Local date</label><input id="add-day-date" type="date" name="date" min="@DateValue(Plan.Dates.Start)" max="@DateValue(Plan.Dates.End)" required />
+                    <label for="add-day-title">Day title</label><input id="add-day-title" name="title" required maxlength="200" autocomplete="off" placeholder="Arrival in Rome" />
                     <button type="submit">Add itinerary day</button>
                 </form>
             </details>
@@ -166,19 +166,19 @@
                                 <form class="planner-board__form" method="post" action="@EditTransportationPath(segment.Id)">
                                     <AntiforgeryToken />
                                     <input type="hidden" name="expectedVersion" value="@Plan.Version" />
-                                    <label>Mode<input name="mode" value="@segment.Mode" required maxlength="100" autocomplete="off" /></label>
-                                    <label>From<input name="from" value="@segment.From" required maxlength="200" autocomplete="off" /></label>
-                                    <label>To<input name="to" value="@segment.To" required maxlength="200" autocomplete="off" /></label>
+                                    <label for="@TransportationFieldId(segment.Id, "mode")">Mode for @segment.From to @segment.To</label><input id="@TransportationFieldId(segment.Id, "mode")" name="mode" value="@segment.Mode" required maxlength="100" autocomplete="off" />
+                                    <label for="@TransportationFieldId(segment.Id, "from")">Origin for @segment.Mode transportation</label><input id="@TransportationFieldId(segment.Id, "from")" name="from" value="@segment.From" required maxlength="200" autocomplete="off" />
+                                    <label for="@TransportationFieldId(segment.Id, "to")">Destination for @segment.Mode transportation</label><input id="@TransportationFieldId(segment.Id, "to")" name="to" value="@segment.To" required maxlength="200" autocomplete="off" />
                                     <div class="planner-board__form-columns">
-                                        <label>Departure date<input type="date" name="departureDate" value="@DateValue(segment.DepartureDate)" min="@DateValue(Plan.Dates.Start)" max="@DateValue(Plan.Dates.End)" required /></label>
-                                        <label>Departure time <span>(optional)</span><input type="time" name="departureTimeLocal" value="@TimeValue(segment.DepartureTimeLocal)" /></label>
+                                        <div><label for="@TransportationFieldId(segment.Id, "departure-date")">Departure date for @segment.Mode from @segment.From</label><input id="@TransportationFieldId(segment.Id, "departure-date")" type="date" name="departureDate" value="@DateValue(segment.DepartureDate)" min="@DateValue(Plan.Dates.Start)" max="@DateValue(Plan.Dates.End)" required /></div>
+                                        <div><label for="@TransportationFieldId(segment.Id, "departure-time")">Departure time for @segment.Mode from @segment.From <span>(optional)</span></label><input id="@TransportationFieldId(segment.Id, "departure-time")" type="time" name="departureTimeLocal" value="@TimeValue(segment.DepartureTimeLocal)" /></div>
                                     </div>
-                                    <label>Departure time zone<input name="departureTimeZoneId" value="@segment.DepartureTimeZone.Value" required maxlength="100" autocomplete="off" /></label>
+                                    <label for="@TransportationFieldId(segment.Id, "departure-time-zone")">Departure time zone for @segment.Mode from @segment.From</label><input id="@TransportationFieldId(segment.Id, "departure-time-zone")" name="departureTimeZoneId" value="@segment.DepartureTimeZone.Value" required maxlength="100" autocomplete="off" />
                                     <div class="planner-board__form-columns">
-                                        <label>Arrival date<input type="date" name="arrivalDate" value="@DateValue(segment.ArrivalDate)" min="@DateValue(Plan.Dates.Start)" max="@DateValue(Plan.Dates.End)" required /></label>
-                                        <label>Arrival time <span>(optional)</span><input type="time" name="arrivalTimeLocal" value="@TimeValue(segment.ArrivalTimeLocal)" /></label>
+                                        <div><label for="@TransportationFieldId(segment.Id, "arrival-date")">Arrival date for @segment.Mode to @segment.To</label><input id="@TransportationFieldId(segment.Id, "arrival-date")" type="date" name="arrivalDate" value="@DateValue(segment.ArrivalDate)" min="@DateValue(Plan.Dates.Start)" max="@DateValue(Plan.Dates.End)" required /></div>
+                                        <div><label for="@TransportationFieldId(segment.Id, "arrival-time")">Arrival time for @segment.Mode to @segment.To <span>(optional)</span></label><input id="@TransportationFieldId(segment.Id, "arrival-time")" type="time" name="arrivalTimeLocal" value="@TimeValue(segment.ArrivalTimeLocal)" /></div>
                                     </div>
-                                    <label>Arrival time zone<input name="arrivalTimeZoneId" value="@segment.ArrivalTimeZone.Value" required maxlength="100" autocomplete="off" /></label>
+                                    <label for="@TransportationFieldId(segment.Id, "arrival-time-zone")">Arrival time zone for @segment.Mode to @segment.To</label><input id="@TransportationFieldId(segment.Id, "arrival-time-zone")" name="arrivalTimeZoneId" value="@segment.ArrivalTimeZone.Value" required maxlength="100" autocomplete="off" />
                                     <div class="planner-board__form-actions"><button type="submit">Save transportation</button><a class="planner-board__secondary-button" href="@TransportationCancelPath">Cancel</a></div>
                                 </form>
                             </details>
@@ -191,7 +191,7 @@
         {
             <details class="planner-board__disclosure planner-board__action" name="planner-board-action">
                 <summary>Add transportation</summary>
-                <form class="planner-board__form" method="post" action="@AddTransportationPath"><AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" /><label>Mode<input name="mode" required maxlength="100" placeholder="Flight, rail, cruise, or car" /></label><label>From<input name="from" required maxlength="200" /></label><label>To<input name="to" required maxlength="200" /></label><div class="planner-board__form-columns"><label>Departure date<input type="date" name="departureDate" required /></label><label>Departure time <span>(optional)</span><input type="time" name="departureTimeLocal" /></label></div><label>Departure time zone<input name="departureTimeZoneId" required maxlength="100" placeholder="America/Phoenix" /></label><div class="planner-board__form-columns"><label>Arrival date<input type="date" name="arrivalDate" required /></label><label>Arrival time <span>(optional)</span><input type="time" name="arrivalTimeLocal" /></label></div><label>Arrival time zone<input name="arrivalTimeZoneId" required maxlength="100" placeholder="Europe/Rome" /></label><button type="submit">Add proposed transportation</button></form>
+                <form class="planner-board__form" method="post" action="@AddTransportationPath"><AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" /><label for="add-transportation-mode">Mode</label><input id="add-transportation-mode" name="mode" required maxlength="100" placeholder="Flight, rail, cruise, or car" /><label for="add-transportation-from">From</label><input id="add-transportation-from" name="from" required maxlength="200" /><label for="add-transportation-to">To</label><input id="add-transportation-to" name="to" required maxlength="200" /><div class="planner-board__form-columns"><div><label for="add-transportation-departure-date">Departure date</label><input id="add-transportation-departure-date" type="date" name="departureDate" required /></div><div><label for="add-transportation-departure-time">Departure time <span>(optional)</span></label><input id="add-transportation-departure-time" type="time" name="departureTimeLocal" /></div></div><label for="add-transportation-departure-time-zone">Departure time zone</label><input id="add-transportation-departure-time-zone" name="departureTimeZoneId" required maxlength="100" placeholder="America/Phoenix" /><div class="planner-board__form-columns"><div><label for="add-transportation-arrival-date">Arrival date</label><input id="add-transportation-arrival-date" type="date" name="arrivalDate" required /></div><div><label for="add-transportation-arrival-time">Arrival time <span>(optional)</span></label><input id="add-transportation-arrival-time" type="time" name="arrivalTimeLocal" /></div></div><label for="add-transportation-arrival-time-zone">Arrival time zone</label><input id="add-transportation-arrival-time-zone" name="arrivalTimeZoneId" required maxlength="100" placeholder="Europe/Rome" /><button type="submit">Add proposed transportation</button></form>
             </details>
         }
     </section>
@@ -220,12 +220,12 @@
                                 <form class="planner-board__form" method="post" action="@EditAccommodationPath(accommodation.Id)">
                                     <AntiforgeryToken />
                                     <input type="hidden" name="expectedVersion" value="@Plan.Version" />
-                                    <label>Accommodation name<input name="name" value="@accommodation.Name" required maxlength="200" autocomplete="off" /></label>
+                                    <label for="@AccommodationFieldId(accommodation.Id, "name")">Accommodation name for @accommodation.Name</label><input id="@AccommodationFieldId(accommodation.Id, "name")" name="name" value="@accommodation.Name" required maxlength="200" autocomplete="off" />
                                     <div class="planner-board__form-columns">
-                                        <label>Start date<input type="date" name="startDate" value="@DateValue(accommodation.Dates.Start)" min="@DateValue(Plan.Dates.Start)" max="@DateValue(Plan.Dates.End)" required /></label>
-                                        <label>End date<input type="date" name="endDate" value="@DateValue(accommodation.Dates.End)" min="@DateValue(Plan.Dates.Start)" max="@DateValue(Plan.Dates.End)" required /></label>
+                                        <div><label for="@AccommodationFieldId(accommodation.Id, "start-date")">Start date for @accommodation.Name</label><input id="@AccommodationFieldId(accommodation.Id, "start-date")" type="date" name="startDate" value="@DateValue(accommodation.Dates.Start)" min="@DateValue(Plan.Dates.Start)" max="@DateValue(Plan.Dates.End)" required /></div>
+                                        <div><label for="@AccommodationFieldId(accommodation.Id, "end-date")">End date for @accommodation.Name</label><input id="@AccommodationFieldId(accommodation.Id, "end-date")" type="date" name="endDate" value="@DateValue(accommodation.Dates.End)" min="@DateValue(Plan.Dates.Start)" max="@DateValue(Plan.Dates.End)" required /></div>
                                     </div>
-                                    <label>Property time zone<input name="timeZoneId" value="@accommodation.TimeZone.Value" required maxlength="100" autocomplete="off" /></label>
+                                    <label for="@AccommodationFieldId(accommodation.Id, "time-zone")">Property time zone for @accommodation.Name</label><input id="@AccommodationFieldId(accommodation.Id, "time-zone")" name="timeZoneId" value="@accommodation.TimeZone.Value" required maxlength="100" autocomplete="off" />
                                     <div class="planner-board__form-actions"><button type="submit">Save accommodation</button><a class="planner-board__secondary-button" href="@AccommodationCancelPath">Cancel</a></div>
                                 </form>
                             </details>
@@ -238,7 +238,7 @@
         {
             <details class="planner-board__disclosure planner-board__action" name="planner-board-action">
                 <summary>Add accommodation</summary>
-                <form class="planner-board__form" method="post" action="@AddAccommodationPath"><AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" /><label>Accommodation name<input name="name" required maxlength="200" /></label><div class="planner-board__form-columns"><label>Start date<input type="date" name="startDate" required /></label><label>End date<input type="date" name="endDate" required /></label></div><label>Property time zone<input name="timeZoneId" required maxlength="100" placeholder="Europe/Rome" /></label><button type="submit">Add proposed accommodation</button></form>
+                <form class="planner-board__form" method="post" action="@AddAccommodationPath"><AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" /><label for="add-accommodation-name">Accommodation name</label><input id="add-accommodation-name" name="name" required maxlength="200" /><div class="planner-board__form-columns"><div><label for="add-accommodation-start-date">Start date</label><input id="add-accommodation-start-date" type="date" name="startDate" required /></div><div><label for="add-accommodation-end-date">End date</label><input id="add-accommodation-end-date" type="date" name="endDate" required /></div></div><label for="add-accommodation-time-zone">Property time zone</label><input id="add-accommodation-time-zone" name="timeZoneId" required maxlength="100" placeholder="Europe/Rome" /><button type="submit">Add proposed accommodation</button></form>
             </details>
         }
     </section>
@@ -250,7 +250,7 @@
         {
             <details class="planner-board__disclosure planner-board__action" name="planner-board-action">
                 <summary>Add reservation summary</summary>
-                <form class="planner-board__form" method="post" action="@AddReservationPath"><AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" /><label>Reservation subject<input name="subject" required maxlength="200" autocomplete="off" placeholder="Hotel, tour, or transportation hold" /></label><p>Confirmation references are added through a separate protected workflow.</p><button type="submit">Add proposed reservation</button></form>
+                <form class="planner-board__form" method="post" action="@AddReservationPath"><AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" /><label for="add-reservation-subject">Reservation subject</label><input id="add-reservation-subject" name="subject" required maxlength="200" autocomplete="off" placeholder="Hotel, tour, or transportation hold" /><p>Confirmation references are added through a separate protected workflow.</p><button type="submit">Add proposed reservation</button></form>
             </details>
         }
     </section>

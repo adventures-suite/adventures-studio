@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
 
 namespace TheSimontonAdventures.Web.Components;
 
@@ -32,8 +33,32 @@ public static class PlannerWorkspaceThemeExtensions
 }
 
 /// <summary>Wraps the authorized Planner workspace with responsive navigation and display controls.</summary>
-public partial class PlannerWorkspaceShell : ComponentBase
+public partial class PlannerWorkspaceShell : ComponentBase, IAsyncDisposable
 {
+    private ElementReference MainContent { get; set; }
+    private IJSObjectReference? FocusModule { get; set; }
+
+    [Inject]
+    private IJSRuntime JavaScript { get; set; } = null!;
+
+    [Inject]
+    private NavigationManager Navigation { get; set; } = null!;
+
+    private string SkipLinkHref
+    {
+        get
+        {
+            var relativePath = Navigation.ToBaseRelativePath(Navigation.Uri);
+            var fragmentIndex = relativePath.IndexOf('#', StringComparison.Ordinal);
+            if (fragmentIndex >= 0)
+            {
+                relativePath = relativePath[..fragmentIndex];
+            }
+
+            return $"/{relativePath}#planner-workspace-content";
+        }
+    }
+
     /// <summary>Gets the minimum supported sidebar width in pixels.</summary>
     public const int MinimumSidebarWidthPixels = 224;
 
@@ -152,5 +177,46 @@ public partial class PlannerWorkspaceShell : ComponentBase
             _ => PlannerWorkspaceTheme.System
         };
         return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            FocusModule = await JavaScript.InvokeAsync<IJSObjectReference>(
+                "import",
+                "./Components/Planner/PlannerWorkspaceShell.razor.js");
+        }
+    }
+
+    private async Task FocusMainContentAsync()
+    {
+        if (FocusModule is not null)
+        {
+            await FocusModule.InvokeVoidAsync("focusElement", MainContent);
+        }
+        else
+        {
+            await MainContent.FocusAsync();
+        }
+    }
+
+    /// <summary>Releases the JavaScript module owned by this interactive shell.</summary>
+    public async ValueTask DisposeAsync()
+    {
+        if (FocusModule is not null)
+        {
+            try
+            {
+                await FocusModule.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+                // The circuit already owns teardown when the browser disconnects.
+            }
+        }
+
+        GC.SuppressFinalize(this);
     }
 }

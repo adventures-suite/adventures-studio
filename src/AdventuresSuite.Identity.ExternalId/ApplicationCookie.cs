@@ -26,6 +26,7 @@ internal static class ApplicationCookiePrincipal
     internal const string AuthenticationTimeClaim = "adventures_suite_auth_time";
     internal const string AuthenticationMethodClaim = "adventures_suite_auth_method";
     internal const string OidcAuthenticationMethod = "oidc";
+    internal const string DevelopmentAuthenticationMethod = "development";
 
     private static readonly HashSet<string> AllowedClaimTypes =
     [
@@ -38,12 +39,18 @@ internal static class ApplicationCookiePrincipal
 
     public static ClaimsPrincipal Create(
         AuthenticationSessionTicket ticket,
-        DateTimeOffset authenticatedAtUtc)
+        DateTimeOffset authenticatedAtUtc,
+        string authenticationMethod = OidcAuthenticationMethod)
     {
         ArgumentNullException.ThrowIfNull(ticket);
         if (authenticatedAtUtc.Offset != TimeSpan.Zero)
         {
             throw new ArgumentException("Authentication time must be UTC.", nameof(authenticatedAtUtc));
+        }
+
+        if (authenticationMethod is not (OidcAuthenticationMethod or DevelopmentAuthenticationMethod))
+        {
+            throw new ArgumentException("The authentication method is not approved.", nameof(authenticationMethod));
         }
 
         return new ClaimsPrincipal(new ClaimsIdentity(
@@ -52,7 +59,7 @@ internal static class ApplicationCookiePrincipal
             new Claim(SessionIdClaim, ticket.SessionId.Value),
             new Claim(SecurityVersionClaim, ticket.SecurityVersion.Value.ToString(CultureInfo.InvariantCulture)),
             new Claim(AuthenticationTimeClaim, authenticatedAtUtc.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture)),
-            new Claim(AuthenticationMethodClaim, OidcAuthenticationMethod)
+            new Claim(AuthenticationMethodClaim, authenticationMethod)
         ], ExternalIdAuthenticationExtensions.InternalCookieScheme));
     }
 
@@ -86,7 +93,7 @@ internal static class ApplicationCookiePrincipal
             || version <= 0
             || !long.TryParse(authenticationTime, NumberStyles.None,
                 CultureInfo.InvariantCulture, out var authenticationSeconds)
-            || !string.Equals(authenticationMethod, OidcAuthenticationMethod, StringComparison.Ordinal))
+            || authenticationMethod is not (OidcAuthenticationMethod or DevelopmentAuthenticationMethod))
         {
             return null;
         }
@@ -105,7 +112,7 @@ internal static class ApplicationCookiePrincipal
                     new UserId(userId),
                     new SecurityVersion(version)),
                 authenticatedAtUtc,
-                OidcAuthenticationMethod);
+                authenticationMethod);
         }
         catch
         {
