@@ -21,6 +21,22 @@ trans-Atlantic Adventure. It exercises multiple destinations, cruise and land
 segments, changing time zones, sea days, accommodations, activities, and
 transportation without inventing a synthetic product scenario.
 
+The product must also prove itself beyond conventional destination vacations.
+Motorcycle touring is the first additional reference scenario, followed by RV,
+cycling, trekking, sailing, rail, cruise, overland, winter, diving, pilgrimage,
+accessible, multigenerational, festival, and sporting-event Adventures. A plan
+may combine several modes; the experience must not force the user into one
+behavior-controlling trip type.
+
+For a motorcycle Journey, the Planner and Ideas experience should be capable of
+expressing route stages, scenic or direct routing, surface preferences, daily
+distance or riding-time limits, fuel and rest planning, ferry and border
+considerations, motorcycle-friendly stays and secure parking, gear,
+maintenance, vehicle-document readiness, weather or closure contingencies, and
+different rider experience or endurance. These are planning inputs and sourced
+guidance, never unsupported assurances of safety, legality, passability,
+availability, or booking.
+
 ## Primary User
 
 An authorized member acting for a Creator who needs to organize a real future

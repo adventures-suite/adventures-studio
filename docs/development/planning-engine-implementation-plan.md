@@ -234,7 +234,9 @@ Near-term Ideas slice priority:
 2. immediately add deterministic multi-facet filtering and paging over that
    boundary, including context defaults, removable chips, result counts,
    country/region, idea kind, duration, transportation, category, pace,
-   season, accessibility, budget, traveler composition, source, and language;
+   route style, terrain/surface, daily distance or travel time, season,
+   accessibility, equipment needs, budget, traveler composition, source, and
+   language;
 3. deliver the reviewed curated launch collection;
 4. prove one explicit reviewed Add-to-plan operation; and
 5. add accessible drag and drop only as an equivalent enhancement.
@@ -245,6 +247,17 @@ entitlement, licensing, and publication rules are enforced before returning
 cards or facet counts. Mobile filtering uses an accessible drawer or sheet.
 Ranking, AI personalization, provider search, and booking claims remain outside
 the filtering slice.
+
+The query and filtering slices must use motorcycle touring as a required
+non-conventional-travel acceptance scenario. Prove that the vocabulary can
+express motorcycle, scenic/direct routing, paved/gravel/off-road surfaces,
+daily distance or riding-time limits, countries, duration, ferry use, secure
+parking or stay needs, and preparation categories without adding a rigid
+behavior-controlling `TripType`. Also test that the same capability-composition
+model can describe at least RV, cycling, trekking, sailing, rail, cruise, and
+overland examples. Current weather, closures, fuel access, border rules,
+safety, price, availability, and bookings remain attributable external facts,
+not inferred plan state.
 
 Scope:
 
@@ -261,6 +274,8 @@ Scope:
 - deterministic contextual Ideas filtering with combined facets, removable
   chips, result counts, paging integration, localized labels, and an accessible
   mobile filter surface
+- composable Adventure-mode facets proven with a motorcycle touring reference
+  scenario and reusable across non-conventional travel styles
 - reviewed curated Idea Library foundation and environment-specific launch
   collection before production rail population
 - authorized layered Adventure map with overview, segment, destination, day,

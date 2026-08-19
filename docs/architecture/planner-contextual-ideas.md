@@ -139,6 +139,8 @@ by combining facets such as:
   transportation, and stay;
 - trip-duration range and available days;
 - transportation modes;
+- route style, terrain or surface, daily travel-distance or duration range, and
+  vehicle or equipment needs;
 - travel categories and styles such as culture, food, history, outdoors,
   cruise, road trip, relaxation, and family travel;
 - pace, season or preferred month, accessibility characteristics, budget range
@@ -172,6 +174,15 @@ licensing, lifecycle, and publication rules before returning facet counts or
 cards. An unavailable or unauthorized source cannot be inferred through counts,
 labels, empty groups, timing, cache entries, or pagination. Filter state is
 transient and never mutates the authoritative plan.
+
+The facet vocabulary must be tested beyond conventional vacations. Motorcycle
+touring is the first proving scenario and must support discovery by motorcycle,
+scenic or direct route style, paved/gravel/off-road surface, daily riding
+distance or time, route duration, countries, ferry use, accommodation needs,
+and relevant categories. The same composable vocabulary must extend without a
+new top-level tenant or plan model to RV, cycling, trekking, sailing, rail,
+cruise, overland, winter, diving, pilgrimage, accessible, event, and other
+Adventure modes.
 
 ## Mutation Boundary
 
