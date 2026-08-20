@@ -14,6 +14,96 @@ public sealed class PlanningRepositoryIntegrationTests
 {
     private const string ConnectionVariable = "ADVENTURESSUITE_SQL_TEST_CONNECTION_STRING";
 
+    /// <summary>Proves Destination FootStep replay evidence commits and rolls back atomically.</summary>
+    [Fact]
+    public async Task DestinationFootStepApplication_RealSqlServer_IsAtomicAndReplaySafe()
+    {
+        var masterConnectionString = Environment.GetEnvironmentVariable(ConnectionVariable);
+        Assert.False(string.IsNullOrWhiteSpace(masterConnectionString),
+            $"Set {ConnectionVariable} for the SQL integration gate.");
+        var databaseName = $"AdventuresSuiteFootStepTest_{Guid.NewGuid():N}";
+        var databaseConnectionString = BuildDatabaseConnectionString(masterConnectionString, databaseName);
+        await ExecuteAsync(masterConnectionString, $"CREATE DATABASE [{databaseName}];");
+
+        try
+        {
+            await CompanionPolicyMigrationTestHarness.MigrateAllAsync(databaseConnectionString);
+            var factory = new SqlPlanningTransactionFactory(databaseConnectionString);
+            var creator = new CreatorId("creator_footstep");
+            var plan = CreatePlan(creator, 1, "FootStep application");
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                await transaction.AdventurePlans.AddAsync(creator, plan);
+                transaction.RequiredAuditIntents.AddRequired(Audit(
+                    creator, plan.Id, Permissions.AdventurePlanCreate, null, 1));
+                await transaction.CommitAsync();
+            }
+
+            var visit = new DestinationVisit
+            {
+                Id = new("visit_lisbon"), Name = "Lisbon, Portugal",
+                Dates = new(new(2027, 10, 30), new(2027, 11, 2)),
+                TimeZone = new("Europe/Lisbon"), Sequence = 2
+            };
+            var updated = plan.WithDestinationVisit(visit, plan.Audit.UpdatedAtUtc.AddMinutes(1));
+            var reservation = FootStepReservation(plan.Id, visit.Id, 2, "footstep-key-00000001");
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                Assert.Equal(PlannerFootStepApplicationOutcome.Reserved,
+                    (await transaction.PlannerFootStepApplications.ResolveAsync(
+                        creator, reservation)).Outcome);
+                await transaction.AdventurePlans.AddDestinationVisitAsync(
+                    creator, updated, visit, 1);
+                await transaction.PlannerFootStepApplications.AddAsync(creator, reservation);
+                transaction.RequiredAuditIntents.AddRequired(Audit(
+                    creator, plan.Id, Permissions.AdventurePlanEdit, 1, 2));
+                await transaction.CommitAsync();
+            }
+
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                var replay = await transaction.PlannerFootStepApplications.ResolveAsync(
+                    creator, reservation with { TargetId = "unused_retry_target" });
+                Assert.Equal(PlannerFootStepApplicationOutcome.Replay, replay.Outcome);
+                Assert.Equal(visit.Id.Value, replay.TargetId);
+                Assert.Equal(2, replay.ResultingVersion);
+            }
+
+            var rollbackVisit = visit with { Id = new("visit_footstep_rollback"), Sequence = 3 };
+            var rollbackPlan = updated.WithDestinationVisit(
+                rollbackVisit, updated.Audit.UpdatedAtUtc.AddMinutes(1));
+            var rollbackReservation = FootStepReservation(
+                plan.Id, rollbackVisit.Id, 3, "footstep-key-00000002");
+            await using (var transaction = await factory.BeginAsync(creator))
+            {
+                Assert.Equal(PlannerFootStepApplicationOutcome.Reserved,
+                    (await transaction.PlannerFootStepApplications.ResolveAsync(
+                        creator, rollbackReservation)).Outcome);
+                await transaction.AdventurePlans.AddDestinationVisitAsync(
+                    creator, rollbackPlan, rollbackVisit, 2);
+                await transaction.PlannerFootStepApplications.AddAsync(creator, rollbackReservation);
+                await Assert.ThrowsAsync<InvalidOperationException>(() => transaction.CommitAsync());
+            }
+
+            await using var connection = new SqlConnection(databaseConnectionString);
+            await connection.OpenAsync();
+            await using var command = new SqlCommand("""
+                SELECT
+                  (SELECT COUNT(*) FROM planning.DestinationVisits WHERE DestinationVisitId='visit_footstep_rollback'),
+                  (SELECT COUNT(*) FROM planning.PlannerFootStepApplications WHERE IdempotencyKey='footstep-key-00000002');
+                """, connection);
+            await using var reader = await command.ExecuteReaderAsync();
+            Assert.True(await reader.ReadAsync());
+            Assert.Equal(0, reader.GetInt32(0));
+            Assert.Equal(0, reader.GetInt32(1));
+        }
+        finally
+        {
+            await ExecuteAsync(masterConnectionString,
+                $"ALTER DATABASE [{databaseName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [{databaseName}];");
+        }
+    }
+
     /// <summary>Proves a destination append, plan version, and audit commit atomically.</summary>
     [Fact]
     public async Task AddDestinationVisit_RealSqlServer_IsAtomicAndConcurrent()
@@ -987,6 +1077,25 @@ public sealed class PlanningRepositoryIntegrationTests
             new CorrelationId($"correlation_{Guid.NewGuid():N}"),
             previousVersion: previousVersion,
             resultingVersion: resultingVersion);
+
+    private static PlannerFootStepApplicationReservation FootStepReservation(
+        AdventurePlanId planId,
+        DestinationVisitId destinationId,
+        long resultingVersion,
+        string key) => new()
+        {
+            AdventurePlanId = planId,
+            IdempotencyKey = new(key),
+            Fingerprint = new(1, Enumerable.Repeat((byte)0x5A, 32).ToArray()),
+            FootStepId = "footstep_destination_lisbon_gateway",
+            FootStepVersion = "1.0",
+            TargetType = "DestinationVisit",
+            TargetId = destinationId.Value,
+            ResultingVersion = resultingVersion,
+            Attribution = "AdventuresSuite fictional editorial demo",
+            UseDecisionReference = "development:footstep_destination_lisbon_gateway:1.0",
+            AppliedAtUtc = new(2026, 8, 19, 20, 0, 0, TimeSpan.Zero)
+        };
 
     private static async Task AssertPlanAndAuditAbsentAsync(
         string connectionString,

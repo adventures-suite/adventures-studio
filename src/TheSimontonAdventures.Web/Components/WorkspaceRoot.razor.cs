@@ -256,6 +256,7 @@ public partial class WorkspaceRoot
     private string CreateFromTemplatePath => $"{PlanListPath}/create-from-template";
     private string EditPlanPath => $"{PlanListPath}/{Plan!.Id.Value}/overview";
     private string AddDestinationPath => $"{PlanListPath}/{Plan!.Id.Value}/destinations";
+    private string ApplyDestinationFootStepPath => $"{PlanListPath}/{Plan!.Id.Value}/footsteps/destination";
     private string AddDayPath => $"{PlanListPath}/{Plan!.Id.Value}/days";
     private string AddActivityPath => $"{PlanListPath}/{Plan!.Id.Value}/activities";
     private string AddTransportationPath => $"{PlanListPath}/{Plan!.Id.Value}/transportation";
@@ -306,6 +307,16 @@ public partial class WorkspaceRoot
             "conflict" => "This plan changed. Review the current route and try again.",
             "validation" => "Review the destination name, dates, and IANA time zone.",
             "failure" => "The destination could not be added. Please try again.",
+            _ => null
+        };
+    private string? FootStepStatusMessage =>
+        GetQueryValue("footstep") switch
+        {
+            "added" => "The Destination FootStep was added to the plan with its source recorded.",
+            "denied" => "That FootStep is not available to this workspace.",
+            "conflict" => "This plan changed. Review the FootStep and current plan before trying again.",
+            "validation" => "Review the destination dates and try again.",
+            "failure" => "The FootStep could not be added. Your plan was not changed.",
             _ => null
         };
     private string? DayStatusMessage =>

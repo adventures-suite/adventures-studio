@@ -31,6 +31,11 @@ public interface IPlanningTransaction : IAsyncDisposable
         throw new NotSupportedException(
             "This transaction does not support Adventure Template provenance.");
 
+    /// <summary>Gets durable FootStep application idempotency and provenance persistence.</summary>
+    IPlannerFootStepApplicationStore PlannerFootStepApplications =>
+        throw new NotSupportedException(
+            "This transaction does not support FootStep application provenance.");
+
     /// <summary>
     /// Gets the collector for audit intent that must commit atomically with
     /// Planning mutations in this transaction.

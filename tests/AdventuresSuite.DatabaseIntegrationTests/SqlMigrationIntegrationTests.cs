@@ -29,7 +29,7 @@ public sealed class SqlMigrationIntegrationTests
         try
         {
             var firstRun = await CompanionPolicyMigrationTestHarness.MigrateAllAsync(databaseConnectionString);
-            Assert.Equal(11, firstRun.Count);
+            Assert.Equal(12, firstRun.Count);
 
             await VerifySchemaAsync(databaseConnectionString);
             await VerifyConstraintsAsync(databaseConnectionString);
@@ -39,7 +39,7 @@ public sealed class SqlMigrationIntegrationTests
             var secondRun = await CompanionPolicyMigrationTestHarness.MigrateAllAsync(databaseConnectionString);
 
             Assert.Empty(secondRun);
-            Assert.Equal(11, await ScalarAsync<int>(databaseConnectionString,
+            Assert.Equal(12, await ScalarAsync<int>(databaseConnectionString,
                 "SELECT COUNT(*) FROM dbo.AdventuresSuiteSchemaVersions;"));
             Assert.Equal(signatureBefore, await GetSchemaSignatureAsync(databaseConnectionString));
 
@@ -74,7 +74,8 @@ public sealed class SqlMigrationIntegrationTests
                     && !name.EndsWith("0008_create_companion_read_role.sql", StringComparison.Ordinal)
                     && !name.EndsWith("0009_create_adventure_plan_create_results.sql", StringComparison.Ordinal)
                     && !name.EndsWith("0010_create_companion_policy_assignments.sql", StringComparison.Ordinal)
-                    && !name.EndsWith("0011_create_adventure_plan_template_origins.sql", StringComparison.Ordinal))
+                    && !name.EndsWith("0011_create_adventure_plan_template_origins.sql", StringComparison.Ordinal)
+                    && !name.EndsWith("0012_create_planner_footstep_applications.sql", StringComparison.Ordinal))
                 .JournalToSqlTable("dbo", "AdventuresSuiteSchemaVersions")
                 .WithTransactionPerScript()
                 .Build()
@@ -83,7 +84,7 @@ public sealed class SqlMigrationIntegrationTests
             Assert.Equal(3, await ScalarAsync<int>(connectionString,
                 "SELECT COUNT(*) FROM dbo.AdventuresSuiteSchemaVersions;"));
 
-            Assert.Equal(8, (await CompanionPolicyMigrationTestHarness.MigrateAllAsync(connectionString)).Count);
+            Assert.Equal(9, (await CompanionPolicyMigrationTestHarness.MigrateAllAsync(connectionString)).Count);
             Assert.Equal(6, await ScalarAsync<int>(connectionString, """
                 SELECT COUNT(*) FROM sys.tables t JOIN sys.schemas s ON s.schema_id=t.schema_id
                 WHERE s.name='auth';
@@ -120,6 +121,9 @@ public sealed class SqlMigrationIntegrationTests
                         StringComparison.Ordinal)
                     && !name.EndsWith(
                         "0011_create_adventure_plan_template_origins.sql",
+                        StringComparison.Ordinal)
+                    && !name.EndsWith(
+                        "0012_create_planner_footstep_applications.sql",
                         StringComparison.Ordinal))
                 .JournalToSqlTable("dbo", "AdventuresSuiteSchemaVersions")
                 .WithTransactionPerScript()
@@ -248,6 +252,59 @@ public sealed class SqlMigrationIntegrationTests
         }
     }
 
+    /// <summary>Proves exact 0011 upgrades through only 0012 with append-only FootStep evidence.</summary>
+    [Fact]
+    public async Task Migration0012_UpgradesExact0011ExactlyOnce()
+    {
+        var masterConnectionString = Environment.GetEnvironmentVariable(ConnectionVariable);
+        Assert.False(string.IsNullOrWhiteSpace(masterConnectionString),
+            $"Set {ConnectionVariable} for the SQL integration gate.");
+        var databaseName = $"AdventuresSuiteFootStepUpgrade_{Guid.NewGuid():N}";
+        var connectionString = BuildDatabaseConnectionString(masterConnectionString, databaseName);
+        await CreateDatabaseAsync(masterConnectionString, databaseName);
+        try
+        {
+            using (DatabaseMigratorRunner.AcquireMigrationLock(connectionString))
+                Assert.Equal(9, DatabaseMigratorRunner.MigrateWithLockHeld(
+                    connectionString, maximumMigrationNumber: "0009").Count);
+            await ExecuteAsync(connectionString,
+                "CREATE ROLE AdventuresSuiteCompanionPolicyRuntime AUTHORIZATION dbo;");
+            using (DatabaseMigratorRunner.AcquireMigrationLock(connectionString))
+                Assert.Equal(2, DatabaseMigratorRunner.MigrateWithLockHeld(
+                    connectionString, maximumMigrationNumber: "0011").Count);
+
+            var before = await MigrationOperationalState.CaptureAsync(connectionString);
+            Assert.Equal(MigrationJournalOutcome.At0011,
+                MigrationOperationalState.Classify(before.Journal));
+            IReadOnlyList<string> applied;
+            using (DatabaseMigratorRunner.AcquireMigrationLock(connectionString))
+                applied = DatabaseMigratorRunner.MigrateWithLockHeld(
+                    connectionString, maximumMigrationNumber: "0012");
+
+            Assert.Single(applied);
+            Assert.EndsWith("0012_create_planner_footstep_applications.sql", applied[0],
+                StringComparison.Ordinal);
+            Assert.Equal(MigrationJournalOutcome.At0012,
+                MigrationOperationalState.Classify(
+                    (await MigrationOperationalState.CaptureAsync(connectionString)).Journal));
+            Assert.Equal(4, await ScalarAsync<int>(connectionString, """
+                SELECT COUNT(*) FROM sys.database_permissions AS permissions
+                INNER JOIN sys.database_principals AS principals
+                    ON principals.principal_id=permissions.grantee_principal_id
+                INNER JOIN sys.objects AS objects ON objects.object_id=permissions.major_id
+                WHERE principals.name='AdventuresSuitePlanningRuntime'
+                  AND objects.name='PlannerFootStepApplications'
+                  AND ((permissions.state_desc='GRANT' AND permissions.permission_name IN ('SELECT','INSERT'))
+                    OR (permissions.state_desc='DENY' AND permissions.permission_name IN ('UPDATE','DELETE')));
+                """));
+            Assert.Empty(DatabaseMigratorRunner.Migrate(connectionString));
+        }
+        finally
+        {
+            await DropDatabaseAsync(masterConnectionString, databaseName);
+        }
+    }
+
     /// <summary>Proves a concurrent migrator fails before it can inspect or mutate the journal.</summary>
     [Fact]
     public async Task MigrationLock_RejectsConcurrentMigratorAndReleasesForNextRun()
@@ -267,7 +324,7 @@ public sealed class SqlMigrationIntegrationTests
                 Assert.Equal("Another database migration is already running.", exception.Message);
             }
 
-            Assert.Equal(11, (await CompanionPolicyMigrationTestHarness.MigrateAllAsync(connectionString)).Count);
+            Assert.Equal(12, (await CompanionPolicyMigrationTestHarness.MigrateAllAsync(connectionString)).Count);
         }
         finally
         {
@@ -295,7 +352,8 @@ public sealed class SqlMigrationIntegrationTests
                     && !name.EndsWith("0008_create_companion_read_role.sql", StringComparison.Ordinal)
                     && !name.EndsWith("0009_create_adventure_plan_create_results.sql", StringComparison.Ordinal)
                     && !name.EndsWith("0010_create_companion_policy_assignments.sql", StringComparison.Ordinal)
-                    && !name.EndsWith("0011_create_adventure_plan_template_origins.sql", StringComparison.Ordinal))
+                    && !name.EndsWith("0011_create_adventure_plan_template_origins.sql", StringComparison.Ordinal)
+                    && !name.EndsWith("0012_create_planner_footstep_applications.sql", StringComparison.Ordinal))
                 .JournalToSqlTable("dbo", "AdventuresSuiteSchemaVersions")
                 .WithTransactionPerScript()
                 .Build()
@@ -360,7 +418,8 @@ public sealed class SqlMigrationIntegrationTests
                     && !name.EndsWith("0008_create_companion_read_role.sql", StringComparison.Ordinal)
                     && !name.EndsWith("0009_create_adventure_plan_create_results.sql", StringComparison.Ordinal)
                     && !name.EndsWith("0010_create_companion_policy_assignments.sql", StringComparison.Ordinal)
-                    && !name.EndsWith("0011_create_adventure_plan_template_origins.sql", StringComparison.Ordinal))
+                    && !name.EndsWith("0011_create_adventure_plan_template_origins.sql", StringComparison.Ordinal)
+                    && !name.EndsWith("0012_create_planner_footstep_applications.sql", StringComparison.Ordinal))
                 .JournalToSqlTable("dbo", "AdventuresSuiteSchemaVersions")
                 .WithTransactionPerScript()
                 .Build()
@@ -422,7 +481,8 @@ public sealed class SqlMigrationIntegrationTests
                     && !name.EndsWith("0008_create_companion_read_role.sql", StringComparison.Ordinal)
                     && !name.EndsWith("0009_create_adventure_plan_create_results.sql", StringComparison.Ordinal)
                     && !name.EndsWith("0010_create_companion_policy_assignments.sql", StringComparison.Ordinal)
-                    && !name.EndsWith("0011_create_adventure_plan_template_origins.sql", StringComparison.Ordinal))
+                    && !name.EndsWith("0011_create_adventure_plan_template_origins.sql", StringComparison.Ordinal)
+                    && !name.EndsWith("0012_create_planner_footstep_applications.sql", StringComparison.Ordinal))
                 .JournalToSqlTable("dbo", "AdventuresSuiteSchemaVersions")
                 .WithTransactionPerScript()
                 .Build()
@@ -482,7 +542,8 @@ public sealed class SqlMigrationIntegrationTests
                 .WithScriptsEmbeddedInAssembly(assembly, name =>
                     MigrationCatalog.IsMigrationResource(assembly, name)
                     && !name.EndsWith("0010_create_companion_policy_assignments.sql", StringComparison.Ordinal)
-                    && !name.EndsWith("0011_create_adventure_plan_template_origins.sql", StringComparison.Ordinal))
+                    && !name.EndsWith("0011_create_adventure_plan_template_origins.sql", StringComparison.Ordinal)
+                    && !name.EndsWith("0012_create_planner_footstep_applications.sql", StringComparison.Ordinal))
                 .JournalToSqlTable("dbo", "AdventuresSuiteSchemaVersions")
                 .WithTransactionPerScript()
                 .Build()

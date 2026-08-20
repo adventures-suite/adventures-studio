@@ -126,6 +126,7 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
     private PlannerFootStepSort SortBy { get; set; } = PlannerFootStepSort.Catalog;
     private PlannerFootStepGrouping GroupBy { get; set; }
     private PlannerFootStepView ViewType { get; set; } = PlannerFootStepView.Cards;
+    private Dictionary<string, string> ApplicationKeys { get; } = new(StringComparer.Ordinal);
 
     /// <summary>Gets or sets the selected authorized canvas context.</summary>
     [Parameter]
@@ -133,6 +134,24 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
     /// <summary>Gets or sets the already authorized FootStep projections.</summary>
     [Parameter]
     public IReadOnlyList<PlannerFootStepDefinition> AuthorizedItems { get; set; } = [];
+    /// <summary>Gets or sets whether the authorized actor may apply a supported FootStep.</summary>
+    [Parameter]
+    public bool CanEdit { get; set; }
+    /// <summary>Gets or sets the authoritative plan version rendered into application forms.</summary>
+    [Parameter]
+    public long ExpectedVersion { get; set; }
+    /// <summary>Gets or sets the plan's inclusive start date.</summary>
+    [Parameter]
+    public DateOnly PlanStartDate { get; set; }
+    /// <summary>Gets or sets the plan's inclusive end date.</summary>
+    [Parameter]
+    public DateOnly PlanEndDate { get; set; }
+    /// <summary>Gets or sets the protected Destination FootStep application path.</summary>
+    [Parameter]
+    public string ApplyDestinationPath { get; set; } = string.Empty;
+    /// <summary>Gets or sets safe Post/Redirect/Get feedback for FootStep application.</summary>
+    [Parameter]
+    public string? ApplicationStatusMessage { get; set; }
     /// <summary>Gets or sets an explicit state for deterministic component verification.</summary>
     [Parameter]
     public PlannerIdeasState? StateOverride { get; set; }
@@ -219,6 +238,7 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
             MaximumDays = null;
             SortBy = PlannerFootStepSort.Catalog;
             GroupBy = PlannerFootStepGrouping.None;
+            ApplicationKeys.Clear();
             CurrentPage = 1;
         }
     }
@@ -300,6 +320,22 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
     };
     private static string Monogram(PlannerFootStepDefinition item) =>
         string.Concat(item.Title.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(word => char.ToUpperInvariant(word[0])));
+    private string ApplicationKey(PlannerFootStepDefinition item)
+    {
+        if (!ApplicationKeys.TryGetValue(item.Id, out var key))
+        {
+            key = $"footstep_{Guid.NewGuid():N}";
+            ApplicationKeys[item.Id] = key;
+        }
+        return key;
+    }
+    private DateOnly SuggestedEnd(PlannerFootStepDefinition item)
+    {
+        var candidate = item.DurationDays is > 1
+            ? PlanStartDate.AddDays(item.DurationDays.Value - 1)
+            : PlanStartDate;
+        return candidate > PlanEndDate ? PlanEndDate : candidate;
+    }
     private string ContextReason => Context?.Kind switch
     {
         PlannerIdeasContextKind.Day => "Fits the selected itinerary day.",

@@ -103,7 +103,13 @@ if (authenticationMode is not null
             ? new DevelopmentPlannerFootStepCatalogSource(
                 services.GetRequiredService<IHostEnvironment>())
             : new UnavailablePlannerFootStepCatalogSource());
+    builder.Services.AddSingleton<IPlannerFootStepUseResolver>(services =>
+        string.Equals(authenticationMode, nameof(AuthenticationMode.Development), StringComparison.OrdinalIgnoreCase)
+            ? services.GetRequiredService<IPlannerFootStepCatalogSource>() as IPlannerFootStepUseResolver
+                ?? new UnavailablePlannerFootStepUseResolver()
+            : new UnavailablePlannerFootStepUseResolver());
     builder.Services.AddScoped<IPlannerFootStepQueryService, PlannerFootStepQueryService>();
+    builder.Services.AddScoped<IDestinationFootStepApplyService, DestinationFootStepApplyService>();
     builder.Services.AddScoped<IAdventurePlanOverviewEditService, AdventurePlanOverviewEditService>();
     builder.Services.AddScoped<IDestinationVisitAddService, DestinationVisitAddService>();
     builder.Services.AddScoped<IItineraryDayAddService, ItineraryDayAddService>();
@@ -345,6 +351,7 @@ if (authenticationConfiguration.Mode is AuthenticationMode.ExternalProvider or A
     app.MapAdventureTemplateInstantiateEndpoint();
     app.MapAdventurePlanOverviewEditEndpoint();
     app.MapDestinationVisitAddEndpoint();
+    app.MapDestinationFootStepApplyEndpoint();
     app.MapItineraryDayAddEndpoint();
     app.MapItineraryDayEditEndpoint();
     app.MapPlannedActivityAddEndpoint();

@@ -14,7 +14,7 @@ public sealed class DatabaseMigrationTests
     {
         var migrations = MigrationCatalog.GetOrderedResourceNames(MigratorAssembly);
 
-        Assert.Equal(11, migrations.Count);
+        Assert.Equal(12, migrations.Count);
         Assert.EndsWith("0001_create_planning_schema.sql", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("0002_create_adventure_plans.sql", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("0003_create_planning_children.sql", migrations[2], StringComparison.Ordinal);
@@ -26,7 +26,22 @@ public sealed class DatabaseMigrationTests
         Assert.EndsWith("0009_create_adventure_plan_create_results.sql", migrations[8], StringComparison.Ordinal);
         Assert.EndsWith("0010_create_companion_policy_assignments.sql", migrations[9], StringComparison.Ordinal);
         Assert.EndsWith("0011_create_adventure_plan_template_origins.sql", migrations[10], StringComparison.Ordinal);
+        Assert.EndsWith("0012_create_planner_footstep_applications.sql", migrations[11], StringComparison.Ordinal);
         Assert.Equal(migrations.Count, migrations.Distinct(StringComparer.Ordinal).Count());
+    }
+
+    /// <summary>Ensures FootStep application evidence is retry-safe, exact-version, and append-only.</summary>
+    [Fact]
+    public void PlannerFootStepApplications_DeclareImmutableApplicationEvidence()
+    {
+        var migration = ReadMigration("0012_create_planner_footstep_applications.sql");
+
+        Assert.Contains("PRIMARY KEY (CreatorId, AdventurePlanId, IdempotencyKey)", migration, StringComparison.Ordinal);
+        Assert.Contains("FootStepId nvarchar(64) COLLATE Latin1_General_100_BIN2", migration, StringComparison.Ordinal);
+        Assert.Contains("FootStepVersion nvarchar(32) COLLATE Latin1_General_100_BIN2", migration, StringComparison.Ordinal);
+        Assert.Contains("FOREIGN KEY (CreatorId, AdventurePlanId, TargetId)", migration, StringComparison.Ordinal);
+        Assert.Contains("GRANT SELECT, INSERT", migration, StringComparison.Ordinal);
+        Assert.Contains("DENY UPDATE, DELETE", migration, StringComparison.Ordinal);
     }
 
     /// <summary>Ensures template provenance is Creator-scoped, append-only, and version exact.</summary>

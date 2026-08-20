@@ -137,6 +137,12 @@
                                        ReservationStatusMessage="@ReservationStatusMessage" />
                 <PlannerContextualIdeasRail Context="@SelectedIdeasContext"
                                             AuthorizedItems="@AuthorizedFootSteps"
+                                            CanEdit="@PlanCanEdit"
+                                            ExpectedVersion="@Plan.Version"
+                                            PlanStartDate="@Plan.Dates.Start"
+                                            PlanEndDate="@Plan.Dates.End"
+                                            ApplyDestinationPath="@ApplyDestinationFootStepPath"
+                                            ApplicationStatusMessage="@FootStepStatusMessage"
                                             WidthPixels="@IdeasWidthPixels"
                                             OnAdventureContextRequested="SelectAdventureIdeasContextAsync"
                                             OnResizeRequested="ResizeIdeasAsync" />
