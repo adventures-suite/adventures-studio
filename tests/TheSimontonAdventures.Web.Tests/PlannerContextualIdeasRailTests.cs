@@ -130,9 +130,12 @@ public sealed class PlannerContextualIdeasRailTests
         Assert.Contains("Sort by", html, StringComparison.Ordinal);
         Assert.Contains("Shortest duration", html, StringComparison.Ordinal);
         Assert.Contains("aria-label=\"FootStep view type\"", html, StringComparison.Ordinal);
-        Assert.Contains(">Cards</button>", html, StringComparison.Ordinal);
-        Assert.Contains(">List</button>", html, StringComparison.Ordinal);
-        Assert.Contains(">Tabular</button>", html, StringComparison.Ordinal);
+        Assert.Contains("aria-label=\"Card view\"", html, StringComparison.Ordinal);
+        Assert.Contains("aria-label=\"List view\"", html, StringComparison.Ordinal);
+        Assert.Contains("aria-label=\"Tabular view\"", html, StringComparison.Ordinal);
+        Assert.Contains("title=\"Card view\"", html, StringComparison.Ordinal);
+        Assert.Contains("aria-hidden=\"true\"", html, StringComparison.Ordinal);
+        Assert.Contains("focusable=\"false\"", html, StringComparison.Ordinal);
         var markup = File.ReadAllText(Path.Combine(
             FindApplicationRoot(), "Components", "Planner", "PlannerContextualIdeasRail.razor"));
         Assert.Contains("<table class=\"planner-ideas__table\">", markup, StringComparison.Ordinal);

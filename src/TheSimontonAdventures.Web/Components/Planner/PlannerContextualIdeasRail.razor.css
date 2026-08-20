@@ -21,6 +21,9 @@
 .planner-ideas__display-controls label { display: grid; font-size: .78rem; font-weight: 700; gap: .3rem; }
 .planner-ideas__display-controls select { max-width: 100%; min-height: 2.5rem; }
 .planner-ideas__view-toggle { display: flex; gap: .4rem; }
+.planner-ideas__view-button { align-items: center; display: inline-flex; justify-content: center; min-height: 2.75rem; min-width: 2.75rem; padding: .55rem; }
+.planner-ideas__view-button svg { fill: none; height: 1.25rem; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.75; width: 1.25rem; }
+.planner-ideas__view-button svg circle { fill: currentColor; stroke: none; }
 .planner-ideas__view-toggle button[aria-pressed="true"] { background: var(--planner-shell-primary); color: var(--planner-shell-surface); }
 .planner-ideas__group-heading { border-bottom: 1px solid var(--planner-shell-border); margin: 1rem 0 .55rem; padding-bottom: .35rem; text-transform: capitalize; }
 .planner-ideas--list-view .planner-ideas__card { display: grid; gap: 0 .65rem; grid-template-columns: 2.75rem minmax(0, 1fr); padding: .7rem; }
