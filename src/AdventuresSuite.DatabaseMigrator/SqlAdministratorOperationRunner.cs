@@ -29,7 +29,8 @@ internal static class SqlAdministratorOperationRunner
         "0009_create_adventure_plan_create_results.sql",
         "0010_create_companion_policy_assignments.sql",
         "0011_create_adventure_plan_template_origins.sql",
-        "0012_create_planner_footstep_applications.sql"
+        "0012_create_planner_footstep_applications.sql",
+        "0013_grant_planning_runtime_permissions.sql"
     ];
 
     private static readonly string[] At0006PermissionSignatures =
@@ -163,9 +164,112 @@ internal static class SqlAdministratorOperationRunner
                 RequireAuthorizationIdentity("ADVENTURESSUITE_ADMIN_TARGET_USER_ID"),
                 RequireBoundedIdentifier("ADVENTURESSUITE_ADMIN_SUPPORT_ID"),
                 RequireBoundedIdentifier("ADVENTURESSUITE_ADMIN_CORRELATION_ID")),
+            "bind-application-planning-runtime" =>
+                await BindApplicationPlanningRuntimeAsync(connection, context),
             "cleanup" => await CleanupAsync(connection, context),
             _ => throw new InvalidOperationException("The SQL administrator operation is not approved.")
         };
+    }
+
+    /// <summary>
+    /// Binds the exact existing development web identity to the migrated
+    /// Planning runtime role without creating a principal or broad authority.
+    /// </summary>
+    internal static async Task<int> BindApplicationPlanningRuntimeAsync(
+        SqlConnection connection,
+        Context context,
+        TextWriter? evidenceWriter = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(connection);
+        ArgumentNullException.ThrowIfNull(context);
+        if (context.ApplicationPrincipalId == Guid.Empty
+            || context.ApplicationClientId == Guid.Empty
+            || string.IsNullOrWhiteSpace(context.ApplicationPrincipalName)
+            || string.IsNullOrWhiteSpace(context.ApplicationIdentityResourceId))
+            throw new InvalidOperationException("The approved application workload identity is required.");
+        if (connection.State != System.Data.ConnectionState.Open)
+            await connection.OpenAsync(cancellationToken);
+
+        var alias = AzureDevelopmentBootstrapper.CreatePrincipalAlias(
+            context.ApplicationPrincipalName, context.ApplicationPrincipalId);
+        await using var transaction = (SqlTransaction)await connection.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            await using var command = new SqlCommand("""
+                SET XACT_ABORT ON;
+                DECLARE @LockResult int;
+                EXEC @LockResult = sys.sp_getapplock
+                    @Resource=N'AdventuresSuite.SqlAdministrator.ApplicationPlanningRuntime.v1',
+                    @LockMode=N'Exclusive', @LockOwner=N'Transaction', @LockTimeout=0;
+                IF @LockResult < 0 THROW 51000, 'The application runtime binding lock is unavailable.', 1;
+
+                DECLARE @PrincipalId int = DATABASE_PRINCIPAL_ID(@Alias);
+                IF @PrincipalId IS NULL
+                    THROW 51000, 'The approved application database principal does not exist.', 1;
+                IF NOT EXISTS (SELECT 1 FROM sys.database_principals
+                    WHERE principal_id=@PrincipalId AND type='E'
+                      AND CAST(sid AS uniqueidentifier)=@ClientId)
+                    THROW 51000, 'The application database principal does not match the approved identity.', 1;
+                IF NOT EXISTS (SELECT 1 FROM sys.database_principals AS roles
+                    LEFT JOIN sys.database_principals AS owners
+                      ON owners.principal_id=roles.owning_principal_id
+                    WHERE roles.name=N'AdventuresSuitePlanningRuntime' AND roles.type='R'
+                      AND roles.is_fixed_role=0 AND owners.name=N'dbo')
+                    THROW 51000, 'The Planning runtime role is unavailable or nonconforming.', 1;
+                IF ISNULL(IS_ROLEMEMBER(N'AdventuresSuiteAuthenticationRuntime', @Alias),0)<>1
+                   OR ISNULL(IS_ROLEMEMBER(N'AdventuresSuiteMembershipRuntime', @Alias),0)<>1
+                    THROW 51000, 'The application identity prerequisite roles are missing.', 1;
+                IF ISNULL(IS_ROLEMEMBER(N'db_owner', @Alias),0)<>0
+                   OR ISNULL(IS_ROLEMEMBER(N'db_ddladmin', @Alias),0)<>0
+                   OR ISNULL(IS_ROLEMEMBER(N'db_datareader', @Alias),0)<>0
+                   OR ISNULL(IS_ROLEMEMBER(N'db_datawriter', @Alias),0)<>0
+                    THROW 51000, 'The application identity has prohibited broad role authority.', 1;
+                IF EXISTS (SELECT 1 FROM sys.database_role_members AS memberships
+                    INNER JOIN sys.database_principals AS roles
+                      ON roles.principal_id=memberships.role_principal_id
+                    WHERE roles.name=N'AdventuresSuitePlanningRuntime'
+                      AND memberships.member_principal_id<>@PrincipalId)
+                    THROW 51000, 'The Planning runtime role has an unexpected member.', 1;
+                IF ISNULL(IS_ROLEMEMBER(N'AdventuresSuitePlanningRuntime', @Alias),0)<>1
+                BEGIN
+                    DECLARE @Statement nvarchar(max)=N'ALTER ROLE [AdventuresSuitePlanningRuntime] ADD MEMBER '
+                        + QUOTENAME(@Alias) + N';';
+                    EXEC sys.sp_executesql @Statement;
+                END;
+                IF ISNULL(IS_ROLEMEMBER(N'AdventuresSuitePlanningRuntime', @Alias),0)<>1
+                   OR (SELECT COUNT(*) FROM sys.database_role_members AS memberships
+                       INNER JOIN sys.database_principals AS roles
+                         ON roles.principal_id=memberships.role_principal_id
+                       WHERE roles.name=N'AdventuresSuitePlanningRuntime')<>1
+                    THROW 51000, 'The exact Planning runtime binding was not established.', 1;
+                """, connection, transaction);
+            command.Parameters.Add("@Alias", System.Data.SqlDbType.NVarChar, 128).Value = alias;
+            command.Parameters.Add("@ClientId", System.Data.SqlDbType.UniqueIdentifier)
+                .Value = context.ApplicationClientId;
+            await command.ExecuteNonQueryAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            if (transaction.Connection is not null)
+                await transaction.RollbackAsync(CancellationToken.None);
+            throw;
+        }
+
+        var payload = JsonSerializer.Serialize(new
+        {
+            schemaVersion = 1,
+            operation = "development-application-planning-runtime-binding-v1",
+            outcome = "bound",
+            role = "AdventuresSuitePlanningRuntime",
+            applicationPrincipalIdSha256 = Hash(context.ApplicationPrincipalId.ToString()),
+            applicationIdentityResourceIdSha256 = Hash(context.ApplicationIdentityResourceId),
+            operationId = context.OperationId,
+            occurredAtUtc = DateTimeOffset.UtcNow
+        });
+        await (evidenceWriter ?? Console.Out).WriteLineAsync(payload);
+        return 0;
     }
 
     /// <summary>
@@ -605,7 +709,7 @@ internal static class SqlAdministratorOperationRunner
             objectCountSignatures.Add($"{schema}|{type}|{count}");
         }
         if (schemas.Count > 3 || roles.Length > 5 || principals.Count > 2
-            || permissions.Count > 168 || rawScripts.Count > 12 || objectCounts.Count > 24)
+            || permissions.Count > 168 || rawScripts.Count > 13 || objectCounts.Count > 24)
             throw new InvalidOperationException("The SQL administrator baseline evidence exceeded its bounds.");
 
         var journalIsValid = TryNormalizeJournal(rawScripts, out var scripts);
@@ -651,6 +755,25 @@ internal static class SqlAdministratorOperationRunner
             && principals.Count == 0
             && permissionSignatures.SequenceEqual(At0009PermissionSignatures, StringComparer.Ordinal)
             && objectCountSignatures.SequenceEqual(At0009ObjectCountSignatures, StringComparer.Ordinal);
+        var expectedApplicationSidHash = context.ApplicationClientId == Guid.Empty
+            ? null
+            : Convert.ToHexString(SHA256.HashData(context.ApplicationClientId.ToByteArray()));
+        var planningRuntimeMembers = roleMap.TryGetValue(
+            "AdventuresSuitePlanningRuntime", out var planningRuntimeRole)
+            ? planningRuntimeRole.Members
+            : [];
+        var planningRuntimeMembershipIsConforming = planningRuntimeMembers.Count == 0
+            || (expectedApplicationSidHash is not null
+                && planningRuntimeMembers.Count == 1
+                && planningRuntimeMembers[0] == expectedApplicationSidHash);
+        var planningRuntimePermissionsAreComplete = new[]
+        {
+            "AdventuresSuitePlanningRuntime|GRANT|SELECT|SCHEMA|[planning]",
+            "AdventuresSuitePlanningRuntime|GRANT|INSERT|SCHEMA|[planning]",
+            "AdventuresSuitePlanningRuntime|GRANT|UPDATE|SCHEMA|[planning]",
+            "AdventuresSuitePlanningRuntime|DENY|DELETE|SCHEMA|[planning]",
+            "AdventuresSuitePlanningRuntime|DENY|ALTER|SCHEMA|[planning]"
+        }.All(permissionSignatures.Contains);
         var complete = schemas.Count == 3
             && schemaJson.Contains("\"planning\",\"owner\":\"db_ddladmin\"", StringComparison.Ordinal)
             && schemaJson.Contains("\"auth\",\"owner\":\"db_ddladmin\"", StringComparison.Ordinal)
@@ -662,6 +785,8 @@ internal static class SqlAdministratorOperationRunner
                 "AdventuresSuitePlanningRuntime"
             }, StringComparer.Ordinal)
             && roles.All(role => !JsonSerializer.Serialize(role).Contains("unexpected-redacted", StringComparison.Ordinal))
+            && planningRuntimeMembershipIsConforming
+            && planningRuntimePermissionsAreComplete
             && principals.Count == 0
             && !permissionJson.Contains("unexpected-redacted", StringComparison.Ordinal)
             && journalExists && journalIsValid
@@ -774,7 +899,14 @@ internal static class SqlAdministratorOperationRunner
         RequireHex("ADVENTURESSUITE_CATALOG_SHA256", 64),
         Require("ADVENTURESSUITE_ADMIN_IDENTITY_RESOURCE_ID"),
         Require("ADVENTURESSUITE_SQL_SERVER_RESOURCE_ID"),
-        Require("ADVENTURESSUITE_SQL_PRIVATE_ENDPOINT_RESOURCE_ID"));
+        Require("ADVENTURESSUITE_SQL_PRIVATE_ENDPOINT_RESOURCE_ID"),
+        ReadOptionalGuid("ADVENTURESSUITE_APPLICATION_PRINCIPAL_ID"),
+        ReadOptionalGuid("ADVENTURESSUITE_APPLICATION_CLIENT_ID"),
+        Environment.GetEnvironmentVariable("ADVENTURESSUITE_APPLICATION_PRINCIPAL_NAME")?.Trim() ?? string.Empty,
+        Environment.GetEnvironmentVariable("ADVENTURESSUITE_APPLICATION_IDENTITY_RESOURCE_ID")?.Trim() ?? string.Empty);
+
+    private static Guid ReadOptionalGuid(string name) =>
+        Guid.TryParse(Environment.GetEnvironmentVariable(name), out var value) ? value : Guid.Empty;
 
     private static string Require(string name) =>
         !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(name))
@@ -828,7 +960,9 @@ internal static class SqlAdministratorOperationRunner
         string SqlServer, string SqlDatabase, string SourceSha, string OperationId,
         string WorkflowSha256, long PackageRunId, long PackageArtifactId,
         string PackageSha256, string CatalogSha256, string AdministratorIdentityResourceId,
-        string SqlServerResourceId, string PrivateEndpointResourceId);
+        string SqlServerResourceId, string PrivateEndpointResourceId,
+        Guid ApplicationPrincipalId = default, Guid ApplicationClientId = default,
+        string ApplicationPrincipalName = "", string ApplicationIdentityResourceId = "");
 
     private sealed record RoleState(
         string Name,

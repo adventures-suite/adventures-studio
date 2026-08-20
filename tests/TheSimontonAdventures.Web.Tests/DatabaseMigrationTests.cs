@@ -14,7 +14,7 @@ public sealed class DatabaseMigrationTests
     {
         var migrations = MigrationCatalog.GetOrderedResourceNames(MigratorAssembly);
 
-        Assert.Equal(12, migrations.Count);
+        Assert.Equal(13, migrations.Count);
         Assert.EndsWith("0001_create_planning_schema.sql", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("0002_create_adventure_plans.sql", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("0003_create_planning_children.sql", migrations[2], StringComparison.Ordinal);
@@ -27,6 +27,7 @@ public sealed class DatabaseMigrationTests
         Assert.EndsWith("0010_create_companion_policy_assignments.sql", migrations[9], StringComparison.Ordinal);
         Assert.EndsWith("0011_create_adventure_plan_template_origins.sql", migrations[10], StringComparison.Ordinal);
         Assert.EndsWith("0012_create_planner_footstep_applications.sql", migrations[11], StringComparison.Ordinal);
+        Assert.EndsWith("0013_grant_planning_runtime_permissions.sql", migrations[12], StringComparison.Ordinal);
         Assert.Equal(migrations.Count, migrations.Distinct(StringComparer.Ordinal).Count());
     }
 
@@ -42,6 +43,21 @@ public sealed class DatabaseMigrationTests
         Assert.Contains("FOREIGN KEY (CreatorId, AdventurePlanId, TargetId)", migration, StringComparison.Ordinal);
         Assert.Contains("GRANT SELECT, INSERT", migration, StringComparison.Ordinal);
         Assert.Contains("DENY UPDATE, DELETE", migration, StringComparison.Ordinal);
+    }
+
+    /// <summary>Ensures the web runtime receives bounded Planning DML and no DDL or deletion authority.</summary>
+    [Fact]
+    public void PlanningRuntimePermissions_AreBoundedToRequiredSchemaDml()
+    {
+        var migration = ReadMigration("0013_grant_planning_runtime_permissions.sql");
+
+        Assert.Contains("GRANT SELECT, INSERT, UPDATE ON SCHEMA::planning", migration, StringComparison.Ordinal);
+        Assert.Contains("DENY DELETE, ALTER ON SCHEMA::planning", migration, StringComparison.Ordinal);
+        Assert.Contains("exact complete 0012 journal", migration, StringComparison.Ordinal);
+        Assert.Contains("exact unbound prerequisite", migration, StringComparison.Ordinal);
+        Assert.DoesNotContain("CONTROL", migration, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("db_datareader", migration, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("db_datawriter", migration, StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>Ensures template provenance is Creator-scoped, append-only, and version exact.</summary>

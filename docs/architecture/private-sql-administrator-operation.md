@@ -145,6 +145,26 @@ automatic retry. Repository review, merge, and ordinary deployment do not run
 it; live execution requires a fresh baseline, a distinct checksum-bound
 approval packet, and the normal cleanup and fresh-session denial-proof sequence.
 
+### Development application Planning-runtime binding
+
+After migration `0013`, the separately approved
+`bind-application-planning-runtime` operation may add only the exact existing
+development App Service contained user to `AdventuresSuitePlanningRuntime`.
+The operation does not create a user. It verifies the supplied Azure resource,
+principal object, client, and principal-name bindings; exact external-user SID;
+existing Authentication and Membership runtime memberships; dbo-owned,
+non-fixed Planning role; absence of broad fixed-role authority; and absence of
+any unexpected Planning-role member. It then adds that one member in a
+zero-wait, transaction-owned application lock and emits only hashed workload
+identity evidence.
+
+The role grants schema-scoped `SELECT`, `INSERT`, and `UPDATE`, while denying
+`DELETE` and `ALTER`. Existing object-level append-only denials continue to
+override the schema grant. The application cannot run migrations, create or
+alter schema, grant itself access, or bypass Creator and instance
+authorization. Baseline may accept either the unbound role or the one exact
+approved application member when the expected client identity is supplied.
+
 ## Baseline allowlist and evidence
 
 The query reads only catalog metadata needed to classify the DbUp journal and
@@ -156,8 +176,8 @@ application rows.
 
 Evidence follows `infrastructure/private-sql-admin-operation/evidence.schema.json`.
 The baseline accepts only four reviewed states: absent, canonical `At0006`,
-the exact `At0009` prerequisite for the bounded `0010`-through-`0012` migration, and clean
-complete through `0012` with the temporary migration principal absent. `At0009` requires the exact nine-script journal prefix, three
+the exact `At0009` prerequisite for the bounded `0010`-through-`0013` migration, and clean
+complete through `0013` with the temporary migration principal absent. `At0009` requires the exact nine-script journal prefix, three
 schema owners, five runtime roles and membership shape, including the exact
 dbo-owned, empty, authority-free `AdventuresSuiteCompanionPolicyRuntime` role, zero migration
 principal, complete permission allowlist, and exact object counts. DbUp journal

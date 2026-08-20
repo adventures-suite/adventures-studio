@@ -6,18 +6,20 @@ require(){ rg -q --fixed-strings -- "$1" "$2"; }; reject(){ ! rg -q --fixed-stri
 "$dir/validate-baseline-sql.sh"
 jq -e '.workloadName=="id-adventures-suite-sql-bootstrap-dev" and (.prohibited|index("migrationUami"))!=null and (.prohibited|index("EntraGroupMembership"))!=null and (.prohibited|index("directoryReaders"))!=null and .authentication.maximumOperationMinutes==30 and .authentication.source=="GitHubOidcAzureCli"' "$dir/identity-model.json" >/dev/null
 jq -e '.credential=="Azure.Identity.AzureCliCredential" and .identitySelector=="exactAdministratorClientId" and .tokenScope=="https://database.windows.net/.default" and .delivery=="Microsoft.Data.SqlClient.SqlConnection.AccessToken" and .operationLimitMinutes==30 and .processReuse==false and .implementationState=="hostedVnetRunnerImplemented" and (.prohibitedSurfaces|index("environment"))!=null' "$dir/authentication-contract.json" >/dev/null
-jq -e '.additionalProperties==false and (.properties.outcome.enum|index("At0009"))!=null and .properties.permissions.maxItems==168 and .properties.principals.maxItems==1 and .properties.principals.items.properties.name.const=="AdventuresSuiteMigrationDev-ffc9a" and .properties.journal.properties.scripts.maxItems==12 and .properties.roles.maxItems==5 and .properties.residue.properties.resourceCount.const==0' "$dir/evidence.schema.json" >/dev/null
+jq -e '.additionalProperties==false and (.properties.outcome.enum|index("At0009"))!=null and .properties.permissions.maxItems==168 and .properties.principals.maxItems==1 and .properties.principals.items.properties.name.const=="AdventuresSuiteMigrationDev-ffc9a" and .properties.journal.properties.scripts.maxItems==13 and .properties.roles.maxItems==5 and .properties.residue.properties.resourceCount.const==0' "$dir/evidence.schema.json" >/dev/null
 jq -e '.additionalProperties==false and .properties.operation.const=="companion-policy-runtime-role-bootstrap-v1" and .properties.roleName.const=="AdventuresSuiteCompanionPolicyRuntime" and .properties.owner.const=="dbo" and .properties.memberCount.const==0 and .properties.parentRoleCount.const==0 and .properties.explicitPermissionCount.const==0 and .properties.ownedSecurableCount.const==0 and .properties.inheritedApplicationAuthorityCount.const==0 and .properties.readRuntimeRoleUnchanged.const==true' "$dir/policy-role-evidence.schema.json" >/dev/null
 jq -e '.additionalProperties==false and .properties.operation.const=="development-initial-owner-bootstrap-v1" and .properties.outcome.const=="created" and .properties.creatorId.const=="creator_tsa_01" and .properties.membershipId.const=="membership_tsa_initial_owner" and .properties.role.const=="Owner" and .properties.membershipVersion.const==1 and .properties.auditEventId.const=="audit_tsa_initial_owner" and .properties.auditActorType.const=="System"' "$dir/initial-owner-evidence.schema.json" >/dev/null
-jq -e '.deadlineMinutes==30 and .automaticRetryCount==0 and .baselineMustPrecedeBootstrap==true and .baselineCanInvokeBootstrap==false and .successfulBaselineOutcomes==["complete","At0009","At0006","absent"] and .cleanup.independent==true and (.operations==["baseline","bootstrap","bootstrap-policy-role","bootstrap-initial-owner","cleanup","denial-proof"]) and (.failureOutcomes|index("ambiguous"))!=null and (.failureOutcomes|index("cleanupPartial"))!=null and (.authorityBoundaries|length)==4' "$dir/operation-policy.json" >/dev/null
+jq -e '.additionalProperties==false and .properties.operation.const=="development-application-planning-runtime-binding-v1" and .properties.outcome.const=="bound" and .properties.role.const=="AdventuresSuitePlanningRuntime" and .properties.applicationPrincipalIdSha256.pattern=="^[0-9a-f]{64}$"' "$dir/application-planning-runtime-evidence.schema.json" >/dev/null
+jq -e '.deadlineMinutes==30 and .automaticRetryCount==0 and .baselineMustPrecedeBootstrap==true and .baselineCanInvokeBootstrap==false and .successfulBaselineOutcomes==["complete","At0009","At0006","absent"] and .cleanup.independent==true and (.operations==["baseline","bootstrap","bootstrap-policy-role","bootstrap-initial-owner","bind-application-planning-runtime","cleanup","denial-proof"]) and (.failureOutcomes|index("ambiguous"))!=null and (.failureOutcomes|index("cleanupPartial"))!=null and (.authorityBoundaries|length)==4' "$dir/operation-policy.json" >/dev/null
 require "environment: database-development" "$workflow"; require "timeout-minutes: 30" "$workflow"; require "cancel-in-progress: false" "$workflow"
 require "group: private-sql-migration-vnet" "$workflow"; require "labels: adventures-suite-private-sql" "$workflow"
-require "options: [baseline, bootstrap, bootstrap-policy-role, bootstrap-initial-owner, cleanup, denial-proof]" "$workflow"; require "validate-operation.sh" "$workflow"; require "if: always()" "$workflow"
+require "options: [baseline, bootstrap, bootstrap-policy-role, bootstrap-initial-owner, bind-application-planning-runtime, cleanup, denial-proof]" "$workflow"; require "validate-operation.sh" "$workflow"; require "if: always()" "$workflow"
 require "package_artifact_id" "$workflow"; require "package_sha256" "$workflow"; require "catalog_sha256" "$workflow"
 require "azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac" "$workflow"; require "allow-no-subscriptions: true" "$workflow"
 require '--admin-baseline' "$workflow"; require '--admin-bootstrap' "$workflow"; require '--admin-cleanup' "$workflow"; require '--admin-denial-proof' "$workflow"
 require '--admin-bootstrap-companion-policy-role' "$workflow"
 require '--admin-bootstrap-initial-owner' "$workflow"
+require '--admin-bind-application-planning-runtime' "$workflow"
 reject "az deployment" "$workflow"; reject "sqlcmd" "$workflow"; reject "--bootstrap-sql" "$workflow"; reject "continue-on-error" "$workflow"
 reject "metadata/identity/oauth2/token" "$workflow"; reject "SQL_TOKEN" "$workflow"; reject "Bearer " "$workflow"
 reject "publicIPAddress" "$workflow"; reject "firewallRules" "$workflow"; reject "retry" "$workflow"; reject "ManagedIdentityCredential" "$workflow"
@@ -35,6 +37,7 @@ admin_id="/subscriptions/$subscription/resourceGroups/rg-adventures-suite-dev/pr
 migration_id="/subscriptions/$subscription/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-adventures-suite-migrate-job-dev"
 server_id="/subscriptions/$subscription/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.Sql/servers/adventures-suite-dev-sql"
 endpoint_id="/subscriptions/$subscription/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.Network/privateEndpoints/pe-adventures-suite-dev-sql"
+application_id="/subscriptions/$subscription/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.Web/sites/adventures-suite-dev"
 validate(){ (
   export OPERATION_MODE=baseline REPOSITORY_ID=1317655952 ORGANIZATION_ID=316268438 SOURCE_SHA="$sha" CURRENT_PROTECTED_MAIN_SHA="$sha" WORKFLOW_SHA256="$digest" BASELINE_SQL_SHA256="$digest" OPERATION_ID=admin-op-01
   export PACKAGE_RUN_ID=12345678 PACKAGE_ARTIFACT_ID=23456789 PACKAGE_SHA256="$digest" CATALOG_SHA256="$digest"
@@ -72,6 +75,10 @@ for invalid in \
   'OPERATION_APPROVAL_SHA256=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'; do
   if validate "$invalid"; then echo "invalid binding accepted" >&2; exit 1; fi
 done
+if validate OPERATION_MODE=bind-application-planning-runtime OPERATION_APPROVAL_SHA256="$digest"; then
+  echo "application Planning runtime binding lacked the exact workload identity" >&2; exit 1
+fi
+validate OPERATION_MODE=bind-application-planning-runtime OPERATION_APPROVAL_SHA256="$digest" APPLICATION_IDENTITY_RESOURCE_ID="$application_id" APPLICATION_CLIENT_ID=21c95c0f-4855-433b-b835-9b14446276db APPLICATION_PRINCIPAL_ID=43f88b68-e853-4ece-9379-bd2079af8ec0 APPLICATION_PRINCIPAL_NAME=adventures-suite-dev
 for mode in bootstrap cleanup denial-proof; do
   if validate OPERATION_MODE="$mode"; then echo "$mode lacked separate approval" >&2; exit 1; fi
   validate OPERATION_MODE="$mode" OPERATION_APPROVAL_SHA256="$digest"

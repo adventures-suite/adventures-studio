@@ -14,9 +14,9 @@ fictional content, and the normal application authorization and mutation paths.
 - The repository selected .NET SDK `10.0.303`.
 - The clean database committed migrations `0001` through `0009`, stopped at
   the intentional Companion policy-role prerequisite, and then completed
-  `0010` through `0012` after the exact empty local role was created.
-- The final journal contained 12 entries and ended at
-  `0012_create_planner_footstep_applications.sql`.
+  `0010` through `0013` after the exact empty local role was created.
+- The final journal contained 13 entries and ended at
+  `0013_grant_planning_runtime_permissions.sql`.
 - Repeating the bounded identity bootstrap preserved exactly one synthetic
   user, one external identity, one active Planner membership, zero additional
   permission grants, and zero plans before the browser walkthrough.

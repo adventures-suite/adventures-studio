@@ -31,6 +31,14 @@ arm_id_equals "$MIGRATION_IDENTITY_RESOURCE_ID" "/subscriptions/$subscription/re
 arm_id_equals "$SQL_SERVER_RESOURCE_ID" "/subscriptions/$subscription/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.Sql/servers/adventures-suite-dev-sql" || exit 1
 [[ "$SQL_DATABASE_NAME" == AdventuresSuiteDevelopment ]] || exit 1
 arm_id_equals "$SQL_PRIVATE_ENDPOINT_RESOURCE_ID" "/subscriptions/$subscription/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.Network/privateEndpoints/pe-adventures-suite-dev-sql" || exit 1
+if [[ -n "${APPLICATION_IDENTITY_RESOURCE_ID:-}${APPLICATION_CLIENT_ID:-}${APPLICATION_PRINCIPAL_ID:-}${APPLICATION_PRINCIPAL_NAME:-}" ]]; then
+  [[ "${APPLICATION_CLIENT_ID:-}" =~ ^[0-9a-f-]{36}$ && "${APPLICATION_PRINCIPAL_ID:-}" =~ ^[0-9a-f-]{36}$ ]] || exit 1
+  [[ "${APPLICATION_PRINCIPAL_NAME:-}" == adventures-suite-dev ]] || exit 1
+  arm_id_equals "${APPLICATION_IDENTITY_RESOURCE_ID:-}" "/subscriptions/$subscription/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.Web/sites/adventures-suite-dev" || exit 1
+fi
+if [[ "$OPERATION_MODE" != bind-application-planning-runtime && "$OPERATION_MODE" != baseline ]]; then
+  [[ -z "${APPLICATION_IDENTITY_RESOURCE_ID:-}" && -z "${APPLICATION_CLIENT_ID:-}" && -z "${APPLICATION_PRINCIPAL_ID:-}" && -z "${APPLICATION_PRINCIPAL_NAME:-}" ]] || exit 1
+fi
 case "$OPERATION_MODE" in
   baseline)
     [[ -z "${OPERATION_APPROVAL_SHA256:-}" && -z "${SUPPORT_ID:-}" && -z "${CORRELATION_ID:-}" && -z "${TARGET_USER_ID:-}" ]] || exit 1
@@ -49,6 +57,11 @@ case "$OPERATION_MODE" in
     [[ "${SUPPORT_ID:-}" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{7,63}$ ]] || exit 1
     [[ "${CORRELATION_ID:-}" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{7,63}$ ]] || exit 1
     [[ "${TARGET_USER_ID:-}" =~ ^[a-z][a-z0-9_]{2,63}$ ]] || exit 1
+    ;;
+  bind-application-planning-runtime)
+    [[ "${OPERATION_APPROVAL_SHA256:-}" =~ ^[0-9a-f]{64}$ ]] || exit 1
+    [[ -z "${SUPPORT_ID:-}" && -z "${CORRELATION_ID:-}" && -z "${TARGET_USER_ID:-}" ]] || exit 1
+    [[ -n "${APPLICATION_IDENTITY_RESOURCE_ID:-}" && -n "${APPLICATION_CLIENT_ID:-}" && -n "${APPLICATION_PRINCIPAL_ID:-}" && -n "${APPLICATION_PRINCIPAL_NAME:-}" ]] || exit 1
     ;;
   *) exit 1 ;;
 esac

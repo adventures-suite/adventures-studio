@@ -161,7 +161,7 @@ first mode is a statically allowlisted metadata baseline using the dedicated
 because the design is present. The identity is never the migration UAMI and
 never gains authority through an Entra group. The baseline recognizes only
 absent, the exact canonical `At0006` state, the exact `At0009` prerequisite for
-the bounded `0010`-through-`0012` operation, or complete through `0012`. `At0006` requires the
+the bounded `0010`-through-`0013` operation, or complete through `0013`. `At0006` requires the
 exact fully qualified DbUp journal
 prefix and the reviewed schemas, runtime roles, permissions, and object counts.
 The `At0009` prerequisite includes the exact dbo-owned, empty, authority-free
@@ -214,8 +214,8 @@ The proposed VM uses existing UAMI `id-adventures-suite-migrate-job-dev`
 fresh Azure and database identity readback.
 
 An approved run will capture the exact `At0009` pre-state, acquire the zero-wait
-application lock, execute migrations `0010`, `0011`, and `0012` once in order,
-capture post-state, classify `Complete`, `Migration0011Committed`,
+application lock, execute migrations `0010`, `0011`, `0012`, and `0013` once in order,
+capture post-state, classify `Complete`, `Migration0012Committed`, `Migration0011Committed`,
 `Migration0010Committed`, `NoScriptCommitted`, or `Unexpected`, and retain
 bounded logs. Independent VM cleanup is mandatory even if GitHub loses the
 runner. Repository implementation and review do not authorize live execution.

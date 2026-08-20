@@ -42,7 +42,20 @@ public sealed class MigrationOperationRunnerTests
     }
 
     [Fact]
-    public void CompleteRequires0012SchemaPermissionsAndUnchangedFingerprint()
+    public void CompleteRequires0013SchemaPermissionsAndUnchangedFingerprint()
+    {
+        var before = State(MigrationJournalOutcome.At0009, fingerprint: "SAME", complete: true,
+            policyPrerequisite: true);
+        var after = State(MigrationJournalOutcome.At0013, fingerprint: "SAME", complete: true,
+            policyComplete: true, templateComplete: true, footStepComplete: true, runtimeComplete: true);
+
+        Assert.Equal(
+            MigrationOperationClassification.Complete,
+            MigrationOperationRunner.ClassifyResult(before, after, MigrationJournalOutcome.At0013, null));
+    }
+
+    [Fact]
+    public void FailureAfter0012IsReportedAsCommittedPartialProgress()
     {
         var before = State(MigrationJournalOutcome.At0009, fingerprint: "SAME", complete: true,
             policyPrerequisite: true);
@@ -50,8 +63,9 @@ public sealed class MigrationOperationRunnerTests
             policyComplete: true, templateComplete: true, footStepComplete: true);
 
         Assert.Equal(
-            MigrationOperationClassification.Complete,
-            MigrationOperationRunner.ClassifyResult(before, after, MigrationJournalOutcome.At0012, null));
+            MigrationOperationClassification.Migration0012Committed,
+            MigrationOperationRunner.ClassifyResult(
+                before, after, MigrationJournalOutcome.At0012, new InvalidOperationException()));
     }
 
     [Fact]
@@ -180,8 +194,8 @@ public sealed class MigrationOperationRunnerTests
     [Fact]
     public void CompleteStateRejectsMissingOrUnexpectedPlanningPermissions()
     {
-        var complete = State(MigrationJournalOutcome.At0012, fingerprint: "SAME", complete: true,
-            policyComplete: true, templateComplete: true, footStepComplete: true);
+        var complete = State(MigrationJournalOutcome.At0013, fingerprint: "SAME", complete: true,
+            policyComplete: true, templateComplete: true, footStepComplete: true, runtimeComplete: true);
         Assert.False(MigrationOperationRunner.VerifyExpectedPostState(complete with
         {
             PlanningPermissions = complete.PlanningPermissions.Skip(1).ToArray()
@@ -210,6 +224,8 @@ public sealed class MigrationOperationRunnerTests
             MigrationOperationalState.Classify(Journal(11)));
         Assert.Equal(MigrationJournalOutcome.At0012,
             MigrationOperationalState.Classify(Journal(12)));
+        Assert.Equal(MigrationJournalOutcome.At0013,
+            MigrationOperationalState.Classify(Journal(13)));
         Assert.Equal(MigrationJournalOutcome.Unexpected,
             MigrationOperationalState.Classify(Journal(8).Reverse().ToArray()));
         Assert.Equal(MigrationJournalOutcome.Unexpected,
@@ -255,7 +271,8 @@ public sealed class MigrationOperationRunnerTests
         bool policyPrerequisite = false,
         bool policyComplete = false,
         bool templateComplete = false,
-        bool footStepComplete = false) =>
+        bool footStepComplete = false,
+        bool runtimeComplete = false) =>
         new(
             Journal(outcome switch
             {
@@ -266,6 +283,7 @@ public sealed class MigrationOperationRunnerTests
                 MigrationJournalOutcome.At0010 => 10,
                 MigrationJournalOutcome.At0011 => 11,
                 MigrationJournalOutcome.At0012 => 12,
+                MigrationJournalOutcome.At0013 => 13,
                 _ => 5
             }),
             footStepComplete
@@ -290,7 +308,7 @@ public sealed class MigrationOperationRunnerTests
                 ? ["planning.AdventurePlanCreateResults|USER_TABLE", "planning.TravelerParticipations|USER_TABLE"]
                 : migration0008 || migration0007 ? ["planning.TravelerParticipations|USER_TABLE"] : [],
             complete || migration0008 ? ExpectedPermissions(policyComplete) : [],
-            complete ? ExpectedPlanningPermissions(templateComplete, footStepComplete) : [],
+            complete ? ExpectedPlanningPermissions(templateComplete, footStepComplete, runtimeComplete) : [],
             policyComplete ? ExpectedPolicyPermissions() : [],
             ["planning.AdventurePlans|0|0"],
             fingerprint,
@@ -356,7 +374,8 @@ public sealed class MigrationOperationRunnerTests
 
     private static IReadOnlyList<string> ExpectedPlanningPermissions(
         bool includeTemplateOrigins = false,
-        bool includeFootStepApplications = false)
+        bool includeFootStepApplications = false,
+        bool includeSchemaRuntimePermissions = false)
     {
         var permissions = new List<string>
         {
@@ -379,6 +398,13 @@ public sealed class MigrationOperationRunnerTests
             permissions.Add("GRANT|SELECT|planning|PlannerFootStepApplications");
             permissions.Add("DENY|UPDATE|planning|PlannerFootStepApplications");
             permissions.Add("DENY|DELETE|planning|PlannerFootStepApplications");
+        }
+        if (includeSchemaRuntimePermissions)
+        {
+            permissions.Add("GRANT|SELECT|planning|");
+            permissions.Add("GRANT|INSERT|planning|");
+            permissions.Add("GRANT|UPDATE|planning|");
+            permissions.Add("DENY|DELETE|planning|");
         }
         return permissions;
     }

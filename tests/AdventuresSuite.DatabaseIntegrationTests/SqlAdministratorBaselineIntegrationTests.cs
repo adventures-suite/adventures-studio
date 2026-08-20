@@ -200,7 +200,7 @@ public sealed class SqlAdministratorBaselineIntegrationTests
             await ExecuteParameterizedAsync(connectionString,
                 AzureDevelopmentBootstrapper.BuildMigrationGrants($"[{MigrationPrincipalName}]"),
                 MigrationPrincipalName);
-            Assert.Equal(12,
+            Assert.Equal(13,
                 (await CompanionPolicyMigrationTestHarness.MigrateAllAsync(connectionString)).Count);
 
             await using var connection = new SqlConnection(connectionString);

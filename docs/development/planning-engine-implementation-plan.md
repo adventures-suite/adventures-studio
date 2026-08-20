@@ -361,7 +361,7 @@ catalog persistence, template authoring, entitlement or licensing stores, the
 Planner's “Use this Journey” endpoint/UI, parameter editing, reporting
 projections, or protected production migration execution. Those remain
 separate reviewed slices. A later dedicated migration-runner slice broadens the
-protected operation from exact `0009` through current `0012`; the Planner
+protected operation from exact `0009` through current `0013`; the Planner
 feature slice itself still does not alter migration execution authority.
 
 The next stacked customer-workflow slice adds the first direct “Use this
