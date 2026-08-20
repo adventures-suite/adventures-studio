@@ -611,7 +611,6 @@ internal static class SqlAdministratorOperationRunner
         var journalIsValid = TryNormalizeJournal(rawScripts, out var scripts);
         var schemaJson = JsonSerializer.Serialize(schemas);
         var roleNames = roleMap.Keys.ToArray();
-        var principalJson = JsonSerializer.Serialize(principals);
         var permissionJson = JsonSerializer.Serialize(permissions);
         var absent = schemas.Count == 0 && roles.Length == 0 && principals.Count == 0
             && permissions.Count == 0 && !journalExists && rawScripts.Count == 0 && objectCounts.Count == 0;
@@ -663,9 +662,7 @@ internal static class SqlAdministratorOperationRunner
                 "AdventuresSuitePlanningRuntime"
             }, StringComparer.Ordinal)
             && roles.All(role => !JsonSerializer.Serialize(role).Contains("unexpected-redacted", StringComparison.Ordinal))
-            && principals.Count == 1
-            && principalJson.Contains("\"name\":\"AdventuresSuiteMigrationDev-ffc9a\"", StringComparison.Ordinal)
-            && !principalJson.Contains("unexpected-redacted", StringComparison.Ordinal)
+            && principals.Count == 0
             && !permissionJson.Contains("unexpected-redacted", StringComparison.Ordinal)
             && journalExists && journalIsValid
             && scripts.SequenceEqual(ApprovedScripts, StringComparer.Ordinal);
