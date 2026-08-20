@@ -132,6 +132,28 @@ evidence. Follow it with mandatory administrator cleanup and a fresh-session
 denial proof. Never substitute email, claims, a public SQL path, application
 startup, or direct interactive SQL editing.
 
+### Temporary development SQL administrator authority
+
+The dedicated administrator UAMI is intentionally not a member of the normal
+administrator group and has no standing SQL access. When a separately approved
+administrator operation is required, use the Owner-assisted finite boundary in
+`infrastructure/private-sql-admin-authority/operate.sh` from a clean checkout of
+the exact current protected-main SHA and a human Azure Owner session.
+
+1. Run `prepare-establish` and retain its bounded JSON and digest.
+2. Review and separately approve that exact digest.
+3. Run `establish`; stop unless exact UAMI readback succeeds.
+4. Execute only the independently approved SQL operation.
+5. Regardless of its outcome, run `prepare-restore` and separately approve its
+   different digest.
+6. Run `restore`; require exact normal-group and Azure AD-only readback.
+7. Acquire a fresh GitHub OIDC/Azure CLI session and run the separately approved
+   SQL `denial-proof` operation.
+
+Do not retry a failed or ambiguous transition, add the UAMI to the group, open
+public SQL, use a migration or application identity, or combine authority,
+baseline, bootstrap, restoration, and denial proof into one approval.
+
 The repository-only administrator path is documented at
 `docs/architecture/private-sql-administrator-operation.md`. Its mandatory
 first mode is a statically allowlisted metadata baseline using the dedicated
