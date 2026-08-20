@@ -110,6 +110,10 @@ jobs:
             --settings \
               CreatorResolution__AzureDefaultCreatorId="$AZURE_DEFAULT_CREATOR_ID" \
               Authentication__Mode="$AUTHENTICATION_MODE" \
+              Authentication__TrustedProxyNetworks__0="169.254.0.0/16" \
+              Authentication__TrustedProxyNetworks__1="10.0.0.0/8" \
+              Authentication__TrustedProxyNetworks__2="172.16.0.0/12" \
+              Authentication__TrustedProxyNetworks__3="192.168.0.0/16" \
               Deployment__CommitSha="${{ github.sha }}" \
               Deployment__RunId="${{ github.run_id }}" \
               Deployment__RunAttempt="${{ github.run_attempt }}" \

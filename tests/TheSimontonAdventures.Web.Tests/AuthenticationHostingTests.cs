@@ -131,6 +131,41 @@ public sealed class AuthenticationHostingTests
         Assert.DoesNotContain(IPAddress.Parse("169.254.129.2"), options.KnownProxies);
     }
 
+    /// <summary>
+    /// Ensures Azure's bounded private proxy topology is trusted in both socket
+    /// address representations without accepting a public network.
+    /// </summary>
+    [Fact]
+    public void AddAuthentication_ExternalProvider_TrustsOnlyConfiguredProxyNetworks()
+    {
+        var builder = ExternalProviderBuilder();
+        builder.Configuration["Authentication:TrustedProxyNetworks:0"] = "169.254.0.0/16";
+        builder.Configuration["Authentication:TrustedProxyNetworks:1"] = "10.0.0.0/8";
+
+        builder.AddAdventuresSuiteAuthentication();
+        using var services = builder.Services.BuildServiceProvider();
+        var options = services.GetRequiredService<IOptions<ForwardedHeadersOptions>>().Value;
+
+        Assert.Contains(new System.Net.IPNetwork(
+            IPAddress.Parse("169.254.0.0"), 16), options.KnownIPNetworks);
+        Assert.Contains(new System.Net.IPNetwork(
+            IPAddress.Parse("::ffff:169.254.0.0"), 112), options.KnownIPNetworks);
+        Assert.Contains(new System.Net.IPNetwork(
+            IPAddress.Parse("10.0.0.0"), 8), options.KnownIPNetworks);
+        Assert.DoesNotContain(options.KnownIPNetworks, network =>
+            network.Contains(IPAddress.Parse("203.0.113.10")));
+    }
+
+    /// <summary>Ensures malformed proxy networks fail startup.</summary>
+    [Fact]
+    public void AddAuthentication_ExternalProvider_InvalidProxyNetwork_Throws()
+    {
+        var builder = ExternalProviderBuilder();
+        builder.Configuration["Authentication:TrustedProxyNetworks:0"] = "169.254.0.0";
+
+        Assert.Throws<InvalidOperationException>(() => builder.AddAdventuresSuiteAuthentication());
+    }
+
     /// <summary>Ensures generated platform identities are typed, bounded, and unpredictable.</summary>
     [Fact]
     public void CryptographicIdentityGenerator_CreatesDistinctTypedValues()
