@@ -2,9 +2,12 @@ using AdventuresSuite.Identity.ExternalId;
 using AdventuresSuite.Identity.SqlServer;
 using Azure.Core;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Microsoft.Identity.Abstractions;
+using System.Net;
 using TheSimontonAdventures.Web.Authorization;
 
 namespace TheSimontonAdventures.Web.Tests;
@@ -100,43 +103,32 @@ public sealed class AuthenticationHostingTests
     [Fact]
     public void AddAuthentication_ExternalProvider_RegistersConcreteSignedAssertionProvider()
     {
-        var builder = WebApplication.CreateBuilder();
-        var settings = new Dictionary<string, string?>
-        {
-            ["Authentication:Mode"] = nameof(AuthenticationMode.ExternalProvider),
-            ["Authentication:WorkspaceOrigin"] = "https://workspace.example.com",
-            ["Authentication:ProviderId"] = "entra_external_id_dev",
-            ["Authentication:Authority"] = "https://tenant.example.com/tenant/v2.0",
-            ["Authentication:ClientId"] = "client-id",
-            ["Authentication:ClientCertificateName"] = "external-id-certificate",
-            ["Authentication:CallbackPath"] = "/signin-oidc",
-            ["Authentication:SignedOutCallbackPath"] = "/signout-callback-oidc",
-            ["Authentication:AbsoluteSessionLifetime"] = "08:00:00",
-            ["Authentication:IdleSessionTimeout"] = "00:30:00",
-            ["Authentication:ActivityTouchInterval"] = "00:05:00",
-            ["Authentication:CircuitRevalidationInterval"] = "00:05:00",
-            ["Authentication:KeyVaultUri"] = "https://vault.example.com/",
-            ["Authentication:DataProtectionBlobUri"] =
-                "https://storage.example.com/dataprotection/keys.xml",
-            ["Authentication:DataProtectionKeyUri"] =
-                "https://vault.example.com/keys/data-protection",
-            ["Authentication:SqlConnectionString"] =
-                "Server=tcp:sql.example.com,1433;Database=AdventuresSuiteDev;" +
-                "Authentication=Active Directory Managed Identity;Encrypt=Strict;" +
-                "TrustServerCertificate=False",
-            ["Authentication:SqlServerName"] = "sql.example.com",
-            ["Authentication:SqlDatabaseName"] = "AdventuresSuiteDev",
-            ["Authentication:DataProtectionApplicationName"] =
-                "AdventuresSuite.Development.Authentication",
-            ["Authentication:TrustedProxyAddresses:0"] = "169.254.129.1"
-        };
-        builder.Configuration.AddInMemoryCollection(settings);
+        var builder = ExternalProviderBuilder();
 
         builder.AddAdventuresSuiteAuthentication();
         using var services = builder.Services.BuildServiceProvider();
 
         var concrete = services.GetRequiredService<KeyVaultExternalIdSignedAssertionProvider>();
         Assert.Same(concrete, services.GetRequiredService<ICustomSignedAssertionProvider>());
+    }
+
+    /// <summary>
+    /// Ensures an exact IPv4 proxy allowlist also accepts the equivalent address
+    /// representation supplied by a Linux dual-mode socket.
+    /// </summary>
+    [Fact]
+    public void AddAuthentication_ExternalProvider_TrustsExactMappedProxyAddress()
+    {
+        var builder = ExternalProviderBuilder();
+
+        builder.AddAdventuresSuiteAuthentication();
+        using var services = builder.Services.BuildServiceProvider();
+        var options = services.GetRequiredService<IOptions<ForwardedHeadersOptions>>().Value;
+        var configuredAddress = IPAddress.Parse("169.254.129.1");
+
+        Assert.Contains(configuredAddress, options.KnownProxies);
+        Assert.Contains(configuredAddress.MapToIPv6(), options.KnownProxies);
+        Assert.DoesNotContain(IPAddress.Parse("169.254.129.2"), options.KnownProxies);
     }
 
     /// <summary>Ensures generated platform identities are typed, bounded, and unpredictable.</summary>
@@ -207,6 +199,41 @@ public sealed class AuthenticationHostingTests
         public override ValueTask<AccessToken> GetTokenAsync(
             TokenRequestContext requestContext,
             CancellationToken cancellationToken) => throw new NotSupportedException();
+    }
+
+    private static WebApplicationBuilder ExternalProviderBuilder()
+    {
+        var builder = WebApplication.CreateBuilder();
+        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Authentication:Mode"] = nameof(AuthenticationMode.ExternalProvider),
+            ["Authentication:WorkspaceOrigin"] = "https://workspace.example.com",
+            ["Authentication:ProviderId"] = "entra_external_id_dev",
+            ["Authentication:Authority"] = "https://tenant.example.com/tenant/v2.0",
+            ["Authentication:ClientId"] = "client-id",
+            ["Authentication:ClientCertificateName"] = "external-id-certificate",
+            ["Authentication:CallbackPath"] = "/signin-oidc",
+            ["Authentication:SignedOutCallbackPath"] = "/signout-callback-oidc",
+            ["Authentication:AbsoluteSessionLifetime"] = "08:00:00",
+            ["Authentication:IdleSessionTimeout"] = "00:30:00",
+            ["Authentication:ActivityTouchInterval"] = "00:05:00",
+            ["Authentication:CircuitRevalidationInterval"] = "00:05:00",
+            ["Authentication:KeyVaultUri"] = "https://vault.example.com/",
+            ["Authentication:DataProtectionBlobUri"] =
+                "https://storage.example.com/dataprotection/keys.xml",
+            ["Authentication:DataProtectionKeyUri"] =
+                "https://vault.example.com/keys/data-protection",
+            ["Authentication:SqlConnectionString"] =
+                "Server=tcp:sql.example.com,1433;Database=AdventuresSuiteDev;" +
+                "Authentication=Active Directory Managed Identity;Encrypt=Strict;" +
+                "TrustServerCertificate=False",
+            ["Authentication:SqlServerName"] = "sql.example.com",
+            ["Authentication:SqlDatabaseName"] = "AdventuresSuiteDev",
+            ["Authentication:DataProtectionApplicationName"] =
+                "AdventuresSuite.Development.Authentication",
+            ["Authentication:TrustedProxyAddresses:0"] = "169.254.129.1"
+        });
+        return builder;
     }
 
     private static WebApplicationBuilder DevelopmentBuilder(string environment, bool enabled)
