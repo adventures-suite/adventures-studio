@@ -158,7 +158,8 @@ Evidence follows `infrastructure/private-sql-admin-operation/evidence.schema.jso
 The baseline accepts only four reviewed states: absent, canonical `At0006`,
 the exact `At0009` prerequisite for the bounded `0010`-through-`0012` migration, and complete
 through `0012`. `At0009` requires the exact nine-script journal prefix, three
-schema owners, four runtime roles and membership shape, zero migration
+schema owners, five runtime roles and membership shape, including the exact
+dbo-owned, empty, authority-free `AdventuresSuiteCompanionPolicyRuntime` role, zero migration
 principal, complete permission allowlist, and exact object counts. DbUp journal
 records must use the exact
 `AdventuresSuite.DatabaseMigrator.Database.Migrations.` prefix. That prefix is

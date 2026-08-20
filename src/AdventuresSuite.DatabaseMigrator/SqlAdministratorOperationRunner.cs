@@ -633,10 +633,12 @@ internal static class SqlAdministratorOperationRunner
             && schemaJson == "[{\"name\":\"audit\",\"owner\":\"db_ddladmin\"},{\"name\":\"auth\",\"owner\":\"db_ddladmin\"},{\"name\":\"planning\",\"owner\":\"db_ddladmin\"}]"
             && roleNames.SequenceEqual(new[]
             {
-                "AdventuresSuiteAuthenticationRuntime", "AdventuresSuiteCompanionReadRuntime",
-                "AdventuresSuiteMembershipRuntime", "AdventuresSuitePlanningRuntime"
+                "AdventuresSuiteAuthenticationRuntime", "AdventuresSuiteCompanionPolicyRuntime",
+                "AdventuresSuiteCompanionReadRuntime", "AdventuresSuiteMembershipRuntime",
+                "AdventuresSuitePlanningRuntime"
             }, StringComparer.Ordinal)
             && roleMap["AdventuresSuiteAuthenticationRuntime"].Owner == "dbo"
+            && roleMap["AdventuresSuiteCompanionPolicyRuntime"].Owner == "dbo"
             && roleMap["AdventuresSuiteCompanionReadRuntime"].Owner == "dbo"
             && roleMap["AdventuresSuiteMembershipRuntime"].Owner == "dbo"
             && roleMap["AdventuresSuitePlanningRuntime"].Owner == "dbo"
@@ -644,6 +646,7 @@ internal static class SqlAdministratorOperationRunner
             && roleMap["AdventuresSuiteMembershipRuntime"].Members.Count == 1
             && roleMap["AdventuresSuiteAuthenticationRuntime"].Members[0]
                 == roleMap["AdventuresSuiteMembershipRuntime"].Members[0]
+            && roleMap["AdventuresSuiteCompanionPolicyRuntime"].Members.Count == 0
             && roleMap["AdventuresSuiteCompanionReadRuntime"].Members.Count == 0
             && roleMap["AdventuresSuitePlanningRuntime"].Members.Count == 0
             && principals.Count == 0

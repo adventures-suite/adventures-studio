@@ -76,6 +76,7 @@ public sealed class SqlAdministratorBaselineIntegrationTests
             using (DatabaseMigratorRunner.AcquireMigrationLock(connectionString))
                 Assert.Equal(9, DatabaseMigratorRunner.MigrateWithLockHeld(connectionString, "0009").Count);
             await ExecuteAsync(connectionString, $"""
+                CREATE ROLE AdventuresSuiteCompanionPolicyRuntime AUTHORIZATION dbo;
                 CREATE USER [{loginName}] FOR LOGIN [{loginName}];
                 ALTER ROLE AdventuresSuiteAuthenticationRuntime ADD MEMBER [{loginName}];
                 ALTER ROLE AdventuresSuiteMembershipRuntime ADD MEMBER [{loginName}];
@@ -89,6 +90,51 @@ public sealed class SqlAdministratorBaselineIntegrationTests
             Assert.Equal(0, result.ExitCode);
             Assert.Equal("At0009", result.Evidence.RootElement.GetProperty("outcome").GetString());
             Assert.Empty(result.Evidence.RootElement.GetProperty("principals").EnumerateArray());
+        }
+        finally
+        {
+            await DropDatabaseAsync(master, databaseName);
+            await ExecuteAsync(master, $"""
+                IF EXISTS (SELECT 1 FROM sys.server_principals WHERE name=N'{loginName}')
+                    DROP LOGIN [{loginName}];
+                """);
+        }
+    }
+
+    /// <summary>Rejects authority or ownership drift on the 0009 policy-role prerequisite.</summary>
+    [Theory]
+    [InlineData("GRANT SELECT ON OBJECT::planning.AdventurePlans TO AdventuresSuiteCompanionPolicyRuntime")]
+    [InlineData("CREATE USER unexpected_policy_member WITHOUT LOGIN; ALTER ROLE AdventuresSuiteCompanionPolicyRuntime ADD MEMBER unexpected_policy_member")]
+    [InlineData("CREATE ROLE unexpected_policy_owner AUTHORIZATION dbo; ALTER AUTHORIZATION ON ROLE::AdventuresSuiteCompanionPolicyRuntime TO unexpected_policy_owner")]
+    public async Task BaselineReader_RejectsAt0009PolicyRoleDrift(string mutation)
+    {
+        var master = RequireConnectionString();
+        var suffix = Guid.NewGuid().ToString("N");
+        var databaseName = $"AdventuresSuiteAdminBaseline0009Drift_{suffix}";
+        var loginName = $"baseline_0009_drift_{suffix}";
+        var password = $"Local-{Guid.NewGuid():N}!aA9";
+        await ExecuteAsync(master,
+            $"CREATE LOGIN [{loginName}] WITH PASSWORD = '{password}'; CREATE DATABASE [{databaseName}];");
+        try
+        {
+            var connectionString = BuildDatabaseConnectionString(master, databaseName);
+            using (DatabaseMigratorRunner.AcquireMigrationLock(connectionString))
+                Assert.Equal(9, DatabaseMigratorRunner.MigrateWithLockHeld(connectionString, "0009").Count);
+            await ExecuteAsync(connectionString, $"""
+                CREATE ROLE AdventuresSuiteCompanionPolicyRuntime AUTHORIZATION dbo;
+                CREATE USER [{loginName}] FOR LOGIN [{loginName}];
+                ALTER ROLE AdventuresSuiteAuthenticationRuntime ADD MEMBER [{loginName}];
+                ALTER ROLE AdventuresSuiteMembershipRuntime ADD MEMBER [{loginName}];
+                GRANT CONNECT TO [{loginName}];
+                {mutation};
+                """);
+
+            await using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync();
+            var result = await CaptureBaselineAsync(connection, databaseName);
+
+            Assert.Equal(1, result.ExitCode);
+            Assert.Equal("unexpected", result.Evidence.RootElement.GetProperty("outcome").GetString());
         }
         finally
         {
