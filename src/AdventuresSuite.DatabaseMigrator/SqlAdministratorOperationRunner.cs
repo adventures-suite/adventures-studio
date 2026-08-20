@@ -128,6 +128,44 @@ internal static class SqlAdministratorOperationRunner
         "planning|USER_TABLE|15"
     ];
 
+    private static readonly string[] At0012AdditionalPermissionSignatures =
+    [
+        "AdventuresSuiteCompanionPolicyRuntime|DENY|DELETE|OBJECT_OR_COLUMN|[audit].[AuditEvents]",
+        "AdventuresSuiteCompanionPolicyRuntime|GRANT|INSERT|OBJECT_OR_COLUMN|[audit].[AuditEvents]",
+        "AdventuresSuiteCompanionPolicyRuntime|DENY|UPDATE|OBJECT_OR_COLUMN|[audit].[AuditEvents]",
+        "AdventuresSuiteCompanionPolicyRuntime|DENY|DELETE|OBJECT_OR_COLUMN|[audit].[CompanionInformationPolicyAssignmentEvents]",
+        "AdventuresSuiteCompanionPolicyRuntime|GRANT|INSERT|OBJECT_OR_COLUMN|[audit].[CompanionInformationPolicyAssignmentEvents]",
+        "AdventuresSuiteCompanionPolicyRuntime|DENY|UPDATE|OBJECT_OR_COLUMN|[audit].[CompanionInformationPolicyAssignmentEvents]",
+        "AdventuresSuiteCompanionPolicyRuntime|GRANT|SELECT|OBJECT_OR_COLUMN|[planning].[AdventurePlans]",
+        "AdventuresSuiteCompanionPolicyRuntime|DENY|DELETE|OBJECT_OR_COLUMN|[planning].[CompanionInformationPolicyAssignments]",
+        "AdventuresSuiteCompanionPolicyRuntime|GRANT|INSERT|OBJECT_OR_COLUMN|[planning].[CompanionInformationPolicyAssignments]",
+        "AdventuresSuiteCompanionPolicyRuntime|GRANT|SELECT|OBJECT_OR_COLUMN|[planning].[CompanionInformationPolicyAssignments]",
+        "AdventuresSuiteCompanionPolicyRuntime|GRANT|UPDATE|OBJECT_OR_COLUMN|[planning].[CompanionInformationPolicyAssignments]",
+        "AdventuresSuiteCompanionPolicyRuntime|GRANT|SELECT|OBJECT_OR_COLUMN|[planning].[TravelerParticipations]",
+        "AdventuresSuiteCompanionPolicyRuntime|DENY|ALTER|SCHEMA|[audit]",
+        "AdventuresSuiteCompanionPolicyRuntime|DENY|ALTER|SCHEMA|[planning]",
+        "AdventuresSuiteCompanionReadRuntime|DENY|DELETE|OBJECT_OR_COLUMN|[planning].[CompanionInformationPolicyAssignments]",
+        "AdventuresSuiteCompanionReadRuntime|DENY|INSERT|OBJECT_OR_COLUMN|[planning].[CompanionInformationPolicyAssignments]",
+        "AdventuresSuiteCompanionReadRuntime|GRANT|SELECT|OBJECT_OR_COLUMN|[planning].[CompanionInformationPolicyAssignments]",
+        "AdventuresSuiteCompanionReadRuntime|DENY|UPDATE|OBJECT_OR_COLUMN|[planning].[CompanionInformationPolicyAssignments]",
+        "AdventuresSuitePlanningRuntime|DENY|DELETE|OBJECT_OR_COLUMN|[planning].[AdventurePlanTemplateOrigins]",
+        "AdventuresSuitePlanningRuntime|GRANT|INSERT|OBJECT_OR_COLUMN|[planning].[AdventurePlanTemplateOrigins]",
+        "AdventuresSuitePlanningRuntime|GRANT|SELECT|OBJECT_OR_COLUMN|[planning].[AdventurePlanTemplateOrigins]",
+        "AdventuresSuitePlanningRuntime|DENY|UPDATE|OBJECT_OR_COLUMN|[planning].[AdventurePlanTemplateOrigins]",
+        "AdventuresSuitePlanningRuntime|DENY|DELETE|OBJECT_OR_COLUMN|[planning].[PlannerFootStepApplications]",
+        "AdventuresSuitePlanningRuntime|GRANT|INSERT|OBJECT_OR_COLUMN|[planning].[PlannerFootStepApplications]",
+        "AdventuresSuitePlanningRuntime|GRANT|SELECT|OBJECT_OR_COLUMN|[planning].[PlannerFootStepApplications]",
+        "AdventuresSuitePlanningRuntime|DENY|UPDATE|OBJECT_OR_COLUMN|[planning].[PlannerFootStepApplications]"
+    ];
+
+    private static readonly string[] At0012ObjectCountSignatures =
+    [
+        "audit|USER_TABLE|2",
+        "auth|USER_TABLE|6",
+        "dbo|USER_TABLE|1",
+        "planning|USER_TABLE|18"
+    ];
+
     internal static async Task<int> RunAsync(string operation)
     {
         var context = ReadContext();
@@ -755,6 +793,31 @@ internal static class SqlAdministratorOperationRunner
             && principals.Count == 0
             && permissionSignatures.SequenceEqual(At0009PermissionSignatures, StringComparer.Ordinal)
             && objectCountSignatures.SequenceEqual(At0009ObjectCountSignatures, StringComparer.Ordinal);
+        var at0012ExpectedPermissions = At0009PermissionSignatures
+            .Concat(At0012AdditionalPermissionSignatures)
+            .ToHashSet(StringComparer.Ordinal);
+        var at0012 = journalIsValid
+            && journalExists
+            && scripts.SequenceEqual(ApprovedScripts.Take(12), StringComparer.Ordinal)
+            && schemaJson == "[{\"name\":\"audit\",\"owner\":\"db_ddladmin\"},{\"name\":\"auth\",\"owner\":\"db_ddladmin\"},{\"name\":\"planning\",\"owner\":\"db_ddladmin\"}]"
+            && roleNames.SequenceEqual(new[]
+            {
+                "AdventuresSuiteAuthenticationRuntime", "AdventuresSuiteCompanionPolicyRuntime",
+                "AdventuresSuiteCompanionReadRuntime", "AdventuresSuiteMembershipRuntime",
+                "AdventuresSuitePlanningRuntime"
+            }, StringComparer.Ordinal)
+            && roleMap.Values.All(role => role.Owner == "dbo")
+            && roleMap["AdventuresSuiteAuthenticationRuntime"].Members.Count == 1
+            && roleMap["AdventuresSuiteMembershipRuntime"].Members.Count == 1
+            && roleMap["AdventuresSuiteAuthenticationRuntime"].Members[0]
+                == roleMap["AdventuresSuiteMembershipRuntime"].Members[0]
+            && roleMap["AdventuresSuiteCompanionPolicyRuntime"].Members.Count == 0
+            && roleMap["AdventuresSuiteCompanionReadRuntime"].Members.Count == 0
+            && roleMap["AdventuresSuitePlanningRuntime"].Members.Count == 0
+            && principals.Count == 0
+            && permissionSignatures.Count == at0012ExpectedPermissions.Count
+            && permissionSignatures.ToHashSet(StringComparer.Ordinal).SetEquals(at0012ExpectedPermissions)
+            && objectCountSignatures.SequenceEqual(At0012ObjectCountSignatures, StringComparer.Ordinal);
         var expectedApplicationSidHash = context.ApplicationClientId == Guid.Empty
             ? null
             : Convert.ToHexString(SHA256.HashData(context.ApplicationClientId.ToByteArray()));
@@ -793,6 +856,7 @@ internal static class SqlAdministratorOperationRunner
             && scripts.SequenceEqual(ApprovedScripts, StringComparer.Ordinal);
         var outcome = absent ? "absent" : at0006 ? nameof(MigrationJournalOutcome.At0006)
             : at0009 ? nameof(MigrationJournalOutcome.At0009)
+            : at0012 ? nameof(MigrationJournalOutcome.At0012)
             : complete ? "complete" : "unexpected";
         var baseline = new
         {

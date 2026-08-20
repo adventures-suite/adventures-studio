@@ -175,9 +175,10 @@ and counts of required objects by approved schema and type. It never selects
 application rows.
 
 Evidence follows `infrastructure/private-sql-admin-operation/evidence.schema.json`.
-The baseline accepts only four reviewed states: absent, canonical `At0006`,
-the exact `At0009` prerequisite for the bounded `0010`-through-`0013` migration, and clean
-complete through `0013` with the temporary migration principal absent. `At0009` requires the exact nine-script journal prefix, three
+The baseline accepts only five reviewed states: absent, canonical `At0006`,
+the exact `At0009` prerequisite for the bounded `0010`-through-`0013` migration,
+the exact `At0012` prerequisite for migration `0013`, and clean complete through
+`0013` with the temporary migration principal absent. `At0009` requires the exact nine-script journal prefix, three
 schema owners, five runtime roles and membership shape, including the exact
 dbo-owned, empty, authority-free `AdventuresSuiteCompanionPolicyRuntime` role, zero migration
 principal, complete permission allowlist, and exact object counts. DbUp journal

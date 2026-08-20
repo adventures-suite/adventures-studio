@@ -101,6 +101,51 @@ public sealed class SqlAdministratorBaselineIntegrationTests
         }
     }
 
+    /// <summary>Accepts only the exact reviewed 0012 prerequisite for migration 0013.</summary>
+    [Fact]
+    public async Task BaselineReader_AcceptsExactQualifiedAt0012State()
+    {
+        var master = RequireConnectionString();
+        var suffix = Guid.NewGuid().ToString("N");
+        var databaseName = $"AdventuresSuiteAdminBaseline0012_{suffix}";
+        var loginName = $"baseline_0012_{suffix}";
+        var password = $"Local-{Guid.NewGuid():N}!aA9";
+        await ExecuteAsync(master,
+            $"CREATE LOGIN [{loginName}] WITH PASSWORD = '{password}'; CREATE DATABASE [{databaseName}];");
+        try
+        {
+            var connectionString = BuildDatabaseConnectionString(master, databaseName);
+            using (DatabaseMigratorRunner.AcquireMigrationLock(connectionString))
+                Assert.Equal(9, DatabaseMigratorRunner.MigrateWithLockHeld(connectionString, "0009").Count);
+            await ExecuteAsync(connectionString,
+                "CREATE ROLE AdventuresSuiteCompanionPolicyRuntime AUTHORIZATION dbo;");
+            using (DatabaseMigratorRunner.AcquireMigrationLock(connectionString))
+                Assert.Equal(3, DatabaseMigratorRunner.MigrateWithLockHeld(connectionString, "0012").Count);
+            await ExecuteAsync(connectionString, $"""
+                CREATE USER [{loginName}] FOR LOGIN [{loginName}];
+                ALTER ROLE AdventuresSuiteAuthenticationRuntime ADD MEMBER [{loginName}];
+                ALTER ROLE AdventuresSuiteMembershipRuntime ADD MEMBER [{loginName}];
+                GRANT CONNECT TO [{loginName}];
+                """);
+
+            await using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync();
+            var result = await CaptureBaselineAsync(connection, databaseName);
+
+            Assert.Equal(0, result.ExitCode);
+            Assert.Equal("At0012", result.Evidence.RootElement.GetProperty("outcome").GetString());
+            Assert.Empty(result.Evidence.RootElement.GetProperty("principals").EnumerateArray());
+        }
+        finally
+        {
+            await DropDatabaseAsync(master, databaseName);
+            await ExecuteAsync(master, $"""
+                IF EXISTS (SELECT 1 FROM sys.server_principals WHERE name=N'{loginName}')
+                    DROP LOGIN [{loginName}];
+                """);
+        }
+    }
+
     /// <summary>Rejects authority or ownership drift on the 0009 policy-role prerequisite.</summary>
     [Theory]
     [InlineData("GRANT SELECT ON OBJECT::planning.AdventurePlans TO AdventuresSuiteCompanionPolicyRuntime")]
