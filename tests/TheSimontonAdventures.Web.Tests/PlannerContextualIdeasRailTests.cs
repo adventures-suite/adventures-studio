@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TheSimontonAdventures.Web.Components;
+using TheSimontonAdventures.Web.Planning;
 
 namespace TheSimontonAdventures.Web.Tests;
 
@@ -29,7 +30,7 @@ public sealed class PlannerContextualIdeasRailTests
         var developmentHtml = await RenderAsync(new()
         {
             [nameof(PlannerContextualIdeasRail.Context)] = context,
-            [nameof(PlannerContextualIdeasRail.EnableDevelopmentIdeas)] = true
+            [nameof(PlannerContextualIdeasRail.AuthorizedItems)] = Items(PlannerIdeasContextKind.Destination)
         });
 
         Assert.Contains("No FootSteps for this context", productionHtml, StringComparison.Ordinal);
@@ -39,6 +40,9 @@ public sealed class PlannerContextualIdeasRailTests
         Assert.Contains("Fictional local Alpha demo", developmentHtml, StringComparison.Ordinal);
         Assert.Contains("not booked, available, or added to your plan", developmentHtml, StringComparison.Ordinal);
         Assert.Contains("Cards per page", developmentHtml, StringComparison.Ordinal);
+        Assert.Contains("Filter FootSteps", developmentHtml, StringComparison.Ordinal);
+        Assert.Contains("Minimum days", developmentHtml, StringComparison.Ordinal);
+        Assert.Contains("motorcycle", developmentHtml, StringComparison.Ordinal);
     }
 
     /// <summary>Development FootSteps change type and content with the selected planning context.</summary>
@@ -52,14 +56,13 @@ public sealed class PlannerContextualIdeasRailTests
         var dayHtml = await RenderDevelopmentContextAsync(
             new PlannerIdeasContext(PlannerIdeasContextKind.Day, "day-1", "Arrival day"));
 
-        Assert.Contains("Destination", adventureHtml, StringComparison.Ordinal);
+        Assert.Contains("route pattern", adventureHtml, StringComparison.Ordinal);
         Assert.DoesNotContain("Journey · suggestion", adventureHtml, StringComparison.Ordinal);
         Assert.DoesNotContain("Sample day", adventureHtml, StringComparison.Ordinal);
-        Assert.Contains("Sample day", destinationHtml, StringComparison.Ordinal);
-        Assert.Contains("Stay pattern", destinationHtml, StringComparison.Ordinal);
+        Assert.Contains("sample day", destinationHtml, StringComparison.Ordinal);
+        Assert.Contains("activity", destinationHtml, StringComparison.Ordinal);
         Assert.DoesNotContain("Journey", destinationHtml, StringComparison.Ordinal);
-        Assert.Contains("Meal rhythm", dayHtml, StringComparison.Ordinal);
-        Assert.Contains("Pacing", dayHtml, StringComparison.Ordinal);
+        Assert.Contains("One memorable local anchor", dayHtml, StringComparison.Ordinal);
         Assert.DoesNotContain("Stay pattern", dayHtml, StringComparison.Ordinal);
     }
 
@@ -131,8 +134,32 @@ public sealed class PlannerContextualIdeasRailTests
     private static Task<string> RenderDevelopmentContextAsync(PlannerIdeasContext context) => RenderAsync(new()
     {
         [nameof(PlannerContextualIdeasRail.Context)] = context,
-        [nameof(PlannerContextualIdeasRail.EnableDevelopmentIdeas)] = true
+        [nameof(PlannerContextualIdeasRail.AuthorizedItems)] = Items(context.Kind)
     });
+
+    private static IReadOnlyList<PlannerFootStepDefinition> Items(PlannerIdeasContextKind kind) => kind switch
+    {
+        PlannerIdeasContextKind.Adventure => [Item("route-pattern", "Scenic motorcycle touring rhythm")],
+        PlannerIdeasContextKind.Destination =>
+            [Item("sample-day", "A gentle first day"), Item("activity", "One memorable local anchor")],
+        _ => [Item("activity", "One memorable local anchor")]
+    };
+
+    private static PlannerFootStepDefinition Item(string kind, string title) => new()
+    {
+        Id = $"footstep_{kind}",
+        Version = "1.0",
+        Kind = kind,
+        Title = title,
+        Summary = "Fictional summary.",
+        Attribution = "Fictional local Alpha demo",
+        Freshness = "Demo snapshot",
+        ContextKinds = new HashSet<PlannerFootStepContextKind> { PlannerFootStepContextKind.Adventure, PlannerFootStepContextKind.Destination, PlannerFootStepContextKind.Day },
+        TransportationModes = new HashSet<string>(StringComparer.Ordinal) { "motorcycle" },
+        Categories = new HashSet<string>(StringComparer.Ordinal) { "outdoors" },
+        RouteStyles = new HashSet<string>(StringComparer.Ordinal) { "scenic" },
+        Surfaces = new HashSet<string>(StringComparer.Ordinal) { "paved" }
+    };
 
     private static string FindApplicationRoot()
     {

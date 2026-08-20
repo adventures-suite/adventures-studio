@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
+using TheSimontonAdventures.Web.Planning;
 
 namespace TheSimontonAdventures.Web.Components;
 
@@ -74,38 +75,20 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
 
     [Inject]
     private IJSRuntime JavaScript { get; set; } = null!;
-    private static readonly IReadOnlyDictionary<PlannerIdeasContextKind, IReadOnlyList<PlannerIdeaCard>> DevelopmentIdeas =
-        new Dictionary<PlannerIdeasContextKind, IReadOnlyList<PlannerIdeaCard>>
-        {
-            [PlannerIdeasContextKind.Adventure] =
-            [
-                new("Destination", "Add a contrasting second stop", "Pair the current route with a nearby destination that offers a different pace.", "Fictional local Alpha demo", "Demo snapshot", "Helps develop the Adventure route.", "DS")
-            ],
-            [PlannerIdeasContextKind.Destination] =
-            [
-                new("Sample day", "A gentle first day", "Combine one neighborhood anchor with flexible time to settle in.", "Fictional local Alpha demo", "Demo snapshot", "Matches the selected destination visit.", "SD"),
-                new("Activity", "A slower local morning", "Leave room for a neighborhood walk and an unhurried café stop.", "Fictional local Alpha demo", "Demo snapshot", "Matches the selected destination visit.", "AM"),
-                new("Stay pattern", "Choose a walkable home base", "Consider a central area that reduces transfers between planned days.", "Fictional local Alpha demo", "Demo snapshot", "Supports destination-level planning.", "ST")
-            ],
-            [PlannerIdeasContextKind.Day] =
-            [
-                new("Activity", "One memorable local anchor", "Choose one meaningful experience and preserve room around it.", "Fictional local Alpha demo", "Demo snapshot", "Fits the selected itinerary day.", "AC"),
-                new("Meal rhythm", "Protect an unhurried meal", "Reserve a flexible meal window instead of filling every hour.", "Fictional local Alpha demo", "Demo snapshot", "Supports a realistic daily pace.", "MR"),
-                new("Pacing", "Keep nearby discoveries flexible", "Group optional discoveries near the day's anchor to avoid unnecessary transfers.", "Fictional local Alpha demo", "Demo snapshot", "Uses the selected day as context.", "PC")
-            ]
-        };
-
     private string? PreviousContextKey { get; set; }
     private string? SelectedType { get; set; }
+    private HashSet<string> SelectedFacets { get; } = new(StringComparer.Ordinal);
+    private int? MinimumDays { get; set; }
+    private int? MaximumDays { get; set; }
     private int PageSize { get; set; } = 3;
     private int CurrentPage { get; set; } = 1;
 
     /// <summary>Gets or sets the selected authorized canvas context.</summary>
     [Parameter]
     public PlannerIdeasContext? Context { get; set; }
-    /// <summary>Gets or sets whether fictional deterministic cards may appear in explicit Development authentication.</summary>
+    /// <summary>Gets or sets the already authorized FootStep projections.</summary>
     [Parameter]
-    public bool EnableDevelopmentIdeas { get; set; }
+    public IReadOnlyList<PlannerFootStepDefinition> AuthorizedItems { get; set; } = [];
     /// <summary>Gets or sets an explicit state for deterministic component verification.</summary>
     [Parameter]
     public PlannerIdeasState? StateOverride { get; set; }
@@ -125,25 +108,27 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
     /// <summary>Gets the effective state after Development-only source gating.</summary>
     public PlannerIdeasState EffectiveState => StateOverride ?? (Context is null
         ? PlannerIdeasState.NoSelection
-        : EnableDevelopmentIdeas ? PlannerIdeasState.Populated : PlannerIdeasState.Empty);
-    /// <summary>Gets the rendered fictional cards only when the Development-only gate is active.</summary>
-    internal IReadOnlyList<PlannerIdeaCard> Ideas => EffectiveState != PlannerIdeasState.Populated
-        || !EnableDevelopmentIdeas
-        || Context is null
-        || !DevelopmentIdeas.TryGetValue(Context.Kind, out var ideas)
-            ? []
-            : ideas;
+        : AuthorizedItems.Count > 0 ? PlannerIdeasState.Populated : PlannerIdeasState.Empty);
+    /// <summary>Gets the authorized cards supplied by the application query boundary.</summary>
+    internal IReadOnlyList<PlannerFootStepDefinition> Ideas =>
+        EffectiveState == PlannerIdeasState.Populated ? AuthorizedItems : [];
     /// <summary>Gets the FootStep types available for the selected context.</summary>
     internal IReadOnlyList<string> AvailableTypes => Ideas
-        .Select(idea => idea.Type)
+        .Select(idea => idea.Kind)
         .Distinct(StringComparer.Ordinal)
         .ToArray();
     /// <summary>Gets the FootSteps matching the transient type filter.</summary>
-    internal IReadOnlyList<PlannerIdeaCard> FilteredIdeas => SelectedType is null
+    internal IReadOnlyList<PlannerFootStepDefinition> FilteredIdeas => SelectedType is null
         ? Ideas
-        : Ideas.Where(idea => idea.Type == SelectedType).ToArray();
+        : Ideas.Where(idea => idea.Kind == SelectedType).ToArray();
+    /// <summary>Gets the cards matching every selected stable facet.</summary>
+    internal IReadOnlyList<PlannerFootStepDefinition> FacetedIdeas => FilteredIdeas
+        .Where(MatchesSelectedFacets)
+        .Where(item => !MinimumDays.HasValue || item.DurationDays >= MinimumDays)
+        .Where(item => !MaximumDays.HasValue || item.DurationDays <= MaximumDays)
+        .ToArray();
     /// <summary>Gets the FootSteps visible on the selected page.</summary>
-    internal IReadOnlyList<PlannerIdeaCard> PagedIdeas => FilteredIdeas
+    internal IReadOnlyList<PlannerFootStepDefinition> PagedIdeas => FacetedIdeas
         .Skip((CurrentPage - 1) * PageSize)
         .Take(PageSize)
         .ToArray();
@@ -168,9 +153,62 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
         {
             PreviousContextKey = contextKey;
             SelectedType = null;
+            SelectedFacets.Clear();
+            MinimumDays = null;
+            MaximumDays = null;
             CurrentPage = 1;
         }
     }
+    private IReadOnlyList<PlannerFacetOption> AvailableFacets => Ideas.SelectMany(Facets)
+        .Distinct().OrderBy(option => option.Group, StringComparer.Ordinal)
+        .ThenBy(option => option.Value, StringComparer.Ordinal).ToArray();
+    private void ToggleFacet(PlannerFacetOption facet)
+    {
+        if (!SelectedFacets.Add(facet.Key))
+        {
+            SelectedFacets.Remove(facet.Key);
+        }
+        CurrentPage = 1;
+    }
+    private void ClearFilters()
+    {
+        SelectedType = null;
+        SelectedFacets.Clear();
+        MinimumDays = null;
+        MaximumDays = null;
+        CurrentPage = 1;
+    }
+    private void ChangeMinimumDays(ChangeEventArgs args) => ChangeDuration(args, true);
+    private void ChangeMaximumDays(ChangeEventArgs args) => ChangeDuration(args, false);
+    private void ChangeDuration(ChangeEventArgs args, bool minimum)
+    {
+        var value = int.TryParse(args.Value?.ToString(), out var parsed) && parsed is >= 1 and <= 365
+            ? parsed : (int?)null;
+        if (minimum) MinimumDays = value; else MaximumDays = value;
+        CurrentPage = 1;
+    }
+    private bool MatchesSelectedFacets(PlannerFootStepDefinition item) => SelectedFacets
+        .Select(PlannerFacetOption.Parse).GroupBy(option => option.Group, StringComparer.Ordinal)
+        .All(group => group.Any(selected => Facets(item).Contains(selected)));
+    private static IReadOnlySet<PlannerFacetOption> Facets(PlannerFootStepDefinition item) =>
+        Options("place", item.Places).Concat(Options("transportation", item.TransportationModes))
+        .Concat(Options("category", item.Categories)).Concat(Options("route style", item.RouteStyles))
+        .Concat(Options("surface", item.Surfaces)).Concat(Options("accessibility", item.Accessibility))
+        .Concat(Options("pace", item.Paces)).Concat(Options("season", item.Seasons))
+        .Concat(Options("equipment", item.EquipmentNeeds)).Concat(Options("budget", item.BudgetBands))
+        .Concat(Options("travelers", item.TravelerCompositions)).Concat(Options("source", item.SourceClasses))
+        .Concat(Options("language", item.Languages)).ToHashSet();
+    private static IEnumerable<PlannerFacetOption> Options(string group, IEnumerable<string> values) =>
+        values.Select(value => new PlannerFacetOption(group, value));
+    private static string DisplayFacet(string value) => string.Join(' ', value.Split('-'));
+    private static string Monogram(PlannerFootStepDefinition item) =>
+        string.Concat(item.Title.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(word => char.ToUpperInvariant(word[0])));
+    private string ContextReason => Context?.Kind switch
+    {
+        PlannerIdeasContextKind.Day => "Fits the selected itinerary day.",
+        PlannerIdeasContextKind.Destination => "Matches the selected destination visit.",
+        _ => "Helps develop the whole Adventure."
+    };
     private async Task ChangePageSizeAsync(int pageSize)
     {
         PageSize = pageSize;
@@ -286,12 +324,12 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
     }
 }
 
-/// <summary>Describes one narrow, non-authoritative suggestion card.</summary>
-internal sealed record PlannerIdeaCard(
-    string Type,
-    string Title,
-    string Summary,
-    string Source,
-    string Freshness,
-    string Reason,
-    string Monogram);
+internal sealed record PlannerFacetOption(string Group, string Value)
+{
+    public string Key => $"{Group}:{Value}";
+    public static PlannerFacetOption Parse(string key)
+    {
+        var separator = key.IndexOf(':');
+        return new(key[..separator], key[(separator + 1)..]);
+    }
+}

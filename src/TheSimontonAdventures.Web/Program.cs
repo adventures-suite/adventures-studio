@@ -98,6 +98,12 @@ if (authenticationMode is not null
     builder.Services.AddScoped<IAdventureTemplateCatalogQueryService, AdventureTemplateCatalogQueryService>();
     builder.Services.AddScoped<IAdventureTemplateUseResolver, AdventureTemplateUseResolver>();
     builder.Services.AddScoped<IAdventureTemplateInstantiateService, AdventureTemplateInstantiateService>();
+    builder.Services.AddSingleton<IPlannerFootStepCatalogSource>(services =>
+        string.Equals(authenticationMode, nameof(AuthenticationMode.Development), StringComparison.OrdinalIgnoreCase)
+            ? new DevelopmentPlannerFootStepCatalogSource(
+                services.GetRequiredService<IHostEnvironment>())
+            : new UnavailablePlannerFootStepCatalogSource());
+    builder.Services.AddScoped<IPlannerFootStepQueryService, PlannerFootStepQueryService>();
     builder.Services.AddScoped<IAdventurePlanOverviewEditService, AdventurePlanOverviewEditService>();
     builder.Services.AddScoped<IDestinationVisitAddService, DestinationVisitAddService>();
     builder.Services.AddScoped<IItineraryDayAddService, ItineraryDayAddService>();

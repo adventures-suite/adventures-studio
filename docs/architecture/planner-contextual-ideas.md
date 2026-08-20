@@ -277,6 +277,14 @@ the owning Planning command's idempotency rules.
 8. Add measured ranking and personalization only after consent, classification,
    evaluation, reporting, retention, and cost policies are approved.
 
+The initial executable query boundary is now in place with exact Creator,
+actor, plan, and selected-context validation, deterministic combined facets,
+paging, and a fail-closed production source. Its fictional local Development
+catalog is environment-isolated JSON and is not production content. The next
+focused slice must replace or supplement that source through the reviewed
+Content Engine library boundary before proving one Activity FootStep review and
+Add-to-plan operation with durable provenance.
+
 ## Definition of Done
 
 - The authoritative plan remains unmistakable from every suggestion source.

@@ -241,6 +241,15 @@ Near-term FootSteps slice priority:
 4. prove one explicit reviewed Add-to-plan operation; and
 5. add accessible drag and drop only as an equivalent enhancement.
 
+The first query/filtering implementation establishes a provider-neutral,
+Creator- and plan-scoped application boundary. It validates the selected
+destination or day against the authorized aggregate before consulting a source,
+applies locale-independent combined facets and deterministic paging, and keeps
+production empty when no reviewed catalog source is configured. Authenticated
+local Development uses a separate fictional JSON catalog, including the
+motorcycle-touring proving scenario. This slice does not apply a FootStep or
+mutate Planning; reviewed Add-to-plan provenance remains the next boundary.
+
 Facet identifiers and persisted preferences are locale-independent. The UI
 localizes labels and formatting, while Creator visibility, authorization,
 entitlement, licensing, and publication rules are enforced before returning
