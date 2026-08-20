@@ -18,6 +18,15 @@ it is never automatically retried, rolled back destructively, or hidden by
 journal edits. Migrations never run from web or API startup. This decision does
 not convert the migration model to DACPAC.
 
+The current development operation accepts only the exact reviewed `At0009`
+baseline with its authority-free Companion policy role. It selects exactly
+migrations `0010`, `0011`, and `0012` in one lock-held execution and reports
+success only after the journal, schema objects, constraints, indexes, runtime
+permissions, and unchanged authoritative application-data fingerprint match
+the exact `At0012` state. A failure after `0010` or `0011` is retained as
+explicit committed partial progress and requires a separately reviewed
+repair-forward decision; it is never retried automatically.
+
 ## Package authority
 
 Only the protected-main workflow may produce an executable release artifact.

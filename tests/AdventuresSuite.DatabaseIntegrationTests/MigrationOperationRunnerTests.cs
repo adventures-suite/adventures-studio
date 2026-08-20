@@ -42,7 +42,34 @@ public sealed class MigrationOperationRunnerTests
     }
 
     [Fact]
-    public void CompleteRequires0010SchemaPermissionsAndUnchangedFingerprint()
+    public void CompleteRequires0012SchemaPermissionsAndUnchangedFingerprint()
+    {
+        var before = State(MigrationJournalOutcome.At0009, fingerprint: "SAME", complete: true,
+            policyPrerequisite: true);
+        var after = State(MigrationJournalOutcome.At0012, fingerprint: "SAME", complete: true,
+            policyComplete: true, templateComplete: true, footStepComplete: true);
+
+        Assert.Equal(
+            MigrationOperationClassification.Complete,
+            MigrationOperationRunner.ClassifyResult(before, after, MigrationJournalOutcome.At0012, null));
+    }
+
+    [Fact]
+    public void FailureAfter0011IsReportedAsCommittedPartialProgress()
+    {
+        var before = State(MigrationJournalOutcome.At0009, fingerprint: "SAME", complete: true,
+            policyPrerequisite: true);
+        var after = State(MigrationJournalOutcome.At0011, fingerprint: "SAME", complete: true,
+            policyComplete: true, templateComplete: true);
+
+        Assert.Equal(
+            MigrationOperationClassification.Migration0011Committed,
+            MigrationOperationRunner.ClassifyResult(
+                before, after, MigrationJournalOutcome.At0011, new InvalidOperationException()));
+    }
+
+    [Fact]
+    public void FailureAfter0010IsReportedAsCommittedPartialProgress()
     {
         var before = State(MigrationJournalOutcome.At0009, fingerprint: "SAME", complete: true,
             policyPrerequisite: true);
@@ -50,8 +77,9 @@ public sealed class MigrationOperationRunnerTests
             policyComplete: true);
 
         Assert.Equal(
-            MigrationOperationClassification.Complete,
-            MigrationOperationRunner.ClassifyResult(before, after, MigrationJournalOutcome.At0010, null));
+            MigrationOperationClassification.Migration0010Committed,
+            MigrationOperationRunner.ClassifyResult(
+                before, after, MigrationJournalOutcome.At0010, new InvalidOperationException()));
     }
 
     [Fact]
@@ -97,6 +125,8 @@ public sealed class MigrationOperationRunnerTests
         foreach (var outcome in new[]
                  {
                      MigrationJournalOutcome.Unexpected,
+                     MigrationJournalOutcome.At0011,
+                     MigrationJournalOutcome.At0010,
                      MigrationJournalOutcome.At0008,
                      MigrationJournalOutcome.At0007,
                      MigrationJournalOutcome.At0006
@@ -150,7 +180,8 @@ public sealed class MigrationOperationRunnerTests
     [Fact]
     public void CompleteStateRejectsMissingOrUnexpectedPlanningPermissions()
     {
-        var complete = State(MigrationJournalOutcome.At0009, fingerprint: "SAME", complete: true);
+        var complete = State(MigrationJournalOutcome.At0012, fingerprint: "SAME", complete: true,
+            policyComplete: true, templateComplete: true, footStepComplete: true);
         Assert.False(MigrationOperationRunner.VerifyExpectedPostState(complete with
         {
             PlanningPermissions = complete.PlanningPermissions.Skip(1).ToArray()
@@ -173,6 +204,12 @@ public sealed class MigrationOperationRunnerTests
             MigrationOperationalState.Classify(Journal(8)));
         Assert.Equal(MigrationJournalOutcome.At0009,
             MigrationOperationalState.Classify(Journal(9)));
+        Assert.Equal(MigrationJournalOutcome.At0010,
+            MigrationOperationalState.Classify(Journal(10)));
+        Assert.Equal(MigrationJournalOutcome.At0011,
+            MigrationOperationalState.Classify(Journal(11)));
+        Assert.Equal(MigrationJournalOutcome.At0012,
+            MigrationOperationalState.Classify(Journal(12)));
         Assert.Equal(MigrationJournalOutcome.Unexpected,
             MigrationOperationalState.Classify(Journal(8).Reverse().ToArray()));
         Assert.Equal(MigrationJournalOutcome.Unexpected,
@@ -216,7 +253,9 @@ public sealed class MigrationOperationRunnerTests
         bool migration0008 = false,
         bool migration0007 = false,
         bool policyPrerequisite = false,
-        bool policyComplete = false) =>
+        bool policyComplete = false,
+        bool templateComplete = false,
+        bool footStepComplete = false) =>
         new(
             Journal(outcome switch
             {
@@ -225,9 +264,24 @@ public sealed class MigrationOperationRunnerTests
                 MigrationJournalOutcome.At0008 => 8,
                 MigrationJournalOutcome.At0009 => 9,
                 MigrationJournalOutcome.At0010 => 10,
+                MigrationJournalOutcome.At0011 => 11,
+                MigrationJournalOutcome.At0012 => 12,
                 _ => 5
             }),
-            policyComplete
+            footStepComplete
+                ? ["audit.CompanionInformationPolicyAssignmentEvents|USER_TABLE",
+                    "planning.AdventurePlanCreateResults|USER_TABLE",
+                    "planning.AdventurePlanTemplateOrigins|USER_TABLE",
+                    "planning.CompanionInformationPolicyAssignments|USER_TABLE",
+                    "planning.PlannerFootStepApplications|USER_TABLE",
+                    "planning.TravelerParticipations|USER_TABLE"]
+                : templateComplete
+                ? ["audit.CompanionInformationPolicyAssignmentEvents|USER_TABLE",
+                    "planning.AdventurePlanCreateResults|USER_TABLE",
+                    "planning.AdventurePlanTemplateOrigins|USER_TABLE",
+                    "planning.CompanionInformationPolicyAssignments|USER_TABLE",
+                    "planning.TravelerParticipations|USER_TABLE"]
+                : policyComplete
                 ? ["audit.CompanionInformationPolicyAssignmentEvents|USER_TABLE",
                     "planning.AdventurePlanCreateResults|USER_TABLE",
                     "planning.CompanionInformationPolicyAssignments|USER_TABLE",
@@ -236,7 +290,7 @@ public sealed class MigrationOperationRunnerTests
                 ? ["planning.AdventurePlanCreateResults|USER_TABLE", "planning.TravelerParticipations|USER_TABLE"]
                 : migration0008 || migration0007 ? ["planning.TravelerParticipations|USER_TABLE"] : [],
             complete || migration0008 ? ExpectedPermissions(policyComplete) : [],
-            complete ? ExpectedPlanningPermissions() : [],
+            complete ? ExpectedPlanningPermissions(templateComplete, footStepComplete) : [],
             policyComplete ? ExpectedPolicyPermissions() : [],
             ["planning.AdventurePlans|0|0"],
             fingerprint,
@@ -259,7 +313,13 @@ public sealed class MigrationOperationRunnerTests
             policyPrerequisite || policyComplete,
             0,
             0,
-            policyPrerequisite || policyComplete ? "dbo" : string.Empty);
+            policyPrerequisite || policyComplete ? "dbo" : string.Empty,
+            templateComplete,
+            templateComplete ? 9 : 0,
+            templateComplete,
+            footStepComplete,
+            footStepComplete ? 11 : 0,
+            footStepComplete ? 2 : 0);
 
     private static IReadOnlyList<string> Journal(int count) =>
         MigrationCatalog.GetOrderedResourceNames(typeof(MigrationCatalog).Assembly)
@@ -294,14 +354,34 @@ public sealed class MigrationOperationRunnerTests
         return permissions;
     }
 
-    private static IReadOnlyList<string> ExpectedPlanningPermissions() =>
-    [
-        "GRANT|INSERT|planning|AdventurePlanCreateResults",
-        "GRANT|SELECT|planning|AdventurePlanCreateResults",
-        "DENY|UPDATE|planning|AdventurePlanCreateResults",
-        "DENY|DELETE|planning|AdventurePlanCreateResults",
-        "DENY|ALTER|planning|"
-    ];
+    private static IReadOnlyList<string> ExpectedPlanningPermissions(
+        bool includeTemplateOrigins = false,
+        bool includeFootStepApplications = false)
+    {
+        var permissions = new List<string>
+        {
+            "GRANT|INSERT|planning|AdventurePlanCreateResults",
+            "GRANT|SELECT|planning|AdventurePlanCreateResults",
+            "DENY|UPDATE|planning|AdventurePlanCreateResults",
+            "DENY|DELETE|planning|AdventurePlanCreateResults",
+            "DENY|ALTER|planning|"
+        };
+        if (includeTemplateOrigins)
+        {
+            permissions.Add("GRANT|INSERT|planning|AdventurePlanTemplateOrigins");
+            permissions.Add("GRANT|SELECT|planning|AdventurePlanTemplateOrigins");
+            permissions.Add("DENY|UPDATE|planning|AdventurePlanTemplateOrigins");
+            permissions.Add("DENY|DELETE|planning|AdventurePlanTemplateOrigins");
+        }
+        if (includeFootStepApplications)
+        {
+            permissions.Add("GRANT|INSERT|planning|PlannerFootStepApplications");
+            permissions.Add("GRANT|SELECT|planning|PlannerFootStepApplications");
+            permissions.Add("DENY|UPDATE|planning|PlannerFootStepApplications");
+            permissions.Add("DENY|DELETE|planning|PlannerFootStepApplications");
+        }
+        return permissions;
+    }
 
     private static IReadOnlyList<string> ExpectedPolicyPermissions() =>
     [

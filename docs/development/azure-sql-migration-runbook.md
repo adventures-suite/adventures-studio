@@ -161,7 +161,7 @@ first mode is a statically allowlisted metadata baseline using the dedicated
 because the design is present. The identity is never the migration UAMI and
 never gains authority through an Entra group. The baseline recognizes only
 absent, the exact canonical `At0006` state, the exact `At0009` prerequisite for
-the bounded `0010` operation, or complete through `0012`. `At0006` requires the
+the bounded `0010`-through-`0012` operation, or complete through `0012`. `At0006` requires the
 exact fully qualified DbUp journal
 prefix and the reviewed schemas, runtime roles, permissions, and object counts;
 arbitrary partial states are rejected. The hosted-runner workflow binds exact
@@ -210,12 +210,12 @@ The proposed VM uses existing UAMI `id-adventures-suite-migrate-job-dev`
 `d0da8236-91dc-4454-8a3d-19d08a406e5d`). Repository text never substitutes for
 fresh Azure and database identity readback.
 
-An approved run will capture pre-state, acquire the zero-wait application lock,
-execute the exact operation once through migration 0009, capture post-state,
-classify `Complete`, `Migration0008Committed`, `Migration0007Committed`,
-`NoScriptCommitted`, or `Unexpected`, and retain
+An approved run will capture the exact `At0009` pre-state, acquire the zero-wait
+application lock, execute migrations `0010`, `0011`, and `0012` once in order,
+capture post-state, classify `Complete`, `Migration0011Committed`,
+`Migration0010Committed`, `NoScriptCommitted`, or `Unexpected`, and retain
 bounded logs. Independent VM cleanup is mandatory even if GitHub loses the
-runner. None of those operations is implemented or authorized here.
+runner. Repository implementation and review do not authorize live execution.
 
 ## Inert runner lifecycle definition
 

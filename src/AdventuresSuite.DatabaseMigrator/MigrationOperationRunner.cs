@@ -76,10 +76,10 @@ internal static partial class MigrationOperationRunner
         IReadOnlyList<string> selectedScripts = [];
         try
         {
-            // This operation is explicitly bounded to the reviewed 0009 -> 0010 transition.
+            // This operation is explicitly bounded to the reviewed 0009 -> 0012 transition.
             selectedScripts = DatabaseMigratorRunner.MigrateWithLockHeld(
                 connectionFactory.CreateConnection,
-                maximumMigrationNumber: "0010");
+                maximumMigrationNumber: "0012");
         }
         catch (Exception exception)
         {
@@ -152,9 +152,15 @@ internal static partial class MigrationOperationRunner
     {
         if (!string.Equals(before.ApplicationFingerprint, after.ApplicationFingerprint, StringComparison.Ordinal))
             return MigrationOperationClassification.Unexpected;
-        if (migrationFailure is null && afterOutcome == MigrationJournalOutcome.At0010
+        if (migrationFailure is null && afterOutcome == MigrationJournalOutcome.At0012
             && VerifyExpectedPostState(after))
             return MigrationOperationClassification.Complete;
+        if (migrationFailure is not null && afterOutcome == MigrationJournalOutcome.At0011
+            && VerifyExpected0011State(after))
+            return MigrationOperationClassification.Migration0011Committed;
+        if (migrationFailure is not null && afterOutcome == MigrationJournalOutcome.At0010
+            && VerifyExpected0010State(after))
+            return MigrationOperationClassification.Migration0010Committed;
         if (migrationFailure is not null && afterOutcome == MigrationJournalOutcome.At0009
             && VerifyExpected0009PrerequisiteState(after))
             return MigrationOperationClassification.NoScriptCommitted;
@@ -210,7 +216,7 @@ internal static partial class MigrationOperationRunner
         && state.CompanionPermissions.Count == 0
         && state.PlanningPermissions.Count == 0;
 
-    internal static bool VerifyExpectedPostState(MigrationStateEvidence state)
+    internal static bool VerifyExpected0010State(MigrationStateEvidence state)
     {
         if (!VerifyExpected0009State(state)
             || !state.CompanionPolicyAssignmentsExists
@@ -242,7 +248,113 @@ internal static partial class MigrationOperationRunner
             "DENY|DELETE|planning|CompanionInformationPolicyAssignments",
             "DENY|ALTER|audit|",
             "DENY|ALTER|planning|"
-        }.SetEquals(state.PolicyPermissions);
+        }.SetEquals(state.PolicyPermissions)
+            && ExpectedPlanningPermissions().SetEquals(state.PlanningPermissions);
+    }
+
+    internal static bool VerifyExpected0011State(MigrationStateEvidence state) =>
+        VerifyExpected0010Authority(state)
+        && state.AdventurePlanTemplateOriginsExists
+        && state.AdventurePlanTemplateOriginConstraintCount == 9
+        && state.AdventurePlanTemplateOriginIndexExists
+        && !state.PlannerFootStepApplicationsExists
+        && state.PlannerFootStepApplicationConstraintCount == 0
+        && state.PlannerFootStepApplicationIndexCount == 0
+        && state.RelevantObjects.SequenceEqual(
+            ["audit.CompanionInformationPolicyAssignmentEvents|USER_TABLE",
+             "planning.AdventurePlanCreateResults|USER_TABLE",
+             "planning.AdventurePlanTemplateOrigins|USER_TABLE",
+             "planning.CompanionInformationPolicyAssignments|USER_TABLE",
+             "planning.TravelerParticipations|USER_TABLE"], StringComparer.Ordinal)
+        && ExpectedPlanningPermissions(includeTemplateOrigins: true)
+            .SetEquals(state.PlanningPermissions);
+
+    /// <summary>Requires the exact schema and least-privilege state through migration 0012.</summary>
+    internal static bool VerifyExpectedPostState(MigrationStateEvidence state) =>
+        VerifyExpected0010Authority(state)
+        && state.AdventurePlanTemplateOriginsExists
+        && state.AdventurePlanTemplateOriginConstraintCount == 9
+        && state.AdventurePlanTemplateOriginIndexExists
+        && state.PlannerFootStepApplicationsExists
+        && state.PlannerFootStepApplicationConstraintCount == 11
+        && state.PlannerFootStepApplicationIndexCount == 2
+        && state.RelevantObjects.SequenceEqual(
+            ["audit.CompanionInformationPolicyAssignmentEvents|USER_TABLE",
+             "planning.AdventurePlanCreateResults|USER_TABLE",
+             "planning.AdventurePlanTemplateOrigins|USER_TABLE",
+             "planning.CompanionInformationPolicyAssignments|USER_TABLE",
+             "planning.PlannerFootStepApplications|USER_TABLE",
+             "planning.TravelerParticipations|USER_TABLE"], StringComparer.Ordinal)
+        && ExpectedPlanningPermissions(includeTemplateOrigins: true, includeFootStepApplications: true)
+            .SetEquals(state.PlanningPermissions);
+
+    private static bool VerifyExpected0010Authority(MigrationStateEvidence state) =>
+        state.TravelerParticipationsExists
+        && state.TravelerConstraintCount == 7
+        && state.TravelerAuthorizedListIndexExists
+        && state.CompanionRoleExists
+        && state.CompanionRoleMemberCount == 0
+        && state.CompanionParentRoleCount == 0
+        && string.Equals(state.CompanionRoleOwner, "dbo", StringComparison.Ordinal)
+        && state.AdventurePlanCreateResultsExists
+        && state.AdventurePlanCreateResultConstraintCount == 7
+        && state.AdventurePlanCreateResultExpiryIndexExists
+        && state.PlanningRoleExists
+        && state.PlanningRoleMemberCount == 0
+        && state.PlanningParentRoleCount == 0
+        && string.Equals(state.PlanningRoleOwner, "dbo", StringComparison.Ordinal)
+        && state.CompanionPolicyAssignmentsExists
+        && state.CompanionPolicyAssignmentEventsExists
+        && state.CompanionPolicyRoleExists
+        && state.CompanionPolicyRoleMemberCount == 0
+        && state.CompanionPolicyParentRoleCount == 0
+        && string.Equals(state.CompanionPolicyRoleOwner, "dbo", StringComparison.Ordinal)
+        && new HashSet<string>(StringComparer.Ordinal)
+        {
+            "GRANT|INSERT|audit|AuditEvents",
+            "DENY|UPDATE|audit|AuditEvents",
+            "DENY|DELETE|audit|AuditEvents",
+            "GRANT|INSERT|audit|CompanionInformationPolicyAssignmentEvents",
+            "DENY|UPDATE|audit|CompanionInformationPolicyAssignmentEvents",
+            "DENY|DELETE|audit|CompanionInformationPolicyAssignmentEvents",
+            "GRANT|SELECT|planning|AdventurePlans",
+            "GRANT|SELECT|planning|TravelerParticipations",
+            "GRANT|SELECT|planning|CompanionInformationPolicyAssignments",
+            "GRANT|INSERT|planning|CompanionInformationPolicyAssignments",
+            "GRANT|UPDATE|planning|CompanionInformationPolicyAssignments",
+            "DENY|DELETE|planning|CompanionInformationPolicyAssignments",
+            "DENY|ALTER|audit|",
+            "DENY|ALTER|planning|"
+        }.SetEquals(state.PolicyPermissions)
+        && VerifyCompanionPermissions(state.CompanionPermissions, includePolicyAssignment: true);
+
+    private static HashSet<string> ExpectedPlanningPermissions(
+        bool includeTemplateOrigins = false,
+        bool includeFootStepApplications = false)
+    {
+        var expected = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "GRANT|INSERT|planning|AdventurePlanCreateResults",
+            "GRANT|SELECT|planning|AdventurePlanCreateResults",
+            "DENY|UPDATE|planning|AdventurePlanCreateResults",
+            "DENY|DELETE|planning|AdventurePlanCreateResults",
+            "DENY|ALTER|planning|"
+        };
+        if (includeTemplateOrigins)
+        {
+            expected.Add("GRANT|INSERT|planning|AdventurePlanTemplateOrigins");
+            expected.Add("GRANT|SELECT|planning|AdventurePlanTemplateOrigins");
+            expected.Add("DENY|UPDATE|planning|AdventurePlanTemplateOrigins");
+            expected.Add("DENY|DELETE|planning|AdventurePlanTemplateOrigins");
+        }
+        if (includeFootStepApplications)
+        {
+            expected.Add("GRANT|INSERT|planning|PlannerFootStepApplications");
+            expected.Add("GRANT|SELECT|planning|PlannerFootStepApplications");
+            expected.Add("DENY|UPDATE|planning|PlannerFootStepApplications");
+            expected.Add("DENY|DELETE|planning|PlannerFootStepApplications");
+        }
+        return expected;
     }
 
     internal static bool VerifyExpected0009State(MigrationStateEvidence state)
@@ -261,6 +373,12 @@ internal static partial class MigrationOperationRunner
             || !string.Equals(state.PlanningRoleOwner, "dbo", StringComparison.Ordinal)
             || state.AdventurePlanCreateResultConstraintCount != 7
             || !state.AdventurePlanCreateResultExpiryIndexExists
+            || state.AdventurePlanTemplateOriginsExists
+            || state.AdventurePlanTemplateOriginConstraintCount != 0
+            || state.AdventurePlanTemplateOriginIndexExists
+            || state.PlannerFootStepApplicationsExists
+            || state.PlannerFootStepApplicationConstraintCount != 0
+            || state.PlannerFootStepApplicationIndexCount != 0
             || !state.RelevantObjects.Where(value =>
                     !value.Contains("CompanionInformationPolicy", StringComparison.Ordinal))
                 .SequenceEqual(
@@ -295,14 +413,7 @@ internal static partial class MigrationOperationRunner
             expectedPermissions.Remove("DENY|DELETE|planning|CompanionInformationPolicyAssignments");
         }
         return expectedPermissions.SetEquals(state.CompanionPermissions)
-            && new HashSet<string>(StringComparer.Ordinal)
-            {
-                "GRANT|INSERT|planning|AdventurePlanCreateResults",
-                "GRANT|SELECT|planning|AdventurePlanCreateResults",
-                "DENY|UPDATE|planning|AdventurePlanCreateResults",
-                "DENY|DELETE|planning|AdventurePlanCreateResults",
-                "DENY|ALTER|planning|"
-            }.SetEquals(state.PlanningPermissions);
+            && ExpectedPlanningPermissions().SetEquals(state.PlanningPermissions);
     }
 
     private static bool VerifyExpected0006State(MigrationStateEvidence state) =>
@@ -341,7 +452,9 @@ internal static partial class MigrationOperationRunner
             ["planning.TravelerParticipations|USER_TABLE"], StringComparer.Ordinal)
         && VerifyCompanionPermissions(state.CompanionPermissions);
 
-    private static bool VerifyCompanionPermissions(IReadOnlyList<string> actual)
+    private static bool VerifyCompanionPermissions(
+        IReadOnlyList<string> actual,
+        bool includePolicyAssignment = false)
     {
         var expected = new HashSet<string>(StringComparer.Ordinal);
         foreach (var target in new[]
@@ -358,6 +471,13 @@ internal static partial class MigrationOperationRunner
         }
         expected.Add("DENY|ALTER|auth|");
         expected.Add("DENY|ALTER|planning|");
+        if (includePolicyAssignment)
+        {
+            expected.Add("GRANT|SELECT|planning|CompanionInformationPolicyAssignments");
+            expected.Add("DENY|INSERT|planning|CompanionInformationPolicyAssignments");
+            expected.Add("DENY|UPDATE|planning|CompanionInformationPolicyAssignments");
+            expected.Add("DENY|DELETE|planning|CompanionInformationPolicyAssignments");
+        }
         return expected.SetEquals(actual);
     }
 
@@ -395,7 +515,13 @@ internal static partial class MigrationOperationRunner
             state.CompanionPolicyRoleExists,
             state.CompanionPolicyRoleMemberCount,
             state.CompanionPolicyParentRoleCount,
-            state.CompanionPolicyRoleOwner
+            state.CompanionPolicyRoleOwner,
+            state.AdventurePlanTemplateOriginsExists,
+            state.AdventurePlanTemplateOriginConstraintCount,
+            state.AdventurePlanTemplateOriginIndexExists,
+            state.PlannerFootStepApplicationsExists,
+            state.PlannerFootStepApplicationConstraintCount,
+            state.PlannerFootStepApplicationIndexCount
         });
 
     private static void WriteEvidence(object value) =>
@@ -426,6 +552,8 @@ internal static partial class MigrationOperationRunner
 internal enum MigrationOperationClassification
 {
     Complete,
+    Migration0011Committed,
+    Migration0010Committed,
     Migration0008Committed,
     Migration0007Committed,
     NoScriptCommitted,

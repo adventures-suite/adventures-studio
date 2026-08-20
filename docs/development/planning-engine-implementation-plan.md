@@ -360,8 +360,9 @@ This foundation does not yet provide a production template catalog adapter,
 catalog persistence, template authoring, entitlement or licensing stores, the
 Planner's “Use this Journey” endpoint/UI, parameter editing, reporting
 projections, or protected production migration execution. Those remain
-separate reviewed slices; the existing protected `0009 -> 0010` migration
-operation is intentionally not broadened by the Planner feature slice.
+separate reviewed slices. A later dedicated migration-runner slice broadens the
+protected operation from exact `0009` through current `0012`; the Planner
+feature slice itself still does not alter migration execution authority.
 
 The next stacked customer-workflow slice adds the first direct “Use this
 Journey” consumer of that boundary. In local Alpha only, a JSON-driven fictional
