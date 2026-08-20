@@ -51,7 +51,8 @@ internal sealed class SqlPlannerFootStepApplicationStore(
                    CASE WHEN d.DestinationVisitId IS NOT NULL THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END AS TargetExists,
                    CASE WHEN EXISTS
                      (SELECT 1 FROM audit.AuditEvents e
-                       WHERE e.CreatorId=a.CreatorId AND e.ResourceType=N'AdventurePlan'
+                       WHERE e.CreatorId=a.CreatorId COLLATE Latin1_General_100_BIN2
+                         AND e.ResourceType=N'AdventurePlan'
                          AND e.ResourceId=a.AdventurePlanId COLLATE Latin1_General_100_BIN2
                          AND e.ResultingVersion=a.ResultingVersion
                          AND e.Outcome=N'Succeeded' AND e.ReasonCategory=N'Completed')

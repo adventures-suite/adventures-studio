@@ -871,7 +871,7 @@ public sealed class SqlMigrationIntegrationTests
                   WHERE columns.object_id = tables.object_id AND columns.name = 'CreatorId'
               );
             """);
-        Assert.Equal(17, creatorColumns);
+        Assert.Equal(18, creatorColumns);
 
         Assert.True(await ScalarAsync<int>(connectionString,
             "SELECT COUNT(*) FROM sys.foreign_keys WHERE name LIKE 'FK[_]%';") >= 12);
