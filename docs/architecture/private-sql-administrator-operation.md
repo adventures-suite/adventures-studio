@@ -95,6 +95,38 @@ Creating the empty role does not authorize migration `0010`; a later migration
 preflight must independently re-read the role and every documented
 prerequisite.
 
+### Development initial Creator Owner
+
+The finite administrator boundary also supports one separately approved
+`bootstrap-initial-owner` operation for the fixed development Creator
+`creator_tsa_01`. This is an initial-ownership bootstrap, not general membership
+administration and not a Planner, web-startup, or authentication behavior.
+
+The operation accepts one exact opaque platform `UserId` using the canonical
+authorization-identity format. It requires that user to be active and retain at
+least one active External ID mapping. It acquires a zero-wait Creator-specific
+transaction lock and refuses to operate when any membership already exists for
+the Creator or when its fixed audit identity is present. It never selects a
+user by email, display name, issuer, subject, or provider claim.
+
+On success, the operation inserts only fixed membership
+`membership_tsa_initial_owner`, active version 1 with the non-expiring `Owner`
+role and no direct permission grants. The membership, role, and required
+`Creator.ManageMembers` audit record commit in the same SQL transaction. The
+audit actor is honestly classified as `System`; the reviewed GitHub Environment
+approval, operation packet, support identifier, and correlation identifier
+retain the separate human administrative authorization evidence. The legacy
+membership attribution columns reference the target user to satisfy their
+existing foreign-key contract and do not replace the authoritative audit actor.
+
+Bounded evidence includes only fixed resource identifiers, the resulting
+membership version, a SHA-256 hash of the opaque target UserId, safe approval
+identifiers, outcome, and UTC time. It excludes email, External ID issuer or
+subject, tokens, claims, SQL values, and Creator content. The operation has zero
+automatic retry. Repository review, merge, and ordinary deployment do not run
+it; live execution requires a fresh baseline, a distinct checksum-bound
+approval packet, and the normal cleanup and fresh-session denial-proof sequence.
+
 ## Baseline allowlist and evidence
 
 The query reads only catalog metadata needed to classify the DbUp journal and

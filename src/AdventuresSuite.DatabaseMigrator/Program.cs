@@ -20,6 +20,8 @@ try
             return await SqlAdministratorOperationRunner.RunAsync("bootstrap");
         case ["--admin-bootstrap-companion-policy-role"]:
             return await SqlAdministratorOperationRunner.RunAsync("bootstrap-policy-role");
+        case ["--admin-bootstrap-initial-owner"]:
+            return await SqlAdministratorOperationRunner.RunAsync("bootstrap-initial-owner");
         case ["--admin-cleanup"]:
             return await SqlAdministratorOperationRunner.RunAsync("cleanup");
         case ["--admin-denial-proof"]:

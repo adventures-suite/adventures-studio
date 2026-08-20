@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Development initial Creator Owner bootstrap evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "operation", "outcome", "creatorId", "membershipId",
+    "role", "membershipVersion", "targetUserIdSha256", "auditEventId",
+    "auditActorType", "supportId", "correlationId", "operationId", "occurredAtUtc"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "operation": { "const": "development-initial-owner-bootstrap-v1" },
+    "outcome": { "const": "created" },
+    "creatorId": { "const": "creator_tsa_01" },
+    "membershipId": { "const": "membership_tsa_initial_owner" },
+    "role": { "const": "Owner" },
+    "membershipVersion": { "const": 1 },
+    "targetUserIdSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "auditEventId": { "const": "audit_tsa_initial_owner" },
+    "auditActorType": { "const": "System" },
+    "supportId": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{7,63}$" },
+    "correlationId": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{7,63}$" },
+    "operationId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{7,31}$" },
+    "occurredAtUtc": { "type": "string", "format": "date-time" }
+  }
+}

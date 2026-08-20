@@ -120,6 +120,18 @@ migration-0010 permissions. Repository review and merge do not execute the
 operation; persistent-database execution requires separate approval and
 readback before migration-0010 preparation.
 
+The one-time development initial-owner operation uses the same private,
+Environment-approved administrator boundary but is a separate DML decision.
+Use `bootstrap-initial-owner` only after a fresh baseline proves the expected
+complete schema and an operator has reviewed the exact protected-main SHA,
+workflow and package checksums, fixed Creator `creator_tsa_01`, exact opaque
+target `UserId`, support ID, correlation ID, and distinct operation-approval
+digest. It refuses any pre-existing Creator membership state and atomically
+creates only the fixed non-expiring Owner membership plus required audit
+evidence. Follow it with mandatory administrator cleanup and a fresh-session
+denial proof. Never substitute email, claims, a public SQL path, application
+startup, or direct interactive SQL editing.
+
 The repository-only administrator path is documented at
 `docs/architecture/private-sql-administrator-operation.md`. Its mandatory
 first mode is a statically allowlisted metadata baseline using the dedicated

@@ -11,7 +11,7 @@
     "requiredAfter": ["success", "failure", "timeout", "cancelled", "runnerLost", "ambiguous"],
     "successRequiresZero": ["resourceCount", "registrationCount", "temporaryAssignmentCount", "guestFileCount"]
   },
-  "operations": ["baseline", "bootstrap", "bootstrap-policy-role", "cleanup", "denial-proof"],
+  "operations": ["baseline", "bootstrap", "bootstrap-policy-role", "bootstrap-initial-owner", "cleanup", "denial-proof"],
   "authorityBoundaries": ["administratorIdentityAndFic", "temporarySqlAdministrator", "sqlBootstrap", "sqlCleanupAndDenialProof"],
   "prohibitedNetworkChanges": ["publicSql", "firewallException", "publicIp", "inboundSsh", "inboundRdp", "legacyAdministrationVm", "snet-devtools"]
 }
