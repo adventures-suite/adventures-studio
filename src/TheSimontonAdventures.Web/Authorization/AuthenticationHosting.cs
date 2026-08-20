@@ -96,6 +96,13 @@ public static class AuthenticationHosting
                 }
 
                 options.KnownProxies.Add(address);
+                if (address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                {
+                    // Linux may surface an IPv4 peer through a dual-mode socket as
+                    // its IPv4-mapped IPv6 equivalent. Trust both representations
+                    // of the same configured address without widening the allowlist.
+                    options.KnownProxies.Add(address.MapToIPv6());
+                }
             }
         });
 
