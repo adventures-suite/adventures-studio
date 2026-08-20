@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Development application Planning runtime binding evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "operation", "outcome", "role", "applicationPrincipalIdSha256", "applicationIdentityResourceIdSha256", "operationId", "occurredAtUtc"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "operation": { "const": "development-application-planning-runtime-binding-v1" },
+    "outcome": { "const": "bound" },
+    "role": { "const": "AdventuresSuitePlanningRuntime" },
+    "applicationPrincipalIdSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "applicationIdentityResourceIdSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "operationId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{7,31}$" },
+    "occurredAtUtc": { "type": "string", "format": "date-time" }
+  }
+}

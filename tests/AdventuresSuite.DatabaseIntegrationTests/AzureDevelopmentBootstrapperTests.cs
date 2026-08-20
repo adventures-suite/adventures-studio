@@ -60,6 +60,21 @@ public sealed class AzureDevelopmentBootstrapperTests
         Assert.DoesNotContain("WITH OBJECT_ID", source, StringComparison.Ordinal);
     }
 
+    /// <summary>Ensures runtime binding includes the dedicated Planning role without broad roles.</summary>
+    [Fact]
+    public void RuntimeBinding_UsesDedicatedPlanningRoleWithoutBroadDatabaseRoles()
+    {
+        var source = File.ReadAllText(Path.Combine(
+            FindRepositoryRoot(), "src/AdventuresSuite.DatabaseMigrator/SqlAdministratorOperationRunner.cs"));
+
+        Assert.Contains("AdventuresSuitePlanningRuntime", source, StringComparison.Ordinal);
+        Assert.Contains("approved application database principal does not exist", source, StringComparison.Ordinal);
+        Assert.Contains("prohibited broad role authority", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("ALTER ROLE [db_datareader] ADD MEMBER", source, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("ALTER ROLE [db_datawriter] ADD MEMBER", source, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("ALTER ROLE [db_ddladmin] ADD MEMBER", source, StringComparison.OrdinalIgnoreCase);
+    }
+
     [Fact]
     public void CleanupRevokesOnlyTemporaryCatalogDropsUserAndRetainsPrerequisites()
     {

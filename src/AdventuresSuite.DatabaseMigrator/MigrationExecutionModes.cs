@@ -68,7 +68,7 @@ internal static partial class MigrationExecutionModes
             validated.ConnectionFactory.CreateConnection);
         var expectedFingerprint = Require("ADVENTURESSUITE_EXPECTED_APPLICATION_FINGERPRINT");
         var journal = MigrationOperationalState.Classify(state.Journal);
-        var verified = journal == MigrationJournalOutcome.At0012
+        var verified = journal == MigrationJournalOutcome.At0013
             && MigrationOperationRunner.VerifyExpectedPostState(state)
             && string.Equals(expectedFingerprint, state.ApplicationFingerprint, StringComparison.Ordinal);
         var exitCode = verified ? 0 : 1;

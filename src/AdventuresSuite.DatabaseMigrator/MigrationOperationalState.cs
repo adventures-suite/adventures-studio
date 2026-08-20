@@ -235,6 +235,7 @@ internal static class MigrationOperationalState
         if (journal.SequenceEqual(catalog.Take(10), StringComparer.Ordinal)) return MigrationJournalOutcome.At0010;
         if (journal.SequenceEqual(catalog.Take(11), StringComparer.Ordinal)) return MigrationJournalOutcome.At0011;
         if (journal.SequenceEqual(catalog.Take(12), StringComparer.Ordinal)) return MigrationJournalOutcome.At0012;
+        if (journal.SequenceEqual(catalog.Take(13), StringComparer.Ordinal)) return MigrationJournalOutcome.At0013;
         return MigrationJournalOutcome.Unexpected;
     }
 
@@ -323,5 +324,6 @@ internal enum MigrationJournalOutcome
     At0010,
     At0011,
     At0012,
+    At0013,
     Unexpected
 }

@@ -76,10 +76,10 @@ internal static partial class MigrationOperationRunner
         IReadOnlyList<string> selectedScripts = [];
         try
         {
-            // This operation is explicitly bounded to the reviewed 0009 -> 0012 transition.
+            // This operation is explicitly bounded to the reviewed 0009 -> 0013 transition.
             selectedScripts = DatabaseMigratorRunner.MigrateWithLockHeld(
                 connectionFactory.CreateConnection,
-                maximumMigrationNumber: "0012");
+                maximumMigrationNumber: "0013");
         }
         catch (Exception exception)
         {
@@ -152,9 +152,12 @@ internal static partial class MigrationOperationRunner
     {
         if (!string.Equals(before.ApplicationFingerprint, after.ApplicationFingerprint, StringComparison.Ordinal))
             return MigrationOperationClassification.Unexpected;
-        if (migrationFailure is null && afterOutcome == MigrationJournalOutcome.At0012
+        if (migrationFailure is null && afterOutcome == MigrationJournalOutcome.At0013
             && VerifyExpectedPostState(after))
             return MigrationOperationClassification.Complete;
+        if (migrationFailure is not null && afterOutcome == MigrationJournalOutcome.At0012
+            && VerifyExpected0012State(after))
+            return MigrationOperationClassification.Migration0012Committed;
         if (migrationFailure is not null && afterOutcome == MigrationJournalOutcome.At0011
             && VerifyExpected0011State(after))
             return MigrationOperationClassification.Migration0011Committed;
@@ -269,8 +272,12 @@ internal static partial class MigrationOperationRunner
         && ExpectedPlanningPermissions(includeTemplateOrigins: true)
             .SetEquals(state.PlanningPermissions);
 
-    /// <summary>Requires the exact schema and least-privilege state through migration 0012.</summary>
-    internal static bool VerifyExpectedPostState(MigrationStateEvidence state) =>
+    internal static bool VerifyExpected0012State(MigrationStateEvidence state) =>
+        VerifyExpected0012Structure(state)
+        && ExpectedPlanningPermissions(includeTemplateOrigins: true, includeFootStepApplications: true)
+            .SetEquals(state.PlanningPermissions);
+
+    private static bool VerifyExpected0012Structure(MigrationStateEvidence state) =>
         VerifyExpected0010Authority(state)
         && state.AdventurePlanTemplateOriginsExists
         && state.AdventurePlanTemplateOriginConstraintCount == 9
@@ -284,9 +291,13 @@ internal static partial class MigrationOperationRunner
              "planning.AdventurePlanTemplateOrigins|USER_TABLE",
              "planning.CompanionInformationPolicyAssignments|USER_TABLE",
              "planning.PlannerFootStepApplications|USER_TABLE",
-             "planning.TravelerParticipations|USER_TABLE"], StringComparer.Ordinal)
-        && ExpectedPlanningPermissions(includeTemplateOrigins: true, includeFootStepApplications: true)
-            .SetEquals(state.PlanningPermissions);
+             "planning.TravelerParticipations|USER_TABLE"], StringComparer.Ordinal);
+
+    /// <summary>Requires the exact schema and least-privilege state through migration 0013.</summary>
+    internal static bool VerifyExpectedPostState(MigrationStateEvidence state) =>
+        VerifyExpected0012Structure(state)
+        && ExpectedPlanningPermissions(includeTemplateOrigins: true, includeFootStepApplications: true,
+            includeSchemaRuntimePermissions: true).SetEquals(state.PlanningPermissions);
 
     private static bool VerifyExpected0010Authority(MigrationStateEvidence state) =>
         state.TravelerParticipationsExists
@@ -330,7 +341,8 @@ internal static partial class MigrationOperationRunner
 
     private static HashSet<string> ExpectedPlanningPermissions(
         bool includeTemplateOrigins = false,
-        bool includeFootStepApplications = false)
+        bool includeFootStepApplications = false,
+        bool includeSchemaRuntimePermissions = false)
     {
         var expected = new HashSet<string>(StringComparer.Ordinal)
         {
@@ -353,6 +365,13 @@ internal static partial class MigrationOperationRunner
             expected.Add("GRANT|SELECT|planning|PlannerFootStepApplications");
             expected.Add("DENY|UPDATE|planning|PlannerFootStepApplications");
             expected.Add("DENY|DELETE|planning|PlannerFootStepApplications");
+        }
+        if (includeSchemaRuntimePermissions)
+        {
+            expected.Add("GRANT|SELECT|planning|");
+            expected.Add("GRANT|INSERT|planning|");
+            expected.Add("GRANT|UPDATE|planning|");
+            expected.Add("DENY|DELETE|planning|");
         }
         return expected;
     }
@@ -552,6 +571,7 @@ internal static partial class MigrationOperationRunner
 internal enum MigrationOperationClassification
 {
     Complete,
+    Migration0012Committed,
     Migration0011Committed,
     Migration0010Committed,
     Migration0008Committed,
