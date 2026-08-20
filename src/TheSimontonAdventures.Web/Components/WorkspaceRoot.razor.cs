@@ -38,6 +38,8 @@ public partial class WorkspaceRoot
     private string CreateIdempotencyKey { get; } = $"request_{Guid.NewGuid():N}";
     private PlannerIdeasContext? SelectedIdeasContext { get; set; }
     private IReadOnlyList<AdventureTemplateBlueprint> AdventureTemplates { get; set; } = [];
+    private IReadOnlyList<PlannerFootStepDefinition> AuthorizedFootSteps { get; set; } = [];
+    private ActorIdentity? WorkspaceActor { get; set; }
     private bool IsTemplateMode { get; set; }
     private int IdeasWidthPixels { get; set; } = 320;
 
@@ -47,13 +49,13 @@ public partial class WorkspaceRoot
         return Task.CompletedTask;
     }
 
-    private Task SelectIdeasContextAsync(PlannerIdeasContext context)
+    private async Task SelectIdeasContextAsync(PlannerIdeasContext context)
     {
         SelectedIdeasContext = context;
-        return Task.CompletedTask;
+        await LoadFootStepsAsync(context);
     }
 
-    private Task SelectAdventureIdeasContextAsync()
+    private async Task SelectAdventureIdeasContextAsync()
     {
         if (Plan is not null)
         {
@@ -63,7 +65,10 @@ public partial class WorkspaceRoot
                 Plan.Title);
         }
 
-        return Task.CompletedTask;
+        if (SelectedIdeasContext is not null)
+        {
+            await LoadFootStepsAsync(SelectedIdeasContext);
+        }
     }
 
     private Task ResizeIdeasAsync(int requestedWidthPixels)
@@ -113,6 +118,7 @@ public partial class WorkspaceRoot
 
         try
         {
+            WorkspaceActor = actor;
             AddressedCreatorId = creatorId;
             if (planId.HasValue)
             {
@@ -167,6 +173,48 @@ public partial class WorkspaceRoot
                 exception,
                 "Planner dashboard read failed before a safe response could be rendered.");
             LoadState = WorkspaceLoadState.Failure;
+        }
+    }
+
+    private async Task LoadFootStepsAsync(PlannerIdeasContext context)
+    {
+        if (WorkspaceActor is null || Plan is null)
+        {
+            AuthorizedFootSteps = [];
+            return;
+        }
+
+        var service = HttpContextAccessor.HttpContext?.RequestServices.GetService<IPlannerFootStepQueryService>();
+        if (service is null)
+        {
+            AuthorizedFootSteps = [];
+            return;
+        }
+
+        var kind = context.Kind switch
+        {
+            PlannerIdeasContextKind.Adventure => PlannerFootStepContextKind.Adventure,
+            PlannerIdeasContextKind.Destination => PlannerFootStepContextKind.Destination,
+            PlannerIdeasContextKind.Day => PlannerFootStepContextKind.Day,
+            _ => throw new InvalidOperationException("Unsupported Planner FootStep context.")
+        };
+        try
+        {
+            var result = await service.QueryAsync(new PlannerFootStepQuery(
+                WorkspaceActor, AddressedCreatorId, Plan.Id, kind, context.Id, "en-US",
+                new PlannerFootStepFilters(), 1, 24));
+            AuthorizedFootSteps = result.IsAllowed ? result.Items : [];
+        }
+        catch (OperationCanceledException) when (
+            HttpContextAccessor.HttpContext?.RequestAborted.IsCancellationRequested is true)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            HttpContextAccessor.HttpContext?.RequestServices.GetService<ILogger<WorkspaceRoot>>()?.LogError(
+                exception, "Planner FootStep catalog failed; manual planning remains available.");
+            AuthorizedFootSteps = [];
         }
     }
 

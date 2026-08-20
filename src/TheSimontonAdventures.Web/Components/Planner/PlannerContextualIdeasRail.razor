@@ -48,20 +48,99 @@
                         <button type="button" aria-pressed="@(SelectedType == type ? "true" : "false")" @onclick="() => SelectType(type)">@type</button>
                     }
                 </nav>
-                <ul class="planner-ideas__list">
-                    @foreach (var idea in PagedIdeas)
+                <details class="planner-ideas__filters">
+                    <summary>Filter FootSteps (@FacetedIdeas.Count)</summary>
+                    <fieldset>
+                        <legend>Travel details</legend>
+                        <label>Minimum days <input type="number" min="1" max="365" value="@MinimumDays" @onchange="ChangeMinimumDays" /></label>
+                        <label>Maximum days <input type="number" min="1" max="365" value="@MaximumDays" @onchange="ChangeMaximumDays" /></label>
+                        @foreach (var facet in AvailableFacets)
+                        {
+                            <label><input type="checkbox" checked="@SelectedFacets.Contains(facet.Key)" @onchange="() => ToggleFacet(facet)" /> @DisplayFacet(facet.Value) <span>(@facet.Group)</span></label>
+                        }
+                    </fieldset>
+                    @if (SelectedType is not null || SelectedFacets.Count > 0 || MinimumDays.HasValue || MaximumDays.HasValue)
                     {
-                        <li><article class="planner-ideas__card">
-                            <div class="planner-ideas__thumbnail" aria-hidden="true">@idea.Monogram</div>
-                            <p class="planner-ideas__type">@idea.Type · suggestion</p>
-                            <h4>@idea.Title</h4>
-                            <p>@idea.Summary</p>
-                            <dl><div><dt>Source</dt><dd>@idea.Source</dd></div><div><dt>Freshness</dt><dd>@idea.Freshness</dd></div><div><dt>Why</dt><dd>@idea.Reason</dd></div></dl>
-                            <p class="planner-ideas__boundary">Inspiration only — not booked, available, or added to your plan.</p>
-                        </article></li>
+                        <div class="planner-ideas__chips" aria-label="Active FootStep filters">
+                            @if (SelectedType is not null) { <button type="button" @onclick="() => SelectType(null)">@DisplayFacet(SelectedType) ×</button> }
+                            @foreach (var key in SelectedFacets) { var facet = PlannerFacetOption.Parse(key); <button type="button" @onclick="() => ToggleFacet(facet)">@DisplayFacet(facet.Value) ×</button> }
+                            <button type="button" @onclick="ClearFilters">Clear all</button>
+                        </div>
                     }
-                </ul>
-                <PlannerIdeaPager TotalItems="@FilteredIdeas.Count"
+                </details>
+                <div class="planner-ideas__display-controls">
+                    <label>Group by
+                        <select value="@GroupBy" @onchange="ChangeGrouping">
+                            <option value="None">No grouping</option><option value="Kind">FootStep type</option>
+                            <option value="Transportation">Transportation</option><option value="Category">Category</option><option value="Source">Source</option>
+                        </select>
+                    </label>
+                    <label>Sort by
+                        <select value="@SortBy" @onchange="ChangeSort">
+                            <option value="Catalog">Catalog order</option><option value="Title">Title</option>
+                            <option value="ShortestDuration">Shortest duration</option><option value="LongestDuration">Longest duration</option><option value="Source">Source</option>
+                        </select>
+                    </label>
+                    <div class="planner-ideas__view-toggle" role="group" aria-label="FootStep view type">
+                        <button type="button" class="planner-ideas__view-button" aria-label="Card view" title="Card view" aria-pressed="@(ViewType == PlannerFootStepView.Cards)" @onclick="() => ChangeView(PlannerFootStepView.Cards)">
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                        </button>
+                        <button type="button" class="planner-ideas__view-button" aria-label="List view" title="List view" aria-pressed="@(ViewType == PlannerFootStepView.List)" @onclick="() => ChangeView(PlannerFootStepView.List)">
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="5" cy="6" r="1.5"/><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="5" cy="12" r="1.5"/><circle cx="5" cy="18" r="1.5"/></svg>
+                        </button>
+                        <button type="button" class="planner-ideas__view-button" aria-label="Tabular view" title="Tabular view" aria-pressed="@(ViewType == PlannerFootStepView.Tabular)" @onclick="() => ChangeView(PlannerFootStepView.Tabular)">
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 9h18M3 14h18M9 4v16M15 4v16"/></svg>
+                        </button>
+                    </div>
+                </div>
+                @if (FacetedIdeas.Count == 0)
+                {
+                    <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Empty" Title="No FootSteps match these filters" Message="Your plan is unchanged. Remove a filter or clear all filters to see more inspiration." />
+                }
+                @foreach (var group in PagedGroups)
+                {
+                    @if (group.Label is not null) { <h4 class="planner-ideas__group-heading">@group.Label</h4> }
+                    @if (ViewType == PlannerFootStepView.Tabular)
+                    {
+                        <div class="planner-ideas__table-region" tabindex="0" role="region" aria-label="FootSteps table">
+                            <table class="planner-ideas__table">
+                                <caption>FootSteps for @Context.Label</caption>
+                                <thead><tr><th scope="col">FootStep</th><th scope="col">Type</th><th scope="col">Location</th><th scope="col">Transportation</th><th scope="col">Duration</th><th scope="col">Category</th><th scope="col">Source</th></tr></thead>
+                                <tbody>
+                                @foreach (var idea in group.Items)
+                                {
+                                    <tr>
+                                        <th scope="row"><span>@idea.Title</span><small>@idea.Summary</small></th>
+                                        <td>@DisplayFacet(idea.Kind)</td>
+                                        <td>@DisplayValues(idea.Places)</td>
+                                        <td>@DisplayValues(idea.TransportationModes)</td>
+                                        <td>@DisplayDuration(idea.DurationDays)</td>
+                                        <td>@DisplayValues(idea.Categories)</td>
+                                        <td>@idea.Attribution</td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <ul class="planner-ideas__list">
+                        @foreach (var idea in group.Items)
+                        {
+                            <li><article class="planner-ideas__card">
+                                <div class="planner-ideas__thumbnail" aria-hidden="true">@Monogram(idea)</div>
+                                <p class="planner-ideas__type">@DisplayFacet(idea.Kind) · suggestion</p>
+                                <h4>@idea.Title</h4>
+                                <p>@idea.Summary</p>
+                                <dl><div><dt>Source</dt><dd>@idea.Attribution</dd></div><div><dt>Freshness</dt><dd>@idea.Freshness</dd></div><div><dt>Why</dt><dd>@ContextReason</dd></div></dl>
+                                <p class="planner-ideas__boundary">Inspiration only — not booked, available, or added to your plan.</p>
+                            </article></li>
+                        }
+                        </ul>
+                    }
+                }
+                <PlannerIdeaPager TotalItems="@FacetedIdeas.Count"
                                   PageSize="@PageSize"
                                   CurrentPage="@CurrentPage"
                                   PageSizeOptions="@RailPageSizeOptions"

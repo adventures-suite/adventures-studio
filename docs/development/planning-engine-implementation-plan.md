@@ -241,6 +241,26 @@ Near-term FootSteps slice priority:
 4. prove one explicit reviewed Add-to-plan operation; and
 5. add accessible drag and drop only as an equivalent enhancement.
 
+The first query/filtering implementation establishes a provider-neutral,
+Creator- and plan-scoped application boundary. It validates the selected
+destination or day against the authorized aggregate before consulting a source,
+applies locale-independent combined facets and deterministic paging, and keeps
+production empty when no reviewed catalog source is configured. Authenticated
+local Development uses a separate fictional JSON catalog, including the
+motorcycle-touring proving scenario. This slice does not apply a FootStep or
+mutate Planning; reviewed Add-to-plan provenance remains the next boundary.
+The rail also provides presentation-only grouping, deterministic Sort-by
+choices, and distinct Card, compact List, and accessible Tabular views over the
+same authorized filtered page. Tabular view uses real column and row semantics
+with a keyboard-focusable horizontal overflow region at constrained widths.
+Catalog order is labeled honestly and is not presented as personalized ranking.
+
+The fictional Development catalog proves the same composable discovery model
+across motorcycle, RV, cycling, trekking, sailing, rail, cruise, overland, and
+mixed-mode Journeys. Facets are derived from the authorized result set rather
+than a rigid trip-type switch. A filtered zero-result keeps the plan unchanged
+and offers an explicit remove-filter or clear-all recovery path.
+
 Facet identifiers and persisted preferences are locale-independent. The UI
 localizes labels and formatting, while Creator visibility, authorization,
 entitlement, licensing, and publication rules are enforced before returning

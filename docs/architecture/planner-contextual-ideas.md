@@ -251,7 +251,16 @@ the owning Planning command's idempotency rules.
   announced without relying on motion or color.
 - The rail and preview meet WCAG 2.2 AA in light, dark, and system themes.
 - Long labels, missing images, reduced motion, zoom, 320 CSS-pixel layouts, and
-  provider failure retain a useful experience.
+provider failure retain a useful experience.
+
+Grouping, deterministic sorting, and card/list presentation operate only over
+the authorized filtered result set. They are transient presentation choices:
+they do not change relevance evidence, source authorization, entitlement,
+provenance, or Planning state. Initial grouping supports FootStep kind,
+transportation-mode combination, category combination, and source. Initial
+sorting supports catalog order, title, duration, and source; it must not call
+catalog order "recommended" until an approved explainable ranking contract
+exists.
 - When the rail is unavailable or empty, manual planning remains fully usable.
 
 ## Incremental Delivery
@@ -276,6 +285,14 @@ the owning Planning command's idempotency rules.
    boundary is implemented.
 8. Add measured ranking and personalization only after consent, classification,
    evaluation, reporting, retention, and cost policies are approved.
+
+The initial executable query boundary is now in place with exact Creator,
+actor, plan, and selected-context validation, deterministic combined facets,
+paging, and a fail-closed production source. Its fictional local Development
+catalog is environment-isolated JSON and is not production content. The next
+focused slice must replace or supplement that source through the reviewed
+Content Engine library boundary before proving one Activity FootStep review and
+Add-to-plan operation with durable provenance.
 
 ## Definition of Done
 
