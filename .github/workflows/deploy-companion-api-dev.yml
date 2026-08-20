@@ -159,6 +159,7 @@ jobs:
             ((.paths | keys) == [
               "/v1/companion/adventures",
               "/v1/companion/adventures/{adventureId}",
+              "/v1/companion/adventures/{adventureId}/itinerary",
               "/v1/companion/adventures/{adventureId}/today"
             ]) and
             (.security == [{"companionOAuth": ["Companion.Access"]}]) and
@@ -168,13 +169,16 @@ jobs:
             (.components.securitySchemes.companionOAuth.flows.authorizationCode.scopes | keys == ["Companion.Access"]) and
             (.paths["/v1/companion/adventures"] | keys == ["get"]) and
             (.paths["/v1/companion/adventures/{adventureId}"] | keys == ["get"]) and
+            (.paths["/v1/companion/adventures/{adventureId}/itinerary"] | keys == ["get"]) and
             (.paths["/v1/companion/adventures/{adventureId}/today"] | keys == ["get"]) and
             (.paths["/v1/companion/adventures"].get |
               exact_read_operation("ListCompanionAdventures"; "#/components/schemas/CompanionAdventureCollectionDto")) and
             (.paths["/v1/companion/adventures/{adventureId}"].get |
               exact_read_operation("GetCompanionAdventure"; "#/components/schemas/CompanionAdventureDto")) and
             (.paths["/v1/companion/adventures/{adventureId}/today"].get |
-              exact_read_operation("GetCompanionToday"; "#/components/schemas/CompanionTodayDto"))
+              exact_read_operation("GetCompanionToday"; "#/components/schemas/CompanionTodayDto")) and
+            (.paths["/v1/companion/adventures/{adventureId}/itinerary"].get |
+              exact_read_operation("GetCompanionItinerary"; "#/components/schemas/CompanionItineraryDto"))
           ' "${{ env.EVIDENCE_DIR }}/companion-v1.openapi.json" >/dev/null
           kill "$api_pid"
           wait "$api_pid" || true
