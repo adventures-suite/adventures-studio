@@ -59,10 +59,52 @@ public sealed class SqlAdministratorBaselineIntegrationTests
         finally { await DropDatabaseAsync(master, databaseName); }
     }
 
+    /// <summary>Accepts only the exact reviewed 0009 migration prerequisite state.</summary>
+    [Fact]
+    public async Task BaselineReader_AcceptsExactQualifiedAt0009State()
+    {
+        var master = RequireConnectionString();
+        var suffix = Guid.NewGuid().ToString("N");
+        var databaseName = $"AdventuresSuiteAdminBaseline0009_{suffix}";
+        var loginName = $"baseline_0009_{suffix}";
+        var password = $"Local-{Guid.NewGuid():N}!aA9";
+        await ExecuteAsync(master,
+            $"CREATE LOGIN [{loginName}] WITH PASSWORD = '{password}'; CREATE DATABASE [{databaseName}];");
+        try
+        {
+            var connectionString = BuildDatabaseConnectionString(master, databaseName);
+            using (DatabaseMigratorRunner.AcquireMigrationLock(connectionString))
+                Assert.Equal(9, DatabaseMigratorRunner.MigrateWithLockHeld(connectionString, "0009").Count);
+            await ExecuteAsync(connectionString, $"""
+                CREATE USER [{loginName}] FOR LOGIN [{loginName}];
+                ALTER ROLE AdventuresSuiteAuthenticationRuntime ADD MEMBER [{loginName}];
+                ALTER ROLE AdventuresSuiteMembershipRuntime ADD MEMBER [{loginName}];
+                GRANT CONNECT TO [{loginName}];
+                """);
+
+            await using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync();
+            var result = await CaptureBaselineAsync(connection, databaseName);
+
+            Assert.Equal(0, result.ExitCode);
+            Assert.Equal("At0009", result.Evidence.RootElement.GetProperty("outcome").GetString());
+            Assert.Empty(result.Evidence.RootElement.GetProperty("principals").EnumerateArray());
+        }
+        finally
+        {
+            await DropDatabaseAsync(master, databaseName);
+            await ExecuteAsync(master, $"""
+                IF EXISTS (SELECT 1 FROM sys.server_principals WHERE name=N'{loginName}')
+                    DROP LOGIN [{loginName}];
+                """);
+        }
+    }
+
     /// <summary>Rejects noncanonical journals and other partial committed boundaries.</summary>
     [Theory]
     [InlineData("0005", null)]
     [InlineData("0007", null)]
+    [InlineData("0009", "GRANT EXECUTE TO AdventuresSuitePlanningRuntime")]
     [InlineData("0006", "UPDATE dbo.AdventuresSuiteSchemaVersions SET ScriptName=N'0001_create_planning_schema.sql' WHERE Id=1")]
     [InlineData("0006", "UPDATE dbo.AdventuresSuiteSchemaVersions SET ScriptName=N'Wrong.Prefix.0001_create_planning_schema.sql' WHERE Id=1")]
     [InlineData("0006", "DELETE dbo.AdventuresSuiteSchemaVersions WHERE Id=3")]

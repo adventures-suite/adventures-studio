@@ -149,14 +149,18 @@ approval packet, and the normal cleanup and fresh-session denial-proof sequence.
 
 The query reads only catalog metadata needed to classify the DbUp journal and
 its ordered script names; `planning`, `auth`, and `audit` schemas and owners;
-the four runtime roles, owners, and memberships; the dedicated administrator
+the runtime roles, owners, and memberships; the dedicated administrator
 and migration contained users; direct database/schema/object/role permissions;
 and counts of required objects by approved schema and type. It never selects
 application rows.
 
 Evidence follows `infrastructure/private-sql-admin-operation/evidence.schema.json`.
-The baseline accepts only three reviewed states: absent, canonical `At0006`,
-and complete through 0009. DbUp journal records must use the exact
+The baseline accepts only four reviewed states: absent, canonical `At0006`,
+the exact `At0009` prerequisite for the bounded `0010` migration, and complete
+through `0012`. `At0009` requires the exact nine-script journal prefix, three
+schema owners, four runtime roles and membership shape, zero migration
+principal, complete permission allowlist, and exact object counts. DbUp journal
+records must use the exact
 `AdventuresSuite.DatabaseMigrator.Database.Migrations.` prefix. That prefix is
 removed only for comparison and bounded evidence against the authoritative
 ordered catalog; every other partial state fails closed.

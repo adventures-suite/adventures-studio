@@ -4,7 +4,7 @@
   "automaticRetryCount": 0,
   "baselineMustPrecedeBootstrap": true,
   "baselineCanInvokeBootstrap": false,
-  "successfulBaselineOutcomes": ["complete", "absent"],
+  "successfulBaselineOutcomes": ["complete", "At0009", "At0006", "absent"],
   "failureOutcomes": ["unexpected", "ambiguous", "timeout", "cancelled", "runnerLost", "identityMismatch", "authorityMismatch", "evidenceRejected", "cleanupPartial"],
   "cleanup": {
     "independent": true,
