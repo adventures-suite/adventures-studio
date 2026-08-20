@@ -86,6 +86,10 @@
                         <button type="button" aria-pressed="@(ViewType == PlannerFootStepView.List)" @onclick="() => ChangeView(PlannerFootStepView.List)">List</button>
                     </div>
                 </div>
+                @if (FacetedIdeas.Count == 0)
+                {
+                    <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Empty" Title="No FootSteps match these filters" Message="Your plan is unchanged. Remove a filter or clear all filters to see more inspiration." />
+                }
                 @foreach (var group in PagedGroups)
                 {
                     @if (group.Label is not null) { <h4 class="planner-ideas__group-heading">@group.Label</h4> }

@@ -254,6 +254,12 @@ choices, and equivalent Card/List views over the same authorized filtered
 page. Catalog order is labeled honestly and is not presented as personalized
 ranking.
 
+The fictional Development catalog proves the same composable discovery model
+across motorcycle, RV, cycling, trekking, sailing, rail, cruise, overland, and
+mixed-mode Journeys. Facets are derived from the authorized result set rather
+than a rigid trip-type switch. A filtered zero-result keeps the plan unchanged
+and offers an explicit remove-filter or clear-all recovery path.
+
 Facet identifiers and persisted preferences are locale-independent. The UI
 localizes labels and formatting, while Creator visibility, authorization,
 entitlement, licensing, and publication rules are enforced before returning

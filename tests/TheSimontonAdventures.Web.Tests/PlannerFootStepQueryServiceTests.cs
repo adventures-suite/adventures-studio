@@ -88,6 +88,49 @@ public sealed class PlannerFootStepQueryServiceTests
         Assert.Equal("c", Assert.Single(result.Items).Id);
     }
 
+    /// <summary>Composable transportation alternatives match a mixed-mode Journey without a controlling trip type.</summary>
+    [Fact]
+    public async Task QueryAsync_MixedModeJourney_MatchesAnySelectedModeAndEverySelectedFacetGroup()
+    {
+        var mixedMode = Item("mixed", "Rail and ferry circuit", "rail", "culture", "multi-modal", "paved") with
+        {
+            TransportationModes = Set("rail", "ferry", "bicycle"),
+            Categories = Set("culture", "cycling"),
+            TravelerCompositions = Set("solo", "couple")
+        };
+        var service = Service(new RecordingSource(
+            mixedMode,
+            Item("cruise", "Port sampler", "cruise-ship", "culture", "port-to-port", "paved")), Plan());
+        var filters = new PlannerFootStepFilters
+        {
+            TransportationModes = Set("ferry", "cruise-ship"),
+            Categories = Set("cycling"),
+            TravelerCompositions = Set("couple")
+        };
+
+        var result = await service.QueryAsync(Query(filters));
+
+        Assert.True(result.IsAllowed);
+        Assert.Equal("mixed", Assert.Single(result.Items).Id);
+    }
+
+    /// <summary>An unknown category returns an authorized empty result without substituting another Journey type.</summary>
+    [Fact]
+    public async Task QueryAsync_UnknownCategory_ReturnsAuthorizedEmptyResult()
+    {
+        var service = Service(new RecordingSource(
+            Item("rail", "Rail circuit", "rail", "culture", "multi-city", "paved")), Plan());
+
+        var result = await service.QueryAsync(Query(new PlannerFootStepFilters
+        {
+            Categories = Set("unknown-category")
+        }));
+
+        Assert.True(result.IsAllowed);
+        Assert.Empty(result.Items);
+        Assert.Equal(0, result.TotalItems);
+    }
+
     private static PlannerFootStepQueryService Service(RecordingSource source, AdventurePlan plan) => new(
         new MembershipProvider(Membership()),
         new AuthorizationEvaluator(AuthorizationDecision.Allow()),

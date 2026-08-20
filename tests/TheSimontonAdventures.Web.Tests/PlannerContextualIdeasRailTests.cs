@@ -134,6 +134,34 @@ public sealed class PlannerContextualIdeasRailTests
         Assert.Contains(">List</button>", html, StringComparison.Ordinal);
     }
 
+    /// <summary>The Adventure catalog demonstrates diverse and mixed-mode Journeys through result-derived facets.</summary>
+    [Fact]
+    public async Task Rail_AdventureResults_ExposeDiverseTravelFacets()
+    {
+        var html = await RenderAsync(new()
+        {
+            [nameof(PlannerContextualIdeasRail.Context)] = new PlannerIdeasContext(
+                PlannerIdeasContextKind.Adventure, "plan-1", "Many ways to travel"),
+            [nameof(PlannerContextualIdeasRail.AuthorizedItems)] = DiverseJourneyItems()
+        });
+
+        Assert.Contains("motorcycle", html, StringComparison.Ordinal);
+        Assert.Contains("rv", html, StringComparison.Ordinal);
+        Assert.Contains("bicycle", html, StringComparison.Ordinal);
+        Assert.Contains("cruise ship", html, StringComparison.Ordinal);
+        Assert.Contains("sailboat", html, StringComparison.Ordinal);
+        Assert.Contains("four wheel drive", html, StringComparison.Ordinal);
+        Assert.Contains("rail", html, StringComparison.Ordinal);
+        Assert.Contains("trekking", html, StringComparison.Ordinal);
+        Assert.Contains("mixed mode", html, StringComparison.Ordinal);
+        Assert.Contains("Clear all", File.ReadAllText(Path.Combine(
+            FindApplicationRoot(), "Components", "Planner", "PlannerContextualIdeasRail.razor")),
+            StringComparison.Ordinal);
+        Assert.Contains("No FootSteps match these filters", File.ReadAllText(Path.Combine(
+            FindApplicationRoot(), "Components", "Planner", "PlannerContextualIdeasRail.razor")),
+            StringComparison.Ordinal);
+    }
+
     private static async Task<string> RenderAsync(Dictionary<string, object?> parameters)
     {
         var services = new ServiceCollection();
@@ -177,6 +205,36 @@ public sealed class PlannerContextualIdeasRailTests
         RouteStyles = new HashSet<string>(StringComparer.Ordinal) { "scenic" },
         Surfaces = new HashSet<string>(StringComparer.Ordinal) { "paved" }
     };
+
+    private static IReadOnlyList<PlannerFootStepDefinition> DiverseJourneyItems() =>
+    [
+        DiverseItem("Motorcycle touring", ["motorcycle"], ["road-trip"]),
+        DiverseItem("RV parks loop", ["rv"], ["nature"]),
+        DiverseItem("Coastal cycling", ["bicycle"], ["cycling"]),
+        DiverseItem("Village trek", ["walking"], ["trekking"]),
+        DiverseItem("Island sailing", ["sailboat"], ["sailing"]),
+        DiverseItem("Classic rail", ["rail"], ["rail-journey"]),
+        DiverseItem("Cultural cruise", ["cruise-ship"], ["cruise"]),
+        DiverseItem("Desert overland", ["four-wheel-drive"], ["overland"]),
+        DiverseItem("Mixed mode islands", ["rail", "ferry", "bicycle"], ["mixed-mode"])
+    ];
+
+    private static PlannerFootStepDefinition DiverseItem(
+        string title,
+        string[] transportationModes,
+        string[] categories) => new()
+        {
+            Id = $"footstep_{title.Replace(' ', '_').ToLowerInvariant()}",
+            Version = "1.0",
+            Kind = "journey-pattern",
+            Title = title,
+            Summary = "Fictional diverse Journey pattern.",
+            Attribution = "Fictional local Alpha demo",
+            Freshness = "Demo snapshot",
+            ContextKinds = new HashSet<PlannerFootStepContextKind> { PlannerFootStepContextKind.Adventure },
+            TransportationModes = transportationModes.ToHashSet(StringComparer.Ordinal),
+            Categories = categories.ToHashSet(StringComparer.Ordinal)
+        };
 
     private static string FindApplicationRoot()
     {
