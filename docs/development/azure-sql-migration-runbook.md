@@ -163,7 +163,10 @@ never gains authority through an Entra group. The baseline recognizes only
 absent, the exact canonical `At0006` state, the exact `At0009` prerequisite for
 the bounded `0010`-through-`0012` operation, or complete through `0012`. `At0006` requires the
 exact fully qualified DbUp journal
-prefix and the reviewed schemas, runtime roles, permissions, and object counts;
+prefix and the reviewed schemas, runtime roles, permissions, and object counts.
+The `At0009` prerequisite includes the exact dbo-owned, empty, authority-free
+`AdventuresSuiteCompanionPolicyRuntime` role; ownership, membership, or direct
+permission drift fails closed;
 arbitrary partial states are rejected. The hosted-runner workflow binds exact
 repository and organization IDs, protected SHA, workflow checksum, operation
 ID, identity IDs, server, database, private endpoint, attested package, and
