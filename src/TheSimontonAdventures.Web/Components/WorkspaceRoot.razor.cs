@@ -111,6 +111,8 @@ public partial class WorkspaceRoot
             return;
         }
 
+        WorkspaceActor = actor;
+
         if (!TryGetAddressedRoute(InitialPath, out var creatorId, out var planId))
         {
             var directory = context.RequestServices.GetService<ICreatorWorkspaceDirectoryService>();
@@ -147,7 +149,6 @@ public partial class WorkspaceRoot
 
         try
         {
-            WorkspaceActor = actor;
             AddressedCreatorId = creatorId;
             if (planId.HasValue)
             {
