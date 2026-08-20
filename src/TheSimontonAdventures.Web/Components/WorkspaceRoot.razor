@@ -38,9 +38,16 @@
         }
         else if (LoadState == WorkspaceLoadState.Landing)
         {
-            <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Unavailable"
-                                   Title="Choose a Creator workspace"
-                                   Message="Open an explicitly addressed Creator workspace to view its Adventure Plans." />
+            @if (AuthorizedCreatorWorkspaces.Count == 0)
+            {
+                <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Empty"
+                                       Title="No Planner workspaces"
+                                       Message="Your account does not currently have an active Creator workspace with Planner access." />
+            }
+            else
+            {
+                <PlannerCreatorWorkspaceChooser Workspaces="@AuthorizedCreatorWorkspaces" />
+            }
         }
         else if (Plan is not null)
         {

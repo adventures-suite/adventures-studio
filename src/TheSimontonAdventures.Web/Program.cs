@@ -88,6 +88,7 @@ if (authenticationMode is not null
     builder.Services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>();
     builder.Services.AddSingleton(TimeProvider.System);
     builder.Services.AddScoped<IPlannerWorkspaceQueryService, PlannerWorkspaceQueryService>();
+    builder.Services.AddScoped<ICreatorWorkspaceDirectoryService, CreatorWorkspaceDirectoryService>();
     builder.Services.AddSingleton<IPlanningCreationIdentityGenerator, GuidPlanningCreationIdentityGenerator>();
     builder.Services.AddScoped<IManualAdventurePlanCreateService, ManualAdventurePlanCreateService>();
     builder.Services.AddSingleton<IAdventureTemplateCatalogSource>(services =>

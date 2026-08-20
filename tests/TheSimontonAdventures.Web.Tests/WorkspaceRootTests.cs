@@ -65,6 +65,40 @@ public sealed class WorkspaceRootTests
         Assert.DoesNotContain("opaque-user", html);
     }
 
+    /// <summary>The workspace root renders only Creator choices returned by the authorized directory.</summary>
+    [Fact]
+    public async Task AuthenticatedWorkspace_RendersAuthorizedCreatorChooser()
+    {
+        var html = await RenderAsync(ApplicationPrincipal(), configure: services =>
+        {
+            services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>();
+            services.AddSingleton<ICreatorWorkspaceDirectoryService>(
+                new StubCreatorWorkspaceDirectoryService([
+                    new(new("creator_tsa_01"), "The Simonton Adventures")
+                ]));
+        });
+
+        Assert.Contains("Choose a Creator workspace", html);
+        Assert.Contains("The Simonton Adventures", html);
+        Assert.Contains("href=\"/workspace/creators/creator_tsa_01/plans\"", html);
+        Assert.DoesNotContain("creator_forged", html);
+    }
+
+    /// <summary>Workspace discovery failures remain generic and disclose no Creator details.</summary>
+    [Fact]
+    public async Task AuthenticatedWorkspace_DirectoryFailure_RendersGenericFailure()
+    {
+        var html = await RenderAsync(ApplicationPrincipal(), configure: services =>
+        {
+            services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>();
+            services.AddSingleton<ICreatorWorkspaceDirectoryService>(
+                new ThrowingCreatorWorkspaceDirectoryService());
+        });
+
+        Assert.Contains("Planner temporarily unavailable", html);
+        Assert.DoesNotContain("PRIVATE-CREATOR", html);
+    }
+
     /// <summary>An explicitly addressed and authorized Creator renders only its dashboard projection.</summary>
     [Fact]
     public async Task AddressedCreatorRoute_RendersAuthorizedDashboard()
@@ -362,7 +396,7 @@ public sealed class WorkspaceRootTests
                 services.AddSingleton<IPlannerWorkspaceQueryService>(query);
             });
 
-        Assert.Contains("Choose a Creator workspace", html);
+        Assert.Contains("No Planner workspaces", html);
         Assert.Equal(0, query.CallCount);
     }
 
@@ -507,5 +541,21 @@ public sealed class WorkspaceRootTests
             AdventurePlanId planId,
             CancellationToken cancellationToken = default) =>
             throw new InvalidOperationException("database detail");
+    }
+
+    private sealed class StubCreatorWorkspaceDirectoryService(
+        IReadOnlyList<CreatorWorkspaceChoice> workspaces) : ICreatorWorkspaceDirectoryService
+    {
+        public Task<IReadOnlyList<CreatorWorkspaceChoice>> ListAsync(
+            AdventuresSuite.Identity.ActorIdentity actor,
+            CancellationToken cancellationToken = default) => Task.FromResult(workspaces);
+    }
+
+    private sealed class ThrowingCreatorWorkspaceDirectoryService : ICreatorWorkspaceDirectoryService
+    {
+        public Task<IReadOnlyList<CreatorWorkspaceChoice>> ListAsync(
+            AdventuresSuite.Identity.ActorIdentity actor,
+            CancellationToken cancellationToken = default) =>
+            throw new InvalidOperationException("PRIVATE-CREATOR database detail");
     }
 }

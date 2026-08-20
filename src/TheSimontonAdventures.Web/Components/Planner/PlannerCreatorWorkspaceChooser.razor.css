@@ -1,0 +1,78 @@
+.creator-workspace-chooser {
+    padding: clamp(1.25rem, 3vw, 2rem);
+    border: 1px solid var(--planner-border);
+    border-radius: 1.25rem;
+    background: var(--planner-surface-raised);
+}
+
+.creator-workspace-chooser h2,
+.creator-workspace-chooser p {
+    margin-top: 0;
+}
+
+.creator-workspace-chooser__eyebrow {
+    color: var(--planner-primary);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.creator-workspace-chooser__grid {
+    display: grid;
+    gap: 0.85rem;
+    margin-top: 1.5rem;
+}
+
+.creator-workspace-choice {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1rem;
+    min-height: 5.25rem;
+    padding: 1rem;
+    border: 1px solid var(--planner-border);
+    border-radius: 1rem;
+    color: var(--planner-text);
+    background: var(--planner-surface);
+    text-decoration: none;
+}
+
+.creator-workspace-choice:hover {
+    border-color: var(--planner-primary);
+}
+
+.creator-workspace-choice:focus-visible {
+    outline: 3px solid var(--planner-focus);
+    outline-offset: 3px;
+}
+
+.creator-workspace-choice__icon {
+    display: grid;
+    width: 2.75rem;
+    height: 2.75rem;
+    place-items: center;
+    border-radius: 0.8rem;
+    color: var(--planner-primary);
+    background: var(--planner-surface-muted);
+}
+
+.creator-workspace-choice__icon svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+}
+
+.creator-workspace-choice strong,
+.creator-workspace-choice small {
+    display: block;
+}
+
+.creator-workspace-choice small {
+    margin-top: 0.25rem;
+    color: var(--planner-text-muted);
+}
