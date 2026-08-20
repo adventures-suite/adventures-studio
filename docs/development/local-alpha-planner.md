@@ -43,13 +43,46 @@ sqlcmd -S localhost,14333 -U sa -P "$LOCAL_ALPHA_SA_PASSWORD" \
   -C -b -Q 'CREATE DATABASE AdventuresSuiteLocalAlpha'
 ```
 
-Apply all reviewed migrations with the existing migration runner and the DDL
-identity. The web application never invokes this command:
+Apply the reviewed migrations with the existing migration runner and the DDL
+identity. The web application never invokes this command. Migration `0010`
+has a deliberately separate administrator-created, authority-free role
+prerequisite, so a clean database uses the following two-stage sequence.
+
+First run the migrator. Scripts `0001` through `0009` commit, and `0010` then
+fails closed because the Companion policy runtime role does not exist yet:
 
 ```sh
 export ADVENTURESSUITE_SQL_CONNECTION_STRING="Server=localhost,14333;Database=AdventuresSuiteLocalAlpha;User ID=sa;Password=$LOCAL_ALPHA_SA_PASSWORD;Encrypt=True;TrustServerCertificate=True"
 dotnet run --project src/AdventuresSuite.DatabaseMigrator -- --migrate
 ```
+
+Confirm that the journal stopped at exactly `0009`, then create only the fixed,
+empty role in this disposable local database. This local `sa` operation does
+not replace or authorize the separately reviewed private-Azure administrator
+workflow:
+
+```sh
+sqlcmd -S localhost,14333 -U sa -P "$LOCAL_ALPHA_SA_PASSWORD" \
+  -C -b -d AdventuresSuiteLocalAlpha -Q \
+  "IF (SELECT COUNT(*) FROM dbo.AdventuresSuiteSchemaVersions)<>9
+       THROW 51000, 'Expected exact 0009 state.',1;
+   IF DATABASE_PRINCIPAL_ID(N'AdventuresSuiteCompanionPolicyRuntime') IS NOT NULL
+       THROW 51000, 'Policy role unexpectedly exists.',1;
+   CREATE ROLE AdventuresSuiteCompanionPolicyRuntime AUTHORIZATION dbo;"
+```
+
+Run the same migrator again. Migration `0010` independently verifies the role
+owner, type, memberships, and permissions before applying `0010` through the
+latest reviewed migration:
+
+```sh
+dotnet run --project src/AdventuresSuite.DatabaseMigrator -- --migrate
+```
+
+Require the final journal count and latest script to match the repository's
+authoritative migration catalog before provisioning the application identity.
+For the current catalog the expected state is 12 scripts ending in
+`0012_create_planner_footstep_applications.sql`.
 
 Provision a distinct DML login into only the three migrated runtime roles:
 
