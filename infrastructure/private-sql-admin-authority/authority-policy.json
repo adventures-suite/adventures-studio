@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "subscriptionId": "5ace9cdd-06d1-47d9-8214-1e7c756d076a",
+  "tenantId": "d7add2bb-ac03-49a8-9377-d0bf6a012f2f",
+  "resourceGroup": "rg-adventures-suite-dev",
+  "sqlServer": "adventures-suite-dev-sql",
+  "administratorResourceName": "ActiveDirectory",
+  "normalAdministrator": {
+    "displayName": "AdventuresSuite Development SQL Bootstrap Administrators",
+    "objectId": "99a35676-95b4-47d9-bbde-74ece42ebcae"
+  },
+  "temporaryAdministrator": {
+    "displayName": "id-adventures-suite-sql-bootstrap-dev",
+    "resourceId": "/subscriptions/5ace9cdd-06d1-47d9-8214-1e7c756d076a/resourceGroups/rg-adventures-suite-dev/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-adventures-suite-sql-bootstrap-dev",
+    "clientId": "9de6645c-8e83-4e28-af7a-e4d6408e8bb4",
+    "principalId": "34069e5e-75f9-42ac-a7f8-f0115e9434bb"
+  },
+  "operations": [
+    "prepare-establish",
+    "establish",
+    "prepare-restore",
+    "restore"
+  ],
+  "automaticRetryCount": 0,
+  "publicNetworkChangesAllowed": false,
+  "groupMembershipChangesAllowed": false,
+  "sqlDataOperationsAllowed": false,
+  "restorationRequiredAfter": [
+    "baseline-success",
+    "baseline-failure",
+    "owner-bootstrap-success",
+    "owner-bootstrap-failure",
+    "timeout",
+    "cancellation",
+    "runner-loss",
+    "ambiguous-result"
+  ]
+}

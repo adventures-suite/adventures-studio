@@ -51,6 +51,7 @@ jobs:
           az bicep install --version v0.46.1
           infrastructure/runner-registration-broker/policy-tests.sh
           infrastructure/runner-registration-broker/authority-policy-tests.sh
+          infrastructure/private-sql-admin-authority/policy-tests.sh
           az bicep build --file infrastructure/github-hosted-private-migration-network/main.bicep --stdout --no-restore >/dev/null
           az bicep build-params --file infrastructure/github-hosted-private-migration-network/main.dev.bicepparam --stdout --no-restore >/dev/null
           node --test .github/scripts/hosted-private-migration-network-policy.test.mjs

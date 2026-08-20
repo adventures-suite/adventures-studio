@@ -31,6 +31,24 @@ boundaries. SQL user creation uses the reviewed `WITH SID ..., TYPE = E` form
 bound to the migration application's client ID. It performs no Microsoft Graph
 lookup and requires no Directory Readers authority.
 
+The Owner-assisted authority boundary is implemented by
+`infrastructure/private-sql-admin-authority/operate.sh`. It never adds the
+dedicated identity to the normal administrator group and never changes public
+networking. `prepare-establish` first proves the exact normal group remains the
+Azure SQL administrator and emits a checksum-bound packet. Only `establish`
+with that separately approved digest may replace the server administrator with
+the exact dedicated UAMI. The operation then requires exact live readback and
+preserves Azure AD-only authentication.
+
+Restoration is an independent approval. `prepare-restore` accepts only the
+exact temporary UAMI pre-state and emits a different packet; `restore` requires
+its digest, reinstates the exact normal administrator group and verifies live
+readback. Neither operation runs SQL, invokes baseline or bootstrap, changes
+group membership, retries automatically, or treats an unexpected live state as
+repairable. Baseline failure, bootstrap failure, timeout, cancellation, runner
+loss, or ambiguity still requires restoration followed by a fresh-session
+`denial-proof` operation.
+
 ## Reused private runner boundary
 
 The administrator operation reuses the proven GitHub-hosted larger runner,
