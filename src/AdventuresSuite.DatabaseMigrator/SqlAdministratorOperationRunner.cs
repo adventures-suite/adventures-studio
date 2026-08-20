@@ -64,6 +64,69 @@ internal static class SqlAdministratorOperationRunner
         "planning|USER_TABLE|13"
     ];
 
+    private static readonly string[] At0009PermissionSignatures =
+    [
+        "AdventuresSuiteAuthenticationRuntime|DENY|ALTER|SCHEMA|[auth]",
+        "AdventuresSuiteAuthenticationRuntime|GRANT|INSERT|SCHEMA|[auth]",
+        "AdventuresSuiteAuthenticationRuntime|GRANT|SELECT|SCHEMA|[auth]",
+        "AdventuresSuiteAuthenticationRuntime|GRANT|UPDATE|SCHEMA|[auth]",
+        "AdventuresSuiteCompanionReadRuntime|DENY|DELETE|OBJECT_OR_COLUMN|[auth].[CreatorMembershipPermissionGrants]",
+        "AdventuresSuiteCompanionReadRuntime|DENY|INSERT|OBJECT_OR_COLUMN|[auth].[CreatorMembershipPermissionGrants]",
+        "AdventuresSuiteCompanionReadRuntime|GRANT|SELECT|OBJECT_OR_COLUMN|[auth].[CreatorMembershipPermissionGrants]",
+        "AdventuresSuiteCompanionReadRuntime|DENY|UPDATE|OBJECT_OR_COLUMN|[auth].[CreatorMembershipPermissionGrants]",
+        "AdventuresSuiteCompanionReadRuntime|DENY|DELETE|OBJECT_OR_COLUMN|[auth].[CreatorMembershipRoles]",
+        "AdventuresSuiteCompanionReadRuntime|DENY|INSERT|OBJECT_OR_COLUMN|[auth].[CreatorMembershipRoles]",
+        "AdventuresSuiteCompanionReadRuntime|GRANT|SELECT|OBJECT_OR_COLUMN|[auth].[CreatorMembershipRoles]",
+        "AdventuresSuiteCompanionReadRuntime|DENY|UPDATE|OBJECT_OR_COLUMN|[auth].[CreatorMembershipRoles]",
+        "AdventuresSuiteCompanionReadRuntime|DENY|DELETE|OBJECT_OR_COLUMN|[auth].[CreatorMemberships]",
+        "AdventuresSuiteCompanionReadRuntime|DENY|INSERT|OBJECT_OR_COLUMN|[auth].[CreatorMemberships]",
+        "AdventuresSuiteCompanionReadRuntime|GRANT|SELECT|OBJECT_OR_COLUMN|[auth].[CreatorMemberships]",
+        "AdventuresSuiteCompanionReadRuntime|DENY|UPDATE|OBJECT_OR_COLUMN|[auth].[CreatorMemberships]",
+        "AdventuresSuiteCompanionReadRuntime|DENY|DELETE|OBJECT_OR_COLUMN|[planning].[AdventurePlans]",
+        "AdventuresSuiteCompanionReadRuntime|DENY|INSERT|OBJECT_OR_COLUMN|[planning].[AdventurePlans]",
+        "AdventuresSuiteCompanionReadRuntime|GRANT|SELECT|OBJECT_OR_COLUMN|[planning].[AdventurePlans]",
+        "AdventuresSuiteCompanionReadRuntime|DENY|UPDATE|OBJECT_OR_COLUMN|[planning].[AdventurePlans]",
+        "AdventuresSuiteCompanionReadRuntime|DENY|DELETE|OBJECT_OR_COLUMN|[planning].[DestinationVisits]",
+        "AdventuresSuiteCompanionReadRuntime|DENY|INSERT|OBJECT_OR_COLUMN|[planning].[DestinationVisits]",
+        "AdventuresSuiteCompanionReadRuntime|GRANT|SELECT|OBJECT_OR_COLUMN|[planning].[DestinationVisits]",
+        "AdventuresSuiteCompanionReadRuntime|DENY|UPDATE|OBJECT_OR_COLUMN|[planning].[DestinationVisits]",
+        "AdventuresSuiteCompanionReadRuntime|DENY|DELETE|OBJECT_OR_COLUMN|[planning].[TravelerParticipations]",
+        "AdventuresSuiteCompanionReadRuntime|DENY|INSERT|OBJECT_OR_COLUMN|[planning].[TravelerParticipations]",
+        "AdventuresSuiteCompanionReadRuntime|GRANT|SELECT|OBJECT_OR_COLUMN|[planning].[TravelerParticipations]",
+        "AdventuresSuiteCompanionReadRuntime|DENY|UPDATE|OBJECT_OR_COLUMN|[planning].[TravelerParticipations]",
+        "AdventuresSuiteCompanionReadRuntime|DENY|ALTER|SCHEMA|[auth]",
+        "AdventuresSuiteCompanionReadRuntime|DENY|ALTER|SCHEMA|[planning]",
+        "AdventuresSuiteMembershipRuntime|DENY|DELETE|OBJECT_OR_COLUMN|[audit].[AuditEvents]",
+        "AdventuresSuiteMembershipRuntime|GRANT|INSERT|OBJECT_OR_COLUMN|[audit].[AuditEvents]",
+        "AdventuresSuiteMembershipRuntime|GRANT|SELECT|OBJECT_OR_COLUMN|[audit].[AuditEvents]",
+        "AdventuresSuiteMembershipRuntime|DENY|UPDATE|OBJECT_OR_COLUMN|[audit].[AuditEvents]",
+        "AdventuresSuiteMembershipRuntime|GRANT|DELETE|OBJECT_OR_COLUMN|[auth].[CreatorMembershipPermissionGrants]",
+        "AdventuresSuiteMembershipRuntime|GRANT|INSERT|OBJECT_OR_COLUMN|[auth].[CreatorMembershipPermissionGrants]",
+        "AdventuresSuiteMembershipRuntime|GRANT|SELECT|OBJECT_OR_COLUMN|[auth].[CreatorMembershipPermissionGrants]",
+        "AdventuresSuiteMembershipRuntime|GRANT|DELETE|OBJECT_OR_COLUMN|[auth].[CreatorMembershipRoles]",
+        "AdventuresSuiteMembershipRuntime|GRANT|INSERT|OBJECT_OR_COLUMN|[auth].[CreatorMembershipRoles]",
+        "AdventuresSuiteMembershipRuntime|GRANT|SELECT|OBJECT_OR_COLUMN|[auth].[CreatorMembershipRoles]",
+        "AdventuresSuiteMembershipRuntime|DENY|DELETE|OBJECT_OR_COLUMN|[auth].[CreatorMemberships]",
+        "AdventuresSuiteMembershipRuntime|GRANT|INSERT|OBJECT_OR_COLUMN|[auth].[CreatorMemberships]",
+        "AdventuresSuiteMembershipRuntime|GRANT|SELECT|OBJECT_OR_COLUMN|[auth].[CreatorMemberships]",
+        "AdventuresSuiteMembershipRuntime|GRANT|UPDATE|OBJECT_OR_COLUMN|[auth].[CreatorMemberships]",
+        "AdventuresSuiteMembershipRuntime|DENY|ALTER|SCHEMA|[audit]",
+        "AdventuresSuiteMembershipRuntime|DENY|ALTER|SCHEMA|[auth]",
+        "AdventuresSuitePlanningRuntime|DENY|DELETE|OBJECT_OR_COLUMN|[planning].[AdventurePlanCreateResults]",
+        "AdventuresSuitePlanningRuntime|GRANT|INSERT|OBJECT_OR_COLUMN|[planning].[AdventurePlanCreateResults]",
+        "AdventuresSuitePlanningRuntime|GRANT|SELECT|OBJECT_OR_COLUMN|[planning].[AdventurePlanCreateResults]",
+        "AdventuresSuitePlanningRuntime|DENY|UPDATE|OBJECT_OR_COLUMN|[planning].[AdventurePlanCreateResults]",
+        "AdventuresSuitePlanningRuntime|DENY|ALTER|SCHEMA|[planning]"
+    ];
+
+    private static readonly string[] At0009ObjectCountSignatures =
+    [
+        "audit|USER_TABLE|1",
+        "auth|USER_TABLE|6",
+        "dbo|USER_TABLE|1",
+        "planning|USER_TABLE|15"
+    ];
+
     internal static async Task<int> RunAsync(string operation)
     {
         var context = ReadContext();
@@ -564,6 +627,28 @@ internal static class SqlAdministratorOperationRunner
             && principals.Count == 0
             && permissionSignatures.SequenceEqual(At0006PermissionSignatures, StringComparer.Ordinal)
             && objectCountSignatures.SequenceEqual(At0006ObjectCountSignatures, StringComparer.Ordinal);
+        var at0009 = journalIsValid
+            && journalExists
+            && scripts.SequenceEqual(ApprovedScripts.Take(9), StringComparer.Ordinal)
+            && schemaJson == "[{\"name\":\"audit\",\"owner\":\"db_ddladmin\"},{\"name\":\"auth\",\"owner\":\"db_ddladmin\"},{\"name\":\"planning\",\"owner\":\"db_ddladmin\"}]"
+            && roleNames.SequenceEqual(new[]
+            {
+                "AdventuresSuiteAuthenticationRuntime", "AdventuresSuiteCompanionReadRuntime",
+                "AdventuresSuiteMembershipRuntime", "AdventuresSuitePlanningRuntime"
+            }, StringComparer.Ordinal)
+            && roleMap["AdventuresSuiteAuthenticationRuntime"].Owner == "dbo"
+            && roleMap["AdventuresSuiteCompanionReadRuntime"].Owner == "dbo"
+            && roleMap["AdventuresSuiteMembershipRuntime"].Owner == "dbo"
+            && roleMap["AdventuresSuitePlanningRuntime"].Owner == "dbo"
+            && roleMap["AdventuresSuiteAuthenticationRuntime"].Members.Count == 1
+            && roleMap["AdventuresSuiteMembershipRuntime"].Members.Count == 1
+            && roleMap["AdventuresSuiteAuthenticationRuntime"].Members[0]
+                == roleMap["AdventuresSuiteMembershipRuntime"].Members[0]
+            && roleMap["AdventuresSuiteCompanionReadRuntime"].Members.Count == 0
+            && roleMap["AdventuresSuitePlanningRuntime"].Members.Count == 0
+            && principals.Count == 0
+            && permissionSignatures.SequenceEqual(At0009PermissionSignatures, StringComparer.Ordinal)
+            && objectCountSignatures.SequenceEqual(At0009ObjectCountSignatures, StringComparer.Ordinal);
         var complete = schemas.Count == 3
             && schemaJson.Contains("\"planning\",\"owner\":\"db_ddladmin\"", StringComparison.Ordinal)
             && schemaJson.Contains("\"auth\",\"owner\":\"db_ddladmin\"", StringComparison.Ordinal)
@@ -582,6 +667,7 @@ internal static class SqlAdministratorOperationRunner
             && journalExists && journalIsValid
             && scripts.SequenceEqual(ApprovedScripts, StringComparer.Ordinal);
         var outcome = absent ? "absent" : at0006 ? nameof(MigrationJournalOutcome.At0006)
+            : at0009 ? nameof(MigrationJournalOutcome.At0009)
             : complete ? "complete" : "unexpected";
         var baseline = new
         {

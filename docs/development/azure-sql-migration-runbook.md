@@ -160,8 +160,9 @@ first mode is a statically allowlisted metadata baseline using the dedicated
 `id-adventures-suite-sql-bootstrap-dev` UAMI; it does not exist or have authority merely
 because the design is present. The identity is never the migration UAMI and
 never gains authority through an Entra group. The baseline recognizes only
-absent, the exact canonical `At0006` state, or
-complete through 0009. `At0006` requires the exact fully qualified DbUp journal
+absent, the exact canonical `At0006` state, the exact `At0009` prerequisite for
+the bounded `0010` operation, or complete through `0012`. `At0006` requires the
+exact fully qualified DbUp journal
 prefix and the reviewed schemas, runtime roles, permissions, and object counts;
 arbitrary partial states are rejected. The hosted-runner workflow binds exact
 repository and organization IDs, protected SHA, workflow checksum, operation
