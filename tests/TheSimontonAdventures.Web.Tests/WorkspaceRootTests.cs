@@ -82,6 +82,46 @@ public sealed class WorkspaceRootTests
         Assert.Contains("The Simonton Adventures", html);
         Assert.Contains("href=\"/workspace/creators/creator_tsa_01/plans\"", html);
         Assert.DoesNotContain("creator_forged", html);
+        Assert.DoesNotContain("Your AdventuresSuite user ID", html);
+        Assert.DoesNotContain("user_planner_01", html);
+    }
+
+    /// <summary>
+    /// An authenticated user without a Creator workspace can obtain only their own opaque
+    /// platform identifier for a bounded support operation.
+    /// </summary>
+    [Fact]
+    public async Task AuthenticatedWorkspace_WithoutMembership_RendersSelfSupportIdentity()
+    {
+        var html = await RenderAsync(ApplicationPrincipal(), configure: services =>
+        {
+            services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>();
+            services.AddSingleton<ICreatorWorkspaceDirectoryService>(
+                new StubCreatorWorkspaceDirectoryService([]));
+        });
+
+        Assert.Contains("No Planner workspaces", html);
+        Assert.Contains("Your AdventuresSuite user ID", html);
+        Assert.Contains("user_planner_01", html);
+        Assert.Contains("does not grant access by itself", html);
+        Assert.DoesNotContain("issuer", html, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("subject", html, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("email", html, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>Malformed authenticated identity never reaches the self-support disclosure.</summary>
+    [Fact]
+    public async Task AuthenticatedWorkspace_WithMalformedIdentity_HidesSelfSupportIdentity()
+    {
+        var principal = new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim(ApplicationUserClaims.UserId, "not a platform user")],
+            authenticationType: "test"));
+        var html = await RenderAsync(principal, configure: services =>
+            services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>());
+
+        Assert.Contains("Workspace unavailable", html);
+        Assert.DoesNotContain("Your AdventuresSuite user ID", html);
+        Assert.DoesNotContain("not a platform user", html);
     }
 
     /// <summary>Workspace discovery failures remain generic and disclose no Creator details.</summary>

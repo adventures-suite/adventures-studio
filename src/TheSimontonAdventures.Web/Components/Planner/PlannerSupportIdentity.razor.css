@@ -1,0 +1,38 @@
+.planner-support-identity {
+    background: var(--planner-shell-surface-muted);
+    border: 1px solid var(--planner-shell-border);
+    border-radius: .85rem;
+    margin-top: 1rem;
+    padding: 1.25rem;
+}
+
+.planner-support-identity__eyebrow {
+    color: var(--planner-shell-text-muted);
+    font-size: .75rem;
+    font-weight: 800;
+    letter-spacing: .12em;
+    margin: 0 0 .35rem;
+    text-transform: uppercase;
+}
+
+.planner-support-identity h2 {
+    font-size: 1.25rem;
+}
+
+.planner-support-identity output {
+    background: var(--planner-shell-surface);
+    border: 1px solid var(--planner-shell-border);
+    border-radius: .45rem;
+    display: block;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    margin: 1rem 0;
+    overflow-wrap: anywhere;
+    padding: .75rem;
+    user-select: all;
+}
+
+.planner-support-identity__privacy {
+    color: var(--planner-shell-text-muted);
+    font-size: .9rem;
+    margin-bottom: 0;
+}

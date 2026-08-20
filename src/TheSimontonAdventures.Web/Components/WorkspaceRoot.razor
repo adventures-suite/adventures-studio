@@ -43,6 +43,10 @@
                 <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Empty"
                                        Title="No Planner workspaces"
                                        Message="Your account does not currently have an active Creator workspace with Planner access." />
+                @if (WorkspaceActor?.UserId is { } userId)
+                {
+                    <PlannerSupportIdentity UserId="@userId.Value" />
+                }
             }
             else
             {
