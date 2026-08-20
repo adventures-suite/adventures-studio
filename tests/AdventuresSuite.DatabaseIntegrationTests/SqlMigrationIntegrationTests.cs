@@ -192,7 +192,7 @@ public sealed class SqlMigrationIntegrationTests
             Assert.Equal(MigrationOperationClassification.Complete,
                 MigrationOperationRunner.ClassifyResult(
                     before, after, MigrationJournalOutcome.At0010, null));
-            Assert.Single(DatabaseMigratorRunner.Migrate(connectionString));
+            Assert.Equal(2, DatabaseMigratorRunner.Migrate(connectionString).Count);
         }
         finally
         {
@@ -812,7 +812,7 @@ public sealed class SqlMigrationIntegrationTests
             WHERE schemas.name = 'planning'
               AND tables.name <> 'AdventurePlans';
             """;
-        Assert.Equal(16, await ScalarAsync<int>(connectionString, childTableSql));
+        Assert.Equal(17, await ScalarAsync<int>(connectionString, childTableSql));
         Assert.Equal(1, await ScalarAsync<int>(connectionString, """
             SELECT COUNT(*) FROM sys.tables AS tables
             INNER JOIN sys.schemas AS schemas ON schemas.schema_id = tables.schema_id
@@ -934,7 +934,8 @@ public sealed class SqlMigrationIntegrationTests
         foreach (var objectName in new[]
         {
             "planning.AdventurePlanCreateResults",
-            "planning.AdventurePlanTemplateOrigins"
+            "planning.AdventurePlanTemplateOrigins",
+            "planning.PlannerFootStepApplications"
         })
         {
             foreach (var permission in new[] { "SELECT", "INSERT" })
