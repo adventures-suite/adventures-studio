@@ -93,7 +93,9 @@ public enum PlannerFootStepView
     /// <summary>Shows visual cards.</summary>
     Cards,
     /// <summary>Shows a compact list.</summary>
-    List
+    List,
+    /// <summary>Shows aligned columns and rows in an accessible table.</summary>
+    Tabular
 }
 
 /// <summary>Renders a responsive, presentation-only projection beside the authoritative itinerary.</summary>
@@ -192,7 +194,7 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
             GroupBy == PlannerFootStepGrouping.None ? null : DisplayFacet(group.Key), group.ToArray()))
         .ToArray();
     /// <summary>Gets the CSS classes representing rail state.</summary>
-    public string RailClasses => $"planner-ideas{(IsCollapsed ? " planner-ideas--collapsed" : string.Empty)}{(IsDrawerOpen ? " planner-ideas--drawer-open" : string.Empty)}{(ViewType == PlannerFootStepView.List ? " planner-ideas--list-view" : string.Empty)}";
+    public string RailClasses => $"planner-ideas{(IsCollapsed ? " planner-ideas--collapsed" : string.Empty)}{(IsDrawerOpen ? " planner-ideas--drawer-open" : string.Empty)}{(ViewType == PlannerFootStepView.List ? " planner-ideas--list-view" : string.Empty)}{(ViewType == PlannerFootStepView.Tabular ? " planner-ideas--tabular-view" : string.Empty)}";
 
     private ElementReference OpenButton { get; set; }
     private ElementReference CloseButton { get; set; }
@@ -285,6 +287,17 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
     private static IEnumerable<PlannerFacetOption> Options(string group, IEnumerable<string> values) =>
         values.Select(value => new PlannerFacetOption(group, value));
     private static string DisplayFacet(string value) => string.Join(' ', value.Split('-'));
+    private static string DisplayValues(IEnumerable<string> values)
+    {
+        var labels = values.OrderBy(value => value, StringComparer.Ordinal).Select(DisplayFacet).ToArray();
+        return labels.Length == 0 ? "—" : string.Join(", ", labels);
+    }
+    private static string DisplayDuration(int? days) => days switch
+    {
+        1 => "1 day",
+        > 1 => $"{days} days",
+        _ => "—"
+    };
     private static string Monogram(PlannerFootStepDefinition item) =>
         string.Concat(item.Title.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(word => char.ToUpperInvariant(word[0])));
     private string ContextReason => Context?.Kind switch

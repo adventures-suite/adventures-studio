@@ -117,7 +117,7 @@ public sealed class PlannerContextualIdeasRailTests
         Assert.Contains("await OpenButton.FocusAsync();", codeBehind, StringComparison.Ordinal);
     }
 
-    /// <summary>Authorized results expose grouping, deterministic sorting, and equivalent card/list views.</summary>
+    /// <summary>Authorized results expose grouping, deterministic sorting, and distinct card, list, and tabular views.</summary>
     [Fact]
     public async Task Rail_PopulatedResults_ExposeDisplayControls()
     {
@@ -132,6 +132,14 @@ public sealed class PlannerContextualIdeasRailTests
         Assert.Contains("aria-label=\"FootStep view type\"", html, StringComparison.Ordinal);
         Assert.Contains(">Cards</button>", html, StringComparison.Ordinal);
         Assert.Contains(">List</button>", html, StringComparison.Ordinal);
+        Assert.Contains(">Tabular</button>", html, StringComparison.Ordinal);
+        var markup = File.ReadAllText(Path.Combine(
+            FindApplicationRoot(), "Components", "Planner", "PlannerContextualIdeasRail.razor"));
+        Assert.Contains("<table class=\"planner-ideas__table\">", markup, StringComparison.Ordinal);
+        Assert.Contains("<th scope=\"col\">FootStep</th>", markup, StringComparison.Ordinal);
+        Assert.Contains("<th scope=\"col\">Transportation</th>", markup, StringComparison.Ordinal);
+        Assert.Contains("<th scope=\"row\">", markup, StringComparison.Ordinal);
+        Assert.Contains("role=\"region\" aria-label=\"FootSteps table\"", markup, StringComparison.Ordinal);
     }
 
     /// <summary>The Adventure catalog demonstrates diverse and mixed-mode Journeys through result-derived facets.</summary>
