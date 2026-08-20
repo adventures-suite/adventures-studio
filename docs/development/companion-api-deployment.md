@@ -97,7 +97,8 @@ sequence:
 5. creates one ZIP named with the full SHA and run attempt and retains its
    SHA-256 checksum and generated OpenAPI document;
 6. authenticates with the dedicated federated deployment identity;
-7. writes the exact release SHA and explicit disabled activation settings;
+7. writes the exact release SHA, explicit closed authentication mode, and
+   disabled activation settings;
 8. uploads synchronously without restart and requires a new successful Azure
    deployment record;
 9. explicitly restarts the App Service; and

@@ -259,6 +259,7 @@ jobs:
             --name "${{ vars.AZURE_COMPANION_API_WEBAPP_NAME }}" \
             --settings \
               ASPNETCORE_ENVIRONMENT=Production \
+              Authentication__CompanionApi__Mode=Closed \
               Companion__ActivationMode=Disabled \
               Companion__DeterministicMode=false \
               Companion__ProjectionProvider="$PROJECTION_PROVIDER" \
