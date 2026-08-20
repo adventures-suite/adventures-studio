@@ -2,13 +2,14 @@ name: Operate Private SQL Administrator Boundary
 on:
   workflow_dispatch:
     inputs:
-      operation_mode: { description: Exact separately approved operation, required: true, type: choice, options: [baseline, bootstrap, bootstrap-policy-role, cleanup, denial-proof] }
+      operation_mode: { description: Exact separately approved operation, required: true, type: choice, options: [baseline, bootstrap, bootstrap-policy-role, bootstrap-initial-owner, cleanup, denial-proof] }
       approved_source_sha: { description: Exact approved protected-main SHA, required: true, type: string }
       workflow_sha256: { description: Exact reviewed workflow SHA-256, required: true, type: string }
       baseline_sql_sha256: { description: Exact reviewed baseline SQL SHA-256, required: true, type: string }
       operation_id: { description: Unique reviewed operation ID, required: true, type: string }
       support_id: { description: Bounded reviewed support ID for policy-role evidence, required: false, type: string }
       correlation_id: { description: Bounded reviewed correlation ID for policy-role evidence, required: false, type: string }
+      target_user_id: { description: Exact opaque platform UserId for the initial-owner operation, required: false, type: string }
       package_run_id: { description: Exact protected-main package workflow run ID, required: true, type: string }
       package_artifact_id: { description: Exact package artifact ID, required: true, type: string }
       package_sha256: { description: Exact attested package SHA-256, required: true, type: string }
@@ -47,6 +48,7 @@ jobs:
       ADVENTURESSUITE_ADMIN_OPERATION_ID: ${{ inputs.operation_id }}
       ADVENTURESSUITE_ADMIN_SUPPORT_ID: ${{ inputs.support_id }}
       ADVENTURESSUITE_ADMIN_CORRELATION_ID: ${{ inputs.correlation_id }}
+      ADVENTURESSUITE_ADMIN_TARGET_USER_ID: ${{ inputs.target_user_id }}
       ADVENTURESSUITE_ADMIN_WORKFLOW_SHA256: ${{ inputs.workflow_sha256 }}
       ADVENTURESSUITE_ADMIN_BASELINE_SQL_SHA256: ${{ inputs.baseline_sql_sha256 }}
       ADVENTURESSUITE_ADMIN_IDENTITY_RESOURCE_ID: ${{ inputs.administrator_identity_resource_id }}
@@ -87,6 +89,7 @@ jobs:
           OPERATION_ID: "${{ inputs.operation_id }}"
           SUPPORT_ID: "${{ inputs.support_id }}"
           CORRELATION_ID: "${{ inputs.correlation_id }}"
+          TARGET_USER_ID: "${{ inputs.target_user_id }}"
           PACKAGE_RUN_ID: "${{ inputs.package_run_id }}"
           PACKAGE_ARTIFACT_ID: "${{ inputs.package_artifact_id }}"
           PACKAGE_SHA256: "${{ inputs.package_sha256 }}"
@@ -132,6 +135,7 @@ jobs:
             baseline) exec "$VERIFIED_DIRECTORY/AdventuresSuite.DatabaseMigrator" --admin-baseline ;;
             bootstrap) exec "$VERIFIED_DIRECTORY/AdventuresSuite.DatabaseMigrator" --admin-bootstrap ;;
             bootstrap-policy-role) exec "$VERIFIED_DIRECTORY/AdventuresSuite.DatabaseMigrator" --admin-bootstrap-companion-policy-role ;;
+            bootstrap-initial-owner) exec "$VERIFIED_DIRECTORY/AdventuresSuite.DatabaseMigrator" --admin-bootstrap-initial-owner ;;
             cleanup) exec "$VERIFIED_DIRECTORY/AdventuresSuite.DatabaseMigrator" --admin-cleanup ;;
             denial-proof) exec "$VERIFIED_DIRECTORY/AdventuresSuite.DatabaseMigrator" --admin-denial-proof ;;
             *) exit 1 ;;

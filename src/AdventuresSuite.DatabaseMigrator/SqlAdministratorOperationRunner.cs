@@ -13,8 +13,12 @@ internal static class SqlAdministratorOperationRunner
     private const string SqlScope = "https://database.windows.net/.default";
     private const string DbUpJournalPrefix = "AdventuresSuite.DatabaseMigrator.Database.Migrations.";
     internal const string CompanionPolicyRuntimeRoleName = "AdventuresSuiteCompanionPolicyRuntime";
+    internal const string InitialOwnerCreatorId = "creator_tsa_01";
+    internal const string InitialOwnerMembershipId = "membership_tsa_initial_owner";
+    internal const string InitialOwnerAuditEventId = "audit_tsa_initial_owner";
     private const string CompanionReadRuntimeRoleName = "AdventuresSuiteCompanionReadRuntime";
     private const string CompanionPolicyRoleOperationVersion = "companion-policy-runtime-role-bootstrap-v1";
+    private const string InitialOwnerOperationVersion = "development-initial-owner-bootstrap-v1";
 
     private static readonly string[] ApprovedScripts =
     [
@@ -90,9 +94,142 @@ internal static class SqlAdministratorOperationRunner
                 context,
                 RequireBoundedIdentifier("ADVENTURESSUITE_ADMIN_SUPPORT_ID"),
                 RequireBoundedIdentifier("ADVENTURESSUITE_ADMIN_CORRELATION_ID")),
+            "bootstrap-initial-owner" => await BootstrapInitialOwnerAsync(
+                connection,
+                context,
+                RequireAuthorizationIdentity("ADVENTURESSUITE_ADMIN_TARGET_USER_ID"),
+                RequireBoundedIdentifier("ADVENTURESSUITE_ADMIN_SUPPORT_ID"),
+                RequireBoundedIdentifier("ADVENTURESSUITE_ADMIN_CORRELATION_ID")),
             "cleanup" => await CleanupAsync(connection, context),
             _ => throw new InvalidOperationException("The SQL administrator operation is not approved.")
         };
+    }
+
+    /// <summary>
+    /// Creates the single initial Owner membership for the fixed development
+    /// Creator after proving that no Creator membership already exists.
+    /// </summary>
+    internal static async Task<int> BootstrapInitialOwnerAsync(
+        SqlConnection connection,
+        Context context,
+        string targetUserId,
+        string supportId,
+        string correlationId,
+        TextWriter? evidenceWriter = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(connection);
+        ArgumentNullException.ThrowIfNull(context);
+        targetUserId = RequireAuthorizationIdentity(targetUserId, nameof(targetUserId));
+        supportId = RequireBoundedIdentifier(supportId, nameof(supportId));
+        correlationId = RequireBoundedIdentifier(correlationId, nameof(correlationId));
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (connection.State != System.Data.ConnectionState.Open)
+            await connection.OpenAsync(cancellationToken);
+
+        await using var transaction = (SqlTransaction)await connection.BeginTransactionAsync(cancellationToken);
+        var committed = false;
+        try
+        {
+            await using (var lockCommand = new SqlCommand("""
+                DECLARE @Result int;
+                EXEC @Result = sys.sp_getapplock
+                    @Resource = N'AdventuresSuite.SqlAdministrator.InitialOwner.creator_tsa_01.v1',
+                    @LockMode = N'Exclusive',
+                    @LockOwner = N'Transaction',
+                    @LockTimeout = 0;
+                IF @Result < 0 THROW 51000, 'The initial-owner administrator lock is unavailable.', 1;
+                """, connection, transaction))
+            {
+                await lockCommand.ExecuteNonQueryAsync(cancellationToken);
+            }
+
+            await using (var command = new SqlCommand("""
+                SET XACT_ABORT ON;
+                IF NOT EXISTS (
+                    SELECT 1 FROM auth.Users WITH (UPDLOCK,HOLDLOCK)
+                    WHERE UserId=@UserId AND Status='Active' AND DisabledAtUtc IS NULL)
+                    THROW 51000, 'The target platform user is not active.', 1;
+                IF NOT EXISTS (
+                    SELECT 1 FROM auth.ExternalIdentities WITH (UPDLOCK,HOLDLOCK)
+                    WHERE UserId=@UserId AND DisabledAtUtc IS NULL)
+                    THROW 51000, 'The target platform user has no active external identity.', 1;
+                IF EXISTS (
+                    SELECT 1 FROM auth.CreatorMemberships WITH (UPDLOCK,HOLDLOCK)
+                    WHERE CreatorId=@CreatorId)
+                    THROW 51000, 'The development Creator already has membership state.', 1;
+                IF EXISTS (
+                    SELECT 1 FROM audit.AuditEvents WITH (UPDLOCK,HOLDLOCK)
+                    WHERE AuditEventId=@AuditEventId)
+                    THROW 51000, 'The initial-owner audit identity is already present.', 1;
+
+                DECLARE @Now datetimeoffset(7)=SYSUTCDATETIME();
+                INSERT auth.CreatorMemberships
+                    (CreatorId,CreatorMembershipId,UserId,Status,Version,EffectiveFromUtc,ExpiresAtUtc,
+                     CreatedAtUtc,UpdatedAtUtc,CreatedByUserId,UpdatedByUserId)
+                VALUES
+                    (@CreatorId,@MembershipId,@UserId,'Active',1,@Now,NULL,
+                     @Now,@Now,@UserId,@UserId);
+                INSERT auth.CreatorMembershipRoles (CreatorId,CreatorMembershipId,Role)
+                    VALUES (@CreatorId,@MembershipId,'Owner');
+                INSERT audit.AuditEvents
+                    (AuditEventId,CreatorId,ActorType,ActorUserId,Permission,ResourceType,ResourceId,
+                     Outcome,ReasonCategory,OccurredAtUtc,CorrelationId,PreviousVersion,ResultingVersion)
+                VALUES
+                    (@AuditEventId,@CreatorId,'System',NULL,'Creator.ManageMembers','CreatorMembership',
+                     @MembershipId,'Succeeded','Completed',@Now,@CorrelationId,NULL,1);
+                """, connection, transaction))
+            {
+                command.Parameters.AddWithValue("@CreatorId", InitialOwnerCreatorId);
+                command.Parameters.AddWithValue("@MembershipId", InitialOwnerMembershipId);
+                command.Parameters.AddWithValue("@AuditEventId", InitialOwnerAuditEventId);
+                command.Parameters.AddWithValue("@UserId", targetUserId);
+                command.Parameters.AddWithValue("@CorrelationId", correlationId);
+                await command.ExecuteNonQueryAsync(cancellationToken);
+            }
+
+            var occurredAtUtc = DateTimeOffset.UtcNow;
+            var payload = JsonSerializer.Serialize(new
+            {
+                schemaVersion = 1,
+                operation = InitialOwnerOperationVersion,
+                outcome = "created",
+                creatorId = InitialOwnerCreatorId,
+                membershipId = InitialOwnerMembershipId,
+                role = "Owner",
+                membershipVersion = 1,
+                targetUserIdSha256 = Hash(targetUserId),
+                auditEventId = InitialOwnerAuditEventId,
+                auditActorType = "System",
+                supportId,
+                correlationId,
+                operationId = context.OperationId,
+                occurredAtUtc
+            });
+            if (Encoding.UTF8.GetByteCount(payload) > 4096)
+                throw new InvalidOperationException("The initial-owner bootstrap evidence exceeded its size bound.");
+
+            await transaction.CommitAsync(cancellationToken);
+            committed = true;
+            await (evidenceWriter ?? Console.Out).WriteLineAsync(payload);
+            return 0;
+        }
+        catch
+        {
+            if (committed)
+                throw;
+            try
+            {
+                await transaction.RollbackAsync(CancellationToken.None);
+            }
+            catch
+            {
+                throw new InvalidOperationException(
+                    "The initial-owner bootstrap failed and transaction rollback was not conclusive.");
+            }
+            throw;
+        }
     }
 
     /// <summary>
@@ -560,6 +697,20 @@ internal static class SqlAdministratorOperationRunner
 
     private static string RequireBoundedIdentifier(string name) =>
         RequireBoundedIdentifier(Require(name), name);
+
+    private static string RequireAuthorizationIdentity(string name) =>
+        RequireAuthorizationIdentity(Require(name), name);
+
+    private static string RequireAuthorizationIdentity(string value, string parameterName)
+    {
+        if (string.IsNullOrWhiteSpace(value)
+            || value.Length is < 3 or > 64
+            || value[0] is < 'a' or > 'z'
+            || value.Any(character => character is not (>= 'a' and <= 'z')
+                and not (>= '0' and <= '9') and not '_'))
+            throw new ArgumentException("A canonical authorization identity is required.", parameterName);
+        return value;
+    }
 
     private static string RequireBoundedIdentifier(string value, string parameterName)
     {
