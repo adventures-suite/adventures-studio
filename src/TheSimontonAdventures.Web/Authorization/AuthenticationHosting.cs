@@ -77,10 +77,30 @@ public static class AuthenticationHosting
         }
 
         var trustedProxyAddresses = section.GetSection("TrustedProxyAddresses").Get<string[]>() ?? [];
-        if (trustedProxyAddresses.Length == 0)
+        var trustedProxyNetworks = section.GetSection("TrustedProxyNetworks").Get<string[]>() ?? [];
+        if (trustedProxyAddresses.Length == 0 && trustedProxyNetworks.Length == 0)
         {
-            throw new InvalidOperationException("At least one exact trusted proxy address is required.");
+            throw new InvalidOperationException("At least one trusted proxy address or network is required.");
         }
+
+        var parsedProxyAddresses = trustedProxyAddresses.Select(value =>
+        {
+            if (!IPAddress.TryParse(value, out var address))
+            {
+                throw new InvalidOperationException("Every trusted proxy must be an exact IP address.");
+            }
+
+            return address;
+        }).ToArray();
+        var parsedProxyNetworks = trustedProxyNetworks.Select(value =>
+        {
+            if (!System.Net.IPNetwork.TryParse(value, out var network) || !value.Contains("/", StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException("Every trusted proxy network must use CIDR notation.");
+            }
+
+            return network;
+        }).ToArray();
 
         builder.Services.Configure<ForwardedHeadersOptions>(options =>
         {
@@ -88,13 +108,8 @@ public static class AuthenticationHosting
             options.ForwardLimit = 1;
             options.KnownIPNetworks.Clear();
             options.KnownProxies.Clear();
-            foreach (var value in trustedProxyAddresses)
+            foreach (var address in parsedProxyAddresses)
             {
-                if (!IPAddress.TryParse(value, out var address))
-                {
-                    throw new InvalidOperationException("Every trusted proxy must be an exact IP address.");
-                }
-
                 options.KnownProxies.Add(address);
                 if (address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                 {
@@ -102,6 +117,17 @@ public static class AuthenticationHosting
                     // its IPv4-mapped IPv6 equivalent. Trust both representations
                     // of the same configured address without widening the allowlist.
                     options.KnownProxies.Add(address.MapToIPv6());
+                }
+            }
+
+            foreach (var network in parsedProxyNetworks)
+            {
+                options.KnownIPNetworks.Add(network);
+                if (network.BaseAddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                {
+                    options.KnownIPNetworks.Add(new System.Net.IPNetwork(
+                        network.BaseAddress.MapToIPv6(),
+                        network.PrefixLength + 96));
                 }
             }
         });
