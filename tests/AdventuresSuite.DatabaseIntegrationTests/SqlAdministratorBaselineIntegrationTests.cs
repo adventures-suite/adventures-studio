@@ -206,9 +206,25 @@ public sealed class SqlAdministratorBaselineIntegrationTests
             await using var connection = new SqlConnection(connectionString);
             await connection.OpenAsync();
 
+            var beforeCleanup = await CaptureBaselineAsync(connection, databaseName);
+            Assert.Equal(1, beforeCleanup.ExitCode);
+            Assert.Equal("unexpected", beforeCleanup.Evidence.RootElement.GetProperty("outcome").GetString());
+
+            await ExecuteAsync(connectionString, $"""
+                REVOKE CONNECT TO [{MigrationPrincipalName}];
+                REVOKE CREATE TABLE TO [{MigrationPrincipalName}];
+                REVOKE VIEW DEFINITION TO [{MigrationPrincipalName}];
+                REVOKE CONTROL ON SCHEMA::planning FROM [{MigrationPrincipalName}];
+                REVOKE CONTROL ON SCHEMA::auth FROM [{MigrationPrincipalName}];
+                REVOKE CONTROL ON SCHEMA::audit FROM [{MigrationPrincipalName}];
+                REVOKE SELECT, INSERT, UPDATE, DELETE ON OBJECT::dbo.AdventuresSuiteSchemaVersions FROM [{MigrationPrincipalName}];
+                DROP USER [{MigrationPrincipalName}];
+                """);
+
             var result = await CaptureBaselineAsync(connection, databaseName);
             Assert.True(result.ExitCode == 0, result.Evidence.RootElement.ToString());
             Assert.Equal("complete", result.Evidence.RootElement.GetProperty("outcome").GetString());
+            Assert.Empty(result.Evidence.RootElement.GetProperty("principals").EnumerateArray());
         }
         finally
         {
