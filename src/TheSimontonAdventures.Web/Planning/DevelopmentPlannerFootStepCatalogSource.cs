@@ -4,7 +4,7 @@ using TheSimontonAdventures.Web.Creators;
 namespace TheSimontonAdventures.Web.Planning;
 
 /// <summary>Loads fictional, environment-isolated FootSteps for authenticated local development.</summary>
-public sealed class DevelopmentPlannerFootStepCatalogSource : IPlannerFootStepCatalogSource
+public sealed class DevelopmentPlannerFootStepCatalogSource : IPlannerFootStepCatalogSource, IPlannerFootStepUseResolver
 {
     private readonly IReadOnlyList<PlannerFootStepDefinition> items;
 
@@ -24,6 +24,24 @@ public sealed class DevelopmentPlannerFootStepCatalogSource : IPlannerFootStepCa
         string requestedLocale,
         CancellationToken cancellationToken = default) =>
         Task.FromResult(items);
+
+    /// <inheritdoc />
+    public Task<AuthorizedPlannerFootStepUse?> ResolveAsync(
+        AdventuresSuite.Identity.ActorIdentity actor,
+        CreatorId customerCreatorId,
+        string footStepId,
+        string version,
+        CancellationToken cancellationToken = default)
+    {
+        var item = actor is { IsHuman: true }
+            ? items.SingleOrDefault(candidate =>
+                string.Equals(candidate.Id, footStepId, StringComparison.Ordinal)
+                && string.Equals(candidate.Version, version, StringComparison.Ordinal))
+            : null;
+        return Task.FromResult(item?.DestinationDraft is null
+            ? null
+            : new AuthorizedPlannerFootStepUse(item, $"development:{item.Id}:{item.Version}"));
+    }
 
     private static PlannerFootStepDefinition ToDefinition(Record source) => new()
     {
@@ -48,7 +66,10 @@ public sealed class DevelopmentPlannerFootStepCatalogSource : IPlannerFootStepCa
         TravelerCompositions = Set(source.TravelerCompositions),
         SourceClasses = Set(source.SourceClasses),
         Languages = Set(source.Languages),
-        DurationDays = source.DurationDays
+        DurationDays = source.DurationDays,
+        DestinationDraft = source.DestinationDraft is null
+            ? null
+            : new(source.DestinationDraft.Name, source.DestinationDraft.TimeZoneId)
     };
 
     private static IReadOnlySet<string> Set(IEnumerable<string> values) =>
@@ -78,5 +99,12 @@ public sealed class DevelopmentPlannerFootStepCatalogSource : IPlannerFootStepCa
         public IReadOnlyList<string> SourceClasses { get; init; } = [];
         public IReadOnlyList<string> Languages { get; init; } = [];
         public int? DurationDays { get; init; }
+        public DestinationDraftRecord? DestinationDraft { get; init; }
+    }
+
+    private sealed record DestinationDraftRecord
+    {
+        public required string Name { get; init; }
+        public required string TimeZoneId { get; init; }
     }
 }

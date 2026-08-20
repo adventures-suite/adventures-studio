@@ -223,6 +223,18 @@ payload, card identity, or source entitlement never authorizes a mutation.
 Unknown fields and stale or mismatched context fail closed. Exact replay follows
 the owning Planning command's idempotency rules.
 
+The first proven mutation applies one exact-version Destination FootStep. The
+review surface fixes the source-provided destination name and IANA time zone,
+lets the user review inclusive dates within the plan, and states that nothing
+is booked. The POST reauthorizes Creator membership and the exact plan instance,
+resolves the exact FootStep version again, serializes a Creator-and-plan-scoped
+idempotency key, and commits the destination, immutable source provenance, plan
+version, and required audit intent in one SQL transaction. A replay is accepted
+only when the fingerprint, resulting destination, and matching successful audit
+evidence all still exist. This Destination-first proving slice is deliberately
+narrower than Journey-template instantiation and does not establish drag and
+drop, availability, pricing, or booking behavior.
+
 ## Privacy, Trust, and Commercial Boundaries
 
 - Private Planning data is minimized before matching against any external
@@ -286,13 +298,14 @@ exists.
 8. Add measured ranking and personalization only after consent, classification,
    evaluation, reporting, retention, and cost policies are approved.
 
-The initial executable query boundary is now in place with exact Creator,
+The executable query boundary is now in place with exact Creator,
 actor, plan, and selected-context validation, deterministic combined facets,
 paging, and a fail-closed production source. Its fictional local Development
-catalog is environment-isolated JSON and is not production content. The next
-focused slice must replace or supplement that source through the reviewed
-Content Engine library boundary before proving one Activity FootStep review and
-Add-to-plan operation with durable provenance.
+catalog is environment-isolated JSON and is not production content. The first
+reviewed Add-to-plan boundary applies one Destination FootStep with durable
+exact-source provenance, retry safety, optimistic concurrency, and atomic audit.
+Production launch content still requires the reviewed Content Engine library
+boundary; the next mutation type must remain a separate focused slice.
 
 ## Definition of Done
 

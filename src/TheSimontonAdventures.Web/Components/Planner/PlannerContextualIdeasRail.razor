@@ -41,6 +41,10 @@
                         <button type="button" @onclick="ShowWholeAdventureAsync">Whole Adventure</button>
                     }
                 </div>
+                @if (ApplicationStatusMessage is not null)
+                {
+                    <p class="planner-ideas__application-status" role="status">@ApplicationStatusMessage</p>
+                }
                 <nav class="planner-ideas__types" aria-label="FootStep types for @Context.Label">
                     <button type="button" aria-pressed="@(SelectedType is null ? "true" : "false")" @onclick="() => SelectType(null)">All</button>
                     @foreach (var type in AvailableTypes)
@@ -105,7 +109,7 @@
                         <div class="planner-ideas__table-region" tabindex="0" role="region" aria-label="FootSteps table">
                             <table class="planner-ideas__table">
                                 <caption>FootSteps for @Context.Label</caption>
-                                <thead><tr><th scope="col">FootStep</th><th scope="col">Type</th><th scope="col">Location</th><th scope="col">Transportation</th><th scope="col">Duration</th><th scope="col">Category</th><th scope="col">Source</th></tr></thead>
+                                <thead><tr><th scope="col">FootStep</th><th scope="col">Type</th><th scope="col">Location</th><th scope="col">Transportation</th><th scope="col">Duration</th><th scope="col">Category</th><th scope="col">Source</th><th scope="col">Action</th></tr></thead>
                                 <tbody>
                                 @foreach (var idea in group.Items)
                                 {
@@ -117,6 +121,25 @@
                                         <td>@DisplayDuration(idea.DurationDays)</td>
                                         <td>@DisplayValues(idea.Categories)</td>
                                         <td>@idea.Attribution</td>
+                                        <td>
+                                            @if (CanEdit && idea.DestinationDraft is { } destination && !string.IsNullOrWhiteSpace(ApplyDestinationPath))
+                                            {
+                                                <details class="planner-ideas__apply"><summary>Preview</summary>
+                                                    <p>Add <strong>@destination.Name</strong> as a proposed destination. Nothing is booked.</p>
+                                                    <form method="post" action="@ApplyDestinationPath">
+                                                        <AntiforgeryToken />
+                                                        <input type="hidden" name="idempotencyKey" value="@ApplicationKey(idea)" />
+                                                        <input type="hidden" name="expectedVersion" value="@ExpectedVersion" />
+                                                        <input type="hidden" name="footStepId" value="@idea.Id" />
+                                                        <input type="hidden" name="footStepVersion" value="@idea.Version" />
+                                                        <input type="hidden" name="timeZoneId" value="@destination.TimeZoneId" />
+                                                        <label>Start date <input type="date" name="startDate" value="@PlanStartDate.ToString("yyyy-MM-dd")" min="@PlanStartDate.ToString("yyyy-MM-dd")" max="@PlanEndDate.ToString("yyyy-MM-dd")" required /></label>
+                                                        <label>End date <input type="date" name="endDate" value="@SuggestedEnd(idea).ToString("yyyy-MM-dd")" min="@PlanStartDate.ToString("yyyy-MM-dd")" max="@PlanEndDate.ToString("yyyy-MM-dd")" required /></label>
+                                                        <button type="submit">Add to plan</button>
+                                                    </form>
+                                                </details>
+                                            }
+                                        </td>
                                     </tr>
                                 }
                                 </tbody>
@@ -135,6 +158,23 @@
                                 <p>@idea.Summary</p>
                                 <dl><div><dt>Source</dt><dd>@idea.Attribution</dd></div><div><dt>Freshness</dt><dd>@idea.Freshness</dd></div><div><dt>Why</dt><dd>@ContextReason</dd></div></dl>
                                 <p class="planner-ideas__boundary">Inspiration only — not booked, available, or added to your plan.</p>
+                                @if (CanEdit && idea.DestinationDraft is { } destination && !string.IsNullOrWhiteSpace(ApplyDestinationPath))
+                                {
+                                    <details class="planner-ideas__apply"><summary>Preview Add to plan</summary>
+                                        <p>Add <strong>@destination.Name</strong> as a proposed destination using <strong>@destination.TimeZoneId</strong>. Review the inclusive dates before confirming. Nothing is booked.</p>
+                                        <form method="post" action="@ApplyDestinationPath">
+                                            <AntiforgeryToken />
+                                            <input type="hidden" name="idempotencyKey" value="@ApplicationKey(idea)" />
+                                            <input type="hidden" name="expectedVersion" value="@ExpectedVersion" />
+                                            <input type="hidden" name="footStepId" value="@idea.Id" />
+                                            <input type="hidden" name="footStepVersion" value="@idea.Version" />
+                                            <input type="hidden" name="timeZoneId" value="@destination.TimeZoneId" />
+                                            <label>Start date <input type="date" name="startDate" value="@PlanStartDate.ToString("yyyy-MM-dd")" min="@PlanStartDate.ToString("yyyy-MM-dd")" max="@PlanEndDate.ToString("yyyy-MM-dd")" required /></label>
+                                            <label>End date <input type="date" name="endDate" value="@SuggestedEnd(idea).ToString("yyyy-MM-dd")" min="@PlanStartDate.ToString("yyyy-MM-dd")" max="@PlanEndDate.ToString("yyyy-MM-dd")" required /></label>
+                                            <button type="submit">Add to plan</button>
+                                        </form>
+                                    </details>
+                                }
                             </article></li>
                         }
                         </ul>

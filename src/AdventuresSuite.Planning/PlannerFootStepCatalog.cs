@@ -100,6 +100,32 @@ public sealed record PlannerFootStepDefinition
     public IReadOnlySet<string> Languages { get; init; } = new HashSet<string>(StringComparer.Ordinal);
     /// <summary>Gets the suggested duration in days when applicable.</summary>
     public int? DurationDays { get; init; }
+    /// <summary>Gets the typed destination draft when this FootStep supports that reviewed operation.</summary>
+    public PlannerFootStepDestinationDraft? DestinationDraft { get; init; }
+}
+
+/// <summary>Defines allowlisted destination values proposed by an immutable FootStep version.</summary>
+/// <param name="Name">The proposed destination working name.</param>
+/// <param name="TimeZoneId">The proposed IANA time-zone identifier.</param>
+public sealed record PlannerFootStepDestinationDraft(string Name, string TimeZoneId);
+
+/// <summary>Represents an exact authorized FootStep use decision.</summary>
+/// <param name="FootStep">The immutable exact-version source.</param>
+/// <param name="UseDecisionReference">The opaque authorization, entitlement, and license decision reference.</param>
+public sealed record AuthorizedPlannerFootStepUse(
+    PlannerFootStepDefinition FootStep,
+    string UseDecisionReference);
+
+/// <summary>Reauthorizes use of one exact immutable FootStep version.</summary>
+public interface IPlannerFootStepUseResolver
+{
+    /// <summary>Resolves an exact source version for a customer Creator and human actor.</summary>
+    Task<AuthorizedPlannerFootStepUse?> ResolveAsync(
+        ActorIdentity actor,
+        CreatorId customerCreatorId,
+        string footStepId,
+        string version,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>Describes an explicit authorized FootStep query.</summary>
@@ -251,4 +277,17 @@ public sealed class UnavailablePlannerFootStepCatalogSource : IPlannerFootStepCa
         string requestedLocale,
         CancellationToken cancellationToken = default) =>
         Task.FromResult<IReadOnlyList<PlannerFootStepDefinition>>([]);
+}
+
+/// <summary>Fails closed when no reviewed FootStep use resolver is configured.</summary>
+public sealed class UnavailablePlannerFootStepUseResolver : IPlannerFootStepUseResolver
+{
+    /// <inheritdoc />
+    public Task<AuthorizedPlannerFootStepUse?> ResolveAsync(
+        ActorIdentity actor,
+        CreatorId customerCreatorId,
+        string footStepId,
+        string version,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult<AuthorizedPlannerFootStepUse?>(null);
 }

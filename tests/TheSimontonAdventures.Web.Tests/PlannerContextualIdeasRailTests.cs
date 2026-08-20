@@ -173,6 +173,52 @@ public sealed class PlannerContextualIdeasRailTests
             StringComparison.Ordinal);
     }
 
+    /// <summary>An editable Destination FootStep renders reviewed dates and exact source fields.</summary>
+    [Fact]
+    public async Task Rail_EditableDestinationFootStep_RendersReviewedApplyForm()
+    {
+        var html = await RenderAsync(new()
+        {
+            [nameof(PlannerContextualIdeasRail.Context)] = new PlannerIdeasContext(
+                PlannerIdeasContextKind.Adventure, "plan-1", "Portugal"),
+            [nameof(PlannerContextualIdeasRail.AuthorizedItems)] = new[] { DestinationItem() },
+            [nameof(PlannerContextualIdeasRail.CanEdit)] = true,
+            [nameof(PlannerContextualIdeasRail.ExpectedVersion)] = 4L,
+            [nameof(PlannerContextualIdeasRail.PlanStartDate)] = new DateOnly(2027, 5, 1),
+            [nameof(PlannerContextualIdeasRail.PlanEndDate)] = new DateOnly(2027, 5, 10),
+            [nameof(PlannerContextualIdeasRail.ApplyDestinationPath)] = "/apply-destination"
+        });
+
+        Assert.Contains("Preview Add to plan", html, StringComparison.Ordinal);
+        Assert.Contains("Lisbon, Portugal", html, StringComparison.Ordinal);
+        Assert.Contains("Nothing is booked", html, StringComparison.Ordinal);
+        Assert.Contains("action=\"/apply-destination\"", html, StringComparison.Ordinal);
+        Assert.Contains("name=\"expectedVersion\" value=\"4\"", html, StringComparison.Ordinal);
+        Assert.Contains("name=\"footStepId\" value=\"footstep_destination_lisbon_gateway\"", html, StringComparison.Ordinal);
+        Assert.Contains("name=\"footStepVersion\" value=\"1.0\"", html, StringComparison.Ordinal);
+        Assert.Contains("name=\"timeZoneId\" value=\"Europe/Lisbon\"", html, StringComparison.Ordinal);
+        Assert.Contains("name=\"startDate\"", html, StringComparison.Ordinal);
+        Assert.Contains("name=\"endDate\"", html, StringComparison.Ordinal);
+        Assert.Contains("Add to plan", html, StringComparison.Ordinal);
+    }
+
+    /// <summary>Read-only users see the proposal but no mutation form or usable action.</summary>
+    [Fact]
+    public async Task Rail_ReadOnlyDestinationFootStep_DoesNotRenderApplyForm()
+    {
+        var html = await RenderAsync(new()
+        {
+            [nameof(PlannerContextualIdeasRail.Context)] = new PlannerIdeasContext(
+                PlannerIdeasContextKind.Adventure, "plan-1", "Portugal"),
+            [nameof(PlannerContextualIdeasRail.AuthorizedItems)] = new[] { DestinationItem() },
+            [nameof(PlannerContextualIdeasRail.CanEdit)] = false,
+            [nameof(PlannerContextualIdeasRail.ApplyDestinationPath)] = "/apply-destination"
+        });
+
+        Assert.DoesNotContain("action=\"/apply-destination\"", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Add to plan", html, StringComparison.Ordinal);
+    }
+
     private static async Task<string> RenderAsync(Dictionary<string, object?> parameters)
     {
         var services = new ServiceCollection();
@@ -215,6 +261,19 @@ public sealed class PlannerContextualIdeasRailTests
         Categories = new HashSet<string>(StringComparer.Ordinal) { "outdoors" },
         RouteStyles = new HashSet<string>(StringComparer.Ordinal) { "scenic" },
         Surfaces = new HashSet<string>(StringComparer.Ordinal) { "paved" }
+    };
+
+    private static PlannerFootStepDefinition DestinationItem() => new()
+    {
+        Id = "footstep_destination_lisbon_gateway",
+        Version = "1.0",
+        Kind = "destination",
+        Title = "Lisbon cultural gateway",
+        Summary = "Fictional reviewed destination draft.",
+        Attribution = "AdventuresSuite fictional editorial demo",
+        Freshness = "Demo snapshot",
+        ContextKinds = new HashSet<PlannerFootStepContextKind> { PlannerFootStepContextKind.Adventure },
+        DestinationDraft = new("Lisbon, Portugal", "Europe/Lisbon")
     };
 
     private static IReadOnlyList<PlannerFootStepDefinition> DiverseJourneyItems() =>

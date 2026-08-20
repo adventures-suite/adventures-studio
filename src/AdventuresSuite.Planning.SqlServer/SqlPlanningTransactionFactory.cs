@@ -56,6 +56,7 @@ internal sealed class SqlPlanningTransaction : IPlanningTransaction
     private readonly PlanningMutationAuditTracker auditTracker;
     private readonly AdventurePlanCreateIdempotencyTracker idempotencyTracker;
     private readonly AdventurePlanTemplateOriginTracker templateOriginTracker;
+    private readonly PlannerFootStepApplicationTracker footStepApplicationTracker;
 
     public SqlPlanningTransaction(
         CreatorId creatorId,
@@ -68,12 +69,15 @@ internal sealed class SqlPlanningTransaction : IPlanningTransaction
         auditTracker = new PlanningMutationAuditTracker(creatorId);
         idempotencyTracker = new AdventurePlanCreateIdempotencyTracker();
         templateOriginTracker = new AdventurePlanTemplateOriginTracker();
+        footStepApplicationTracker = new PlannerFootStepApplicationTracker();
         AdventurePlans = new DapperAdventurePlanRepository(
             creatorId, connection, transaction, auditTracker);
         AdventurePlanCreateIdempotency = new SqlAdventurePlanCreateIdempotencyStore(
             creatorId, connection, transaction, idempotencyTracker);
         AdventurePlanTemplateOrigins = new SqlAdventurePlanTemplateOriginStore(
             creatorId, connection, transaction, templateOriginTracker);
+        PlannerFootStepApplications = new SqlPlannerFootStepApplicationStore(
+            creatorId, connection, transaction, footStepApplicationTracker);
     }
 
     public CreatorId CreatorId { get; }
@@ -84,6 +88,8 @@ internal sealed class SqlPlanningTransaction : IPlanningTransaction
 
     public IAdventurePlanTemplateOriginStore AdventurePlanTemplateOrigins { get; }
 
+    public IPlannerFootStepApplicationStore PlannerFootStepApplications { get; }
+
     public IRequiredAuditIntentCollector RequiredAuditIntents => auditTracker;
 
     public async Task CommitAsync(CancellationToken cancellationToken = default)
@@ -91,6 +97,7 @@ internal sealed class SqlPlanningTransaction : IPlanningTransaction
         ObjectDisposedException.ThrowIf(completed, this);
         var auditEvents = auditTracker.ValidateForCommit();
         idempotencyTracker.ValidateForCommit(auditTracker, templateOriginTracker);
+        footStepApplicationTracker.ValidateForCommit(auditTracker);
         foreach (var auditEvent in auditEvents)
         {
             await connection.ExecuteAsync(new CommandDefinition("""
@@ -240,6 +247,16 @@ internal sealed class PlanningMutationAuditTracker(CreatorId creatorId)
             auditEvent.Permission == Permissions.AdventurePlanCreate
             && auditEvent.Resource.ResourceId == planId.Value
             && auditEvent.PreviousVersion is null
+            && auditEvent.ResultingVersion == resultingVersion) == 1;
+
+    public bool HasExactlyOneAuditedUpdate(AdventurePlanId planId, long resultingVersion) =>
+        mutations.Count(mutation => mutation.PlanId == planId
+            && mutation.PreviousVersion == resultingVersion - 1
+            && mutation.ResultingVersion == resultingVersion) == 1
+        && auditEvents.Count(auditEvent =>
+            auditEvent.Permission == Permissions.AdventurePlanEdit
+            && auditEvent.Resource.ResourceId == planId.Value
+            && auditEvent.PreviousVersion == resultingVersion - 1
             && auditEvent.ResultingVersion == resultingVersion) == 1;
 
     private sealed record PlanningMutation(
