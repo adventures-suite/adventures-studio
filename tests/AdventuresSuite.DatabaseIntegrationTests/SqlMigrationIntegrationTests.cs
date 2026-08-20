@@ -153,9 +153,9 @@ public sealed class SqlMigrationIntegrationTests
         }
     }
 
-    /// <summary>Proves exact 0009 upgrades through only 0010 with unchanged existing data.</summary>
+    /// <summary>Proves one reviewed operation upgrades exact 0009 through 0012.</summary>
     [Fact]
-    public async Task Migration0010_UpgradesExact0009ExactlyOnce()
+    public async Task ReviewedOperation_UpgradesExact0009Through0012ExactlyOnce()
     {
         var masterConnectionString = Environment.GetEnvironmentVariable(ConnectionVariable);
         Assert.False(string.IsNullOrWhiteSpace(masterConnectionString),
@@ -179,20 +179,24 @@ public sealed class SqlMigrationIntegrationTests
             IReadOnlyList<string> applied;
             using (DatabaseMigratorRunner.AcquireMigrationLock(connectionString))
                 applied = DatabaseMigratorRunner.MigrateWithLockHeld(
-                    connectionString, maximumMigrationNumber: "0010");
+                    connectionString, maximumMigrationNumber: "0012");
 
-            Assert.Single(applied);
+            Assert.Equal(3, applied.Count);
             Assert.EndsWith("0010_create_companion_policy_assignments.sql", applied[0],
                 StringComparison.Ordinal);
+            Assert.EndsWith("0011_create_adventure_plan_template_origins.sql", applied[1],
+                StringComparison.Ordinal);
+            Assert.EndsWith("0012_create_planner_footstep_applications.sql", applied[2],
+                StringComparison.Ordinal);
             var after = await MigrationOperationalState.CaptureAsync(connectionString);
-            Assert.Equal(MigrationJournalOutcome.At0010,
+            Assert.Equal(MigrationJournalOutcome.At0012,
                 MigrationOperationalState.Classify(after.Journal));
             Assert.Equal(before.ApplicationFingerprint, after.ApplicationFingerprint);
             Assert.True(MigrationOperationRunner.VerifyExpectedPostState(after));
             Assert.Equal(MigrationOperationClassification.Complete,
                 MigrationOperationRunner.ClassifyResult(
-                    before, after, MigrationJournalOutcome.At0010, null));
-            Assert.Equal(2, DatabaseMigratorRunner.Migrate(connectionString).Count);
+                    before, after, MigrationJournalOutcome.At0012, null));
+            Assert.Empty(DatabaseMigratorRunner.Migrate(connectionString));
         }
         finally
         {
@@ -618,10 +622,10 @@ public sealed class SqlMigrationIntegrationTests
                     before, MigrationJournalOutcome.At0009);
                 await MigrationOperationRunner.VerifyPermissionsBeforeMigrationAsync(
                     () => new SqlConnection(restricted), "permission-gate-test");
-                Assert.Single(DatabaseMigratorRunner.MigrateWithLockHeld(
-                    restricted, maximumMigrationNumber: "0010"));
+                Assert.Equal(3, DatabaseMigratorRunner.MigrateWithLockHeld(
+                    restricted, maximumMigrationNumber: "0012").Count);
                 var after = await MigrationOperationalState.CaptureAsync(restricted);
-                Assert.Equal(MigrationJournalOutcome.At0010,
+                Assert.Equal(MigrationJournalOutcome.At0012,
                     MigrationOperationalState.Classify(after.Journal));
                 Assert.Equal(before.ApplicationFingerprint, after.ApplicationFingerprint);
                 Assert.True(MigrationOperationRunner.VerifyExpectedPostState(after));
@@ -632,21 +636,19 @@ public sealed class SqlMigrationIntegrationTests
                     changedApplicationData.ApplicationFingerprint);
                 Assert.Equal(MigrationOperationClassification.Unexpected,
                     MigrationOperationRunner.ClassifyResult(
-                        before, changedApplicationData, MigrationJournalOutcome.At0010, null));
+                        before, changedApplicationData, MigrationJournalOutcome.At0012, null));
             }
 
             using (DatabaseMigratorRunner.AcquireMigrationLock(restricted))
                 Assert.Empty(DatabaseMigratorRunner.MigrateWithLockHeld(
-                    restricted, maximumMigrationNumber: "0010"));
+                    restricted, maximumMigrationNumber: "0012"));
             await AzureDevelopmentBootstrapper.VerifyMigrationPermissionsAsync(restricted);
             var state = await MigrationOperationalState.CaptureAsync(restricted);
-            Assert.Equal(MigrationJournalOutcome.At0010, MigrationOperationalState.Classify(state.Journal));
+            Assert.Equal(MigrationJournalOutcome.At0012, MigrationOperationalState.Classify(state.Journal));
             Assert.True(MigrationOperationRunner.VerifyExpectedPostState(state));
 
             using (DatabaseMigratorRunner.AcquireMigrationLock(restricted))
-            {
-                Assert.Throws<InvalidOperationException>(() => DatabaseMigratorRunner.Migrate(restricted));
-            }
+                Assert.Empty(DatabaseMigratorRunner.MigrateWithLockHeld(restricted));
         }
         finally
         {

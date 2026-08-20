@@ -31,7 +31,8 @@ internal static class MigrationOperationalState
             INNER JOIN sys.schemas AS schemas ON schemas.schema_id = objects.schema_id
             WHERE objects.type = N'U'
               AND ((schemas.name = N'planning' AND objects.name IN
-                  (N'TravelerParticipations', N'AdventurePlanCreateResults'))
+                  (N'TravelerParticipations', N'AdventurePlanCreateResults',
+                   N'AdventurePlanTemplateOrigins', N'PlannerFootStepApplications'))
                OR objects.name LIKE N'%Companion%')
             ORDER BY schemas.name, objects.name, objects.type_desc;
             """);
@@ -197,6 +198,29 @@ internal static class MigrationOperationalState
                 LEFT JOIN sys.database_principals AS owners
                     ON owners.principal_id = roles.owning_principal_id
                 WHERE roles.name = N'AdventuresSuiteCompanionPolicyRuntime';
+                """),
+            await ObjectExistsAsync(connection, "planning.AdventurePlanTemplateOrigins"),
+            await ScalarAsync(connection, """
+                SELECT COUNT(*) FROM sys.objects
+                WHERE parent_object_id = OBJECT_ID(N'planning.AdventurePlanTemplateOrigins')
+                  AND type IN (N'PK', N'UQ', N'F', N'C');
+                """),
+            await ScalarAsync(connection, """
+                SELECT COUNT(*) FROM sys.indexes
+                WHERE object_id = OBJECT_ID(N'planning.AdventurePlanTemplateOrigins')
+                  AND name = N'IX_AdventurePlanTemplateOrigins_TemplateVersion';
+                """) == 1,
+            await ObjectExistsAsync(connection, "planning.PlannerFootStepApplications"),
+            await ScalarAsync(connection, """
+                SELECT COUNT(*) FROM sys.objects
+                WHERE parent_object_id = OBJECT_ID(N'planning.PlannerFootStepApplications')
+                  AND type IN (N'PK', N'UQ', N'F', N'C');
+                """),
+            await ScalarAsync(connection, """
+                SELECT COUNT(*) FROM sys.indexes
+                WHERE object_id = OBJECT_ID(N'planning.PlannerFootStepApplications')
+                  AND name IN (N'UX_PlannerFootStepApplications_Target',
+                               N'IX_PlannerFootStepApplications_Source');
                 """));
     }
 
@@ -282,7 +306,13 @@ internal sealed record MigrationStateEvidence(
     bool CompanionPolicyRoleExists,
     int CompanionPolicyRoleMemberCount,
     int CompanionPolicyParentRoleCount,
-    string CompanionPolicyRoleOwner);
+    string CompanionPolicyRoleOwner,
+    bool AdventurePlanTemplateOriginsExists,
+    int AdventurePlanTemplateOriginConstraintCount,
+    bool AdventurePlanTemplateOriginIndexExists,
+    bool PlannerFootStepApplicationsExists,
+    int PlannerFootStepApplicationConstraintCount,
+    int PlannerFootStepApplicationIndexCount);
 
 internal enum MigrationJournalOutcome
 {
