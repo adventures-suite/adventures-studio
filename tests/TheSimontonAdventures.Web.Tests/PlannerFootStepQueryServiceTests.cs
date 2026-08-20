@@ -99,13 +99,20 @@ public sealed class PlannerFootStepQueryServiceTests
 
     private static PlannerFootStepDefinition Item(
         string id, string title, string mode, string category, string route, string surface) => new()
-    {
-        Id = id, Version = "1.0", Kind = "activity", Title = title, Summary = "Summary",
-        Attribution = "Adventures Studio", Freshness = "Reviewed",
-        ContextKinds = new HashSet<PlannerFootStepContextKind> { PlannerFootStepContextKind.Day },
-        TransportationModes = Set(mode), Categories = Set(category), RouteStyles = Set(route),
-        Surfaces = Set(surface)
-    };
+        {
+            Id = id,
+            Version = "1.0",
+            Kind = "activity",
+            Title = title,
+            Summary = "Summary",
+            Attribution = "Adventures Studio",
+            Freshness = "Reviewed",
+            ContextKinds = new HashSet<PlannerFootStepContextKind> { PlannerFootStepContextKind.Day },
+            TransportationModes = Set(mode),
+            Categories = Set(category),
+            RouteStyles = Set(route),
+            Surfaces = Set(surface)
+        };
 
     private static IReadOnlySet<string> Set(params string[] values) => values.ToHashSet(StringComparer.Ordinal);
 
@@ -113,13 +120,19 @@ public sealed class PlannerFootStepQueryServiceTests
     {
         var visit = new DestinationVisit
         {
-            Id = new("visit_alpha"), Name = "Example", Dates = new(new(2027, 1, 1), new(2027, 1, 3)),
-            TimeZone = new("Europe/Rome"), Sequence = 1
+            Id = new("visit_alpha"),
+            Name = "Example",
+            Dates = new(new(2027, 1, 1), new(2027, 1, 3)),
+            TimeZone = new("Europe/Rome"),
+            Sequence = 1
         };
         var day = new ItineraryDay
         {
-            Id = DayId, DestinationVisitId = visit.Id, Date = new(2027, 1, 2),
-            TimeZone = visit.TimeZone, Title = "Example day"
+            Id = DayId,
+            DestinationVisitId = visit.Id,
+            Date = new(2027, 1, 2),
+            TimeZone = visit.TimeZone,
+            Title = "Example day"
         };
         var now = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
         return new(PlanId, Creator, "Example", null, AdventureLifecycleStage.Plan,

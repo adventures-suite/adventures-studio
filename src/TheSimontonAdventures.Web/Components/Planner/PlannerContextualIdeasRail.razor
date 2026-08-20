@@ -68,8 +68,29 @@
                         </div>
                     }
                 </details>
-                <ul class="planner-ideas__list">
-                    @foreach (var idea in PagedIdeas)
+                <div class="planner-ideas__display-controls">
+                    <label>Group by
+                        <select value="@GroupBy" @onchange="ChangeGrouping">
+                            <option value="None">No grouping</option><option value="Kind">FootStep type</option>
+                            <option value="Transportation">Transportation</option><option value="Category">Category</option><option value="Source">Source</option>
+                        </select>
+                    </label>
+                    <label>Sort by
+                        <select value="@SortBy" @onchange="ChangeSort">
+                            <option value="Catalog">Catalog order</option><option value="Title">Title</option>
+                            <option value="ShortestDuration">Shortest duration</option><option value="LongestDuration">Longest duration</option><option value="Source">Source</option>
+                        </select>
+                    </label>
+                    <div class="planner-ideas__view-toggle" role="group" aria-label="FootStep view type">
+                        <button type="button" aria-pressed="@(ViewType == PlannerFootStepView.Cards)" @onclick="() => ChangeView(PlannerFootStepView.Cards)">Cards</button>
+                        <button type="button" aria-pressed="@(ViewType == PlannerFootStepView.List)" @onclick="() => ChangeView(PlannerFootStepView.List)">List</button>
+                    </div>
+                </div>
+                @foreach (var group in PagedGroups)
+                {
+                    @if (group.Label is not null) { <h4 class="planner-ideas__group-heading">@group.Label</h4> }
+                    <ul class="planner-ideas__list">
+                    @foreach (var idea in group.Items)
                     {
                         <li><article class="planner-ideas__card">
                             <div class="planner-ideas__thumbnail" aria-hidden="true">@Monogram(idea)</div>
@@ -80,7 +101,8 @@
                             <p class="planner-ideas__boundary">Inspiration only — not booked, available, or added to your plan.</p>
                         </article></li>
                     }
-                </ul>
+                    </ul>
+                }
                 <PlannerIdeaPager TotalItems="@FacetedIdeas.Count"
                                   PageSize="@PageSize"
                                   CurrentPage="@CurrentPage"

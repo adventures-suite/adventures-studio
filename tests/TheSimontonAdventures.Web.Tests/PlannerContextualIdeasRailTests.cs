@@ -117,6 +117,23 @@ public sealed class PlannerContextualIdeasRailTests
         Assert.Contains("await OpenButton.FocusAsync();", codeBehind, StringComparison.Ordinal);
     }
 
+    /// <summary>Authorized results expose grouping, deterministic sorting, and equivalent card/list views.</summary>
+    [Fact]
+    public async Task Rail_PopulatedResults_ExposeDisplayControls()
+    {
+        var html = await RenderDevelopmentContextAsync(
+            new PlannerIdeasContext(PlannerIdeasContextKind.Destination, "destination-1", "Example coast"));
+
+        Assert.Contains("Group by", html, StringComparison.Ordinal);
+        Assert.Contains("FootStep type", html, StringComparison.Ordinal);
+        Assert.Contains("Transportation", html, StringComparison.Ordinal);
+        Assert.Contains("Sort by", html, StringComparison.Ordinal);
+        Assert.Contains("Shortest duration", html, StringComparison.Ordinal);
+        Assert.Contains("aria-label=\"FootStep view type\"", html, StringComparison.Ordinal);
+        Assert.Contains(">Cards</button>", html, StringComparison.Ordinal);
+        Assert.Contains(">List</button>", html, StringComparison.Ordinal);
+    }
+
     private static async Task<string> RenderAsync(Dictionary<string, object?> parameters)
     {
         var services = new ServiceCollection();

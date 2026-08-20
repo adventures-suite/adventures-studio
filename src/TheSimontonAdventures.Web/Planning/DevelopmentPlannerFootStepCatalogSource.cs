@@ -41,10 +41,13 @@ public sealed class DevelopmentPlannerFootStepCatalogSource : IPlannerFootStepCa
         RouteStyles = Set(source.RouteStyles),
         Surfaces = Set(source.Surfaces),
         Accessibility = Set(source.Accessibility),
-        Paces = Set(source.Paces), Seasons = Set(source.Seasons),
-        EquipmentNeeds = Set(source.EquipmentNeeds), BudgetBands = Set(source.BudgetBands),
+        Paces = Set(source.Paces),
+        Seasons = Set(source.Seasons),
+        EquipmentNeeds = Set(source.EquipmentNeeds),
+        BudgetBands = Set(source.BudgetBands),
         TravelerCompositions = Set(source.TravelerCompositions),
-        SourceClasses = Set(source.SourceClasses), Languages = Set(source.Languages),
+        SourceClasses = Set(source.SourceClasses),
+        Languages = Set(source.Languages),
         DurationDays = source.DurationDays
     };
 

@@ -249,6 +249,10 @@ production empty when no reviewed catalog source is configured. Authenticated
 local Development uses a separate fictional JSON catalog, including the
 motorcycle-touring proving scenario. This slice does not apply a FootStep or
 mutate Planning; reviewed Add-to-plan provenance remains the next boundary.
+The rail also provides presentation-only grouping, deterministic Sort-by
+choices, and equivalent Card/List views over the same authorized filtered
+page. Catalog order is labeled honestly and is not presented as personalized
+ranking.
 
 Facet identifiers and persisted preferences are locale-independent. The UI
 localizes labels and formatting, while Creator visibility, authorization,
