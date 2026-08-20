@@ -1,0 +1,25 @@
+@namespace TheSimontonAdventures.Web.Components
+
+<section class="creator-workspace-chooser" aria-labelledby="creator-workspace-title">
+    <p class="creator-workspace-chooser__eyebrow">Your workspaces</p>
+    <h2 id="creator-workspace-title">Choose a Creator workspace</h2>
+    <p>Open a private Planner workspace you are authorized to view.</p>
+    <div class="creator-workspace-chooser__grid">
+        @foreach (var workspace in Workspaces)
+        {
+            <a class="creator-workspace-choice"
+               href="/workspace/creators/@workspace.CreatorId.Value/plans">
+                <span class="creator-workspace-choice__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M4 20V8l8-4 8 4v12M8 20v-7h8v7M9 9h.01M15 9h.01" />
+                    </svg>
+                </span>
+                <span>
+                    <strong>@workspace.DisplayName</strong>
+                    <small>Open Planner</small>
+                </span>
+                <span aria-hidden="true">→</span>
+            </a>
+        }
+    </div>
+</section>

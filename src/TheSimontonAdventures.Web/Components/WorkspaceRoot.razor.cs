@@ -31,6 +31,7 @@ public partial class WorkspaceRoot
     private IHttpContextAccessor HttpContextAccessor { get; set; } = null!;
 
     private IReadOnlyList<AdventurePlanDashboardItem> Plans { get; set; } = [];
+    private IReadOnlyList<CreatorWorkspaceChoice> AuthorizedCreatorWorkspaces { get; set; } = [];
     private AdventurePlanDetail? Plan { get; set; }
     private bool PlanCanEdit { get; set; }
     private CreatorId AddressedCreatorId { get; set; }
@@ -100,17 +101,45 @@ public partial class WorkspaceRoot
             return;
         }
 
-        if (!TryGetAddressedRoute(InitialPath, out var creatorId, out var planId))
-        {
-            LoadState = WorkspaceLoadState.Landing;
-            return;
-        }
-
         LoadState = WorkspaceLoadState.Loading;
         var actorResolver = context.RequestServices.GetService<IWorkspaceActorResolver>();
         var query = context.RequestServices.GetService<IPlannerWorkspaceQueryService>();
         var actor = actorResolver?.Resolve(context.User);
-        if (query is null || actor is null)
+        if (actor is null)
+        {
+            LoadState = WorkspaceLoadState.Unavailable;
+            return;
+        }
+
+        if (!TryGetAddressedRoute(InitialPath, out var creatorId, out var planId))
+        {
+            var directory = context.RequestServices.GetService<ICreatorWorkspaceDirectoryService>();
+            if (directory is null)
+            {
+                LoadState = WorkspaceLoadState.Landing;
+                return;
+            }
+
+            try
+            {
+                AuthorizedCreatorWorkspaces = await directory.ListAsync(actor, context.RequestAborted);
+                LoadState = WorkspaceLoadState.Landing;
+            }
+            catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                context.RequestServices.GetService<ILogger<WorkspaceRoot>>()?.LogError(
+                    exception,
+                    "Creator workspace directory failed before a safe response could be rendered.");
+                LoadState = WorkspaceLoadState.Failure;
+            }
+            return;
+        }
+
+        if (query is null)
         {
             LoadState = WorkspaceLoadState.Unavailable;
             return;
