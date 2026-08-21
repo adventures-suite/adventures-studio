@@ -183,6 +183,15 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
     /// <summary>Gets or sets the callback raised after a dropped catalog item is revalidated.</summary>
     [Parameter]
     public EventCallback<PlannerFootStepDefinition> OnDestinationDropped { get; set; }
+    /// <summary>Gets or sets the callback raised when an applicable Activity FootStep begins dragging.</summary>
+    [Parameter]
+    public EventCallback<PlannerFootStepDefinition> OnActivityDragStarted { get; set; }
+    /// <summary>Gets or sets the callback raised when Activity FootStep dragging ends.</summary>
+    [Parameter]
+    public EventCallback OnActivityDragEnded { get; set; }
+    /// <summary>Gets or sets the callback raised after an Activity FootStep is dropped on an authorized day.</summary>
+    [Parameter]
+    public EventCallback<PlannerActivityFootStepDrop> OnActivityDropped { get; set; }
     /// <summary>Gets whether the desktop rail is collapsed.</summary>
     public bool IsCollapsed { get; private set; }
     /// <summary>Gets whether the narrow-screen drawer is open.</summary>
@@ -251,8 +260,12 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
         CurrentPage = 1;
     }
     private Task ShowWholeAdventureAsync() => OnAdventureContextRequested.InvokeAsync();
-    private bool CanDrag(PlannerFootStepDefinition item) =>
+    private bool CanDrag(PlannerFootStepDefinition item) => CanDragDestination(item) || CanDragActivity(item);
+    private bool CanDragDestination(PlannerFootStepDefinition item) =>
         CanEdit && item.DestinationDraft is not null && !string.IsNullOrWhiteSpace(ApplyDestinationPath);
+    private bool CanDragActivity(PlannerFootStepDefinition item) =>
+        CanEdit && item.ActivityDraft is not null && ActivityTargets.Count > 0 && !string.IsNullOrWhiteSpace(AddActivityPath);
+    private string DragKind(PlannerFootStepDefinition item) => CanDragDestination(item) ? "destination" : CanDragActivity(item) ? "activity" : string.Empty;
     private string DraggableValue(PlannerFootStepDefinition item) => CanDrag(item) ? "true" : "false";
     private Task BeginDestinationDragAsync(PlannerFootStepDefinition item) =>
         CanDrag(item) ? OnDestinationDragStarted.InvokeAsync(item) : Task.CompletedTask;
@@ -283,6 +296,34 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
     /// <summary>Ends the transient pointer drag presentation without changing the Journey.</summary>
     [JSInvokable]
     public Task HandleDestinationFootStepDragEndedAsync() => OnDestinationDragEnded.InvokeAsync();
+
+    /// <summary>Revalidates an untrusted Activity FootStep drop and its authorized day target.</summary>
+    [JSInvokable]
+    public Task HandleActivityFootStepDropAsync(string footStepId, string itineraryDayId)
+    {
+        var item = AuthorizedItems.FirstOrDefault(candidate =>
+            string.Equals(candidate.Id, footStepId, StringComparison.Ordinal));
+        var target = ActivityTargets.FirstOrDefault(candidate =>
+            string.Equals(candidate.Id, itineraryDayId, StringComparison.Ordinal));
+        return item is not null && target is not null && CanDragActivity(item)
+            ? OnActivityDropped.InvokeAsync(new PlannerActivityFootStepDrop(item, target))
+            : Task.CompletedTask;
+    }
+
+    /// <summary>Revalidates an Activity FootStep drag start before exposing day targets.</summary>
+    [JSInvokable]
+    public Task HandleActivityFootStepDragStartedAsync(string footStepId)
+    {
+        var item = AuthorizedItems.FirstOrDefault(candidate =>
+            string.Equals(candidate.Id, footStepId, StringComparison.Ordinal));
+        return item is not null && CanDragActivity(item)
+            ? OnActivityDragStarted.InvokeAsync(item)
+            : Task.CompletedTask;
+    }
+
+    /// <summary>Ends transient Activity FootStep drag presentation without changing the plan.</summary>
+    [JSInvokable]
+    public Task HandleActivityFootStepDragEndedAsync() => OnActivityDragEnded.InvokeAsync();
 
     /// <inheritdoc />
     protected override void OnParametersSet()

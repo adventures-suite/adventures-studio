@@ -130,7 +130,7 @@
                                 <tbody>
                                 @foreach (var idea in group.Items)
                                 {
-                                    <tr draggable="@DraggableValue(idea)" data-planner-destination-footstep="@DraggableValue(idea)" data-planner-footstep-id="@idea.Id" @ondragstart="() => BeginDestinationDragAsync(idea)" @ondragend="EndDestinationDragAsync">
+                                    <tr draggable="@DraggableValue(idea)" data-planner-footstep-kind="@DragKind(idea)" data-planner-footstep-id="@idea.Id">
                                         <th scope="row"><span>@idea.Title</span><small>@idea.Summary</small></th>
                                         <td>@DisplayFacet(idea.Kind)</td>
                                         <td>@DisplayValues(idea.Places)</td>
@@ -173,7 +173,7 @@
                         <ul class="planner-ideas__list">
                         @foreach (var idea in group.Items)
                         {
-                            <li><article class="planner-ideas__card" draggable="@DraggableValue(idea)" data-planner-destination-footstep="@DraggableValue(idea)" data-planner-footstep-id="@idea.Id" @ondragstart="() => BeginDestinationDragAsync(idea)" @ondragend="EndDestinationDragAsync">
+                            <li><article class="planner-ideas__card" draggable="@DraggableValue(idea)" data-planner-footstep-kind="@DragKind(idea)" data-planner-footstep-id="@idea.Id">
                                 <div class="planner-ideas__thumbnail" aria-hidden="true">@Monogram(idea)</div>
                                 <p class="planner-ideas__type">@DisplayFacet(idea.Kind) · suggestion</p>
                                 <h4>@idea.Title</h4>
@@ -182,7 +182,7 @@
                                 <p class="planner-ideas__boundary">Inspiration only — not booked, available, or added to your plan.</p>
                                 @if (CanDrag(idea))
                                 {
-                                    <p class="planner-ideas__drag-hint">Drag to Destinations and route, or preview it below.</p>
+                                    <p class="planner-ideas__drag-hint">@(idea.ActivityDraft is not null ? "Drag to an itinerary day, or review it below." : "Drag to Destinations and route, or preview it below.")</p>
                                 }
                                 @if (CanEdit && idea.DestinationDraft is { } destination && !string.IsNullOrWhiteSpace(ApplyDestinationPath))
                                 {

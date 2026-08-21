@@ -238,8 +238,17 @@ hierarchical subregions, context-sensitive Journey, Destination, and Activity
 proposals, deterministic facets, sorting, grouping, paging, card/list/tabular
 views, and review-first destination drop. These controls remain projections;
 they do not grant entitlement or mutate a plan without the normal authorized
-review boundary. Activity FootStep drag-and-drop remains the next separate
-slice.
+review boundary.
+
+The next slice adds Activity FootStep drag-and-drop only as an accessible
+enhancement to the existing review action. Activity cards are draggable only
+when the authorized projection supplies both an activity draft and a valid
+plan-owned day target. Browser payloads are revalidated against those
+authorized projections, and a drop opens the same review fields as the ordinary
+keyboard/touch action. It never mutates the plan directly. Confirmation still
+uses the existing authorized, antiforgery-protected, concurrency-aware activity
+command. Durable Activity FootStep provenance remains a later focused
+persistence slice and is not implied by this presentation enhancement.
 
 The approved contextual-ideas direction keeps that itinerary board as the
 authoritative canvas and adds a destination-aware FootSteps rail. Delivery begins

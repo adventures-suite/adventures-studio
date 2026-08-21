@@ -159,6 +159,9 @@
                                        PendingDestinationFootStep="@PendingDestinationFootStep"
                                        OnDestinationFootStepDropped="DropDestinationFootStepAsync"
                                        OnDestinationFootStepReviewCancelled="CancelDestinationFootStepReviewAsync"
+                                       IsActivityFootStepDragging="@(DraggedActivityFootStep is not null)"
+                                       PendingActivityFootStep="@PendingActivityFootStep"
+                                       OnActivityFootStepReviewCancelled="CancelActivityFootStepReviewAsync"
                                        ApplyDestinationFootStepPath="@ApplyDestinationFootStepPath"
                                        AddDestinationPath="@AddDestinationPath"
                                        ReorderDestinationPath="@ReorderDestinationPath"
@@ -203,6 +206,9 @@
                                             OnDestinationDragStarted="BeginDestinationFootStepDragAsync"
                                             OnDestinationDragEnded="EndDestinationFootStepDragAsync"
                                             OnDestinationDropped="ReviewDroppedDestinationFootStepAsync"
+                                            OnActivityDragStarted="BeginActivityFootStepDragAsync"
+                                            OnActivityDragEnded="EndActivityFootStepDragAsync"
+                                            OnActivityDropped="ReviewDroppedActivityFootStepAsync"
                                             OnResizeRequested="ResizeIdeasAsync" />
                 </div>
             </article>

@@ -159,7 +159,10 @@ defined in `docs/architecture/experience-design-system.md`.
 - default to whole-Adventure Journeys and Destinations, then change the visible
   FootStep types and filters as the user selects a destination visit or itinerary
   day; later segment, accommodation, activity, and route-position contexts use
-  the same model
+  the same hierarchy
+- let users drag an Activity FootStep to an eligible itinerary day as a copy
+  gesture, then review and confirm the title and local times; keep the ordinary
+  review action available for keyboard, touch, and assistive-technology users
 - let users combine country or region, idea kind, duration, transportation,
   category, pace, season, accessibility, budget, traveler composition, source,
   and language filters; show active filters as removable chips with a result
