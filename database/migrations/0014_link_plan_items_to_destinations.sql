@@ -8,7 +8,7 @@ ALTER TABLE planning.Accommodations
 ALTER TABLE planning.Reservations
     ADD DestinationVisitId nvarchar(64) NULL;
 
-ALTER TABLE planning.TransportationSegments ADD CONSTRAINT FK_TransportationSegments_DepartureDestinationVisit
+EXEC(N'ALTER TABLE planning.TransportationSegments ADD CONSTRAINT FK_TransportationSegments_DepartureDestinationVisit
     FOREIGN KEY (CreatorId, AdventurePlanId, DepartureDestinationVisitId)
     REFERENCES planning.DestinationVisits (CreatorId, AdventurePlanId, DestinationVisitId);
 
@@ -34,7 +34,7 @@ CREATE INDEX IX_TransportationSegments_ArrivalDestinationVisit
 
 CREATE INDEX IX_Accommodations_DestinationVisit
     ON planning.Accommodations (CreatorId, AdventurePlanId, DestinationVisitId)
-    WHERE DestinationVisitId IS NOT NULL;
+    WHERE DestinationVisitId IS NOT NULL;');
 
 CREATE INDEX IX_Reservations_DestinationVisit
     ON planning.Reservations (CreatorId, AdventurePlanId, DestinationVisitId)
