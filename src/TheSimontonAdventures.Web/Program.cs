@@ -67,6 +67,9 @@ builder.Services.AddScoped<ITrustedRequestHostContextAccessor>(services =>
 // startup instead of falling back to public-only or development identity.
 builder.AddAdventuresSuiteAuthentication();
 var authenticationMode = builder.Configuration["Authentication:Mode"];
+var previewCatalogsEnabled = PlannerPreviewCatalogActivation.IsEnabled(
+    builder.Configuration,
+    authenticationMode);
 if (authenticationMode is not null
     && (string.Equals(authenticationMode, nameof(AuthenticationMode.ExternalProvider), StringComparison.OrdinalIgnoreCase)
         || string.Equals(authenticationMode, nameof(AuthenticationMode.Development), StringComparison.OrdinalIgnoreCase)))
@@ -92,7 +95,7 @@ if (authenticationMode is not null
     builder.Services.AddSingleton<IPlanningCreationIdentityGenerator, GuidPlanningCreationIdentityGenerator>();
     builder.Services.AddScoped<IManualAdventurePlanCreateService, ManualAdventurePlanCreateService>();
     builder.Services.AddSingleton<IAdventureTemplateCatalogSource>(services =>
-        string.Equals(authenticationMode, nameof(AuthenticationMode.Development), StringComparison.OrdinalIgnoreCase)
+        previewCatalogsEnabled
             ? new DevelopmentAdventureTemplateCatalogSource(
                 services.GetRequiredService<IHostEnvironment>())
             : new UnavailableAdventureTemplateCatalogSource());
@@ -100,12 +103,12 @@ if (authenticationMode is not null
     builder.Services.AddScoped<IAdventureTemplateUseResolver, AdventureTemplateUseResolver>();
     builder.Services.AddScoped<IAdventureTemplateInstantiateService, AdventureTemplateInstantiateService>();
     builder.Services.AddSingleton<IPlannerFootStepCatalogSource>(services =>
-        string.Equals(authenticationMode, nameof(AuthenticationMode.Development), StringComparison.OrdinalIgnoreCase)
+        previewCatalogsEnabled
             ? new DevelopmentPlannerFootStepCatalogSource(
                 services.GetRequiredService<IHostEnvironment>())
             : new UnavailablePlannerFootStepCatalogSource());
     builder.Services.AddSingleton<IPlannerFootStepUseResolver>(services =>
-        string.Equals(authenticationMode, nameof(AuthenticationMode.Development), StringComparison.OrdinalIgnoreCase)
+        previewCatalogsEnabled
             ? services.GetRequiredService<IPlannerFootStepCatalogSource>() as IPlannerFootStepUseResolver
                 ?? new UnavailablePlannerFootStepUseResolver()
             : new UnavailablePlannerFootStepUseResolver());

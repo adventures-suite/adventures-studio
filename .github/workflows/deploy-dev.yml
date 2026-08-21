@@ -110,6 +110,8 @@ jobs:
             --settings \
               CreatorResolution__AzureDefaultCreatorId="$AZURE_DEFAULT_CREATOR_ID" \
               Authentication__Mode="$AUTHENTICATION_MODE" \
+              Deployment__Environment=Development \
+              PlannerCatalog__Mode=DevelopmentPreview \
               Authentication__TrustedProxyNetworks__0="169.254.0.0/16" \
               Authentication__TrustedProxyNetworks__1="10.0.0.0/8" \
               Authentication__TrustedProxyNetworks__2="172.16.0.0/12" \
