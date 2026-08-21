@@ -214,8 +214,9 @@ The proposed VM uses existing UAMI `id-adventures-suite-migrate-job-dev`
 `d0da8236-91dc-4454-8a3d-19d08a406e5d`). Repository text never substitutes for
 fresh Azure and database identity readback.
 
-An approved run will capture the exact `At0009` pre-state, acquire the zero-wait
-application lock, execute migrations `0010`, `0011`, `0012`, and `0013` once in order,
+An approved run will capture either the exact `At0009` pre-state or the exact
+repair-forward `At0012` pre-state, acquire the zero-wait application lock,
+execute only the remaining migrations through `0013` once in order,
 capture post-state, classify `Complete`, `Migration0012Committed`, `Migration0011Committed`,
 `Migration0010Committed`, `NoScriptCommitted`, or `Unexpected`, and retain
 bounded logs. Independent VM cleanup is mandatory even if GitHub loses the

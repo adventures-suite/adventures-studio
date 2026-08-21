@@ -76,7 +76,8 @@ internal static partial class MigrationOperationRunner
         IReadOnlyList<string> selectedScripts = [];
         try
         {
-            // This operation is explicitly bounded to the reviewed 0009 -> 0013 transition.
+            // This operation is bounded to either the reviewed 0009 -> 0013 transition
+            // or the exact repair-forward 0012 -> 0013 transition.
             selectedScripts = DatabaseMigratorRunner.MigrateWithLockHeld(
                 connectionFactory.CreateConnection,
                 maximumMigrationNumber: "0013");
@@ -179,15 +180,20 @@ internal static partial class MigrationOperationRunner
         return MigrationOperationClassification.Unexpected;
     }
 
-    /// <summary>Requires the exact reviewed 0009 state and authority-free policy role.</summary>
+    /// <summary>Requires an exact reviewed 0009 or repair-forward 0012 state.</summary>
     internal static void ValidatePreMigrationState(
         MigrationStateEvidence state,
         MigrationJournalOutcome outcome)
     {
-        if (outcome != MigrationJournalOutcome.At0009
-            || !VerifyExpected0009PrerequisiteState(state))
+        var approved = outcome switch
+        {
+            MigrationJournalOutcome.At0009 => VerifyExpected0009PrerequisiteState(state),
+            MigrationJournalOutcome.At0012 => VerifyExpected0012State(state),
+            _ => false
+        };
+        if (!approved)
             throw new InvalidOperationException(
-                "The pre-migration database state is not the approved 0009 policy-assignment baseline.");
+                "The pre-migration database state is not an approved migration baseline.");
     }
 
     private static bool VerifyExpected0009PrerequisiteState(MigrationStateEvidence state) =>
