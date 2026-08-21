@@ -214,6 +214,33 @@ planning status.
 The itinerary board keeps plan records read-first by placing contextual creation
 and supported edit forms in one native, mutually exclusive disclosure group.
 
+Delivery status (August 21, 2026): the local Alpha Planner now presents a
+responsive, focus-oriented Journey workspace with a pinned panel toolbar,
+independently collapsible panels, a compact/resizable workspace rail, and a
+sticky, resizable FootSteps rail that becomes a drawer on narrow screens. The
+overview consolidates plan metadata and a protected-Resource-ready hero-image
+placeholder. Calendar thumbnails and destination selection provide concise
+date context without changing authoritative Planning state.
+
+Destination context filters itinerary days, transportation, accommodations,
+and reservation summaries through explicit Creator-, plan-, and
+destination-scoped relationships. A reviewed destination reorder moves the
+selected visit and its dependent local dates atomically, preserves identity and
+duration, rejects archived or unauthorized plans, fails optimistic concurrency
+closed, and refuses automatic movement when committed booking state exists.
+Migration `0014` adds the nullable scoped relationship columns, composite
+foreign keys, and filtered indexes as one cohesive prerequisite. The mutation
+uses the existing antiforgery, PRG, authorization, transaction, and required
+audit boundaries.
+
+The FootSteps experience includes transient multi-region exploration,
+hierarchical subregions, context-sensitive Journey, Destination, and Activity
+proposals, deterministic facets, sorting, grouping, paging, card/list/tabular
+views, and review-first destination drop. These controls remain projections;
+they do not grant entitlement or mutate a plan without the normal authorized
+review boundary. Activity FootStep drag-and-drop remains the next separate
+slice.
+
 The approved contextual-ideas direction keeps that itinerary board as the
 authoritative canvas and adds a destination-aware FootSteps rail. Delivery begins
 with a presentation-only, deterministic rail and then one reviewed
@@ -368,7 +395,7 @@ catalog persistence, template authoring, entitlement or licensing stores, the
 Planner's “Use this Journey” endpoint/UI, parameter editing, reporting
 projections, or protected production migration execution. Those remain
 separate reviewed slices. A later dedicated migration-runner slice broadens the
-protected operation from exact `0009` through current `0013`; the Planner
+protected operation from exact `0009` through current `0014`; the Planner
 feature slice itself still does not alter migration execution authority.
 
 The next stacked customer-workflow slice adds the first direct “Use this

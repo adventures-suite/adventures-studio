@@ -1,0 +1,21 @@
+@namespace TheSimontonAdventures.Web.Components
+
+<figure class="planner-plan-hero">
+    @if (!string.IsNullOrWhiteSpace(ImageUrl))
+    {
+        <img src="@ImageUrl" alt="@AltText" />
+    }
+    else
+    {
+        <div class="planner-plan-hero__placeholder" role="img" aria-label="No Journey cover photo selected">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 19V5h16v14H4Zm2-2 4-5 3 3 2-2 3 4H6Zm9-7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" /></svg>
+        </div>
+    }
+    <figcaption>
+        <span>Journey cover</span>
+        @if (IsPlaceholder)
+        {
+            <small>Illustrative placeholder · private photo selection will be added through protected Resources.</small>
+        }
+    </figcaption>
+</figure>

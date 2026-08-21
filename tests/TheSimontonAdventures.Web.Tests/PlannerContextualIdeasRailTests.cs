@@ -40,7 +40,8 @@ public sealed class PlannerContextualIdeasRailTests
         Assert.Contains("Fictional local Alpha demo", developmentHtml, StringComparison.Ordinal);
         Assert.Contains("not booked, available, or added to your plan", developmentHtml, StringComparison.Ordinal);
         Assert.Contains("Cards per page", developmentHtml, StringComparison.Ordinal);
-        Assert.Contains("Filter FootSteps", developmentHtml, StringComparison.Ordinal);
+        Assert.Contains("Filter (", developmentHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("Filter FootSteps", developmentHtml, StringComparison.Ordinal);
         Assert.Contains("Minimum days", developmentHtml, StringComparison.Ordinal);
         Assert.Contains("motorcycle", developmentHtml, StringComparison.Ordinal);
     }
@@ -56,14 +57,47 @@ public sealed class PlannerContextualIdeasRailTests
         var dayHtml = await RenderDevelopmentContextAsync(
             new PlannerIdeasContext(PlannerIdeasContextKind.Day, "day-1", "Arrival day"));
 
-        Assert.Contains("route pattern", adventureHtml, StringComparison.Ordinal);
+        Assert.Contains("Route Style", adventureHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("route pattern", adventureHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("journey pattern", adventureHtml, StringComparison.Ordinal);
+        Assert.Contains("Journey exploration focus", adventureHtml, StringComparison.Ordinal);
+        Assert.Contains("Selectable world regions", adventureHtml, StringComparison.Ordinal);
+        Assert.Contains("Choose one or more regions", adventureHtml, StringComparison.Ordinal);
         Assert.DoesNotContain("Journey · suggestion", adventureHtml, StringComparison.Ordinal);
         Assert.DoesNotContain("Sample day", adventureHtml, StringComparison.Ordinal);
         Assert.Contains("sample day", destinationHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("Journey exploration focus", destinationHtml, StringComparison.Ordinal);
         Assert.Contains("activity", destinationHtml, StringComparison.Ordinal);
         Assert.DoesNotContain("Journey", destinationHtml, StringComparison.Ordinal);
         Assert.Contains("One memorable local anchor", dayHtml, StringComparison.Ordinal);
         Assert.DoesNotContain("Stay pattern", dayHtml, StringComparison.Ordinal);
+    }
+
+    /// <summary>The Journey exploration map has equivalent controls and never claims to mutate the plan.</summary>
+    [Fact]
+    public async Task Rail_AdventureExplorationFocus_IsAccessibleAndExplicitlyTransient()
+    {
+        var html = await RenderDevelopmentContextAsync(
+            new PlannerIdeasContext(PlannerIdeasContextKind.Adventure, "plan-1", "Atlantic light"));
+
+        Assert.Contains("role=\"group\"", html, StringComparison.Ordinal);
+        Assert.Contains("Choose one or more world regions", html, StringComparison.Ordinal);
+        Assert.Contains("aria-label=\"North America\"", html, StringComparison.Ordinal);
+        Assert.Contains("aria-label=\"Europe\"", html, StringComparison.Ordinal);
+        Assert.Contains("aria-label=\"Caribbean\"", html, StringComparison.Ordinal);
+        Assert.Contains("/planner/world-regions.svg#north-america", html, StringComparison.Ordinal);
+        Assert.Contains("/planner/world-regions.svg#asia-pacific", html, StringComparison.Ordinal);
+        Assert.Contains("aria-pressed=\"false\"", html, StringComparison.Ordinal);
+        Assert.Contains("tabindex=\"0\"", html, StringComparison.Ordinal);
+        Assert.Contains("Exploring anywhere", html, StringComparison.Ordinal);
+        Assert.Contains("Your Journey remains unchanged", html, StringComparison.Ordinal);
+        Assert.Contains("aria-expanded", html, StringComparison.Ordinal);
+        Assert.Contains("Tuck map away", html, StringComparison.Ordinal);
+        Assert.Contains("Tuck the map away after I choose a region", html, StringComparison.Ordinal);
+        Assert.Contains("aria-controls=\"planner-exploration-content\"", html, StringComparison.Ordinal);
+        Assert.Contains("Choose one or more world regions", html, StringComparison.Ordinal);
+        Assert.Contains("Not seeing the right place", html, StringComparison.Ordinal);
+        Assert.Contains("Add destination", html, StringComparison.Ordinal);
     }
 
     /// <summary>Populated contexts expose a labeled type filter and a route back to the whole Adventure.</summary>
@@ -113,15 +147,23 @@ public sealed class PlannerContextualIdeasRailTests
         Assert.Contains("aria-label=\"Widen FootSteps rail\"", html, StringComparison.Ordinal);
         Assert.Contains("title=\"Narrow FootSteps rail\"", html, StringComparison.Ordinal);
         Assert.Contains("title=\"Widen FootSteps rail\"", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Contextual inspiration", html, StringComparison.Ordinal);
         var markup = File.ReadAllText(Path.Combine(FindApplicationRoot(), "Components", "Planner", "PlannerContextualIdeasRail.razor"));
         var codeBehind = File.ReadAllText(Path.Combine(FindApplicationRoot(), "Components", "Planner", "PlannerContextualIdeasRail.razor.cs"));
+        var styles = File.ReadAllText(Path.Combine(FindApplicationRoot(), "Components", "Planner", "PlannerContextualIdeasRail.razor.css"));
         Assert.Contains("@onpointermove", markup, StringComparison.Ordinal);
+        Assert.Contains("planner-ideas__collapsed-label", markup, StringComparison.Ordinal);
         Assert.Contains("role=\"@(IsDrawerOpen ? \"dialog\" : \"complementary\")\"", markup, StringComparison.Ordinal);
         Assert.Contains("protected override async Task OnAfterRenderAsync", codeBehind, StringComparison.Ordinal);
         Assert.Contains("FocusCloseAfterRender = true;", codeBehind, StringComparison.Ordinal);
         Assert.Contains("FocusOpenAfterRender = true;", codeBehind, StringComparison.Ordinal);
         Assert.Contains("await CloseButton.FocusAsync();", codeBehind, StringComparison.Ordinal);
         Assert.Contains("await OpenButton.FocusAsync();", codeBehind, StringComparison.Ordinal);
+        Assert.Contains("position: sticky", styles, StringComparison.Ordinal);
+        Assert.Contains("align-self: start", styles, StringComparison.Ordinal);
+        Assert.Contains("--planner-pinned-header-height", styles, StringComparison.Ordinal);
+        Assert.Contains("@media (max-width: 48rem)", styles, StringComparison.Ordinal);
+        Assert.Contains(">Width</span>", markup, StringComparison.Ordinal);
     }
 
     /// <summary>Authorized results expose grouping, deterministic sorting, and distinct card, list, and tabular views.</summary>
@@ -172,10 +214,12 @@ public sealed class PlannerContextualIdeasRailTests
         Assert.Contains("rail", html, StringComparison.Ordinal);
         Assert.Contains("trekking", html, StringComparison.Ordinal);
         Assert.Contains("mixed mode", html, StringComparison.Ordinal);
+        Assert.Contains("Journey Blueprint", html, StringComparison.Ordinal);
+        Assert.DoesNotContain(">journey-pattern<", html, StringComparison.Ordinal);
         Assert.Contains("Clear all", File.ReadAllText(Path.Combine(
             FindApplicationRoot(), "Components", "Planner", "PlannerContextualIdeasRail.razor")),
             StringComparison.Ordinal);
-        Assert.Contains("No FootSteps match these filters", File.ReadAllText(Path.Combine(
+        Assert.Contains("No FootSteps match this exploration", File.ReadAllText(Path.Combine(
             FindApplicationRoot(), "Components", "Planner", "PlannerContextualIdeasRail.razor")),
             StringComparison.Ordinal);
     }
@@ -196,7 +240,12 @@ public sealed class PlannerContextualIdeasRailTests
             [nameof(PlannerContextualIdeasRail.ApplyDestinationPath)] = "/apply-destination"
         });
 
-        Assert.Contains("Preview Add to plan", html, StringComparison.Ordinal);
+        Assert.Contains("Preview destination", html, StringComparison.Ordinal);
+        Assert.Contains("Add destination to Journey", html, StringComparison.Ordinal);
+        Assert.Contains("draggable=\"true\"", html, StringComparison.Ordinal);
+        Assert.Contains("data-planner-destination-footstep=\"true\"", html, StringComparison.Ordinal);
+        Assert.Contains("data-planner-footstep-id=\"footstep_destination_lisbon_gateway\"", html, StringComparison.Ordinal);
+        Assert.Contains("Drag to Destinations and route", html, StringComparison.Ordinal);
         Assert.Contains("Lisbon, Portugal", html, StringComparison.Ordinal);
         Assert.Contains("Nothing is booked", html, StringComparison.Ordinal);
         Assert.Contains("action=\"/apply-destination\"", html, StringComparison.Ordinal);
@@ -206,7 +255,7 @@ public sealed class PlannerContextualIdeasRailTests
         Assert.Contains("name=\"timeZoneId\" value=\"Europe/Lisbon\"", html, StringComparison.Ordinal);
         Assert.Contains("name=\"startDate\"", html, StringComparison.Ordinal);
         Assert.Contains("name=\"endDate\"", html, StringComparison.Ordinal);
-        Assert.Contains("Add to plan", html, StringComparison.Ordinal);
+        Assert.Contains("Add destination to Journey", html, StringComparison.Ordinal);
     }
 
     /// <summary>Read-only users see the proposal but no mutation form or usable action.</summary>
@@ -223,7 +272,58 @@ public sealed class PlannerContextualIdeasRailTests
         });
 
         Assert.DoesNotContain("action=\"/apply-destination\"", html, StringComparison.Ordinal);
-        Assert.DoesNotContain("Add to plan", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Add destination to Journey", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Drag to Destinations and route", html, StringComparison.Ordinal);
+    }
+
+    /// <summary>An editable Activity FootStep prefills the existing protected manual activity form.</summary>
+    [Fact]
+    public async Task Rail_EditableActivityFootStep_RendersReviewFirstActivityForm()
+    {
+        var html = await RenderAsync(new()
+        {
+            [nameof(PlannerContextualIdeasRail.Context)] = new PlannerIdeasContext(
+                PlannerIdeasContextKind.Day, "day-1", "Arrival day"),
+            [nameof(PlannerContextualIdeasRail.AuthorizedItems)] = new[] { ActivityItem() },
+            [nameof(PlannerContextualIdeasRail.ActivityTargets)] = new[]
+            {
+                new PlannerActivityTarget("day-1", "May 2 · Arrival day")
+            },
+            [nameof(PlannerContextualIdeasRail.CanEdit)] = true,
+            [nameof(PlannerContextualIdeasRail.ExpectedVersion)] = 7L,
+            [nameof(PlannerContextualIdeasRail.AddActivityPath)] = "/activities"
+        });
+
+        Assert.Contains("Use as an activity starting point", html, StringComparison.Ordinal);
+        Assert.Contains("action=\"/activities\"", html, StringComparison.Ordinal);
+        Assert.Contains("name=\"expectedVersion\" value=\"7\"", html, StringComparison.Ordinal);
+        Assert.Contains("name=\"itineraryDayId\" value=\"day-1\"", html, StringComparison.Ordinal);
+        Assert.Contains("name=\"title\" value=\"Explore a neighborhood on foot\"", html, StringComparison.Ordinal);
+        Assert.Contains("name=\"startsAtLocal\" value=\"09:30\"", html, StringComparison.Ordinal);
+        Assert.Contains("name=\"endsAtLocal\" value=\"11:30\"", html, StringComparison.Ordinal);
+        Assert.Contains("Nothing is booked", html, StringComparison.Ordinal);
+        Assert.Contains("normal plan activity after review", html, StringComparison.Ordinal);
+    }
+
+    /// <summary>Activity starting points expose no mutation when editing or a valid day target is absent.</summary>
+    [Theory]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    public async Task Rail_ActivityFootStep_RequiresEditAndAuthorizedTarget(bool canEdit, bool hasTarget)
+    {
+        var html = await RenderAsync(new()
+        {
+            [nameof(PlannerContextualIdeasRail.Context)] = new PlannerIdeasContext(
+                PlannerIdeasContextKind.Day, "day-1", "Arrival day"),
+            [nameof(PlannerContextualIdeasRail.AuthorizedItems)] = new[] { ActivityItem() },
+            [nameof(PlannerContextualIdeasRail.ActivityTargets)] = hasTarget
+                ? new[] { new PlannerActivityTarget("day-1", "May 2 · Arrival day") }
+                : Array.Empty<PlannerActivityTarget>(),
+            [nameof(PlannerContextualIdeasRail.CanEdit)] = canEdit,
+            [nameof(PlannerContextualIdeasRail.AddActivityPath)] = "/activities"
+        });
+
+        Assert.DoesNotContain("action=\"/activities\"", html, StringComparison.Ordinal);
     }
 
     private static async Task<string> RenderAsync(Dictionary<string, object?> parameters)
@@ -281,6 +381,19 @@ public sealed class PlannerContextualIdeasRailTests
         Freshness = "Demo snapshot",
         ContextKinds = new HashSet<PlannerFootStepContextKind> { PlannerFootStepContextKind.Adventure },
         DestinationDraft = new("Lisbon, Portugal", "Europe/Lisbon")
+    };
+
+    private static PlannerFootStepDefinition ActivityItem() => new()
+    {
+        Id = "footstep_activity_neighborhood_walk",
+        Version = "1.0",
+        Kind = "activity",
+        Title = "Unhurried neighborhood walk",
+        Summary = "Fictional reviewed activity starting point.",
+        Attribution = "AdventuresSuite fictional editorial demo",
+        Freshness = "Demo snapshot",
+        ContextKinds = new HashSet<PlannerFootStepContextKind> { PlannerFootStepContextKind.Day },
+        ActivityDraft = new("Explore a neighborhood on foot", new TimeOnly(9, 30), new TimeOnly(11, 30))
     };
 
     private static IReadOnlyList<PlannerFootStepDefinition> DiverseJourneyItems() =>

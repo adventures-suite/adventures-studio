@@ -65,6 +65,10 @@ public sealed record TransportationSegment
 {
     /// <summary>Gets the stable transportation identity.</summary>
     public required TransportationSegmentId Id { get; init; }
+    /// <summary>Gets the optional destination visit from which this segment departs.</summary>
+    public DestinationVisitId? DepartureDestinationVisitId { get; init; }
+    /// <summary>Gets the optional destination visit at which this segment arrives.</summary>
+    public DestinationVisitId? ArrivalDestinationVisitId { get; init; }
     /// <summary>Gets the transportation mode such as flight, rail, cruise, or car.</summary>
     public required string Mode { get; init; }
     /// <summary>Gets the departure place.</summary>
@@ -92,6 +96,8 @@ public sealed record Accommodation
 {
     /// <summary>Gets the stable accommodation identity.</summary>
     public required AccommodationId Id { get; init; }
+    /// <summary>Gets the optional destination visit containing this stay.</summary>
+    public DestinationVisitId? DestinationVisitId { get; init; }
     /// <summary>Gets the working accommodation name.</summary>
     public required string Name { get; init; }
     /// <summary>Gets the inclusive local stay dates.</summary>
@@ -107,6 +113,8 @@ public sealed record Reservation
 {
     /// <summary>Gets the stable reservation identity.</summary>
     public required ReservationId Id { get; init; }
+    /// <summary>Gets the optional destination visit this summary supports.</summary>
+    public DestinationVisitId? DestinationVisitId { get; init; }
     /// <summary>Gets the reservation subject.</summary>
     public required string Subject { get; init; }
     /// <summary>Gets an optional private confirmation reference.</summary>

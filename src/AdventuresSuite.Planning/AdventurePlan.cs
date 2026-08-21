@@ -2,6 +2,10 @@ using TheSimontonAdventures.Web.Creators;
 
 namespace TheSimontonAdventures.Web.Planning;
 
+internal sealed class DestinationReorderScheduleException : Exception
+{
+}
+
 /// <summary>
 /// Owns one Creator's private, authoritative planning state independently of
 /// public Content Engine records.
@@ -181,6 +185,91 @@ public sealed class AdventurePlan
     }
 
     /// <summary>
+    /// Creates the next aggregate version with one destination moved to a new route position.
+    /// Visit durations and the existing gaps between route positions are preserved; linked
+    /// itinerary days, accommodations, and transportation endpoint dates move with their visits.
+    /// </summary>
+    public AdventurePlan WithReorderedDestinationVisit(
+        DestinationVisitId destinationVisitId,
+        int targetSequence,
+        DateTimeOffset updatedAtUtc)
+    {
+        var ordered = DestinationVisits.OrderBy(item => item.Sequence).ToList();
+        var moving = ordered.SingleOrDefault(item => item.Id == destinationVisitId)
+            ?? throw new ArgumentException("The destination visit must belong to this plan.", nameof(destinationVisitId));
+        if (targetSequence < 1 || targetSequence > ordered.Count)
+        {
+            throw new ArgumentOutOfRangeException(nameof(targetSequence));
+        }
+
+        ordered.Remove(moving);
+        ordered.Insert(targetSequence - 1, moving);
+
+        var originalSlots = DestinationVisits.OrderBy(item => item.Sequence).ToArray();
+        var cursor = originalSlots[0].Dates.Start;
+        var offsets = new Dictionary<DestinationVisitId, int>();
+        var dateMap = new Dictionary<DateOnly, DateOnly>();
+        var visits = new DestinationVisit[ordered.Count];
+        for (var index = 0; index < ordered.Count; index++)
+        {
+            var visit = ordered[index];
+            var duration = visit.Dates.End.DayNumber - visit.Dates.Start.DayNumber;
+            var dates = new PlanningDateRange(cursor, cursor.AddDays(duration));
+            offsets[visit.Id] = dates.Start.DayNumber - visit.Dates.Start.DayNumber;
+            visits[index] = visit with { Dates = dates, Sequence = index + 1 };
+
+            for (var day = 0; day <= duration; day++)
+            {
+                dateMap[visit.Dates.Start.AddDays(day)] = dates.Start.AddDays(day);
+            }
+
+            if (index < originalSlots.Length - 1)
+            {
+                var gap = originalSlots[index + 1].Dates.Start.DayNumber
+                    - originalSlots[index].Dates.End.DayNumber - 1;
+                var oldGapStart = originalSlots[index].Dates.End.AddDays(1);
+                var newGapStart = dates.End.AddDays(1);
+                for (var day = 0; day < gap; day++)
+                {
+                    dateMap[oldGapStart.AddDays(day)] = newGapStart.AddDays(day);
+                }
+
+                cursor = dates.End.AddDays(gap + 1);
+            }
+        }
+
+        var days = ItineraryDays.Select(day => day with
+        {
+            Date = dateMap.GetValueOrDefault(day.Date, day.Date)
+        }).ToArray();
+        var stays = Accommodations.Select(stay => stay.DestinationVisitId is { } visitId
+            && offsets.TryGetValue(visitId, out var offset)
+                ? stay with { Dates = new PlanningDateRange(stay.Dates.Start.AddDays(offset), stay.Dates.End.AddDays(offset)) }
+                : stay).ToArray();
+        var segments = Transportation.Select(segment => segment with
+        {
+            DepartureDate = dateMap.GetValueOrDefault(segment.DepartureDate, segment.DepartureDate),
+            ArrivalDate = dateMap.GetValueOrDefault(segment.ArrivalDate, segment.ArrivalDate)
+        }).ToArray();
+
+        if (segments.Any(segment => segment.ArrivalDate < segment.DepartureDate
+            || (segment.DepartureDate == segment.ArrivalDate
+                && segment.DepartureTimeZone == segment.ArrivalTimeZone
+                && segment.DepartureTimeLocal is { } departureTime
+                && segment.ArrivalTimeLocal is { } arrivalTime
+                && arrivalTime < departureTime)))
+        {
+            throw new DestinationReorderScheduleException();
+        }
+
+        return new(
+            Id, CreatorId, Title, WorkingDescription, LifecycleStage, Status, Dates,
+            new PlanAudit(checked(Audit.Version + 1), Audit.CreatedAtUtc, updatedAtUtc),
+            Travelers, visits, days, Activities, segments, stays, Reservations, Notes,
+            Tasks, BudgetItems, PackingItems);
+    }
+
+    /// <summary>
     /// Creates the next validated aggregate version with one local itinerary day appended.
     /// Existing plan fields and child records are preserved.
     /// </summary>
@@ -326,7 +415,10 @@ public sealed class AdventurePlan
         DateOnly arrivalDate,
         TimeOnly? arrivalTimeLocal,
         IanaTimeZone arrivalTimeZone,
-        DateTimeOffset updatedAtUtc)
+        DateTimeOffset updatedAtUtc,
+        bool replaceDestinationAssociations = false,
+        DestinationVisitId? departureDestinationVisitId = null,
+        DestinationVisitId? arrivalDestinationVisitId = null)
     {
         var existing = Transportation.SingleOrDefault(item => item.Id == segmentId)
             ?? throw new ArgumentException(
@@ -334,6 +426,10 @@ public sealed class AdventurePlan
         var replacement = new TransportationSegment
         {
             Id = existing.Id,
+            DepartureDestinationVisitId = replaceDestinationAssociations
+                ? departureDestinationVisitId : existing.DepartureDestinationVisitId,
+            ArrivalDestinationVisitId = replaceDestinationAssociations
+                ? arrivalDestinationVisitId : existing.ArrivalDestinationVisitId,
             Mode = mode,
             From = from,
             To = to,
@@ -377,7 +473,9 @@ public sealed class AdventurePlan
         string name,
         PlanningDateRange dates,
         IanaTimeZone timeZone,
-        DateTimeOffset updatedAtUtc)
+        DateTimeOffset updatedAtUtc,
+        bool replaceDestinationAssociation = false,
+        DestinationVisitId? destinationVisitId = null)
     {
         var existing = Accommodations.SingleOrDefault(item => item.Id == accommodationId)
             ?? throw new ArgumentException(
@@ -385,6 +483,8 @@ public sealed class AdventurePlan
         var replacement = new Accommodation
         {
             Id = existing.Id,
+            DestinationVisitId = replaceDestinationAssociation
+                ? destinationVisitId : existing.DestinationVisitId,
             Name = name,
             Dates = dates,
             TimeZone = timeZone,
@@ -512,6 +612,17 @@ public sealed class AdventurePlan
             {
                 throw new ArgumentException("Transportation arrival date cannot precede departure date.");
             }
+
+            ValidateTransportationDestination(
+                segment.DepartureDestinationVisitId,
+                segment.DepartureTimeZone,
+                visitsById,
+                "departure");
+            ValidateTransportationDestination(
+                segment.ArrivalDestinationVisitId,
+                segment.ArrivalTimeZone,
+                visitsById,
+                "arrival");
         }
 
         foreach (var accommodation in Accommodations)
@@ -523,6 +634,16 @@ public sealed class AdventurePlan
             {
                 throw new ArgumentException("Accommodation dates must fall within plan dates.");
             }
+
+
+            if (accommodation.DestinationVisitId is { } visitId
+                && (!visitsById.TryGetValue(visitId, out var visit)
+                    || !visit.Dates.Contains(accommodation.Dates)
+                    || visit.TimeZone != accommodation.TimeZone))
+            {
+                throw new ArgumentException(
+                    "A destination accommodation must use the referenced visit's dates and time zone.");
+            }
         }
 
         foreach (var item in Reservations)
@@ -530,6 +651,10 @@ public sealed class AdventurePlan
             RequireIdentity(item.Id, nameof(item.Id));
             RequireText(item.Subject, nameof(item.Subject));
             RequireOptionalText(item.ConfirmationReference, nameof(item.ConfirmationReference));
+            if (item.DestinationVisitId is { } visitId && !visitsById.ContainsKey(visitId))
+            {
+                throw new ArgumentException("A reservation destination must belong to this plan.");
+            }
             if (!Enum.IsDefined(item.Status))
             {
                 throw new ArgumentOutOfRangeException(nameof(item.Status));
@@ -563,6 +688,25 @@ public sealed class AdventurePlan
         {
             RequireIdentity(item.Id, nameof(item.Id));
             RequireText(item.Description, nameof(item.Description));
+        }
+    }
+
+    private static void ValidateTransportationDestination(
+        DestinationVisitId? destinationVisitId,
+        IanaTimeZone timeZone,
+        IReadOnlyDictionary<DestinationVisitId, DestinationVisit> visitsById,
+        string endpoint)
+    {
+        if (destinationVisitId is not { } visitId)
+        {
+            return;
+        }
+
+        if (!visitsById.TryGetValue(visitId, out var visit)
+            || visit.TimeZone != timeZone)
+        {
+            throw new ArgumentException(
+                $"A transportation {endpoint} must use the referenced visit's time zone.");
         }
     }
 

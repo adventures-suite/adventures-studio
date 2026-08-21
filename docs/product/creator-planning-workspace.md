@@ -119,6 +119,12 @@ defined in `docs/architecture/experience-design-system.md`.
 ### Destinations and Route
 
 - ordered destination visits
+- pointer drag-and-drop plus an equivalent accessible reorder operation, with a
+  visible insertion indicator and explicit review before mutation
+- preserve each visit duration and move linked itinerary days, accommodations,
+  and transportation dates when a reviewed reorder is safe
+- block automatic reorder when confirmed or reserved booking state would make
+  the change destructive; require a future explicit change-management workflow
 - planned local arrival and departure dates
 - IANA time zone
 - visit-specific notes
@@ -147,6 +153,9 @@ defined in `docs/architecture/experience-design-system.md`.
 - show a compact right-side rail of relevant Journeys, Destinations, itinerary
   FootSteps, activities, and route patterns based on the selected destination or
   day
+- let the user explore multiple geographic branches at once, drilling from
+  world region to country and subregion without turning transient exploration
+  state into authoritative Journey geography
 - default to whole-Adventure Journeys and Destinations, then change the visible
   FootStep types and filters as the user selects a destination visit or itinerary
   day; later segment, accommodation, activity, and route-position contexts use

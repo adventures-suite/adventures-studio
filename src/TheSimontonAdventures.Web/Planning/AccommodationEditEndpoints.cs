@@ -98,7 +98,8 @@ public static class AccommodationEditEndpoints
             || !DateOnly.TryParseExact(form["startDate"], "yyyy-MM-dd",
                 CultureInfo.InvariantCulture, DateTimeStyles.None, out var startDate)
             || !DateOnly.TryParseExact(form["endDate"], "yyyy-MM-dd",
-                CultureInfo.InvariantCulture, DateTimeStyles.None, out var endDate))
+                CultureInfo.InvariantCulture, DateTimeStyles.None, out var endDate)
+            || !TryReadOptionalDestinationVisitId(form["destinationVisitId"], out var destinationVisitId))
         {
             return false;
         }
@@ -106,8 +107,16 @@ public static class AccommodationEditEndpoints
         command = new(
             actor, creatorId, planId, accommodationId, expectedVersion,
             form["name"].ToString().Trim(), startDate, endDate,
-            form["timeZoneId"].ToString().Trim());
+            form["timeZoneId"].ToString().Trim(), destinationVisitId);
         return true;
+    }
+
+    private static bool TryReadOptionalDestinationVisitId(string? value, out DestinationVisitId? visitId)
+    {
+        visitId = null;
+        if (string.IsNullOrWhiteSpace(value)) return true;
+        try { visitId = new(value.Trim()); return true; }
+        catch (ArgumentException) { return false; }
     }
 
     private static void Redirect(HttpContext context, string location)

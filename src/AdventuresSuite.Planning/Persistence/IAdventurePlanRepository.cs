@@ -295,7 +295,9 @@ public sealed record TransportationDetail(
     DateOnly ArrivalDate,
     TimeOnly? ArrivalTimeLocal,
     IanaTimeZone ArrivalTimeZone,
-    PlanItemStatus Status);
+    PlanItemStatus Status,
+    DestinationVisitId? DepartureDestinationVisitId = null,
+    DestinationVisitId? ArrivalDestinationVisitId = null);
 
 /// <summary>Projects one accommodation without confirmation or booking credentials.</summary>
 public sealed record AccommodationDetail(
@@ -303,10 +305,12 @@ public sealed record AccommodationDetail(
     string Name,
     PlanningDateRange Dates,
     IanaTimeZone TimeZone,
-    PlanItemStatus Status);
+    PlanItemStatus Status,
+    DestinationVisitId? DestinationVisitId = null);
 
 /// <summary>Projects one reservation without confirmation or booking credentials.</summary>
 public sealed record ReservationDetail(
     ReservationId Id,
     string Subject,
-    PlanItemStatus Status);
+    PlanItemStatus Status,
+    DestinationVisitId? DestinationVisitId = null);

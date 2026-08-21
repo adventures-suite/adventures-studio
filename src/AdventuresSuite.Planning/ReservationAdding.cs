@@ -14,13 +14,15 @@ public sealed record AddReservationCommand
         CreatorId creatorId,
         AdventurePlanId adventurePlanId,
         long expectedVersion,
-        string subject)
+        string subject,
+        DestinationVisitId? destinationVisitId = null)
     {
         Actor = actor;
         CreatorId = creatorId;
         AdventurePlanId = adventurePlanId;
         ExpectedVersion = expectedVersion;
         Subject = subject;
+        DestinationVisitId = destinationVisitId;
     }
 
     /// <summary>Gets the authenticated human actor.</summary>
@@ -33,6 +35,8 @@ public sealed record AddReservationCommand
     public long ExpectedVersion { get; init; }
     /// <summary>Gets the reservation subject without confirmation credentials.</summary>
     public string Subject { get; init; }
+    /// <summary>Gets the optional destination visit this summary supports.</summary>
+    public DestinationVisitId? DestinationVisitId { get; init; }
 }
 
 /// <summary>Classifies non-disclosing reservation outcomes.</summary>
@@ -140,10 +144,16 @@ public sealed class ReservationAddService(
             {
                 return Result(AddReservationOutcome.Conflict);
             }
+            if (command.DestinationVisitId is { } visitId
+                && current.DestinationVisits.All(visit => visit.Id != visitId))
+            {
+                return Result(AddReservationOutcome.Denied);
+            }
 
             var reservation = new Reservation
             {
                 Id = identityGenerator.NewReservationId(),
+                DestinationVisitId = command.DestinationVisitId,
                 Subject = command.Subject,
                 ConfirmationReference = null,
                 Status = PlanItemStatus.Proposed

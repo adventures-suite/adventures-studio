@@ -24,7 +24,8 @@ public sealed record EditAccommodationCommand(
     string Name,
     DateOnly StartDate,
     DateOnly EndDate,
-    string TimeZoneId);
+    string TimeZoneId,
+    DestinationVisitId? DestinationVisitId = null);
 
 /// <summary>Classifies non-disclosing accommodation edit outcomes.</summary>
 public enum EditAccommodationOutcome
@@ -125,6 +126,11 @@ public sealed class AccommodationEditService(
             {
                 return Result(EditAccommodationOutcome.ValidationFailed);
             }
+            if (command.DestinationVisitId is { } destinationVisitId
+                && current.DestinationVisits.All(visit => visit.Id != destinationVisitId))
+            {
+                return Result(EditAccommodationOutcome.Denied);
+            }
 
             if (Matches(accommodation, command, dates, timeZone))
             {
@@ -138,7 +144,9 @@ public sealed class AccommodationEditService(
 
             var now = timeProvider.GetUtcNow().ToUniversalTime();
             var updated = current.WithEditedAccommodation(
-                command.AccommodationId, command.Name, dates, timeZone, now);
+                command.AccommodationId, command.Name, dates, timeZone, now,
+                replaceDestinationAssociation: true,
+                destinationVisitId: command.DestinationVisitId);
             var edited = updated.Accommodations.Single(item => item.Id == command.AccommodationId);
             await transaction.AdventurePlans.UpdateAccommodationAsync(
                 command.CreatorId, updated, edited, command.ExpectedVersion, cancellationToken);
@@ -176,7 +184,8 @@ public sealed class AccommodationEditService(
         IanaTimeZone timeZone) =>
         accommodation.Name == command.Name
         && accommodation.Dates == dates
-        && accommodation.TimeZone == timeZone;
+        && accommodation.TimeZone == timeZone
+        && accommodation.DestinationVisitId == command.DestinationVisitId;
 
     private static bool TryValidate(
         EditAccommodationCommand command,

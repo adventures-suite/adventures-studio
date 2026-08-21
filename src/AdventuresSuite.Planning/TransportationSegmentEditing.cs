@@ -34,7 +34,9 @@ public sealed record EditTransportationSegmentCommand(
     string DepartureTimeZoneId,
     DateOnly ArrivalDate,
     TimeOnly? ArrivalTimeLocal,
-    string ArrivalTimeZoneId);
+    string ArrivalTimeZoneId,
+    DestinationVisitId? DepartureDestinationVisitId = null,
+    DestinationVisitId? ArrivalDestinationVisitId = null);
 
 /// <summary>Classifies non-disclosing transportation edit outcomes.</summary>
 public enum EditTransportationSegmentOutcome
@@ -138,6 +140,11 @@ public sealed class TransportationSegmentEditService(
             {
                 return Result(EditTransportationSegmentOutcome.ValidationFailed);
             }
+            if (!ReferencesVisit(current, command.DepartureDestinationVisitId)
+                || !ReferencesVisit(current, command.ArrivalDestinationVisitId))
+            {
+                return Result(EditTransportationSegmentOutcome.Denied);
+            }
 
             if (Matches(segment, command, departureZone, arrivalZone))
             {
@@ -153,7 +160,10 @@ public sealed class TransportationSegmentEditService(
             var updated = current.WithEditedTransportationSegment(
                 command.TransportationSegmentId, command.Mode, command.From, command.To,
                 command.DepartureDate, command.DepartureTimeLocal, departureZone,
-                command.ArrivalDate, command.ArrivalTimeLocal, arrivalZone, now);
+                command.ArrivalDate, command.ArrivalTimeLocal, arrivalZone, now,
+                replaceDestinationAssociations: true,
+                departureDestinationVisitId: command.DepartureDestinationVisitId,
+                arrivalDestinationVisitId: command.ArrivalDestinationVisitId);
             var edited = updated.Transportation.Single(
                 item => item.Id == command.TransportationSegmentId);
             await transaction.AdventurePlans.UpdateTransportationSegmentAsync(
@@ -198,7 +208,12 @@ public sealed class TransportationSegmentEditService(
         && segment.DepartureTimeZone == departureZone
         && segment.ArrivalDate == command.ArrivalDate
         && segment.ArrivalTimeLocal == command.ArrivalTimeLocal
-        && segment.ArrivalTimeZone == arrivalZone;
+        && segment.ArrivalTimeZone == arrivalZone
+        && segment.DepartureDestinationVisitId == command.DepartureDestinationVisitId
+        && segment.ArrivalDestinationVisitId == command.ArrivalDestinationVisitId;
+
+    private static bool ReferencesVisit(AdventurePlan plan, DestinationVisitId? visitId) =>
+        visitId is null || plan.DestinationVisits.Any(visit => visit.Id == visitId.Value);
 
     private static bool TryValidate(
         EditTransportationSegmentCommand command,

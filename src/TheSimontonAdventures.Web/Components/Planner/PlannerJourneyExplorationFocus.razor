@@ -1,0 +1,129 @@
+@namespace TheSimontonAdventures.Web.Components
+
+<section class="@SectionClasses" aria-labelledby="planner-exploration-title">
+    <div class="planner-exploration__heading">
+        <div>
+            <p>Journey exploration focus</p>
+            <h4 id="planner-exploration-title">Where would you like to explore?</h4>
+        </div>
+        <div class="planner-exploration__heading-actions">
+            @if (SelectedAreaIds.Count > 0 && IsExpanded)
+            {
+                <button type="button" class="planner-exploration__clear" @onclick="ClearSelection">Anywhere</button>
+            }
+            <button type="button"
+                    class="planner-exploration__toggle"
+                    aria-expanded="@IsExpanded"
+                    aria-controls="planner-exploration-content"
+                    aria-label="@(IsExpanded ? "Tuck map away" : "Show map")"
+                    title="@(IsExpanded ? "Tuck map away" : "Show map")"
+                    @onclick="ToggleExpanded">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m7 10 5 5 5-5" /></svg>
+            </button>
+        </div>
+    </div>
+
+    @if (!IsExpanded)
+    {
+        <button type="button" class="planner-exploration__compact" @onclick="Expand">
+            <span>@CompactSelectionSummary</span>
+            <span>Change exploration focus</span>
+        </button>
+    }
+
+    @if (IsExpanded)
+    {
+        <div id="planner-exploration-content">
+            <p class="planner-exploration__help" id="planner-exploration-help">
+                Choose one or more regions, then refine each branch without losing your other selections. This does not change your Journey.
+            </p>
+
+            <svg class="planner-exploration__map"
+                 viewBox="0 0 720 360"
+                 role="group"
+                 aria-label="Selectable world regions"
+                 aria-describedby="planner-exploration-help">
+                <defs>
+                    <linearGradient id="planner-ocean-gradient" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0" class="planner-exploration__ocean-start" />
+                        <stop offset="1" class="planner-exploration__ocean-end" />
+                    </linearGradient>
+                    <filter id="planner-land-shadow" x="-10%" y="-10%" width="120%" height="120%">
+                        <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity=".18" />
+                    </filter>
+                </defs>
+                <rect class="planner-exploration__ocean" x="4" y="4" width="712" height="352" rx="24" />
+                <g class="planner-exploration__graticule" aria-hidden="true">
+                    <path d="M4 90H716M4 180H716M4 270H716" />
+                    <path d="M180 4V356M360 4V356M540 4V356" />
+                </g>
+                @foreach (var region in RootAreas)
+                {
+                    <g class="@RegionClasses(region)"
+                       role="button"
+                       tabindex="0"
+                       aria-label="@region.Name"
+                       aria-pressed="@BranchHasSelection(region.Id)"
+                       @onclick="() => SelectAndExplore(region.Id)"
+                       @onkeydown="args => HandleRegionKey(args, region.Id)">
+                        @if (region.MapAssetId is { } mapAssetId)
+                        {
+                            <use href="@($"/planner/world-regions.svg#{mapAssetId}")" />
+                        }
+                        else
+                        {
+                            <path d="@region.MapPath" />
+                        }
+                        <text x="@region.MapLabelX" y="@region.MapLabelY">@region.MapLabel</text>
+                    </g>
+                }
+            </svg>
+
+            <nav class="planner-exploration__breadcrumb" aria-label="Exploration location">
+                <button type="button" aria-current="@(CurrentParentId is null ? "location" : null)" @onclick="ExploreWorld">World</button>
+                @foreach (var ancestor in CurrentAncestors)
+                {
+                    <span aria-hidden="true">/</span>
+                    <button type="button"
+                            aria-current="@(ancestor.Id == CurrentParentId ? "location" : null)"
+                            @onclick="() => Explore(ancestor.Id)">@ancestor.Name</button>
+                }
+            </nav>
+
+            <fieldset class="planner-exploration__regions">
+                <legend>@CurrentPrompt</legend>
+                @foreach (var area in CurrentChildren)
+                {
+                    <button type="button"
+                            aria-pressed="@BranchHasSelection(area.Id)"
+                            @onclick="() => SelectAndExplore(area.Id)">
+                        @area.Name
+                        @if (HasChildren(area.Id))
+                        {
+                            <span aria-hidden="true">›</span>
+                        }
+                    </button>
+                }
+            </fieldset>
+
+            @if (SelectedAreas.Count > 0)
+            {
+                <div class="planner-exploration__selections" aria-label="Active exploration regions">
+                    @foreach (var area in SelectedAreas)
+                    {
+                        <button type="button" aria-label="Remove @PathLabel(area.Id)" @onclick="() => RemoveSelection(area.Id)">
+                            @PathLabel(area.Id) <span aria-hidden="true">×</span>
+                        </button>
+                    }
+                </div>
+            }
+
+            <p class="planner-exploration__status" role="status">@SelectionSummary</p>
+            <label class="planner-exploration__auto-hide">
+                <input type="checkbox" checked="@AutoHideAfterSelection" @onchange="ChangeAutoHide" />
+                Tuck the map away after I choose a region
+            </label>
+            <p class="planner-exploration__manual">Not seeing the right place? You can always use <strong>Add destination</strong> to enter it manually.</p>
+        </div>
+    }
+</section>

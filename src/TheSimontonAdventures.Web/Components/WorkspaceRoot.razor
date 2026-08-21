@@ -5,7 +5,7 @@
 @using TheSimontonAdventures.Web.Creators
 
 <PlannerWorkspaceShell Title="Planner"
-                       Description="Private adventure and itinerary planning."
+                       Description="Adventure planning made simple."
                        IsContentEdgeAligned="@(Plan is not null)"
                        SimontonAdventuresUrl="@WorkspaceNavigation.SimontonAdventuresUrl">
     <ToolbarContent>
@@ -13,15 +13,29 @@
         {
             <form method="post" action="@ExternalIdBrowserEndpoints.SignOutPath">
                 <AntiforgeryToken />
+                <input type="hidden" name="returnUrl" value="@SignOutReturnPath" />
                 <button class="workspace-signout" type="submit">Sign out</button>
             </form>
         }
     </ToolbarContent>
+    <WorkspaceToolbarContent>
+        @if (Plan is not null)
+        {
+            <div class="planner-context-toolbar">
+                <a class="planner-context-toolbar__back" href="@PlanListPath" aria-label="Return to active plans">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m15 5-7 7 7 7" /></svg>
+                    <span>Active plans</span>
+                </a>
+                <PlannerJourneyFocusToolbar Plan="@Plan"
+                                            FocusedPanel="@FocusedPanel"
+                                            OnFocusedPanelChanged="FocusPanelAsync" />
+            </div>
+        }
+    </WorkspaceToolbarContent>
     <ChildContent>
     <div class="workspace-root">
     @if (IsAuthenticated)
     {
-        <p class="workspace-private">You are signed in to the private workspace. Authorization is checked before plan data is read.</p>
         @if (LoadState == WorkspaceLoadState.Loading)
         {
             <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Loading"
@@ -59,23 +73,8 @@
         else if (Plan is not null)
         {
             <article class="plan-detail">
-                <a class="workspace-back" href="@PlanListPath">← Active plans</a>
-                <header class="plan-detail-header">
-                    <div>
-                        <p class="workspace-eyebrow">@FormatStatus(Plan.Status) · @Plan.LifecycleStage</p>
-                        <h2>@Plan.Title</h2>
-                        @if (!string.IsNullOrWhiteSpace(Plan.WorkingDescription))
-                        {
-                            <p>@Plan.WorkingDescription</p>
-                        }
-                    </div>
-                    <dl>
-                        <div><dt>Dates</dt><dd>@FormatDates(Plan.Dates)</dd></div>
-                        <div><dt>Travelers</dt><dd>@Plan.TravelerCount</dd></div>
-                        <div><dt>Plan version</dt><dd>@Plan.Version</dd></div>
-                    </dl>
-                </header>
-
+                <div class="planner-contextual-layout" style="--planner-ideas-width: @(IdeasWidthPixels)px">
+                <div class="planner-journey-canvas">
                 @if (EditStatusMessage is not null)
                 {
                     @if (IsEditConflict)
@@ -89,43 +88,80 @@
                         <p class="plan-create-status" role="status">@EditStatusMessage</p>
                     }
                 }
-                @if (PlanCanEdit)
-                {
-                    <section class="plan-create" aria-labelledby="edit-plan-overview">
-                        <p class="workspace-eyebrow">Plan overview</p>
-                        <h3 id="edit-plan-overview">Edit overview</h3>
-                        <form method="post" action="@EditPlanPath">
-                            <AntiforgeryToken />
-                            <input type="hidden" name="expectedVersion" value="@Plan.Version" />
-                            <label>
-                                Title
-                                <input name="title" value="@Plan.Title" required maxlength="200" autocomplete="off" />
-                            </label>
-                            <label>
-                                Description <span>(optional)</span>
-                                <textarea name="description" maxlength="2000" rows="3">@Plan.WorkingDescription</textarea>
-                            </label>
-                            <div class="plan-create-dates">
-                                <label>
-                                    Start date
-                                    <input type="date" name="startDate" value="@Plan.Dates.Start.ToString("yyyy-MM-dd")" required />
-                                </label>
-                                <label>
-                                    End date
-                                    <input type="date" name="endDate" value="@Plan.Dates.End.ToString("yyyy-MM-dd")" required />
-                                </label>
+                <section class="@OverviewPanelClasses" aria-labelledby="edit-plan-overview">
+                    <PlannerPanelHeader Panel="PlannerWorkspacePanel.Overview"
+                                        Title="Plan overview"
+                                        Summary="@($"{FormatStatus(Plan.Status)} · {Plan.LifecycleStage} · {FormatDates(Plan.Dates)}")"
+                                        HeadingId="edit-plan-overview"
+                                        ContentId="plan-overview-content"
+                                        IsExpanded="@IsPanelExpanded(PlannerWorkspacePanel.Overview)"
+                                        IsFocused="@IsPanelFocused(PlannerWorkspacePanel.Overview)"
+                                        OnToggle="TogglePanelAsync" />
+                    <div id="plan-overview-content" hidden="@(!IsPanelExpanded(PlannerWorkspacePanel.Overview))">
+                        <div class="plan-overview__layout">
+                            <div class="plan-overview__details">
+                            @if (!PlanCanEdit)
+                            {
+                                <div class="plan-overview__identity">
+                                    <h2>@Plan.Title</h2>
+                                    @if (!string.IsNullOrWhiteSpace(Plan.WorkingDescription))
+                                    {
+                                        <p>@Plan.WorkingDescription</p>
+                                    }
+                                </div>
+                            }
+                            <dl class="plan-overview__facts">
+                                <div><dt>Status</dt><dd>@FormatStatus(Plan.Status)</dd></div>
+                                <div><dt>Stage</dt><dd>@Plan.LifecycleStage</dd></div>
+                                @if (!PlanCanEdit)
+                                {
+                                    <div><dt>Dates</dt><dd>@FormatDates(Plan.Dates)</dd></div>
+                                }
+                                <div><dt>Travelers</dt><dd>@Plan.TravelerCount</dd></div>
+                                <div><dt>Plan version</dt><dd>@Plan.Version</dd></div>
+                            </dl>
+                            @if (PlanCanEdit)
+                            {
+                                <form method="post" action="@EditPlanPath">
+                                    <AntiforgeryToken />
+                                    <input type="hidden" name="expectedVersion" value="@Plan.Version" />
+                                    <label>
+                                        Title
+                                        <input name="title" value="@Plan.Title" required maxlength="200" autocomplete="off" />
+                                    </label>
+                                    <label>
+                                        Description <span>(optional)</span>
+                                        <textarea name="description" maxlength="2000" rows="3">@Plan.WorkingDescription</textarea>
+                                    </label>
+                                    <div class="plan-create-dates">
+                                        <label>Start date<input type="date" name="startDate" value="@Plan.Dates.Start.ToString("yyyy-MM-dd")" required /></label>
+                                        <label>End date<input type="date" name="endDate" value="@Plan.Dates.End.ToString("yyyy-MM-dd")" required /></label>
+                                    </div>
+                                    <button type="submit">Save overview</button>
+                                </form>
+                            }
                             </div>
-                            <button type="submit">Save overview</button>
-                        </form>
-                    </section>
-                }
+                            <PlannerPlanHero ImageUrl="@PlannerHeroImageUrl"
+                                             AltText="Passports and travel keepsakes representing the beginning of a Journey"
+                                             IsPlaceholder="true" />
+                        </div>
+                    </div>
+                </section>
 
-                <div class="planner-contextual-layout" style="--planner-ideas-width: @(IdeasWidthPixels)px">
                 <PlannerItineraryBoard Plan="@Plan"
                                        CanEdit="@PlanCanEdit"
+                                       ExpandedPanels="@ExpandedPanels"
+                                       FocusedPanel="@FocusedPanel"
+                                       OnPanelToggle="TogglePanelAsync"
                                        SelectedContext="@SelectedIdeasContext"
                                        OnContextSelected="SelectIdeasContextAsync"
+                                       IsDestinationFootStepDragging="@(DraggedDestinationFootStep is not null)"
+                                       PendingDestinationFootStep="@PendingDestinationFootStep"
+                                       OnDestinationFootStepDropped="DropDestinationFootStepAsync"
+                                       OnDestinationFootStepReviewCancelled="CancelDestinationFootStepReviewAsync"
+                                       ApplyDestinationFootStepPath="@ApplyDestinationFootStepPath"
                                        AddDestinationPath="@AddDestinationPath"
+                                       ReorderDestinationPath="@ReorderDestinationPath"
                                        AddDayPath="@AddDayPath"
                                        EditDayPathPrefix="@AddDayPath"
                                        DayCancelPath="@PlanPath(Plan.Id)"
@@ -140,6 +176,7 @@
                                        AccommodationCancelPath="@PlanPath(Plan.Id)"
                                        AddReservationPath="@AddReservationPath"
                                        DestinationStatusMessage="@DestinationStatusMessage"
+                                       RouteStatusMessage="@RouteStatusMessage"
                                        DayStatusMessage="@DayStatusMessage"
                                        DayEditStatusMessage="@DayEditStatusMessage"
                                        ActivityStatusMessage="@ActivityStatusMessage"
@@ -149,6 +186,8 @@
                                        AccommodationStatusMessage="@AccommodationStatusMessage"
                                        AccommodationEditStatusMessage="@AccommodationEditStatusMessage"
                                        ReservationStatusMessage="@ReservationStatusMessage" />
+                <p class="workspace-private">Sensitive confirmation references, private notes, budgets, packing lists, and traveler identities are not included in this view.</p>
+                </div>
                 <PlannerContextualIdeasRail Context="@SelectedIdeasContext"
                                             AuthorizedItems="@AuthorizedFootSteps"
                                             CanEdit="@PlanCanEdit"
@@ -156,13 +195,16 @@
                                             PlanStartDate="@Plan.Dates.Start"
                                             PlanEndDate="@Plan.Dates.End"
                                             ApplyDestinationPath="@ApplyDestinationFootStepPath"
+                                            AddActivityPath="@AddActivityPath"
+                                            ActivityTargets="@ActivityFootStepTargets"
                                             ApplicationStatusMessage="@FootStepStatusMessage"
                                             WidthPixels="@IdeasWidthPixels"
                                             OnAdventureContextRequested="SelectAdventureIdeasContextAsync"
+                                            OnDestinationDragStarted="BeginDestinationFootStepDragAsync"
+                                            OnDestinationDragEnded="EndDestinationFootStepDragAsync"
+                                            OnDestinationDropped="ReviewDroppedDestinationFootStepAsync"
                                             OnResizeRequested="ResizeIdeasAsync" />
                 </div>
-
-                <p class="workspace-private">Sensitive confirmation references, private notes, budgets, packing lists, and traveler identities are not included in this view.</p>
             </article>
         }
         else if (IsRootAdventureLanding)

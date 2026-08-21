@@ -1,33 +1,27 @@
 @namespace TheSimontonAdventures.Web.Components
 
 <button type="button" class="planner-ideas__mobile-open" @ref="OpenButton" aria-haspopup="dialog" @onclick="OpenDrawerAsync">FootSteps</button>
-<aside class="@RailClasses" role="@(IsDrawerOpen ? "dialog" : "complementary")" aria-modal="@(IsDrawerOpen ? "true" : null)" aria-labelledby="planner-ideas-title" @onkeydown="HandleKeyAsync">
+<aside class="@RailClasses" @ref="RailElement" role="@(IsDrawerOpen ? "dialog" : "complementary")" aria-modal="@(IsDrawerOpen ? "true" : null)" aria-labelledby="planner-ideas-title" @onkeydown="HandleKeyAsync">
     <header class="planner-ideas__header">
-        <div><p>Contextual inspiration</p><h3 id="planner-ideas-title">FootSteps</h3></div>
+        <div><h3 id="planner-ideas-title">FootSteps</h3></div>
         <div class="planner-ideas__controls">
-            @if (!IsCollapsed)
-            {
-                <div class="planner-ideas__width-controls" role="group" aria-label="FootSteps rail width">
-                    <button type="button"
-                            aria-label="Narrow FootSteps rail"
-                            title="Narrow FootSteps rail"
-                            disabled="@(WidthPixels <= MinimumWidthPixels)"
-                            @onclick="NarrowRailAsync">
-                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14" /></svg>
-                    </button>
-                    <button type="button"
-                            aria-label="Widen FootSteps rail"
-                            title="Widen FootSteps rail"
-                            disabled="@(WidthPixels >= MaximumWidthPixels)"
-                            @onclick="WidenRailAsync">
-                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14" /></svg>
-                    </button>
-                </div>
-            }
-            <button type="button" class="planner-ideas__collapse" aria-expanded="@(!IsCollapsed)" @onclick="ToggleCollapsed">@(IsCollapsed ? "Expand" : "Collapse")</button>
+            <button type="button"
+                    class="planner-ideas__collapse"
+                    aria-label="@(IsCollapsed ? "Expand FootSteps rail" : "Collapse FootSteps rail")"
+                    title="@(IsCollapsed ? "Expand FootSteps rail" : "Collapse FootSteps rail")"
+                    aria-expanded="@(!IsCollapsed)"
+                    @onclick="ToggleCollapsed">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="@(IsCollapsed ? "m15 5-7 7 7 7" : "m9 5 7 7-7 7")" />
+                </svg>
+            </button>
             <button type="button" class="planner-ideas__close" @ref="CloseButton" @onclick="CloseDrawerAsync">Close</button>
         </div>
     </header>
+    @if (IsCollapsed)
+    {
+        <div class="planner-ideas__collapsed-label" aria-hidden="true">FootSteps</div>
+    }
     @if (!IsCollapsed)
     {
         <div class="planner-ideas__body" aria-live="polite">
@@ -60,6 +54,10 @@
                         <button type="button" @onclick="ShowWholeAdventureAsync">Whole Adventure</button>
                     }
                 </div>
+                @if (Context.Kind == PlannerIdeasContextKind.Adventure)
+                {
+                    <PlannerJourneyExplorationFocus OnSelectionChanged="ChangeExplorationAreasAsync" />
+                }
                 @if (ApplicationStatusMessage is not null)
                 {
                     <p class="planner-ideas__application-status" role="status">@ApplicationStatusMessage</p>
@@ -68,11 +66,11 @@
                     <button type="button" aria-pressed="@(SelectedType is null ? "true" : "false")" @onclick="() => SelectType(null)">All</button>
                     @foreach (var type in AvailableTypes)
                     {
-                        <button type="button" aria-pressed="@(SelectedType == type ? "true" : "false")" @onclick="() => SelectType(type)">@type</button>
+                        <button type="button" aria-pressed="@(SelectedType == type ? "true" : "false")" @onclick="() => SelectType(type)">@DisplayFacet(type)</button>
                     }
                 </nav>
                 <details class="planner-ideas__filters">
-                    <summary>Filter FootSteps (@FacetedIdeas.Count)</summary>
+                    <summary>Filter (@FacetedIdeas.Count)</summary>
                     <fieldset>
                         <legend>Travel details</legend>
                         <label>Minimum days <input type="number" min="1" max="365" value="@MinimumDays" @onchange="ChangeMinimumDays" /></label>
@@ -118,7 +116,7 @@
                 </div>
                 @if (FacetedIdeas.Count == 0)
                 {
-                    <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Empty" Title="No FootSteps match these filters" Message="Your plan is unchanged. Remove a filter or clear all filters to see more inspiration." />
+                    <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Empty" Title="No FootSteps match this exploration" Message="@EmptyMatchMessage" />
                 }
                 @foreach (var group in PagedGroups)
                 {
@@ -132,7 +130,7 @@
                                 <tbody>
                                 @foreach (var idea in group.Items)
                                 {
-                                    <tr>
+                                    <tr draggable="@DraggableValue(idea)" data-planner-destination-footstep="@DraggableValue(idea)" data-planner-footstep-id="@idea.Id" @ondragstart="() => BeginDestinationDragAsync(idea)" @ondragend="EndDestinationDragAsync">
                                         <th scope="row"><span>@idea.Title</span><small>@idea.Summary</small></th>
                                         <td>@DisplayFacet(idea.Kind)</td>
                                         <td>@DisplayValues(idea.Places)</td>
@@ -143,7 +141,7 @@
                                         <td>
                                             @if (CanEdit && idea.DestinationDraft is { } destination && !string.IsNullOrWhiteSpace(ApplyDestinationPath))
                                             {
-                                                <details class="planner-ideas__apply"><summary>Preview</summary>
+                                                <details class="planner-ideas__apply"><summary>Preview destination</summary>
                                                     <p>Add <strong>@destination.Name</strong> as a proposed destination. Nothing is booked.</p>
                                                     <form method="post" action="@ApplyDestinationPath">
                                                         <AntiforgeryToken />
@@ -154,10 +152,15 @@
                                                         <input type="hidden" name="timeZoneId" value="@destination.TimeZoneId" />
                                                         <label>Start date <input type="date" name="startDate" value="@PlanStartDate.ToString("yyyy-MM-dd")" min="@PlanStartDate.ToString("yyyy-MM-dd")" max="@PlanEndDate.ToString("yyyy-MM-dd")" required /></label>
                                                         <label>End date <input type="date" name="endDate" value="@SuggestedEnd(idea).ToString("yyyy-MM-dd")" min="@PlanStartDate.ToString("yyyy-MM-dd")" max="@PlanEndDate.ToString("yyyy-MM-dd")" required /></label>
-                                                        <button type="submit">Add to plan</button>
+                                                        <button type="submit">Add destination to Journey</button>
                                                     </form>
                                                 </details>
                                             }
+                                            <PlannerActivityFootStepReview FootStep="@idea"
+                                                                                          Targets="@ActivityTargets"
+                                                                                          CanEdit="@CanEdit"
+                                                                                          ExpectedVersion="@ExpectedVersion"
+                                                                                          AddActivityPath="@AddActivityPath" />
                                         </td>
                                     </tr>
                                 }
@@ -170,16 +173,20 @@
                         <ul class="planner-ideas__list">
                         @foreach (var idea in group.Items)
                         {
-                            <li><article class="planner-ideas__card">
+                            <li><article class="planner-ideas__card" draggable="@DraggableValue(idea)" data-planner-destination-footstep="@DraggableValue(idea)" data-planner-footstep-id="@idea.Id" @ondragstart="() => BeginDestinationDragAsync(idea)" @ondragend="EndDestinationDragAsync">
                                 <div class="planner-ideas__thumbnail" aria-hidden="true">@Monogram(idea)</div>
                                 <p class="planner-ideas__type">@DisplayFacet(idea.Kind) · suggestion</p>
                                 <h4>@idea.Title</h4>
                                 <p>@idea.Summary</p>
-                                <dl><div><dt>Source</dt><dd>@idea.Attribution</dd></div><div><dt>Freshness</dt><dd>@idea.Freshness</dd></div><div><dt>Why</dt><dd>@ContextReason</dd></div></dl>
+                                <dl><div><dt>Source</dt><dd>@idea.Attribution</dd></div><div><dt>Freshness</dt><dd>@idea.Freshness</dd></div><div><dt>Why</dt><dd>@WhyThisFootStep(idea)</dd></div></dl>
                                 <p class="planner-ideas__boundary">Inspiration only — not booked, available, or added to your plan.</p>
+                                @if (CanDrag(idea))
+                                {
+                                    <p class="planner-ideas__drag-hint">Drag to Destinations and route, or preview it below.</p>
+                                }
                                 @if (CanEdit && idea.DestinationDraft is { } destination && !string.IsNullOrWhiteSpace(ApplyDestinationPath))
                                 {
-                                    <details class="planner-ideas__apply"><summary>Preview Add to plan</summary>
+                                    <details class="planner-ideas__apply"><summary>Preview destination</summary>
                                         <p>Add <strong>@destination.Name</strong> as a proposed destination using <strong>@destination.TimeZoneId</strong>. Review the inclusive dates before confirming. Nothing is booked.</p>
                                         <form method="post" action="@ApplyDestinationPath">
                                             <AntiforgeryToken />
@@ -190,10 +197,15 @@
                                             <input type="hidden" name="timeZoneId" value="@destination.TimeZoneId" />
                                             <label>Start date <input type="date" name="startDate" value="@PlanStartDate.ToString("yyyy-MM-dd")" min="@PlanStartDate.ToString("yyyy-MM-dd")" max="@PlanEndDate.ToString("yyyy-MM-dd")" required /></label>
                                             <label>End date <input type="date" name="endDate" value="@SuggestedEnd(idea).ToString("yyyy-MM-dd")" min="@PlanStartDate.ToString("yyyy-MM-dd")" max="@PlanEndDate.ToString("yyyy-MM-dd")" required /></label>
-                                            <button type="submit">Add to plan</button>
+                                            <button type="submit">Add destination to Journey</button>
                                         </form>
                                     </details>
                                 }
+                                <PlannerActivityFootStepReview FootStep="@idea"
+                                                                                      Targets="@ActivityTargets"
+                                                                                      CanEdit="@CanEdit"
+                                                                                      ExpectedVersion="@ExpectedVersion"
+                                                                                      AddActivityPath="@AddActivityPath" />
                             </article></li>
                         }
                         </ul>
@@ -206,6 +218,19 @@
                                   OnPageSizeChanged="ChangePageSizeAsync"
                                   OnPageChanged="ChangePageAsync" />
             }
+        </div>
+        <div class="planner-ideas__width-controls" role="group" aria-label="FootSteps rail width">
+            <button type="button"
+                    aria-label="Narrow FootSteps rail"
+                    title="Narrow FootSteps rail"
+                    disabled="@(WidthPixels <= MinimumWidthPixels)"
+                    @onclick="NarrowRailAsync">−</button>
+            <span aria-hidden="true">Width</span>
+            <button type="button"
+                    aria-label="Widen FootSteps rail"
+                    title="Widen FootSteps rail"
+                    disabled="@(WidthPixels >= MaximumWidthPixels)"
+                    @onclick="WidenRailAsync">+</button>
         </div>
         <div class="planner-ideas__resize" role="separator" aria-label="Resize FootSteps rail" aria-orientation="vertical" tabindex="0" aria-valuemin="@MinimumWidthPixels" aria-valuemax="@MaximumWidthPixels" aria-valuenow="@WidthPixels" @onkeydown="HandleResizeKeyAsync" @onpointerdown="BeginPointerResizeAsync" @onpointermove="ContinuePointerResizeAsync" @onpointerup="EndPointerResize" @onpointercancel="EndPointerResize"></div>
     }

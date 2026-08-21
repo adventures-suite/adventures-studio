@@ -206,6 +206,69 @@ public sealed class PlanningDomainInvariantTests
         Assert.Empty(plan.DestinationVisits);
     }
 
+    /// <summary>Reordering a visit preserves route slots and shifts its linked dated records.</summary>
+    [Fact]
+    public void WithReorderedDestinationVisit_ValidMove_ShiftsLinkedDatesAndPreservesDurations()
+    {
+        var madrid = ValidVisit() with
+        {
+            Dates = new PlanningDateRange(new DateOnly(2027, 10, 26), new DateOnly(2027, 10, 27))
+        };
+        var barcelona = madrid with
+        {
+            Id = new DestinationVisitId("visit_barcelona"),
+            Name = "Barcelona",
+            Dates = new PlanningDateRange(new DateOnly(2027, 10, 30), new DateOnly(2027, 11, 1)),
+            Sequence = 2
+        };
+        var day = ValidDay(barcelona) with { Id = new ItineraryDayId("day_barcelona_one") };
+        var travelDay = day with
+        {
+            Id = new ItineraryDayId("day_route_travel"),
+            DestinationVisitId = null,
+            Date = new DateOnly(2027, 10, 28),
+            Title = "Travel day"
+        };
+        var stay = new Accommodation
+        {
+            Id = new AccommodationId("stay_barcelona"),
+            DestinationVisitId = barcelona.Id,
+            Name = "Barcelona stay",
+            Dates = barcelona.Dates,
+            TimeZone = barcelona.TimeZone
+        };
+        var segment = ValidTransportation() with
+        {
+            DepartureDestinationVisitId = barcelona.Id,
+            ArrivalDestinationVisitId = barcelona.Id,
+            DepartureDate = barcelona.Dates.Start,
+            DepartureTimeZone = barcelona.TimeZone,
+            ArrivalDate = barcelona.Dates.End,
+            ArrivalTimeZone = barcelona.TimeZone
+        };
+        var plan = CreatePlan(
+            destinationVisits: [madrid, barcelona],
+            itineraryDays: [day, travelDay],
+            transportation: [segment],
+            accommodations: [stay]);
+
+        var updated = plan.WithReorderedDestinationVisit(
+            barcelona.Id, 1, Audit.UpdatedAtUtc.AddHours(1));
+
+        Assert.Equal(barcelona.Id, updated.DestinationVisits[0].Id);
+        Assert.Equal(
+            new PlanningDateRange(new DateOnly(2027, 10, 26), new DateOnly(2027, 10, 28)),
+            updated.DestinationVisits[0].Dates);
+        Assert.Equal(new DateOnly(2027, 10, 26), updated.ItineraryDays[0].Date);
+        Assert.Equal(new DateOnly(2027, 10, 29), updated.ItineraryDays[1].Date);
+        Assert.Equal(
+            new PlanningDateRange(new DateOnly(2027, 10, 26), new DateOnly(2027, 10, 28)),
+            updated.Accommodations[0].Dates);
+        Assert.Equal(new DateOnly(2027, 10, 26), updated.Transportation[0].DepartureDate);
+        Assert.Equal(new DateOnly(2027, 10, 28), updated.Transportation[0].ArrivalDate);
+        Assert.Equal(2, updated.Audit.Version);
+    }
+
     /// <summary>Appending a day preserves state and advances exactly one plan version.</summary>
     [Fact]
     public void WithItineraryDay_ValidDay_AppendsAndAdvancesVersion()

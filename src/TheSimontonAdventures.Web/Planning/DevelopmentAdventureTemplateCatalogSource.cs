@@ -94,10 +94,11 @@ public sealed class DevelopmentAdventureTemplateCatalogSource : IAdventureTempla
                 item.DepartureDayOffset, item.DepartureTimeLocal,
                 new IanaTimeZone(item.DepartureTimeZone),
                 item.ArrivalDayOffset, item.ArrivalTimeLocal,
-                new IanaTimeZone(item.ArrivalTimeZone))).ToArray(),
+                new IanaTimeZone(item.ArrivalTimeZone),
+                item.DepartureDestinationKey, item.ArrivalDestinationKey)).ToArray(),
             Accommodations = source.Accommodations.Select(item => new AdventureTemplateAccommodation(
                 item.Name, item.StartDayOffset, item.EndDayOffset,
-                new IanaTimeZone(item.TimeZone))).ToArray()
+                new IanaTimeZone(item.TimeZone), item.DestinationKey)).ToArray()
         };
     }
 
@@ -132,8 +133,10 @@ public sealed class DevelopmentAdventureTemplateCatalogSource : IAdventureTempla
     private sealed record TransportationRecord(
         string Mode, string From, string To,
         int DepartureDayOffset, TimeOnly? DepartureTimeLocal, string DepartureTimeZone,
-        int ArrivalDayOffset, TimeOnly? ArrivalTimeLocal, string ArrivalTimeZone);
+        int ArrivalDayOffset, TimeOnly? ArrivalTimeLocal, string ArrivalTimeZone,
+        string? DepartureDestinationKey, string? ArrivalDestinationKey);
 
     private sealed record AccommodationRecord(
-        string Name, int StartDayOffset, int EndDayOffset, string TimeZone);
+        string Name, int StartDayOffset, int EndDayOffset, string TimeZone,
+        string? DestinationKey);
 }

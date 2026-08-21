@@ -19,6 +19,8 @@ namespace TheSimontonAdventures.Web.Planning;
 /// <param name="ArrivalDate">The local arrival date.</param>
 /// <param name="ArrivalTimeLocal">The optional local arrival time.</param>
 /// <param name="ArrivalTimeZoneId">The arrival IANA time zone.</param>
+/// <param name="DepartureDestinationVisitId">The optional authoritative departure destination visit.</param>
+/// <param name="ArrivalDestinationVisitId">The optional authoritative arrival destination visit.</param>
 public sealed record AddTransportationSegmentCommand(
     ActorIdentity Actor,
     CreatorId CreatorId,
@@ -32,7 +34,9 @@ public sealed record AddTransportationSegmentCommand(
     string DepartureTimeZoneId,
     DateOnly ArrivalDate,
     TimeOnly? ArrivalTimeLocal,
-    string ArrivalTimeZoneId)
+    string ArrivalTimeZoneId,
+    DestinationVisitId? DepartureDestinationVisitId = null,
+    DestinationVisitId? ArrivalDestinationVisitId = null)
 {
     /// <summary>Gets the authenticated human actor.</summary>
     public ActorIdentity Actor { get; init; } = Actor;
@@ -60,6 +64,10 @@ public sealed record AddTransportationSegmentCommand(
     public TimeOnly? ArrivalTimeLocal { get; init; } = ArrivalTimeLocal;
     /// <summary>Gets the arrival IANA time zone.</summary>
     public string ArrivalTimeZoneId { get; init; } = ArrivalTimeZoneId;
+    /// <summary>Gets the optional authoritative departure destination visit.</summary>
+    public DestinationVisitId? DepartureDestinationVisitId { get; init; } = DepartureDestinationVisitId;
+    /// <summary>Gets the optional authoritative arrival destination visit.</summary>
+    public DestinationVisitId? ArrivalDestinationVisitId { get; init; } = ArrivalDestinationVisitId;
 }
 
 /// <summary>Classifies non-disclosing transportation-segment outcomes.</summary>
@@ -168,9 +176,17 @@ public sealed class TransportationSegmentAddService(
                 return Result(AddTransportationSegmentOutcome.ValidationFailed);
             }
 
+            if (!ReferencesVisit(current, command.DepartureDestinationVisitId)
+                || !ReferencesVisit(current, command.ArrivalDestinationVisitId))
+            {
+                return Result(AddTransportationSegmentOutcome.Denied);
+            }
+
             var segment = new TransportationSegment
             {
                 Id = identityGenerator.NewTransportationSegmentId(),
+                DepartureDestinationVisitId = command.DepartureDestinationVisitId,
+                ArrivalDestinationVisitId = command.ArrivalDestinationVisitId,
                 Mode = command.Mode,
                 From = command.From,
                 To = command.To,
@@ -212,6 +228,9 @@ public sealed class TransportationSegmentAddService(
             return Result(AddTransportationSegmentOutcome.Failed);
         }
     }
+
+    private static bool ReferencesVisit(AdventurePlan plan, DestinationVisitId? visitId) =>
+        visitId is null || plan.DestinationVisits.Any(visit => visit.Id == visitId.Value);
 
     private static bool TryValidate(
         AddTransportationSegmentCommand command,

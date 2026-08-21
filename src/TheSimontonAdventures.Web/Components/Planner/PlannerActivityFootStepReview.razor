@@ -1,0 +1,42 @@
+@namespace TheSimontonAdventures.Web.Components
+
+@if (CanEdit && FootStep.ActivityDraft is { } draft && Targets.Count > 0 && !string.IsNullOrWhiteSpace(AddActivityPath))
+{
+    <details class="planner-activity-footstep-review">
+        <summary>Use as an activity starting point</summary>
+        <p>Review the day, title, and local times before adding this proposed activity. Nothing is booked.</p>
+        <form method="post" action="@AddActivityPath">
+            <AntiforgeryToken />
+            <input type="hidden" name="expectedVersion" value="@ExpectedVersion" />
+            @if (Targets.Count == 1)
+            {
+                <input type="hidden" name="itineraryDayId" value="@Targets[0].Id" />
+                <p class="planner-activity-footstep-review__day">Add to <strong>@Targets[0].Label</strong></p>
+            }
+            else
+            {
+                <label>Itinerary day
+                    <select name="itineraryDayId" required>
+                        @foreach (var target in Targets)
+                        {
+                            <option value="@target.Id">@target.Label</option>
+                        }
+                    </select>
+                </label>
+            }
+            <label>Activity title
+                <input name="title" value="@draft.Title" required maxlength="200" autocomplete="off" />
+            </label>
+            <div class="planner-activity-footstep-review__times">
+                <label>Start time <span>(optional)</span>
+                    <input type="time" name="startsAtLocal" value="@TimeValue(draft.SuggestedStartTime)" />
+                </label>
+                <label>End time <span>(optional)</span>
+                    <input type="time" name="endsAtLocal" value="@TimeValue(draft.SuggestedEndTime)" />
+                </label>
+            </div>
+            <button type="submit">Add proposed activity</button>
+        </form>
+        <small>This first slice creates a normal plan activity after review; durable FootStep provenance is a later persistence slice.</small>
+    </details>
+}
