@@ -1,0 +1,26 @@
+.planner-activity-footstep-card { background: var(--planner-shell-surface); border: 1px solid var(--planner-shell-border); border-radius: 1rem; box-shadow: 0 .4rem 1.2rem color-mix(in srgb, var(--planner-shell-text) 8%, transparent); display: grid; gap: .8rem; overflow: hidden; padding: 1rem; position: relative; }
+.planner-activity-footstep-card[draggable="true"] { cursor: grab; }
+.planner-activity-footstep-card[draggable="true"]:active { cursor: grabbing; opacity: .78; }
+.planner-activity-footstep-card__header { align-items: start; display: grid; gap: .7rem; grid-template-columns: 2.65rem minmax(0, 1fr) auto; }
+.planner-activity-footstep-card__icon { align-items: center; background: color-mix(in srgb, var(--planner-shell-accent) 18%, var(--planner-shell-surface)); border-radius: .8rem; color: var(--planner-shell-primary); display: inline-flex; height: 2.65rem; justify-content: center; width: 2.65rem; }
+.planner-activity-footstep-card__icon svg, .planner-activity-footstep-card__target svg { fill: none; height: 1.25rem; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; width: 1.25rem; }
+.planner-activity-footstep-card__header p { color: var(--planner-shell-accent); font-size: .68rem; font-weight: 850; letter-spacing: .09em; margin: .05rem 0 .15rem; text-transform: uppercase; }
+.planner-activity-footstep-card__header h4 { font-family: Georgia, serif; font-size: 1.08rem; line-height: 1.25; margin: 0; }
+.planner-activity-footstep-card__drag-mark { color: var(--planner-shell-text-muted); display: inline-flex; padding: .25rem; }
+.planner-activity-footstep-card__drag-mark svg { fill: currentColor; height: 1.25rem; width: 1.25rem; }
+.planner-activity-footstep-card__summary { color: var(--planner-shell-text-muted); line-height: 1.45; margin: 0; }
+.planner-activity-footstep-card__facts { display: flex; flex-wrap: wrap; gap: .4rem; }
+.planner-activity-footstep-card__facts span { align-items: center; background: var(--planner-shell-surface-muted); border: 1px solid var(--planner-shell-border); border-radius: 999px; display: inline-flex; font-size: .72rem; gap: .3rem; line-height: 1.2; padding: .35rem .55rem; }
+.planner-activity-footstep-card__facts svg { fill: none; height: .9rem; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.9; width: .9rem; }
+.planner-activity-footstep-card__target { align-items: center; background: color-mix(in srgb, var(--planner-shell-primary) 7%, var(--planner-shell-surface)); border-left: .2rem solid var(--planner-shell-primary); border-radius: .45rem; color: var(--planner-shell-primary); display: flex; font-size: .78rem; font-weight: 750; gap: .5rem; padding: .65rem .7rem; }
+.planner-activity-footstep-card__footer { align-items: center; border-top: 1px solid var(--planner-shell-border); display: flex; flex-wrap: wrap; gap: .55rem; justify-content: space-between; padding-top: .7rem; }
+.planner-activity-footstep-card__footer p { color: var(--planner-shell-text-muted); font-size: .72rem; margin: 0; }
+.planner-activity-footstep-card__footer p span { text-transform: uppercase; }
+.planner-activity-footstep-card__boundary { border: 1px solid var(--planner-shell-border); border-radius: 999px; color: var(--planner-shell-text-muted); font-size: .68rem; font-weight: 750; padding: .25rem .45rem; }
+.planner-activity-footstep-card__drag-hint { color: var(--planner-shell-text-muted); font-size: .74rem; margin: 0; }
+.planner-activity-footstep-card__drag-hint span { color: var(--planner-shell-accent); font-weight: 900; }
+
+@media (max-width: 24rem) {
+    .planner-activity-footstep-card__header { grid-template-columns: 2.4rem minmax(0, 1fr); }
+    .planner-activity-footstep-card__drag-mark { display: none; }
+}
