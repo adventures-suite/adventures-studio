@@ -65,10 +65,21 @@ public sealed class WorkspaceRootTests
         Assert.DoesNotContain("opaque-user", html);
     }
 
-    /// <summary>The workspace root renders only Creator choices returned by the authorized directory.</summary>
+    /// <summary>A sole authorized Creator renders direct new and existing Adventure entry points.</summary>
     [Fact]
-    public async Task AuthenticatedWorkspace_RendersAuthorizedCreatorChooser()
+    public async Task AuthenticatedWorkspace_WithOneCreator_RendersAdventureLauncher()
     {
+        var query = new StubPlannerWorkspaceQueryService(
+            PlannerWorkspaceResult.Allowed([new AdventurePlanDashboardItem
+            {
+                Id = new("plan_italy_01"),
+                Title = "Italy, Greece & Croatia",
+                LifecycleStage = AdventureLifecycleStage.Plan,
+                Status = PlanningStatus.Draft,
+                Dates = new(new(2026, 6, 20), new(2026, 7, 5)),
+                Version = 1,
+                IsArchived = false
+            }]));
         var html = await RenderAsync(ApplicationPrincipal(), configure: services =>
         {
             services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>();
@@ -76,14 +87,37 @@ public sealed class WorkspaceRootTests
                 new StubCreatorWorkspaceDirectoryService([
                     new(new("creator_tsa_01"), "The Simonton Adventures")
                 ]));
+            services.AddSingleton<IPlannerWorkspaceQueryService>(query);
         });
 
-        Assert.Contains("Choose a Creator workspace", html);
-        Assert.Contains("The Simonton Adventures", html);
+        Assert.Contains("Plan a new Adventure", html);
+        Assert.Contains("Italy, Greece &amp; Croatia", html);
         Assert.Contains("href=\"/workspace/creators/creator_tsa_01/plans\"", html);
+        Assert.Contains("href=\"/workspace/creators/creator_tsa_01/plans/plan_italy_01\"", html);
+        Assert.Equal(new CreatorId("creator_tsa_01"), query.LastCreatorId);
         Assert.DoesNotContain("creator_forged", html);
         Assert.DoesNotContain("Your AdventuresSuite user ID", html);
         Assert.DoesNotContain("user_planner_01", html);
+    }
+
+    /// <summary>Multiple authorized Creators retain the explicit Creator chooser.</summary>
+    [Fact]
+    public async Task AuthenticatedWorkspace_WithMultipleCreators_RendersCreatorChooser()
+    {
+        var html = await RenderAsync(ApplicationPrincipal(), configure: services =>
+        {
+            services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>();
+            services.AddSingleton<ICreatorWorkspaceDirectoryService>(
+                new StubCreatorWorkspaceDirectoryService([
+                    new(new("creator_alpha_01"), "Alpha Adventures"),
+                    new(new("creator_beta_01"), "Beta Adventures")
+                ]));
+        });
+
+        Assert.Contains("Choose a Creator workspace", html);
+        Assert.Contains("Alpha Adventures", html);
+        Assert.Contains("Beta Adventures", html);
+        Assert.DoesNotContain("Plan a new Adventure", html);
     }
 
     /// <summary>

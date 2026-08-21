@@ -1,0 +1,41 @@
+@namespace TheSimontonAdventures.Web.Components
+@using TheSimontonAdventures.Web.Planning.Persistence
+
+<section class="planner-adventure-launcher" aria-labelledby="planner-adventure-launcher-title">
+    <p class="planner-adventure-launcher__eyebrow">Your adventures</p>
+    <h2 id="planner-adventure-launcher-title">Where would you like to continue?</h2>
+    <p>Start something new or open one of your private Adventures.</p>
+
+    <div class="planner-adventure-launcher__grid">
+        <a class="planner-adventure-choice planner-adventure-choice--new"
+           href="@PlanListPath">
+            <span class="planner-adventure-choice__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                    <path d="M12 5v14M5 12h14" />
+                </svg>
+            </span>
+            <span>
+                <strong>Plan a new Adventure</strong>
+                <small>Start from scratch or choose a Journey FootStep</small>
+            </span>
+            <span aria-hidden="true">→</span>
+        </a>
+
+        @foreach (var plan in Plans)
+        {
+            <a class="planner-adventure-choice"
+               href="@PlanPath(plan.Id)">
+                <span class="planner-adventure-choice__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M4 18.5 8.5 14l3 3L17 10.5l3 3M4 5h16v14H4z" />
+                    </svg>
+                </span>
+                <span>
+                    <strong>@plan.Title</strong>
+                    <small>@FormatDates(plan) · @FormatStatus(plan.Status)</small>
+                </span>
+                <span aria-hidden="true">→</span>
+            </a>
+        }
+    </div>
+</section>

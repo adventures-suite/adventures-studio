@@ -1,0 +1,92 @@
+.planner-adventure-launcher {
+    padding: clamp(1.25rem, 3vw, 2rem);
+    border: 1px solid var(--planner-border);
+    border-radius: 1.25rem;
+    background: var(--planner-surface-raised);
+}
+
+.planner-adventure-launcher h2,
+.planner-adventure-launcher p {
+    margin-top: 0;
+}
+
+.planner-adventure-launcher__eyebrow {
+    color: var(--planner-primary);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.planner-adventure-launcher__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+    gap: 0.85rem;
+    margin-top: 1.5rem;
+}
+
+.planner-adventure-choice {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1rem;
+    min-height: 6rem;
+    padding: 1rem;
+    border: 1px solid var(--planner-border);
+    border-radius: 1rem;
+    color: var(--planner-text);
+    background: var(--planner-surface);
+    text-decoration: none;
+}
+
+.planner-adventure-choice--new {
+    border-color: var(--planner-primary);
+    background: var(--planner-surface-muted);
+}
+
+.planner-adventure-choice:hover {
+    border-color: var(--planner-primary);
+    transform: translateY(-1px);
+}
+
+.planner-adventure-choice:focus-visible {
+    outline: 3px solid var(--planner-focus);
+    outline-offset: 3px;
+}
+
+.planner-adventure-choice__icon {
+    display: grid;
+    width: 2.75rem;
+    height: 2.75rem;
+    place-items: center;
+    border-radius: 0.8rem;
+    color: var(--planner-primary);
+    background: var(--planner-surface-muted);
+}
+
+.planner-adventure-choice__icon svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+}
+
+.planner-adventure-choice strong,
+.planner-adventure-choice small {
+    display: block;
+}
+
+.planner-adventure-choice small {
+    margin-top: 0.35rem;
+    color: var(--planner-text-muted);
+    line-height: 1.4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .planner-adventure-choice:hover {
+        transform: none;
+    }
+}
