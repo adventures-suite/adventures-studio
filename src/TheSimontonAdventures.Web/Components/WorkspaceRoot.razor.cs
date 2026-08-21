@@ -30,6 +30,9 @@ public partial class WorkspaceRoot
     [Inject]
     private IHttpContextAccessor HttpContextAccessor { get; set; } = null!;
 
+    [Inject]
+    private WorkspaceNavigationConfiguration WorkspaceNavigation { get; set; } = null!;
+
     private IReadOnlyList<AdventurePlanDashboardItem> Plans { get; set; } = [];
     private IReadOnlyList<CreatorWorkspaceChoice> AuthorizedCreatorWorkspaces { get; set; } = [];
     private AdventurePlanDetail? Plan { get; set; }

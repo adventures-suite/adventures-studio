@@ -494,6 +494,7 @@ public sealed class WorkspaceRootTests
         services.AddHttpContextAccessor();
         services.AddSingleton<Microsoft.JSInterop.IJSRuntime, StaticTestJavaScriptRuntime>();
         services.AddSingleton<NavigationManager, StaticTestNavigationManager>();
+        services.AddSingleton(new WorkspaceNavigationConfiguration());
         configure?.Invoke(services);
         await using var provider = services.BuildServiceProvider();
         var context = new DefaultHttpContext

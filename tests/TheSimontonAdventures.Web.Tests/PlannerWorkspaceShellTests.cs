@@ -198,6 +198,27 @@ public sealed class PlannerWorkspaceShellTests
         Assert.Equal(6, CountOccurrences(html, " disabled"));
     }
 
+    /// <summary>The configured Web application links to the public Simonton Adventures site.</summary>
+    [Fact]
+    public async Task Sidebar_WithPublicCreatorSite_RendersWebLink()
+    {
+        var publicSite = new Uri("https://simonton.example/");
+        var html = await RenderAsync<PlannerWorkspaceSidebar>(new()
+        {
+            [nameof(PlannerWorkspaceSidebar.SimontonAdventuresUrl)] = publicSite,
+            [nameof(PlannerWorkspaceSidebar.WidthPixels)] = 280,
+            [nameof(PlannerWorkspaceSidebar.MinimumWidthPixels)] = PlannerWorkspaceShell.MinimumSidebarWidthPixels,
+            [nameof(PlannerWorkspaceSidebar.MaximumWidthPixels)] = PlannerWorkspaceShell.MaximumSidebarWidthPixels
+        });
+
+        Assert.Contains("href=\"https://simonton.example/\"", html, StringComparison.Ordinal);
+        Assert.Contains("aria-label=\"Web, open The Simonton Adventures\"", html, StringComparison.Ordinal);
+        Assert.Contains(">Web</span>", html, StringComparison.Ordinal);
+        Assert.Contains(">Simonton Adventures</small>", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("aria-label=\"Web, coming soon\"", html, StringComparison.Ordinal);
+        Assert.Equal(5, CountOccurrences(html, " disabled"));
+    }
+
     /// <summary>The collapsed desktop sidebar becomes a true icon rail without width controls or labels.</summary>
     [Fact]
     public async Task Sidebar_Collapsed_RendersOnlyIconTilesAndAccessibleNames()

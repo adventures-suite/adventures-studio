@@ -40,7 +40,7 @@
                 <span>Planner</span>
             }
         </div>
-        <div class="planner-sidebar__applications" aria-label="Applications coming soon">
+        <div class="planner-sidebar__applications" aria-label="AdventuresSuite applications">
             <button type="button" disabled aria-label="Advisor, coming soon" title="Advisor — Coming soon">
                 <svg class="planner-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                     <path d="M12 3a7 7 0 0 0-4 12.7V20l4-2 4 2v-4.3A7 7 0 0 0 12 3Z" />
@@ -62,13 +62,28 @@
                 </svg>
                 @if (!IsCollapsed) { <span>Publisher</span><small>Coming soon</small> }
             </button>
-            <button type="button" disabled aria-label="Web, coming soon" title="Web — Coming soon">
-                <svg class="planner-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <circle cx="12" cy="12" r="9" />
-                    <path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" />
-                </svg>
-                @if (!IsCollapsed) { <span>Web</span><small>Coming soon</small> }
-            </button>
+            @if (SimontonAdventuresUrl is not null)
+            {
+                <a href="@SimontonAdventuresUrl"
+                   aria-label="Web, open The Simonton Adventures"
+                   title="Web — The Simonton Adventures">
+                    <svg class="planner-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" />
+                    </svg>
+                    @if (!IsCollapsed) { <span>Web</span><small>Simonton Adventures</small> }
+                </a>
+            }
+            else
+            {
+                <button type="button" disabled aria-label="Web, coming soon" title="Web — Coming soon">
+                    <svg class="planner-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" />
+                    </svg>
+                    @if (!IsCollapsed) { <span>Web</span><small>Coming soon</small> }
+                </button>
+            }
             <button type="button" disabled aria-label="Search, coming soon" title="Search — Coming soon">
                 <svg class="planner-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                     <circle cx="10.5" cy="10.5" r="6.5" />

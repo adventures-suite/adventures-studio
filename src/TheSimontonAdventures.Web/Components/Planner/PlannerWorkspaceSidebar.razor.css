@@ -24,14 +24,14 @@
 .planner-sidebar__nav { flex: 1; padding-top: .5rem; }
 .planner-sidebar__current { gap: .7rem; border-radius: .8rem; background: var(--planner-shell-hover); padding: .72rem .8rem; font-weight: 700; }
 .planner-sidebar__applications { display: grid; gap: .4rem; margin-top: .65rem; }
-.planner-sidebar__applications button { align-items: center; display: grid; gap: .65rem; grid-template-columns: 1.15rem minmax(0, 1fr) auto; text-align: left; }
+.planner-sidebar__applications button, .planner-sidebar__applications a { align-items: center; display: grid; gap: .65rem; grid-template-columns: 1.15rem minmax(0, 1fr) auto; text-align: left; }
 .planner-sidebar__applications button:disabled { cursor: not-allowed; opacity: .62; }
 .planner-sidebar__applications small { font-size: .66rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
 .planner-sidebar__icon { width: 1.15rem; height: 1.15rem; min-width: 1.15rem; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
 .planner-sidebar__controls { display: grid; gap: .5rem; }
 .planner-sidebar__controls button { gap: .55rem; width: 100%; }
-.planner-sidebar button { min-height: 2.5rem; border: 1px solid var(--planner-shell-border); border-radius: .65rem; background: transparent; color: inherit; cursor: pointer; padding: .45rem .65rem; }
-.planner-sidebar button:hover, .planner-sidebar button:focus-visible, .planner-sidebar__separator:focus-visible { outline: 3px solid var(--planner-shell-focus); outline-offset: 2px; }
+.planner-sidebar button, .planner-sidebar__applications a { min-height: 2.5rem; border: 1px solid var(--planner-shell-border); border-radius: .65rem; background: transparent; color: inherit; cursor: pointer; padding: .45rem .65rem; text-decoration: none; }
+.planner-sidebar button:hover, .planner-sidebar button:focus-visible, .planner-sidebar__applications a:hover, .planner-sidebar__applications a:focus-visible, .planner-sidebar__separator:focus-visible { outline: 3px solid var(--planner-shell-focus); outline-offset: 2px; }
 .planner-sidebar button svg, .planner-sidebar__mobile-close svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
 .planner-sidebar__resize-controls { justify-content: space-between; gap: .4rem; font-size: .8rem; }
 .planner-sidebar__resize-controls button { width: 2.5rem; }
@@ -39,7 +39,7 @@
 .planner-sidebar__mobile-close { display: none; }
 .planner-sidebar--collapsed .planner-sidebar__current, .planner-sidebar--collapsed .planner-sidebar__controls button { justify-content: center; }
 .planner-sidebar--collapsed .planner-sidebar__applications { justify-items: center; }
-.planner-sidebar--collapsed .planner-sidebar__applications button { display: inline-grid; height: 2.75rem; padding: 0; place-items: center; width: 2.75rem; }
+.planner-sidebar--collapsed .planner-sidebar__applications button, .planner-sidebar--collapsed .planner-sidebar__applications a { display: inline-grid; height: 2.75rem; padding: 0; place-items: center; width: 2.75rem; }
 .planner-sidebar--collapsed .planner-sidebar__header { min-height: 0; }
 .planner-sidebar--collapsed .planner-sidebar__brand { display: none; }
 .planner-sidebar--collapsed .planner-sidebar__nav { padding-top: 0; }

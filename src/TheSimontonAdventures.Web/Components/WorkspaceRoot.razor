@@ -4,7 +4,9 @@
 @using TheSimontonAdventures.Web.Planning.Persistence
 @using TheSimontonAdventures.Web.Creators
 
-<PlannerWorkspaceShell Title="Planner" Description="Private adventure and itinerary planning.">
+<PlannerWorkspaceShell Title="Planner"
+                       Description="Private adventure and itinerary planning."
+                       SimontonAdventuresUrl="@WorkspaceNavigation.SimontonAdventuresUrl">
     <ToolbarContent>
         @if (IsAuthenticated)
         {

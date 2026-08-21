@@ -93,6 +93,7 @@ jobs:
         env:
           AZURE_DEFAULT_CREATOR_ID: ${{ vars.AZURE_DEFAULT_CREATOR_ID }}
           AUTHENTICATION_MODE: ${{ vars.AUTHENTICATION_MODE }}
+          SIMONTON_ADVENTURES_URL: ${{ vars.SIMONTON_ADVENTURES_URL }}
         run: |
           if [ -z "$AZURE_DEFAULT_CREATOR_ID" ]; then
             echo "::error::Set AZURE_DEFAULT_CREATOR_ID in the GitHub dev environment."
@@ -104,6 +105,11 @@ jobs:
             exit 1
           fi
 
+          if [[ ! "$SIMONTON_ADVENTURES_URL" =~ ^https://[^[:space:]]+$ ]]; then
+            echo "::error::Set SIMONTON_ADVENTURES_URL in the GitHub dev environment to the HTTPS public Creator site."
+            exit 1
+          fi
+
           az webapp config appsettings set \
             --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
             --name "${{ vars.AZURE_WEBAPP_NAME }}" \
@@ -112,6 +118,7 @@ jobs:
               Authentication__Mode="$AUTHENTICATION_MODE" \
               Deployment__Environment=Development \
               PlannerCatalog__Mode=DevelopmentPreview \
+              WorkspaceNavigation__SimontonAdventuresUrl="$SIMONTON_ADVENTURES_URL" \
               Authentication__TrustedProxyNetworks__0="169.254.0.0/16" \
               Authentication__TrustedProxyNetworks__1="10.0.0.0/8" \
               Authentication__TrustedProxyNetworks__2="172.16.0.0/12" \
