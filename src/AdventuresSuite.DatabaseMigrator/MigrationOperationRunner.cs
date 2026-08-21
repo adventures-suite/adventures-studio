@@ -76,11 +76,11 @@ internal static partial class MigrationOperationRunner
         IReadOnlyList<string> selectedScripts = [];
         try
         {
-            // This operation is bounded to either the reviewed 0009 -> 0013 transition
-            // or the exact repair-forward 0012 -> 0013 transition.
+            // This operation is bounded to the reviewed transition through 0014,
+            // including exact repair-forward baselines at 0012 or 0013.
             selectedScripts = DatabaseMigratorRunner.MigrateWithLockHeld(
                 connectionFactory.CreateConnection,
-                maximumMigrationNumber: "0013");
+                maximumMigrationNumber: "0014");
         }
         catch (Exception exception)
         {
@@ -153,9 +153,12 @@ internal static partial class MigrationOperationRunner
     {
         if (!string.Equals(before.ApplicationFingerprint, after.ApplicationFingerprint, StringComparison.Ordinal))
             return MigrationOperationClassification.Unexpected;
-        if (migrationFailure is null && afterOutcome == MigrationJournalOutcome.At0013
+        if (migrationFailure is null && afterOutcome == MigrationJournalOutcome.At0014
             && VerifyExpectedPostState(after))
             return MigrationOperationClassification.Complete;
+        if (migrationFailure is not null && afterOutcome == MigrationJournalOutcome.At0013
+            && VerifyExpected0013State(after))
+            return MigrationOperationClassification.Migration0013Committed;
         if (migrationFailure is not null && afterOutcome == MigrationJournalOutcome.At0012
             && VerifyExpected0012State(after))
             return MigrationOperationClassification.Migration0012Committed;
@@ -180,7 +183,7 @@ internal static partial class MigrationOperationRunner
         return MigrationOperationClassification.Unexpected;
     }
 
-    /// <summary>Requires an exact reviewed 0009 or repair-forward 0012 state.</summary>
+    /// <summary>Requires an exact reviewed 0009, 0012, or 0013 state.</summary>
     internal static void ValidatePreMigrationState(
         MigrationStateEvidence state,
         MigrationJournalOutcome outcome)
@@ -189,6 +192,7 @@ internal static partial class MigrationOperationRunner
         {
             MigrationJournalOutcome.At0009 => VerifyExpected0009PrerequisiteState(state),
             MigrationJournalOutcome.At0012 => VerifyExpected0012State(state),
+            MigrationJournalOutcome.At0013 => VerifyExpected0013State(state),
             _ => false
         };
         if (!approved)
@@ -280,6 +284,7 @@ internal static partial class MigrationOperationRunner
 
     internal static bool VerifyExpected0012State(MigrationStateEvidence state) =>
         VerifyExpected0012Structure(state)
+        && NoDestinationPlanItemLinks(state)
         && ExpectedPlanningPermissions(includeTemplateOrigins: true, includeFootStepApplications: true)
             .SetEquals(state.PlanningPermissions);
 
@@ -300,10 +305,25 @@ internal static partial class MigrationOperationRunner
              "planning.TravelerParticipations|USER_TABLE"], StringComparer.Ordinal);
 
     /// <summary>Requires the exact schema and least-privilege state through migration 0013.</summary>
+    internal static bool VerifyExpected0013State(MigrationStateEvidence state) =>
+        VerifyExpected0012Structure(state)
+        && ExpectedPlanningPermissions(includeTemplateOrigins: true, includeFootStepApplications: true,
+            includeSchemaRuntimePermissions: true).SetEquals(state.PlanningPermissions)
+        && NoDestinationPlanItemLinks(state);
+
+    /// <summary>Requires the exact schema and least-privilege state through migration 0014.</summary>
     internal static bool VerifyExpectedPostState(MigrationStateEvidence state) =>
         VerifyExpected0012Structure(state)
         && ExpectedPlanningPermissions(includeTemplateOrigins: true, includeFootStepApplications: true,
-            includeSchemaRuntimePermissions: true).SetEquals(state.PlanningPermissions);
+            includeSchemaRuntimePermissions: true).SetEquals(state.PlanningPermissions)
+        && state.DestinationPlanItemLinkColumnCount == 4
+        && state.DestinationPlanItemLinkForeignKeyCount == 4
+        && state.DestinationPlanItemLinkIndexCount == 4;
+
+    private static bool NoDestinationPlanItemLinks(MigrationStateEvidence state) =>
+        state.DestinationPlanItemLinkColumnCount == 0
+        && state.DestinationPlanItemLinkForeignKeyCount == 0
+        && state.DestinationPlanItemLinkIndexCount == 0;
 
     private static bool VerifyExpected0010Authority(MigrationStateEvidence state) =>
         state.TravelerParticipationsExists
@@ -404,6 +424,9 @@ internal static partial class MigrationOperationRunner
             || state.PlannerFootStepApplicationsExists
             || state.PlannerFootStepApplicationConstraintCount != 0
             || state.PlannerFootStepApplicationIndexCount != 0
+            || state.DestinationPlanItemLinkColumnCount != 0
+            || state.DestinationPlanItemLinkForeignKeyCount != 0
+            || state.DestinationPlanItemLinkIndexCount != 0
             || !state.RelevantObjects.Where(value =>
                     !value.Contains("CompanionInformationPolicy", StringComparison.Ordinal))
                 .SequenceEqual(
@@ -546,7 +569,10 @@ internal static partial class MigrationOperationRunner
             state.AdventurePlanTemplateOriginIndexExists,
             state.PlannerFootStepApplicationsExists,
             state.PlannerFootStepApplicationConstraintCount,
-            state.PlannerFootStepApplicationIndexCount
+            state.PlannerFootStepApplicationIndexCount,
+            state.DestinationPlanItemLinkColumnCount,
+            state.DestinationPlanItemLinkForeignKeyCount,
+            state.DestinationPlanItemLinkIndexCount
         });
 
     private static void WriteEvidence(object value) =>
@@ -578,6 +604,7 @@ internal enum MigrationOperationClassification
 {
     Complete,
     Migration0012Committed,
+    Migration0013Committed,
     Migration0011Committed,
     Migration0010Committed,
     Migration0008Committed,

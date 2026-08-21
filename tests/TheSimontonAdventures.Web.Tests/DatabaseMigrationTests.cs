@@ -14,7 +14,7 @@ public sealed class DatabaseMigrationTests
     {
         var migrations = MigrationCatalog.GetOrderedResourceNames(MigratorAssembly);
 
-        Assert.Equal(13, migrations.Count);
+        Assert.Equal(14, migrations.Count);
         Assert.EndsWith("0001_create_planning_schema.sql", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("0002_create_adventure_plans.sql", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("0003_create_planning_children.sql", migrations[2], StringComparison.Ordinal);
@@ -28,7 +28,44 @@ public sealed class DatabaseMigrationTests
         Assert.EndsWith("0011_create_adventure_plan_template_origins.sql", migrations[10], StringComparison.Ordinal);
         Assert.EndsWith("0012_create_planner_footstep_applications.sql", migrations[11], StringComparison.Ordinal);
         Assert.EndsWith("0013_grant_planning_runtime_permissions.sql", migrations[12], StringComparison.Ordinal);
+        Assert.EndsWith("0014_link_plan_items_to_destinations.sql", migrations[13], StringComparison.Ordinal);
         Assert.Equal(migrations.Count, migrations.Distinct(StringComparer.Ordinal).Count());
+    }
+
+    /// <summary>Ensures reservation context remains Creator- and plan-scoped.</summary>
+    [Fact]
+    public void ReservationDestinationLinks_AreScopedAndIndexed()
+    {
+        var migration = ReadMigration("0014_link_plan_items_to_destinations.sql");
+
+        Assert.Contains(
+            "FOREIGN KEY (CreatorId, AdventurePlanId, DestinationVisitId)",
+            migration,
+            StringComparison.Ordinal);
+        Assert.Contains("WHERE DestinationVisitId IS NOT NULL", migration, StringComparison.Ordinal);
+    }
+
+    /// <summary>Ensures destination context links remain Creator- and plan-scoped.</summary>
+    [Fact]
+    public void DestinationContextLinks_AreScopedAndIndexed()
+    {
+        var migration = ReadMigration("0014_link_plan_items_to_destinations.sql");
+
+        Assert.Contains(
+            "FOREIGN KEY (CreatorId, AdventurePlanId, DepartureDestinationVisitId)",
+            migration,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "FOREIGN KEY (CreatorId, AdventurePlanId, ArrivalDestinationVisitId)",
+            migration,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "FOREIGN KEY (CreatorId, AdventurePlanId, DestinationVisitId)",
+            migration,
+            StringComparison.Ordinal);
+        Assert.Contains("WHERE DepartureDestinationVisitId IS NOT NULL", migration, StringComparison.Ordinal);
+        Assert.Contains("WHERE ArrivalDestinationVisitId IS NOT NULL", migration, StringComparison.Ordinal);
+        Assert.Contains("WHERE DestinationVisitId IS NOT NULL", migration, StringComparison.Ordinal);
     }
 
     /// <summary>Ensures FootStep application evidence is retry-safe, exact-version, and append-only.</summary>
