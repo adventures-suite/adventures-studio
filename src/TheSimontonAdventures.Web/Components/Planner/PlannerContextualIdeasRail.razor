@@ -5,6 +5,25 @@
     <header class="planner-ideas__header">
         <div><p>Contextual inspiration</p><h3 id="planner-ideas-title">FootSteps</h3></div>
         <div class="planner-ideas__controls">
+            @if (!IsCollapsed)
+            {
+                <div class="planner-ideas__width-controls" role="group" aria-label="FootSteps rail width">
+                    <button type="button"
+                            aria-label="Narrow FootSteps rail"
+                            title="Narrow FootSteps rail"
+                            disabled="@(WidthPixels <= MinimumWidthPixels)"
+                            @onclick="NarrowRailAsync">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14" /></svg>
+                    </button>
+                    <button type="button"
+                            aria-label="Widen FootSteps rail"
+                            title="Widen FootSteps rail"
+                            disabled="@(WidthPixels >= MaximumWidthPixels)"
+                            @onclick="WidenRailAsync">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14" /></svg>
+                    </button>
+                </div>
+            }
             <button type="button" class="planner-ideas__collapse" aria-expanded="@(!IsCollapsed)" @onclick="ToggleCollapsed">@(IsCollapsed ? "Expand" : "Collapse")</button>
             <button type="button" class="planner-ideas__close" @ref="CloseButton" @onclick="CloseDrawerAsync">Close</button>
         </div>

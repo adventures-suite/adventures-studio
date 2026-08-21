@@ -64,6 +64,7 @@
 .planner-shell__actions button:focus-visible, .planner-shell__theme select:focus-visible, .planner-shell__skip:focus { outline: 3px solid var(--planner-shell-focus); outline-offset: 2px; }
 .planner-shell__theme { display: grid; gap: .2rem; color: var(--planner-shell-text-muted); font-size: .75rem; font-weight: 700; }
 .planner-shell__content { min-width: 0; max-width: 82rem; margin: 0 auto; padding: 2rem 1.5rem 3rem; }
+.planner-shell__content--edge-aligned { width: 100%; max-width: none; margin: 0; }
 .planner-shell__skip { position: fixed; z-index: 100; top: .5rem; left: .5rem; transform: translateY(-150%); border-radius: .4rem; background: var(--planner-shell-surface); color: var(--planner-shell-text); padding: .65rem .85rem; }
 .planner-shell__skip:focus { transform: translateY(0); }
 .planner-shell__mobile-toggle { display: none; align-items: center; gap: .4rem; }

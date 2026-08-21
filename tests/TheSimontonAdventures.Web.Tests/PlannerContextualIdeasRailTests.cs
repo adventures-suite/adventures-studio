@@ -106,6 +106,11 @@ public sealed class PlannerContextualIdeasRailTests
         Assert.Contains("aria-valuemin=\"272\"", html, StringComparison.Ordinal);
         Assert.Contains("aria-valuemax=\"400\"", html, StringComparison.Ordinal);
         Assert.Contains("aria-valuenow=\"320\"", html, StringComparison.Ordinal);
+        Assert.Contains("aria-label=\"FootSteps rail width\"", html, StringComparison.Ordinal);
+        Assert.Contains("aria-label=\"Narrow FootSteps rail\"", html, StringComparison.Ordinal);
+        Assert.Contains("aria-label=\"Widen FootSteps rail\"", html, StringComparison.Ordinal);
+        Assert.Contains("title=\"Narrow FootSteps rail\"", html, StringComparison.Ordinal);
+        Assert.Contains("title=\"Widen FootSteps rail\"", html, StringComparison.Ordinal);
         var markup = File.ReadAllText(Path.Combine(FindApplicationRoot(), "Components", "Planner", "PlannerContextualIdeasRail.razor"));
         var codeBehind = File.ReadAllText(Path.Combine(FindApplicationRoot(), "Components", "Planner", "PlannerContextualIdeasRail.razor.cs"));
         Assert.Contains("@onpointermove", markup, StringComparison.Ordinal);

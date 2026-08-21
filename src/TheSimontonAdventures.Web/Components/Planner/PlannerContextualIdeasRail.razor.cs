@@ -107,6 +107,8 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
     public const int MinimumWidthPixels = 272;
     /// <summary>Gets the maximum supported FootSteps rail width in pixels.</summary>
     public const int MaximumWidthPixels = 400;
+    /// <summary>Gets the width adjustment applied by the visible controls and arrow keys.</summary>
+    public const int ResizeStepPixels = 16;
 
     private double? PointerStartX { get; set; }
     private int PointerStartWidth { get; set; }
@@ -413,12 +415,18 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
     }
     private Task HandleResizeKeyAsync(KeyboardEventArgs args) => args.Key switch
     {
-        "ArrowLeft" => OnResizeRequested.InvokeAsync(WidthPixels + 16),
-        "ArrowRight" => OnResizeRequested.InvokeAsync(WidthPixels - 16),
+        "ArrowLeft" => OnResizeRequested.InvokeAsync(WidthPixels + ResizeStepPixels),
+        "ArrowRight" => OnResizeRequested.InvokeAsync(WidthPixels - ResizeStepPixels),
         "Home" => OnResizeRequested.InvokeAsync(MinimumWidthPixels),
         "End" => OnResizeRequested.InvokeAsync(MaximumWidthPixels),
         _ => Task.CompletedTask
     };
+
+    private Task NarrowRailAsync() =>
+        OnResizeRequested.InvokeAsync(Math.Max(MinimumWidthPixels, WidthPixels - ResizeStepPixels));
+
+    private Task WidenRailAsync() =>
+        OnResizeRequested.InvokeAsync(Math.Min(MaximumWidthPixels, WidthPixels + ResizeStepPixels));
 
     private async Task BeginPointerResizeAsync(PointerEventArgs args)
     {

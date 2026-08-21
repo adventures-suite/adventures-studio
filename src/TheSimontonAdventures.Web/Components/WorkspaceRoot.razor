@@ -6,6 +6,7 @@
 
 <PlannerWorkspaceShell Title="Planner"
                        Description="Private adventure and itinerary planning."
+                       IsContentEdgeAligned="@(Plan is not null)"
                        SimontonAdventuresUrl="@WorkspaceNavigation.SimontonAdventuresUrl">
     <ToolbarContent>
         @if (IsAuthenticated)
