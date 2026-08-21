@@ -1,0 +1,81 @@
+@namespace TheSimontonAdventures.Web.Components
+
+<article class="workspace-application" aria-labelledby="workspace-application-title">
+    <header class="workspace-application__hero">
+        <div class="workspace-application__identity">
+            <span class="workspace-application__icon" aria-hidden="true">
+                <WorkspaceApplicationIcon Kind="@Application.Kind" />
+            </span>
+            <div>
+                <p class="workspace-application__eyebrow">AdventuresSuite workspace</p>
+                <h2 id="workspace-application-title">@Application.Name</h2>
+            </div>
+        </div>
+        <span class="workspace-application__status">In development</span>
+        <p class="workspace-application__lead">@Application.Description</p>
+        <p class="workspace-application__availability">
+            This preview demonstrates product direction only. It does not grant access,
+            entitlement, availability, or permission to use unfinished capabilities.
+        </p>
+    </header>
+
+    <section class="workspace-application__preview workspace-application__preview--@Application.Slug"
+             aria-labelledby="workspace-preview-title">
+        <div class="workspace-application__preview-heading">
+            <p>Experience preview</p>
+            <h3 id="workspace-preview-title">@Application.PreviewTitle</h3>
+            <span>Representative · non-interactive</span>
+        </div>
+        <p class="workspace-application__preview-description">@Application.PreviewDescription</p>
+
+        @if (Application.Kind == WorkspaceApplicationKind.Maps)
+        {
+            <div class="workspace-application__map" aria-label="Illustrative Journey map preview">
+                <span class="workspace-application__route" aria-hidden="true"></span>
+                <span class="workspace-application__pin workspace-application__pin--one" aria-hidden="true">1</span>
+                <span class="workspace-application__pin workspace-application__pin--two" aria-hidden="true">2</span>
+                <span class="workspace-application__pin workspace-application__pin--three" aria-hidden="true">3</span>
+            </div>
+        }
+        else if (Application.Kind == WorkspaceApplicationKind.Companion)
+        {
+            <div class="workspace-application__phone" aria-hidden="true">
+                <span>Today</span>
+                <strong>Venice</strong>
+                <div></div><div></div><div></div>
+            </div>
+        }
+        else if (Application.Kind == WorkspaceApplicationKind.Web)
+        {
+            <div class="workspace-application__story-image" aria-hidden="true">
+                <span>Journey story</span>
+                <strong>Across the Adriatic</strong>
+            </div>
+        }
+
+        <ul class="workspace-application__items">
+            @foreach (var item in Application.PreviewItems)
+            {
+                <li>
+                    <span class="workspace-application__item-mark" aria-hidden="true"></span>
+                    <div>
+                        <strong>@item.Label</strong>
+                        <p>@item.Detail</p>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(item.Metadata))
+                    {
+                        <small>@item.Metadata</small>
+                    }
+                </li>
+            }
+        </ul>
+    </section>
+
+    <footer class="workspace-application__footer">
+        <a href="@PlannerPath">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m15 5-7 7 7 7" /></svg>
+            Return to Planner
+        </a>
+        <p>Authentication, authorization, subscription, user-type, and time-bound entitlement checks remain required before any future capability can be used.</p>
+    </footer>
+</article>

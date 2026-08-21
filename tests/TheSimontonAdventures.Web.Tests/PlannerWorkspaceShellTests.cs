@@ -192,6 +192,7 @@ public sealed class PlannerWorkspaceShellTests
     {
         var html = await RenderAsync<PlannerWorkspaceSidebar>(new()
         {
+            [nameof(PlannerWorkspaceSidebar.WorkspaceBasePath)] = "/workspace/creators/creator_tsa_01",
             [nameof(PlannerWorkspaceSidebar.WidthPixels)] = 280,
             [nameof(PlannerWorkspaceSidebar.MinimumWidthPixels)] = PlannerWorkspaceShell.MinimumSidebarWidthPixels,
             [nameof(PlannerWorkspaceSidebar.MaximumWidthPixels)] = PlannerWorkspaceShell.MaximumSidebarWidthPixels
@@ -211,31 +212,34 @@ public sealed class PlannerWorkspaceShellTests
         Assert.DoesNotContain(">Planner workspace</span>", html, StringComparison.Ordinal);
         foreach (var application in new[] { "Advisor", "Companion", "Publisher", "Web", "Search", "Maps" })
         {
-            Assert.Contains($"aria-label=\"{application}, coming soon\"", html, StringComparison.Ordinal);
+            Assert.Contains($"title=\"{application}\"", html, StringComparison.Ordinal);
         }
 
-        Assert.Equal(6, CountOccurrences(html, " disabled"));
+        Assert.DoesNotContain("coming soon", html, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(0, CountOccurrences(html, " disabled"));
+        Assert.Contains("href=\"/workspace/creators/creator_tsa_01/advisor\"", html, StringComparison.Ordinal);
+        Assert.Contains("href=\"/workspace/creators/creator_tsa_01/maps\"", html, StringComparison.Ordinal);
     }
 
-    /// <summary>The configured Web application links to the public Simonton Adventures site.</summary>
+    /// <summary>The Web application stays inside the authorized workspace preview instead of implying the public site is the workspace.</summary>
     [Fact]
-    public async Task Sidebar_WithPublicCreatorSite_RendersWebLink()
+    public async Task Sidebar_WithPublicCreatorSite_RendersAuthorizedWebPreviewLink()
     {
         var publicSite = new Uri("https://simonton.example/");
         var html = await RenderAsync<PlannerWorkspaceSidebar>(new()
         {
             [nameof(PlannerWorkspaceSidebar.SimontonAdventuresUrl)] = publicSite,
+            [nameof(PlannerWorkspaceSidebar.WorkspaceBasePath)] = "/workspace/creators/creator_tsa_01",
             [nameof(PlannerWorkspaceSidebar.WidthPixels)] = 280,
             [nameof(PlannerWorkspaceSidebar.MinimumWidthPixels)] = PlannerWorkspaceShell.MinimumSidebarWidthPixels,
             [nameof(PlannerWorkspaceSidebar.MaximumWidthPixels)] = PlannerWorkspaceShell.MaximumSidebarWidthPixels
         });
 
-        Assert.Contains("href=\"https://simonton.example/\"", html, StringComparison.Ordinal);
-        Assert.Contains("aria-label=\"Web, open The Simonton Adventures\"", html, StringComparison.Ordinal);
+        Assert.Contains("href=\"/workspace/creators/creator_tsa_01/web\"", html, StringComparison.Ordinal);
         Assert.Contains(">Web</span>", html, StringComparison.Ordinal);
-        Assert.Contains(">Simonton Adventures</small>", html, StringComparison.Ordinal);
-        Assert.DoesNotContain("aria-label=\"Web, coming soon\"", html, StringComparison.Ordinal);
-        Assert.Equal(5, CountOccurrences(html, " disabled"));
+        Assert.DoesNotContain("https://simonton.example/", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("coming soon", html, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(0, CountOccurrences(html, " disabled"));
     }
 
     /// <summary>The collapsed desktop sidebar becomes a true icon rail without width controls or labels.</summary>
@@ -245,6 +249,7 @@ public sealed class PlannerWorkspaceShellTests
         var html = await RenderAsync<PlannerWorkspaceSidebar>(new()
         {
             [nameof(PlannerWorkspaceSidebar.IsCollapsed)] = true,
+            [nameof(PlannerWorkspaceSidebar.WorkspaceBasePath)] = "/workspace/creators/creator_tsa_01",
             [nameof(PlannerWorkspaceSidebar.WidthPixels)] = 280,
             [nameof(PlannerWorkspaceSidebar.MinimumWidthPixels)] = PlannerWorkspaceShell.MinimumSidebarWidthPixels,
             [nameof(PlannerWorkspaceSidebar.MaximumWidthPixels)] = PlannerWorkspaceShell.MaximumSidebarWidthPixels
@@ -257,7 +262,9 @@ public sealed class PlannerWorkspaceShellTests
         Assert.DoesNotContain("AdventuresSuite Planner</title>", html, StringComparison.Ordinal);
         Assert.DoesNotContain(">Planner workspace</span>", html, StringComparison.Ordinal);
         Assert.DoesNotContain(">Publisher</span>", html, StringComparison.Ordinal);
-        Assert.Contains("aria-label=\"Publisher, coming soon\"", html, StringComparison.Ordinal);
+        Assert.Contains("title=\"Publisher\"", html, StringComparison.Ordinal);
+        Assert.Contains("href=\"/workspace/creators/creator_tsa_01/publisher\"", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("coming soon", html, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("Navigation width controls", html, StringComparison.Ordinal);
         Assert.DoesNotContain("Resize Planner navigation", html, StringComparison.Ordinal);
     }

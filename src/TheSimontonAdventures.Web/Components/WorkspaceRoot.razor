@@ -4,10 +4,12 @@
 @using TheSimontonAdventures.Web.Planning.Persistence
 @using TheSimontonAdventures.Web.Creators
 
-<PlannerWorkspaceShell Title="Planner"
-                       Description="Adventure planning made simple."
+<PlannerWorkspaceShell Title="@WorkspaceTitle"
+                       Description="@WorkspaceDescription"
                        IsContentEdgeAligned="@(Plan is not null)"
-                       SimontonAdventuresUrl="@WorkspaceNavigation.SimontonAdventuresUrl">
+                       SimontonAdventuresUrl="@WorkspaceNavigation.SimontonAdventuresUrl"
+                       WorkspaceBasePath="@WorkspaceBasePath"
+                       ActiveApplicationSlug="@ActiveApplicationSlug">
     <ToolbarContent>
         @if (IsAuthenticated)
         {
@@ -36,7 +38,12 @@
     <div class="workspace-root">
     @if (IsAuthenticated)
     {
-        @if (LoadState == WorkspaceLoadState.Loading)
+        @if (PlaceholderApplication is not null && LoadState == WorkspaceLoadState.Ready)
+        {
+            <WorkspaceApplicationPlaceholder Application="@PlaceholderApplication"
+                                             PlannerPath="@PlanListPath" />
+        }
+        else if (LoadState == WorkspaceLoadState.Loading)
         {
             <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Loading"
                                    Title="Loading your Adventure Plans…" />

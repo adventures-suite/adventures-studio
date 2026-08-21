@@ -28,6 +28,7 @@
 .planner-sidebar__nav { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: .5rem .15rem; scrollbar-width: thin; }
 .planner-sidebar__current { gap: .7rem; border-radius: .8rem; background: var(--planner-shell-hover); padding: .72rem .8rem; font-weight: 700; }
 .planner-sidebar__applications { display: grid; gap: .4rem; margin-top: .65rem; }
+.planner-sidebar__applications a[aria-current="page"] { background: var(--planner-shell-hover); border-color: var(--planner-shell-accent); font-weight: 700; }
 .planner-sidebar__applications button, .planner-sidebar__applications a { align-items: center; display: grid; gap: .65rem; grid-template-columns: 1.15rem minmax(0, 1fr) auto; text-align: left; }
 .planner-sidebar__applications button:disabled { cursor: not-allowed; opacity: .62; }
 .planner-sidebar__applications small { font-size: .66rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
