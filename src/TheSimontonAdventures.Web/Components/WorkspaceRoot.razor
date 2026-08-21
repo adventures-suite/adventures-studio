@@ -164,6 +164,11 @@
                 <p class="workspace-private">Sensitive confirmation references, private notes, budgets, packing lists, and traveler identities are not included in this view.</p>
             </article>
         }
+        else if (IsRootAdventureLanding)
+        {
+            <PlannerAdventureLauncher CreatorId="@AddressedCreatorId"
+                                      Plans="@Plans" />
+        }
         else
         {
             @if (TemplateStatusMessage is not null)

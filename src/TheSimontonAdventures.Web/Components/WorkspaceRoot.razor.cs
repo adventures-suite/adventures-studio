@@ -45,6 +45,7 @@ public partial class WorkspaceRoot
     private IReadOnlyList<PlannerFootStepDefinition> AuthorizedFootSteps { get; set; } = [];
     private ActorIdentity? WorkspaceActor { get; set; }
     private bool IsTemplateMode { get; set; }
+    private bool IsRootAdventureLanding { get; set; }
     private int IdeasWidthPixels { get; set; } = 320;
 
     private Task SetTemplateModeAsync(bool isTemplateMode)
@@ -128,7 +129,21 @@ public partial class WorkspaceRoot
             try
             {
                 AuthorizedCreatorWorkspaces = await directory.ListAsync(actor, context.RequestAborted);
-                LoadState = WorkspaceLoadState.Landing;
+                if (AuthorizedCreatorWorkspaces.Count == 1 && query is not null)
+                {
+                    AddressedCreatorId = AuthorizedCreatorWorkspaces[0].CreatorId;
+                    var result = await query.ListAsync(
+                        actor, AddressedCreatorId, context.RequestAborted);
+                    Plans = result.Plans;
+                    IsRootAdventureLanding = result.IsAllowed;
+                    LoadState = result.IsAllowed
+                        ? WorkspaceLoadState.Ready
+                        : WorkspaceLoadState.Unavailable;
+                }
+                else
+                {
+                    LoadState = WorkspaceLoadState.Landing;
+                }
             }
             catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
             {
