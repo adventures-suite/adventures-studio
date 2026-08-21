@@ -346,6 +346,10 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
     private IReadOnlyList<PlannerFacetOption> AvailableFacets => Ideas.SelectMany(Facets)
         .Distinct().OrderBy(option => option.Group, StringComparer.Ordinal)
         .ThenBy(option => option.Value, StringComparer.Ordinal).ToArray();
+    private IReadOnlyList<PlannerFacetGroup> AvailableFacetGroups => AvailableFacets
+        .GroupBy(option => option.Group, StringComparer.Ordinal)
+        .Select(group => new PlannerFacetGroup(group.Key, group.ToArray()))
+        .ToArray();
     private void ToggleFacet(PlannerFacetOption facet)
     {
         if (!SelectedFacets.Add(facet.Key))
@@ -621,6 +625,10 @@ internal sealed record PlannerFacetOption(string Group, string Value)
         return new(key[..separator], key[(separator + 1)..]);
     }
 }
+
+internal sealed record PlannerFacetGroup(
+    string Name,
+    IReadOnlyList<PlannerFacetOption> Options);
 
 internal sealed record PlannerFootStepGroup(
     string? Label,

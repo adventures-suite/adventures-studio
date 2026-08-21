@@ -71,15 +71,29 @@
                 </nav>
                 <details class="planner-ideas__filters">
                     <summary>Filter (@FacetedIdeas.Count)</summary>
-                    <fieldset>
-                        <legend>Travel details</legend>
-                        <label>Minimum days <input type="number" min="1" max="365" value="@MinimumDays" @onchange="ChangeMinimumDays" /></label>
-                        <label>Maximum days <input type="number" min="1" max="365" value="@MaximumDays" @onchange="ChangeMaximumDays" /></label>
-                        @foreach (var facet in AvailableFacets)
+                    <div class="planner-ideas__filter-groups">
+                        <details class="planner-ideas__filter-group">
+                            <summary>Duration</summary>
+                            <fieldset>
+                                <legend class="planner-visually-hidden">Duration</legend>
+                                <label>Minimum days <input type="number" min="1" max="365" value="@MinimumDays" @onchange="ChangeMinimumDays" /></label>
+                                <label>Maximum days <input type="number" min="1" max="365" value="@MaximumDays" @onchange="ChangeMaximumDays" /></label>
+                            </fieldset>
+                        </details>
+                        @foreach (var group in AvailableFacetGroups)
                         {
-                            <label><input type="checkbox" checked="@SelectedFacets.Contains(facet.Key)" @onchange="() => ToggleFacet(facet)" /> @DisplayFacet(facet.Value) <span>(@facet.Group)</span></label>
+                            <details class="planner-ideas__filter-group">
+                                <summary>@DisplayFacet(group.Name)</summary>
+                                <fieldset>
+                                    <legend class="planner-visually-hidden">@DisplayFacet(group.Name)</legend>
+                                    @foreach (var facet in group.Options)
+                                    {
+                                        <label><input type="checkbox" checked="@SelectedFacets.Contains(facet.Key)" @onchange="() => ToggleFacet(facet)" /> @DisplayFacet(facet.Value)</label>
+                                    }
+                                </fieldset>
+                            </details>
                         }
-                    </fieldset>
+                    </div>
                     @if (SelectedType is not null || SelectedFacets.Count > 0 || MinimumDays.HasValue || MaximumDays.HasValue)
                     {
                         <div class="planner-ideas__chips" aria-label="Active FootStep filters">
