@@ -39,7 +39,10 @@
     </div>
 
     <nav class="planner-sidebar__nav" aria-label="Planner navigation">
-        <div class="planner-sidebar__current" aria-current="page" title="Current application: Planner">
+        <a class="@(ActiveApplicationSlug == "planner" ? "planner-sidebar__current" : null)"
+           href="@PlannerPath"
+           aria-current="@(ActiveApplicationSlug == "planner" ? "page" : null)"
+           title="Planner">
             <svg class="planner-sidebar__icon" viewBox="0 0 24 24" role="img" aria-labelledby="planner-overview-title">
                 <title id="planner-overview-title">Planner overview</title>
                 <path d="M3 12.5 12 4l9 8.5v7.5a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z" />
@@ -48,65 +51,50 @@
             {
                 <span>Planner</span>
             }
-        </div>
+        </a>
         <div class="planner-sidebar__applications" aria-label="AdventuresSuite applications">
-            <button type="button" disabled aria-label="Advisor, coming soon" title="Advisor — Coming soon">
+            <a href="@ApplicationPath("advisor")" aria-current="@(ActiveApplicationSlug == "advisor" ? "page" : null)" title="Advisor">
                 <svg class="planner-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                     <path d="M12 3a7 7 0 0 0-4 12.7V20l4-2 4 2v-4.3A7 7 0 0 0 12 3Z" />
                     <path d="m9.5 10.5 1.5 1.5 3.5-3.5" />
                 </svg>
-                @if (!IsCollapsed) { <span>Advisor</span><small>Coming soon</small> }
-            </button>
-            <button type="button" disabled aria-label="Companion, coming soon" title="Companion — Coming soon">
+                @if (!IsCollapsed) { <span>Advisor</span> }
+            </a>
+            <a href="@ApplicationPath("companion")" aria-current="@(ActiveApplicationSlug == "companion" ? "page" : null)" title="Companion">
                 <svg class="planner-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                     <rect x="7" y="2.5" width="10" height="19" rx="2" />
                     <path d="M10 5h4M11 18.5h2" />
                 </svg>
-                @if (!IsCollapsed) { <span>Companion</span><small>Coming soon</small> }
-            </button>
-            <button type="button" disabled aria-label="Publisher, coming soon" title="Publisher — Coming soon">
+                @if (!IsCollapsed) { <span>Companion</span> }
+            </a>
+            <a href="@ApplicationPath("publisher")" aria-current="@(ActiveApplicationSlug == "publisher" ? "page" : null)" title="Publisher">
                 <svg class="planner-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                     <path d="M4 4h10a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3Z" />
                     <path d="M7 8h6M7 12h6M17 8h3v12h-3" />
                 </svg>
-                @if (!IsCollapsed) { <span>Publisher</span><small>Coming soon</small> }
-            </button>
-            @if (SimontonAdventuresUrl is not null)
-            {
-                <a href="@SimontonAdventuresUrl"
-                   aria-label="Web, open The Simonton Adventures"
-                   title="Web — The Simonton Adventures">
-                    <svg class="planner-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                        <circle cx="12" cy="12" r="9" />
-                        <path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" />
-                    </svg>
-                    @if (!IsCollapsed) { <span>Web</span><small>Simonton Adventures</small> }
-                </a>
-            }
-            else
-            {
-                <button type="button" disabled aria-label="Web, coming soon" title="Web — Coming soon">
-                    <svg class="planner-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                        <circle cx="12" cy="12" r="9" />
-                        <path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" />
-                    </svg>
-                    @if (!IsCollapsed) { <span>Web</span><small>Coming soon</small> }
-                </button>
-            }
-            <button type="button" disabled aria-label="Search, coming soon" title="Search — Coming soon">
+                @if (!IsCollapsed) { <span>Publisher</span> }
+            </a>
+            <a href="@ApplicationPath("web")" aria-current="@(ActiveApplicationSlug == "web" ? "page" : null)" title="Web">
+                <svg class="planner-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" />
+                </svg>
+                @if (!IsCollapsed) { <span>Web</span> }
+            </a>
+            <a href="@ApplicationPath("search")" aria-current="@(ActiveApplicationSlug == "search" ? "page" : null)" title="Search">
                 <svg class="planner-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                     <circle cx="10.5" cy="10.5" r="6.5" />
                     <path d="m15.5 15.5 5 5" />
                 </svg>
-                @if (!IsCollapsed) { <span>Search</span><small>Coming soon</small> }
-            </button>
-            <button type="button" disabled aria-label="Maps, coming soon" title="Maps — Coming soon">
+                @if (!IsCollapsed) { <span>Search</span> }
+            </a>
+            <a href="@ApplicationPath("maps")" aria-current="@(ActiveApplicationSlug == "maps" ? "page" : null)" title="Maps">
                 <svg class="planner-sidebar__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                     <path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z" />
                     <path d="M9 3v15M15 6v15" />
                 </svg>
-                @if (!IsCollapsed) { <span>Maps</span><small>Coming soon</small> }
-            </button>
+                @if (!IsCollapsed) { <span>Maps</span> }
+            </a>
         </div>
     </nav>
 

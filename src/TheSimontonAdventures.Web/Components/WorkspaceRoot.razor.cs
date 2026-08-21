@@ -48,6 +48,7 @@ public partial class WorkspaceRoot
     private IReadOnlyList<AdventureTemplateBlueprint> AdventureTemplates { get; set; } = [];
     private IReadOnlyList<PlannerFootStepDefinition> AuthorizedFootSteps { get; set; } = [];
     private ActorIdentity? WorkspaceActor { get; set; }
+    private WorkspaceApplicationDefinition? PlaceholderApplication { get; set; }
     private bool IsTemplateMode { get; set; }
     private bool IsRootAdventureLanding { get; set; }
     private int IdeasWidthPixels { get; set; } = 320;
@@ -267,6 +268,47 @@ public partial class WorkspaceRoot
 
         WorkspaceActor = actor;
 
+        if (TryGetWorkspaceApplicationRoute(
+            InitialPath,
+            out var applicationCreatorId,
+            out var application))
+        {
+            var directory = context.RequestServices.GetService<ICreatorWorkspaceDirectoryService>();
+            if (directory is null)
+            {
+                LoadState = WorkspaceLoadState.Unavailable;
+                return;
+            }
+
+            try
+            {
+                AuthorizedCreatorWorkspaces = await directory.ListAsync(actor, context.RequestAborted);
+                if (!AuthorizedCreatorWorkspaces.Any(workspace =>
+                    workspace.CreatorId == applicationCreatorId))
+                {
+                    LoadState = WorkspaceLoadState.Unavailable;
+                    return;
+                }
+
+                AddressedCreatorId = applicationCreatorId;
+                PlaceholderApplication = application;
+                LoadState = WorkspaceLoadState.Ready;
+            }
+            catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                context.RequestServices.GetService<ILogger<WorkspaceRoot>>()?.LogError(
+                    exception,
+                    "Workspace application preview authorization failed before a safe response could be rendered.");
+                LoadState = WorkspaceLoadState.Failure;
+            }
+
+            return;
+        }
+
         if (!TryGetAddressedRoute(InitialPath, out var creatorId, out var planId))
         {
             var directory = context.RequestServices.GetService<ICreatorWorkspaceDirectoryService>();
@@ -449,7 +491,49 @@ public partial class WorkspaceRoot
         }
     }
 
+    private static bool TryGetWorkspaceApplicationRoute(
+        PathString path,
+        out CreatorId creatorId,
+        out WorkspaceApplicationDefinition application)
+    {
+        creatorId = default;
+        application = null!;
+        var segments = path.Value?.Split('/', StringSplitOptions.None);
+        if (segments is null
+            || segments.Length != 5
+            || segments[0] != string.Empty
+            || segments[1] != "workspace"
+            || segments[2] != "creators"
+            || !WorkspaceApplicationCatalog.TryGet(segments[4], out var resolvedApplication)
+            || resolvedApplication is null)
+        {
+            return false;
+        }
+
+        application = resolvedApplication;
+
+        try
+        {
+            creatorId = new CreatorId(segments[3]);
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            application = null!;
+            return false;
+        }
+    }
+
     private string PlanListPath => $"/workspace/creators/{AddressedCreatorId.Value}/plans";
+    private string? WorkspaceBasePath => LoadState != WorkspaceLoadState.Ready
+        || string.IsNullOrWhiteSpace(AddressedCreatorId.Value)
+        ? null
+        : $"/workspace/creators/{AddressedCreatorId.Value}";
+    private string ActiveApplicationSlug => PlaceholderApplication?.Slug ?? "planner";
+    private string WorkspaceTitle => PlaceholderApplication?.Name ?? "Planner";
+    private string WorkspaceDescription => PlaceholderApplication is null
+        ? "Adventure planning made simple."
+        : "One connected experience for every stage of your Adventure.";
     private string PlannerHeroImageUrl => PlatformHostConfiguration.Value.JourneyImageUrl;
     private string CreatePlanPath => $"{PlanListPath}/create";
     private string CreateFromTemplatePath => $"{PlanListPath}/create-from-template";

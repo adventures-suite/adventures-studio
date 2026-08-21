@@ -16,9 +16,17 @@ public partial class PlannerWorkspaceSidebar : ComponentBase
     [Parameter]
     public bool IsMobileOpen { get; set; }
 
-    /// <summary>Gets or sets the optional public site opened by the Web navigation item.</summary>
+    /// <summary>Gets or sets the optional public Creator site retained for later Web workspace previews.</summary>
     [Parameter]
     public Uri? SimontonAdventuresUrl { get; set; }
+
+    /// <summary>Gets or sets the authorized Creator-addressed workspace route prefix.</summary>
+    [Parameter]
+    public string? WorkspaceBasePath { get; set; }
+
+    /// <summary>Gets or sets the active application slug, or <c>planner</c>.</summary>
+    [Parameter]
+    public string ActiveApplicationSlug { get; set; } = "planner";
 
     /// <summary>Gets or sets the current bounded width.</summary>
     [Parameter]
@@ -102,4 +110,12 @@ public partial class PlannerWorkspaceSidebar : ComponentBase
 
     private Task RequestPointerWidthAsync(double clientX) =>
         OnResizeRequested.InvokeAsync((int)Math.Round(clientX, MidpointRounding.AwayFromZero));
+
+    private string ApplicationPath(string slug) => WorkspaceBasePath is null
+        ? "/workspace"
+        : $"{WorkspaceBasePath}/{slug}";
+
+    private string PlannerPath => WorkspaceBasePath is null
+        ? "/workspace"
+        : $"{WorkspaceBasePath}/plans";
 }

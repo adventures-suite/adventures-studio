@@ -83,6 +83,14 @@ public partial class PlannerWorkspaceShell : ComponentBase, IAsyncDisposable
     [Parameter]
     public Uri? SimontonAdventuresUrl { get; set; }
 
+    /// <summary>Gets or sets the authorized Creator-addressed workspace route prefix.</summary>
+    [Parameter]
+    public string? WorkspaceBasePath { get; set; }
+
+    /// <summary>Gets or sets the active AdventuresSuite application slug.</summary>
+    [Parameter]
+    public string ActiveApplicationSlug { get; set; } = "planner";
+
     /// <summary>Gets or sets optional toolbar content such as an authenticated sign-out action.</summary>
     [Parameter]
     public RenderFragment? ToolbarContent { get; set; }

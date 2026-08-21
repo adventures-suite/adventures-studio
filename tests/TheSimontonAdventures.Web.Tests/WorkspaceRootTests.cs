@@ -131,6 +131,64 @@ public sealed class WorkspaceRootTests
         Assert.DoesNotContain("Plan a new Adventure", html);
     }
 
+    /// <summary>An authorized Creator member can open an honest, non-interactive workspace preview.</summary>
+    [Theory]
+    [InlineData("advisor", "Advisor")]
+    [InlineData("companion", "Companion")]
+    [InlineData("publisher", "Publisher")]
+    [InlineData("web", "Web")]
+    [InlineData("search", "Search")]
+    [InlineData("maps", "Maps")]
+    public async Task WorkspaceApplicationRoute_WithAuthorizedCreator_RendersPlaceholder(
+        string slug,
+        string applicationName)
+    {
+        var query = new StubPlannerWorkspaceQueryService(PlannerWorkspaceResult.Allowed([]));
+        var html = await RenderAsync(
+            ApplicationPrincipal(),
+            $"/workspace/creators/creator_tsa_01/{slug}",
+            services =>
+            {
+                services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>();
+                services.AddSingleton<ICreatorWorkspaceDirectoryService>(
+                    new StubCreatorWorkspaceDirectoryService([
+                        new(new("creator_tsa_01"), "The Simonton Adventures")
+                    ]));
+                services.AddSingleton<IPlannerWorkspaceQueryService>(query);
+            });
+
+        Assert.Contains("AdventuresSuite workspace", html);
+        Assert.Contains($">{applicationName}</h2>", html, StringComparison.Ordinal);
+        Assert.Contains("In development", html);
+        Assert.Contains("Representative · non-interactive", html);
+        Assert.Contains("does not grant access", html);
+        Assert.Contains("subscription, user-type, and time-bound entitlement checks", html);
+        Assert.Contains("href=\"/workspace/creators/creator_tsa_01/plans\"", html);
+        Assert.Contains($"aria-current=\"page\" title=\"{applicationName}\"", html);
+        Assert.Equal(0, query.CallCount);
+    }
+
+    /// <summary>A placeholder route fails closed when the signed-in user lacks the addressed Creator membership.</summary>
+    [Fact]
+    public async Task WorkspaceApplicationRoute_WithoutAuthorizedCreator_FailsClosed()
+    {
+        var html = await RenderAsync(
+            ApplicationPrincipal(),
+            "/workspace/creators/creator_private_01/maps",
+            services =>
+            {
+                services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>();
+                services.AddSingleton<ICreatorWorkspaceDirectoryService>(
+                    new StubCreatorWorkspaceDirectoryService([
+                        new(new("creator_tsa_01"), "The Simonton Adventures")
+                    ]));
+            });
+
+        Assert.Contains("Workspace unavailable", html);
+        Assert.DoesNotContain("See the shape of the Journey", html);
+        Assert.DoesNotContain("creator_private_01", html);
+    }
+
     /// <summary>
     /// An authenticated user without a Creator workspace can obtain only their own opaque
     /// platform identifier for a bounded support operation.
