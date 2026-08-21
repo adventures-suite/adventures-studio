@@ -70,7 +70,7 @@ public partial class PlannerWorkspaceShell : ComponentBase, IAsyncDisposable
 
     /// <summary>Gets or sets the visible shell title used by the content region.</summary>
     [Parameter]
-    public string Title { get; set; } = "Planner workspace";
+    public string Title { get; set; } = "Planner";
 
     /// <summary>Gets or sets the descriptive text shown in the workspace toolbar.</summary>
     [Parameter]

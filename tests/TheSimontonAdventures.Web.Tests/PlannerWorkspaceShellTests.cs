@@ -188,6 +188,14 @@ public sealed class PlannerWorkspaceShellTests
         Assert.Contains("tabindex=\"0\"", html, StringComparison.Ordinal);
         Assert.Contains("aria-label=\"Narrow Planner navigation\"", html, StringComparison.Ordinal);
         Assert.Contains("aria-label=\"Widen Planner navigation\"", html, StringComparison.Ordinal);
+        Assert.Contains(">Planner</span>", html, StringComparison.Ordinal);
+        Assert.DoesNotContain(">Planner workspace</span>", html, StringComparison.Ordinal);
+        foreach (var application in new[] { "Advisor", "Companion", "Publisher", "Web", "Search", "Maps" })
+        {
+            Assert.Contains($"aria-label=\"{application}, coming soon\"", html, StringComparison.Ordinal);
+        }
+
+        Assert.Equal(6, CountOccurrences(html, " disabled"));
     }
 
     /// <summary>The collapsed desktop sidebar becomes a true icon rail without width controls or labels.</summary>
@@ -208,9 +216,14 @@ public sealed class PlannerWorkspaceShellTests
         Assert.Contains("Planner overview</title>", html, StringComparison.Ordinal);
         Assert.DoesNotContain("AdventuresSuite Planner</title>", html, StringComparison.Ordinal);
         Assert.DoesNotContain(">Planner workspace</span>", html, StringComparison.Ordinal);
+        Assert.DoesNotContain(">Publisher</span>", html, StringComparison.Ordinal);
+        Assert.Contains("aria-label=\"Publisher, coming soon\"", html, StringComparison.Ordinal);
         Assert.DoesNotContain("Navigation width controls", html, StringComparison.Ordinal);
         Assert.DoesNotContain("Resize Planner navigation", html, StringComparison.Ordinal);
     }
+
+    private static int CountOccurrences(string value, string fragment) =>
+        value.Split(fragment, StringSplitOptions.None).Length - 1;
 
     /// <summary>Every reusable state has a named region and appropriate live behavior.</summary>
     [Theory]
