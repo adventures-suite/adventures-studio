@@ -101,10 +101,12 @@ public sealed class PlannerContextualIdeasRailTests
     {
         var html = await RenderAsync(new() { [nameof(PlannerContextualIdeasRail.WidthPixels)] = 320 });
 
+        Assert.Equal(960, PlannerContextualIdeasRail.MaximumWidthPixels);
+        Assert.Equal(64, PlannerContextualIdeasRail.ResizeStepPixels);
         Assert.Contains("aria-haspopup=\"dialog\"", html, StringComparison.Ordinal);
         Assert.Contains("role=\"separator\"", html, StringComparison.Ordinal);
         Assert.Contains("aria-valuemin=\"272\"", html, StringComparison.Ordinal);
-        Assert.Contains("aria-valuemax=\"400\"", html, StringComparison.Ordinal);
+        Assert.Contains("aria-valuemax=\"960\"", html, StringComparison.Ordinal);
         Assert.Contains("aria-valuenow=\"320\"", html, StringComparison.Ordinal);
         Assert.Contains("aria-label=\"FootSteps rail width\"", html, StringComparison.Ordinal);
         Assert.Contains("aria-label=\"Narrow FootSteps rail\"", html, StringComparison.Ordinal);

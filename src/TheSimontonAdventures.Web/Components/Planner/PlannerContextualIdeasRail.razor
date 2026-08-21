@@ -207,7 +207,7 @@
                                   OnPageChanged="ChangePageAsync" />
             }
         </div>
-        <div class="planner-ideas__resize" role="separator" aria-label="Resize FootSteps rail" aria-orientation="vertical" tabindex="0" aria-valuemin="272" aria-valuemax="400" aria-valuenow="@WidthPixels" @onkeydown="HandleResizeKeyAsync" @onpointerdown="BeginPointerResizeAsync" @onpointermove="ContinuePointerResizeAsync" @onpointerup="EndPointerResize" @onpointercancel="EndPointerResize"></div>
+        <div class="planner-ideas__resize" role="separator" aria-label="Resize FootSteps rail" aria-orientation="vertical" tabindex="0" aria-valuemin="@MinimumWidthPixels" aria-valuemax="@MaximumWidthPixels" aria-valuenow="@WidthPixels" @onkeydown="HandleResizeKeyAsync" @onpointerdown="BeginPointerResizeAsync" @onpointermove="ContinuePointerResizeAsync" @onpointerup="EndPointerResize" @onpointercancel="EndPointerResize"></div>
     }
 </aside>
 @if (IsDrawerOpen)
