@@ -365,7 +365,9 @@ public sealed class SqlMigrationIntegrationTests
                   AND ((permissions.state_desc='GRANT' AND permissions.permission_name IN ('SELECT','INSERT','UPDATE'))
                     OR (permissions.state_desc='DENY' AND permissions.permission_name IN ('DELETE','ALTER')));
                 """));
-            Assert.Empty(DatabaseMigratorRunner.Migrate(connectionString));
+            using (DatabaseMigratorRunner.AcquireMigrationLock(connectionString))
+                Assert.Empty(DatabaseMigratorRunner.MigrateWithLockHeld(
+                    connectionString, maximumMigrationNumber: "0013"));
         }
         finally
         {
