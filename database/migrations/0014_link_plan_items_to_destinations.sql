@@ -36,6 +36,6 @@ CREATE INDEX IX_Accommodations_DestinationVisit
     ON planning.Accommodations (CreatorId, AdventurePlanId, DestinationVisitId)
     WHERE DestinationVisitId IS NOT NULL;');
 
-CREATE INDEX IX_Reservations_DestinationVisit
+EXEC(N'CREATE INDEX IX_Reservations_DestinationVisit
     ON planning.Reservations (CreatorId, AdventurePlanId, DestinationVisitId)
-    WHERE DestinationVisitId IS NOT NULL;
+    WHERE DestinationVisitId IS NOT NULL;');
