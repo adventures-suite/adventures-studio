@@ -106,9 +106,9 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
     /// <summary>Gets the minimum supported FootSteps rail width in pixels.</summary>
     public const int MinimumWidthPixels = 272;
     /// <summary>Gets the maximum supported FootSteps rail width in pixels.</summary>
-    public const int MaximumWidthPixels = 400;
+    public const int MaximumWidthPixels = 960;
     /// <summary>Gets the width adjustment applied by the visible controls and arrow keys.</summary>
-    public const int ResizeStepPixels = 16;
+    public const int ResizeStepPixels = 64;
 
     private double? PointerStartX { get; set; }
     private int PointerStartWidth { get; set; }
