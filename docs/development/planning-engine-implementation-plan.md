@@ -261,6 +261,13 @@ mixed-mode Journeys. Facets are derived from the authorized result set rather
 than a rigid trip-type switch. A filtered zero-result keeps the plan unchanged
 and offers an explicit remove-filter or clear-all recovery path.
 
+The Azure development deployment may expose this same reviewed preview catalog
+while retaining real External ID authentication. Activation requires both the
+exact `DevelopmentPreview` catalog mode and the exact `Development` deployment
+classification; partial, production, disabled-authentication, or case-drifted
+configuration remains empty and fail-closed. This is an environment-isolated
+preview adapter, not approval for a production catalog or SQL seed migration.
+
 The first explicit Add-to-plan slice applies one Destination FootStep after a
 reviewed preview. It reauthorizes the human actor, Creator membership, exact
 plan instance, mutation audit requirement, and exact source/version below the

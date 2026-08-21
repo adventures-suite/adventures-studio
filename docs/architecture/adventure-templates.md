@@ -203,8 +203,11 @@ catalog query may show a complete preview, but pressing “Create my private
 Journey” performs a fresh exact-version use decision and the atomic
 instantiation operation. The customer selects only supported parameters; the
 interface must not show controls that are silently ignored. Local Alpha uses a
-fictional JSON catalog. Production remains empty and fail-closed until its
-catalog, entitlement, license, retention, and reporting adapters are approved.
+fictional JSON catalog. The hosted Azure development environment may expose the
+same reviewed preview catalog only through an explicit, exact development
+deployment classification independent from its real authentication provider.
+Production remains empty and fail-closed until its catalog, entitlement,
+license, retention, and reporting adapters are approved.
 
 ## Definition of Done
 
