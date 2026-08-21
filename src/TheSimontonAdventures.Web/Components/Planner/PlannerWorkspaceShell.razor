@@ -1,6 +1,7 @@
 @namespace TheSimontonAdventures.Web.Components
 
 <div class="@ShellClasses"
+     @ref="ShellElement"
      data-theme="@Theme.ToDataAttribute()"
      data-sidebar-collapsed="@IsSidebarCollapsed"
      data-sidebar-hidden="@IsSidebarHidden"
@@ -13,7 +14,7 @@
 
     @if (!IsSidebarHidden)
     {
-        <PlannerWorkspaceSidebar IsCollapsed="@IsSidebarCollapsed"
+        <PlannerWorkspaceSidebar IsCollapsed="@(IsMobileNavigationOpen ? false : IsSidebarCollapsed)"
                                  IsMobileOpen="@IsMobileNavigationOpen"
                                  SimontonAdventuresUrl="@SimontonAdventuresUrl"
                                  WidthPixels="@SidebarWidthPixels"
@@ -26,14 +27,17 @@
     }
 
     <div class="planner-shell__workspace">
+        <div class="planner-shell__pinned-header" @ref="PinnedHeader">
         <header class="planner-shell__toolbar">
             <div class="planner-shell__heading">
                 <p class="planner-shell__eyebrow">AdventuresSuite</p>
-                <h1>@Title</h1>
-                @if (!string.IsNullOrWhiteSpace(Description))
-                {
-                    <p class="planner-shell__description">@Description</p>
-                }
+                <div class="planner-shell__title-line">
+                    <h1>@Title</h1>
+                    @if (!string.IsNullOrWhiteSpace(Description))
+                    {
+                        <p class="planner-shell__description">@Description</p>
+                    }
+                </div>
             </div>
 
             <div class="planner-shell__actions" aria-label="Workspace display controls">
@@ -58,18 +62,52 @@
                     </button>
                 }
 
-                <label class="planner-shell__theme">
-                    <span>Theme</span>
-                    <select aria-label="Planner color theme" value="@Theme.ToDataAttribute()" @onchange="ChangeThemeAsync">
-                        <option value="system">System</option>
-                        <option value="light">Light</option>
-                        <option value="dark">Dark</option>
-                    </select>
-                </label>
-
-                @ToolbarContent
+                <details class="planner-account-menu" open="@IsAccountMenuOpen">
+                    <summary aria-label="Account and appearance"
+                             title="Account and appearance"
+                             aria-expanded="@(IsAccountMenuOpen ? "true" : "false")"
+                             @onclick="ToggleAccountMenuAsync"
+                             @onclick:preventDefault="true">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="8" r="4" /><path d="M4.5 21a7.5 7.5 0 0 1 15 0" /></svg>
+                        <svg class="planner-account-menu__chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m7 9 5 5 5-5" /></svg>
+                    </summary>
+                    <div class="planner-account-menu__panel">
+                        <div class="planner-account-menu__status" title="Authorization is verified before private plan data is read.">
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="5" y="10" width="14" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>
+                            <span>Private workspace</span>
+                        </div>
+                        <fieldset class="planner-account-menu__appearance">
+                            <legend>Appearance</legend>
+                            @foreach (var option in new[]
+                            {
+                                PlannerWorkspaceTheme.System,
+                                PlannerWorkspaceTheme.Light,
+                                PlannerWorkspaceTheme.Dark
+                            })
+                            {
+                                <button type="button"
+                                        aria-pressed="@(Theme == option ? "true" : "false")"
+                                        @onclick="() => SetThemeAsync(option)">
+                                    <span aria-hidden="true">@(Theme == option ? "✓" : string.Empty)</span>
+                                    @option
+                                </button>
+                            }
+                        </fieldset>
+                        @if (ToolbarContent is not null)
+                        {
+                            <div class="planner-account-menu__session">@ToolbarContent</div>
+                        }
+                    </div>
+                </details>
             </div>
         </header>
+        @if (WorkspaceToolbarContent is not null)
+        {
+            <div class="planner-shell__context-toolbar">
+                @WorkspaceToolbarContent
+            </div>
+        }
+        </div>
 
         <main id="planner-workspace-content"
               class="@ContentClasses"

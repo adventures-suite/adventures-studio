@@ -15,13 +15,36 @@ namespace TheSimontonAdventures.Web.Tests;
 /// <summary>Verifies the authorized Planner itinerary-board presentation boundary.</summary>
 public sealed class PlannerItineraryBoardTests
 {
+    [Fact]
+    public async Task Board_ItineraryDay_RendersAccessibleCalendarThumbnail()
+    {
+        var output = await RenderAsync(canEdit: false);
+
+        Assert.Contains("October 2027 calendar, October 25 selected", output, StringComparison.Ordinal);
+        Assert.Contains("planner-calendar__selected", output, StringComparison.Ordinal);
+        Assert.Contains(">25</span>", output, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Board_TransportationAndAccommodation_RenderCalendarRanges()
+    {
+        var output = await RenderAsync(canEdit: true);
+
+        Assert.Contains("Calendar, October 24, 2027 through October 25, 2027 selected", output, StringComparison.Ordinal);
+        Assert.Contains("Calendar, October 25, 2027 through October 29, 2027 selected", output, StringComparison.Ordinal);
+        Assert.True(Regex.Matches(output, "planner-calendar__selected").Count >= 8);
+        Assert.Contains("aria-label=\"Edit transportation: Flight from Phoenix to Madrid\"", output, StringComparison.Ordinal);
+        Assert.Contains("aria-label=\"Edit accommodation: Hotel Central\"", output, StringComparison.Ordinal);
+    }
+
     /// <summary>The board renders every allowlisted record with semantic order and no credentials.</summary>
     [Fact]
     public async Task Board_RendersAuthorizedProjectionWithoutSensitiveValues()
     {
         var html = await RenderAsync(canEdit: false);
 
-        Assert.Contains("Plan the journey", html);
+        Assert.Contains("aria-label=\"Journey planning board\"", html);
+        Assert.DoesNotContain("Authorized plan details only", html, StringComparison.Ordinal);
         Assert.True(html.IndexOf("Madrid", StringComparison.Ordinal) < html.IndexOf("Barcelona", StringComparison.Ordinal));
         Assert.Contains("Arrival day", html);
         Assert.Contains("Prado Museum", html);
@@ -53,8 +76,11 @@ public sealed class PlannerItineraryBoardTests
         Assert.DoesNotContain("name=\"transportation-editor\"", html);
         Assert.DoesNotContain("name=\"accommodation-editor\"", html);
         Assert.DoesNotContain("<details open", html);
-        Assert.DoesNotContain("aria-expanded", html);
+        Assert.Equal(5, Count(html, "aria-controls=\"plan-"));
         Assert.Contains(">Add destination</summary>", html);
+        Assert.Contains("draggable=\"true\"", html, StringComparison.Ordinal);
+        Assert.Contains("aria-label=\"Move Madrid later\"", html, StringComparison.Ordinal);
+        Assert.Contains("aria-label=\"Move Barcelona earlier\"", html, StringComparison.Ordinal);
         Assert.Contains(">Add itinerary day</summary>", html);
         Assert.Contains("Edit itinerary day: Arrival day", html);
         Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/days/day_madrid_01/edit\"", html);
@@ -96,6 +122,45 @@ public sealed class PlannerItineraryBoardTests
         Assert.Contains("Confirmation references are added through a separate protected workflow.", html);
     }
 
+    /// <summary>Controlled panel state hides inactive content without removing headers or unsaved form controls.</summary>
+    [Fact]
+    public async Task Board_FocusedPanel_RendersOnlyItsExpandedContent()
+    {
+        var html = await RenderAsync(
+            canEdit: false,
+            expandedPanels: new HashSet<PlannerWorkspacePanel> { PlannerWorkspacePanel.Transportation });
+
+        Assert.Contains("id=\"plan-route-content\" hidden", html, StringComparison.Ordinal);
+        Assert.Contains("id=\"plan-itinerary-content\" hidden", html, StringComparison.Ordinal);
+        Assert.Contains("id=\"plan-accommodations-content\" hidden", html, StringComparison.Ordinal);
+        Assert.Contains("id=\"plan-reservations-content\" hidden", html, StringComparison.Ordinal);
+        Assert.Contains("id=\"plan-transportation-content\"", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("id=\"plan-transportation-content\" hidden", html, StringComparison.Ordinal);
+        Assert.Contains("Flight: Phoenix to Madrid", html, StringComparison.Ordinal);
+        Assert.Contains("Prado Museum", html, StringComparison.Ordinal);
+        Assert.Contains("Hotel Central", html, StringComparison.Ordinal);
+        Assert.Contains("Museum hold", html, StringComparison.Ordinal);
+    }
+
+    /// <summary>Activity focus keeps activities under their days while making that workflow explicit.</summary>
+    [Fact]
+    public async Task Board_ActivityFocus_EmphasizesActivitiesWithinItinerary()
+    {
+        var html = await RenderAsync(
+            canEdit: true,
+            expandedPanels: new HashSet<PlannerWorkspacePanel> { PlannerWorkspacePanel.Itinerary },
+            focusedPanel: PlannerWorkspacePanel.Activities);
+
+        Assert.Contains("Activities by day", html, StringComparison.Ordinal);
+        Assert.Contains("Activity focus", html, StringComparison.Ordinal);
+        Assert.Contains("Find Activity FootSteps for Arrival day", html, StringComparison.Ordinal);
+        Assert.Contains("Prado Museum", html, StringComparison.Ordinal);
+        Assert.Contains("Add activity to Arrival day", html, StringComparison.Ordinal);
+        Assert.Contains("planner-board__activities-focus", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("id=\"plan-itinerary-content\" hidden", html, StringComparison.Ordinal);
+        Assert.Contains("id=\"plan-route-content\" hidden", html, StringComparison.Ordinal);
+    }
+
     /// <summary>Allowlisted PRG messages remain scoped to their board sections without reflecting arbitrary input.</summary>
     [Fact]
     public async Task Board_RendersOnlyPassedAllowlistedStatusMessages()
@@ -122,7 +187,7 @@ public sealed class PlannerItineraryBoardTests
     {
         var html = await RenderAsync(canEdit: false);
 
-        Assert.Contains("aria-labelledby=\"planner-board-heading\"", html);
+        Assert.Contains("aria-label=\"Journey planning board\"", html);
         Assert.Contains("aria-labelledby=\"plan-route\"", html);
         Assert.Contains("aria-labelledby=\"plan-itinerary\"", html);
         Assert.Contains("aria-labelledby=\"plan-transportation\"", html);
@@ -234,6 +299,42 @@ public sealed class PlannerItineraryBoardTests
         Assert.Equal(2, Count(html, "Add activity to"));
     }
 
+    /// <summary>Selecting a destination limits the Daily itinerary to days assigned to that destination.</summary>
+    [Fact]
+    public async Task Board_SelectedDestination_FiltersDailyItineraryAndOffersReset()
+    {
+        var context = new PlannerIdeasContext(PlannerIdeasContextKind.Destination, "visit_madrid_01", "Madrid");
+
+        var html = await RenderAsync(canEdit: false, plan: PlanWithMadridAndBarcelonaDays(), selectedContext: context);
+
+        Assert.Contains("1 of 2 days", html, StringComparison.Ordinal);
+        Assert.Contains("Showing itinerary for", html, StringComparison.Ordinal);
+        Assert.Contains(">Madrid</strong>", html, StringComparison.Ordinal);
+        Assert.Contains("Show entire itinerary", html, StringComparison.Ordinal);
+        Assert.Contains("Arrival day", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Barcelona day", html, StringComparison.Ordinal);
+        Assert.Contains("1 of 2 segments", html, StringComparison.Ordinal);
+        Assert.Contains("Phoenix", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Barcelona Sants", html, StringComparison.Ordinal);
+        Assert.Contains("1 of 2 stays", html, StringComparison.Ordinal);
+        Assert.Contains("Hotel Central", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Barcelona Harbor Hotel", html, StringComparison.Ordinal);
+    }
+
+    /// <summary>A stale destination selection cannot suppress authorized itinerary days.</summary>
+    [Fact]
+    public async Task Board_UnknownDestinationContext_FallsBackToEntireItinerary()
+    {
+        var context = new PlannerIdeasContext(PlannerIdeasContextKind.Destination, "visit_missing", "Missing");
+
+        var html = await RenderAsync(canEdit: false, plan: PlanWithMadridAndBarcelonaDays(), selectedContext: context);
+
+        Assert.Contains("2 days", html, StringComparison.Ordinal);
+        Assert.Contains("Arrival day", html, StringComparison.Ordinal);
+        Assert.Contains("Barcelona day", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Showing itinerary for", html, StringComparison.Ordinal);
+    }
+
     /// <summary>PRG status rendering never opens an ambiguous creation or edit disclosure.</summary>
     [Fact]
     public async Task Board_PrgMessages_LeaveEveryDisclosureClosed()
@@ -243,6 +344,25 @@ public sealed class PlannerItineraryBoardTests
         Assert.Equal(10, Count(html, "role=\"status\""));
         Assert.Equal(10, Count(html, "name=\"planner-board-action\""));
         Assert.DoesNotContain("<details open", html);
+    }
+
+    /// <summary>A dropped destination FootStep opens review without bypassing the existing protected form.</summary>
+    [Fact]
+    public async Task Board_DroppedDestinationFootStep_RendersExplicitReviewBeforeMutation()
+    {
+        var html = await RenderAsync(canEdit: true, pendingFootStep: DestinationFootStep(), dragging: true);
+
+        Assert.Contains("Drop the FootStep here to review it", html, StringComparison.Ordinal);
+        Assert.Contains("Drop to review this destination", html, StringComparison.Ordinal);
+        Assert.Contains("Your Journey will not change until you confirm.", html, StringComparison.Ordinal);
+        Assert.Contains("data-planner-destination-drop=\"true\"", html, StringComparison.Ordinal);
+        Assert.Contains("Add Barbados to this Journey?", html, StringComparison.Ordinal);
+        Assert.Contains("This adds a proposed destination; it does not make a booking.", html, StringComparison.Ordinal);
+        Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/footsteps/destination\"", html, StringComparison.Ordinal);
+        Assert.Contains("name=\"footStepId\" value=\"footstep_destination_barbados\"", html, StringComparison.Ordinal);
+        Assert.Contains("name=\"expectedVersion\" value=\"17\"", html, StringComparison.Ordinal);
+        Assert.Contains("Add destination to Journey", html, StringComparison.Ordinal);
+        Assert.Contains(">Cancel</button>", html, StringComparison.Ordinal);
     }
 
     private static readonly IReadOnlyDictionary<string, string> Paths = new Dictionary<string, string>
@@ -255,7 +375,15 @@ public sealed class PlannerItineraryBoardTests
         ["reservation"] = "/workspace/creators/creator_alpha_01/plans/plan_spain_2027/reservations"
     };
 
-    private static async Task<string> RenderAsync(bool canEdit, bool includeMessages = false, AdventurePlanDetail? plan = null)
+    private static async Task<string> RenderAsync(
+        bool canEdit,
+        bool includeMessages = false,
+        AdventurePlanDetail? plan = null,
+        PlannerFootStepDefinition? pendingFootStep = null,
+        bool dragging = false,
+        IReadOnlySet<PlannerWorkspacePanel>? expandedPanels = null,
+        PlannerWorkspacePanel focusedPanel = PlannerWorkspacePanel.Transportation,
+        PlannerIdeasContext? selectedContext = null)
     {
         var services = new ServiceCollection();
         services.AddLogging();
@@ -289,6 +417,18 @@ public sealed class PlannerItineraryBoardTests
                     "/workspace/creators/creator_alpha_01/plans/plan_spain_2027",
                 [nameof(PlannerItineraryBoard.AddReservationPath)] = Paths["reservation"]
             };
+            if (expandedPanels is not null)
+            {
+                parameters[nameof(PlannerItineraryBoard.ExpandedPanels)] = expandedPanels;
+                parameters[nameof(PlannerItineraryBoard.FocusedPanel)] = focusedPanel;
+            }
+            parameters[nameof(PlannerItineraryBoard.IsDestinationFootStepDragging)] = dragging;
+            parameters[nameof(PlannerItineraryBoard.SelectedContext)] = selectedContext;
+            parameters[nameof(PlannerItineraryBoard.PendingDestinationFootStep)] = pendingFootStep;
+            parameters[nameof(PlannerItineraryBoard.ApplyDestinationFootStepPath)] =
+                "/workspace/creators/creator_alpha_01/plans/plan_spain_2027/footsteps/destination";
+            parameters[nameof(PlannerItineraryBoard.OnDestinationFootStepReviewCancelled)] =
+                EventCallback.Factory.Create(new object(), () => { });
             if (includeMessages)
             {
                 parameters[nameof(PlannerItineraryBoard.DestinationStatusMessage)] = "Destination status";
@@ -309,6 +449,20 @@ public sealed class PlannerItineraryBoardTests
         });
     }
 
+    private static PlannerFootStepDefinition DestinationFootStep() => new()
+    {
+        Id = "footstep_destination_barbados",
+        Version = "1.0",
+        Kind = "destination",
+        Title = "Barbados island rhythm",
+        Summary = "A balanced Eastern Caribbean stay.",
+        Attribution = "AdventuresSuite curated test",
+        Freshness = "Reviewed for testing",
+        ContextKinds = new HashSet<PlannerFootStepContextKind> { PlannerFootStepContextKind.Adventure },
+        DestinationDraft = new("Barbados", "America/Barbados"),
+        DurationDays = 4
+    };
+
     private static AdventurePlanDetail FullPlan() => new()
     {
         Id = new("plan_spain_2027"),
@@ -327,6 +481,37 @@ public sealed class PlannerItineraryBoardTests
         Transportation = [new(new("transport_phx_mad"), "Flight", "Phoenix", "Madrid", new(2027, 10, 24), new(18, 0), new("America/Phoenix"), new(2027, 10, 25), new(13, 0), new("Europe/Madrid"), PlanItemStatus.Proposed)],
         Accommodations = [new(new("stay_madrid_01"), "Hotel Central", new(new(2027, 10, 25), new(2027, 10, 29)), new("Europe/Madrid"), PlanItemStatus.Proposed)],
         Reservations = [new(new("reservation_museum_01"), "Museum hold", PlanItemStatus.Proposed)]
+    };
+
+    private static AdventurePlanDetail PlanWithMadridAndBarcelonaDays() => FullPlan() with
+    {
+        Days =
+        [
+            new(new("day_madrid_01"), new DestinationVisitId("visit_madrid_01"),
+                new(2027, 10, 25), new("Europe/Madrid"), "Arrival day", []),
+            new(new("day_barcelona_01"), new DestinationVisitId("visit_barcelona_01"),
+                new(2027, 10, 30), new("Europe/Madrid"), "Barcelona day", [])
+        ],
+        Transportation =
+        [
+            new(new("transport_phx_mad"), "Flight", "Phoenix", "Madrid",
+                new(2027, 10, 24), new(18, 0), new("America/Phoenix"),
+                new(2027, 10, 25), new(13, 0), new("Europe/Madrid"),
+                PlanItemStatus.Proposed, null, new("visit_madrid_01")),
+            new(new("transport_mad_bar"), "Rail", "Madrid", "Barcelona Sants",
+                new(2027, 10, 30), new(9, 0), new("Europe/Madrid"),
+                new(2027, 10, 30), new(12, 0), new("Europe/Madrid"),
+                PlanItemStatus.Proposed, new("visit_barcelona_01"), new("visit_barcelona_01"))
+        ],
+        Accommodations =
+        [
+            new(new("stay_madrid_01"), "Hotel Central",
+                new(new(2027, 10, 25), new(2027, 10, 29)),
+                new("Europe/Madrid"), PlanItemStatus.Proposed, new("visit_madrid_01")),
+            new(new("stay_barcelona_01"), "Barcelona Harbor Hotel",
+                new(new(2027, 10, 30), new(2027, 11, 5)),
+                new("Europe/Madrid"), PlanItemStatus.Proposed, new("visit_barcelona_01"))
+        ]
     };
 
     private static AdventurePlanDetail EmptyPlan() => new()

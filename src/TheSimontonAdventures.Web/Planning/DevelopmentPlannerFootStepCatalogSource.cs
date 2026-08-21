@@ -69,8 +69,16 @@ public sealed class DevelopmentPlannerFootStepCatalogSource : IPlannerFootStepCa
         DurationDays = source.DurationDays,
         DestinationDraft = source.DestinationDraft is null
             ? null
-            : new(source.DestinationDraft.Name, source.DestinationDraft.TimeZoneId)
+            : new(source.DestinationDraft.Name, source.DestinationDraft.TimeZoneId),
+        ActivityDraft = source.ActivityDraft is null
+            ? null
+            : new(source.ActivityDraft.Title, ParseTime(source.ActivityDraft.SuggestedStartTime),
+                ParseTime(source.ActivityDraft.SuggestedEndTime))
     };
+
+    private static TimeOnly? ParseTime(string? value) => string.IsNullOrWhiteSpace(value)
+        ? null
+        : TimeOnly.ParseExact(value, "HH:mm", System.Globalization.CultureInfo.InvariantCulture);
 
     private static IReadOnlySet<string> Set(IEnumerable<string> values) =>
         values.ToHashSet(StringComparer.Ordinal);
@@ -100,11 +108,19 @@ public sealed class DevelopmentPlannerFootStepCatalogSource : IPlannerFootStepCa
         public IReadOnlyList<string> Languages { get; init; } = [];
         public int? DurationDays { get; init; }
         public DestinationDraftRecord? DestinationDraft { get; init; }
+        public ActivityDraftRecord? ActivityDraft { get; init; }
     }
 
     private sealed record DestinationDraftRecord
     {
         public required string Name { get; init; }
         public required string TimeZoneId { get; init; }
+    }
+
+    private sealed record ActivityDraftRecord
+    {
+        public required string Title { get; init; }
+        public string? SuggestedStartTime { get; init; }
+        public string? SuggestedEndTime { get; init; }
     }
 }

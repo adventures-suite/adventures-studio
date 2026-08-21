@@ -1,0 +1,28 @@
+@namespace TheSimontonAdventures.Web.Components
+
+<section class="planner-footstep-review" aria-labelledby="@HeadingId">
+    <p class="planner-footstep-review__eyebrow">Destination preview</p>
+    <h5 id="@HeadingId">Add @Destination.Name to this Journey?</h5>
+    <p>@FootStep.Summary</p>
+    <p class="planner-footstep-review__boundary">Review the inclusive dates before confirming. This adds a proposed destination; it does not make a booking.</p>
+    <form method="post" action="@ApplyPath">
+        <AntiforgeryToken />
+        <input type="hidden" name="idempotencyKey" value="@IdempotencyKey" />
+        <input type="hidden" name="expectedVersion" value="@ExpectedVersion" />
+        <input type="hidden" name="footStepId" value="@FootStep.Id" />
+        <input type="hidden" name="footStepVersion" value="@FootStep.Version" />
+        <input type="hidden" name="timeZoneId" value="@Destination.TimeZoneId" />
+        <div class="planner-footstep-review__dates">
+            <label>Start date <input type="date" name="startDate" value="@DateValue(PlanStartDate)" min="@DateValue(PlanStartDate)" max="@DateValue(PlanEndDate)" required /></label>
+            <label>End date <input type="date" name="endDate" value="@DateValue(SuggestedEnd)" min="@DateValue(PlanStartDate)" max="@DateValue(PlanEndDate)" required /></label>
+        </div>
+        <p>Time zone: <strong>@Destination.TimeZoneId</strong></p>
+        <div class="planner-footstep-review__actions">
+            <button type="submit">Add destination to Journey</button>
+            @if (OnCancel.HasDelegate)
+            {
+                <button type="button" class="planner-footstep-review__cancel" @onclick="OnCancel">Cancel</button>
+            }
+        </div>
+    </form>
+</section>

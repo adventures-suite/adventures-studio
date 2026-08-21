@@ -118,6 +118,7 @@ if (authenticationMode is not null
     builder.Services.AddScoped<IDestinationFootStepApplyService, DestinationFootStepApplyService>();
     builder.Services.AddScoped<IAdventurePlanOverviewEditService, AdventurePlanOverviewEditService>();
     builder.Services.AddScoped<IDestinationVisitAddService, DestinationVisitAddService>();
+    builder.Services.AddScoped<IDestinationVisitReorderService, DestinationVisitReorderService>();
     builder.Services.AddScoped<IItineraryDayAddService, ItineraryDayAddService>();
     builder.Services.AddScoped<IItineraryDayEditService, ItineraryDayEditService>();
     builder.Services.AddScoped<IPlannedActivityAddService, PlannedActivityAddService>();
@@ -357,6 +358,7 @@ if (authenticationConfiguration.Mode is AuthenticationMode.ExternalProvider or A
     app.MapAdventureTemplateInstantiateEndpoint();
     app.MapAdventurePlanOverviewEditEndpoint();
     app.MapDestinationVisitAddEndpoint();
+    app.MapDestinationVisitReorderEndpoint();
     app.MapDestinationFootStepApplyEndpoint();
     app.MapItineraryDayAddEndpoint();
     app.MapItineraryDayEditEndpoint();

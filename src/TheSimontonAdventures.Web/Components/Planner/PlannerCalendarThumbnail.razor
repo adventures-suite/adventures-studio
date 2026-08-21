@@ -1,0 +1,30 @@
+@namespace TheSimontonAdventures.Web.Components
+
+<div class="planner-calendar-set" role="img" aria-label="@AccessibleLabel">
+    @foreach (var month in VisibleMonths)
+    {
+        <div class="planner-calendar">
+            <div class="planner-calendar__month">@month.ToString("MMMM yyyy")</div>
+            <div class="planner-calendar__weekdays" aria-hidden="true">
+                @foreach (var weekday in WeekdayLabels)
+                {
+                    <span>@weekday</span>
+                }
+            </div>
+            <div class="planner-calendar__days" aria-hidden="true">
+                @foreach (var day in CalendarDays(month))
+                {
+                    if (day is null)
+                    {
+                        <span class="planner-calendar__blank"></span>
+                    }
+                    else
+                    {
+                        var calendarDate = new DateOnly(month.Year, month.Month, day.Value);
+                        <span class="@(IsSelected(calendarDate) ? "planner-calendar__selected" : null)">@day</span>
+                    }
+                }
+            </div>
+        </div>
+    }
+</div>

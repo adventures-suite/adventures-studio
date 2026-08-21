@@ -102,12 +102,23 @@ public sealed record PlannerFootStepDefinition
     public int? DurationDays { get; init; }
     /// <summary>Gets the typed destination draft when this FootStep supports that reviewed operation.</summary>
     public PlannerFootStepDestinationDraft? DestinationDraft { get; init; }
+    /// <summary>Gets the typed activity draft when this FootStep can seed a reviewed manual activity.</summary>
+    public PlannerFootStepActivityDraft? ActivityDraft { get; init; }
 }
 
 /// <summary>Defines allowlisted destination values proposed by an immutable FootStep version.</summary>
 /// <param name="Name">The proposed destination working name.</param>
 /// <param name="TimeZoneId">The proposed IANA time-zone identifier.</param>
 public sealed record PlannerFootStepDestinationDraft(string Name, string TimeZoneId);
+
+/// <summary>Defines allowlisted activity values proposed by an immutable FootStep version.</summary>
+/// <param name="Title">The proposed activity title.</param>
+/// <param name="SuggestedStartTime">The optional suggested local start time.</param>
+/// <param name="SuggestedEndTime">The optional suggested local end time.</param>
+public sealed record PlannerFootStepActivityDraft(
+    string Title,
+    TimeOnly? SuggestedStartTime,
+    TimeOnly? SuggestedEndTime);
 
 /// <summary>Represents an exact authorized FootStep use decision.</summary>
 /// <param name="FootStep">The immutable exact-version source.</param>

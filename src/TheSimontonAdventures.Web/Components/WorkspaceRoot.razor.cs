@@ -3,6 +3,7 @@ using AdventuresSuite.Identity.ExternalId;
 using AdventuresSuite.Planning;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Options;
 using TheSimontonAdventures.Web.Authorization;
 using TheSimontonAdventures.Web.Creators;
 using TheSimontonAdventures.Web.Planning;
@@ -33,6 +34,9 @@ public partial class WorkspaceRoot
     [Inject]
     private WorkspaceNavigationConfiguration WorkspaceNavigation { get; set; } = null!;
 
+    [Inject]
+    private IOptions<PlatformHostOptions> PlatformHostConfiguration { get; set; } = null!;
+
     private IReadOnlyList<AdventurePlanDashboardItem> Plans { get; set; } = [];
     private IReadOnlyList<CreatorWorkspaceChoice> AuthorizedCreatorWorkspaces { get; set; } = [];
     private AdventurePlanDetail? Plan { get; set; }
@@ -47,6 +51,118 @@ public partial class WorkspaceRoot
     private bool IsTemplateMode { get; set; }
     private bool IsRootAdventureLanding { get; set; }
     private int IdeasWidthPixels { get; set; } = 320;
+    private PlannerFootStepDefinition? DraggedDestinationFootStep { get; set; }
+    private PlannerFootStepDefinition? PendingDestinationFootStep { get; set; }
+    private PlannerWorkspacePanel FocusedPanel { get; set; } = PlannerWorkspacePanel.Overview;
+    private HashSet<PlannerWorkspacePanel> ExpandedPanels { get; } = [PlannerWorkspacePanel.Overview];
+
+    private async Task FocusPanelAsync(PlannerWorkspacePanel panel)
+    {
+        FocusedPanel = panel;
+        ExpandedPanels.Clear();
+        ExpandedPanels.Add(panel == PlannerWorkspacePanel.Activities
+            ? PlannerWorkspacePanel.Itinerary
+            : panel);
+
+        if (panel != PlannerWorkspacePanel.Activities || Plan is null || Plan.Days.Count == 0)
+        {
+            return;
+        }
+
+        var target = SelectedIdeasContext?.Kind switch
+        {
+            PlannerIdeasContextKind.Day => Plan.Days.FirstOrDefault(day =>
+                string.Equals(day.Id.Value, SelectedIdeasContext.Id, StringComparison.Ordinal)),
+            PlannerIdeasContextKind.Destination => Plan.Days
+                .Where(day => string.Equals(day.DestinationVisitId?.Value,
+                    SelectedIdeasContext.Id, StringComparison.Ordinal))
+                .OrderByDescending(day => day.Activities.Count > 0)
+                .ThenBy(day => day.Date)
+                .FirstOrDefault(),
+            _ => null
+        };
+        target ??= Plan.Days.OrderByDescending(day => day.Activities.Count > 0)
+            .ThenBy(day => day.Date)
+            .First();
+        await SelectIdeasContextAsync(new PlannerIdeasContext(
+            PlannerIdeasContextKind.Day, target.Id.Value, target.Title));
+    }
+
+    private Task TogglePanelAsync(PlannerWorkspacePanel panel)
+    {
+        if (!ExpandedPanels.Add(panel))
+        {
+            ExpandedPanels.Remove(panel);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private bool IsPanelExpanded(PlannerWorkspacePanel panel) => ExpandedPanels.Contains(panel);
+    private bool IsPanelFocused(PlannerWorkspacePanel panel) => FocusedPanel == panel;
+    private string OverviewPanelClasses => $"plan-create planner-panel{(IsPanelFocused(PlannerWorkspacePanel.Overview) ? " planner-panel--focused" : IsPanelExpanded(PlannerWorkspacePanel.Overview) ? " planner-panel--open" : " planner-panel--collapsed")}";
+    private IReadOnlyList<PlannerActivityTarget> ActivityFootStepTargets
+    {
+        get
+        {
+            if (Plan is null || SelectedIdeasContext is null)
+            {
+                return [];
+            }
+
+            var days = SelectedIdeasContext.Kind switch
+            {
+                PlannerIdeasContextKind.Day => Plan.Days.Where(day =>
+                    string.Equals(day.Id.Value, SelectedIdeasContext.Id, StringComparison.Ordinal)),
+                PlannerIdeasContextKind.Destination => Plan.Days.Where(day =>
+                    string.Equals(day.DestinationVisitId?.Value, SelectedIdeasContext.Id, StringComparison.Ordinal)),
+                _ => []
+            };
+
+            return days.OrderBy(day => day.Date)
+                .Select(day => new PlannerActivityTarget(
+                    day.Id.Value, $"{day.Date:MMM d} · {day.Title}"))
+                .ToArray();
+        }
+    }
+
+    private Task BeginDestinationFootStepDragAsync(PlannerFootStepDefinition footStep)
+    {
+        DraggedDestinationFootStep = footStep.DestinationDraft is null ? null : footStep;
+        return Task.CompletedTask;
+    }
+
+    private Task EndDestinationFootStepDragAsync()
+    {
+        DraggedDestinationFootStep = null;
+        return Task.CompletedTask;
+    }
+
+    private Task DropDestinationFootStepAsync()
+    {
+        if (DraggedDestinationFootStep?.DestinationDraft is not null)
+        {
+            PendingDestinationFootStep = DraggedDestinationFootStep;
+        }
+        DraggedDestinationFootStep = null;
+        return Task.CompletedTask;
+    }
+
+    private Task ReviewDroppedDestinationFootStepAsync(PlannerFootStepDefinition footStep)
+    {
+        if (footStep.DestinationDraft is not null)
+        {
+            PendingDestinationFootStep = footStep;
+        }
+        DraggedDestinationFootStep = null;
+        return Task.CompletedTask;
+    }
+
+    private Task CancelDestinationFootStepReviewAsync()
+    {
+        PendingDestinationFootStep = null;
+        return Task.CompletedTask;
+    }
 
     private Task SetTemplateModeAsync(bool isTemplateMode)
     {
@@ -89,6 +205,9 @@ public partial class WorkspaceRoot
         HttpContextAccessor.HttpContext?.User.Identity?.IsAuthenticated is true;
 
     private string CurrentLocalPath => InitialPath;
+
+    private string SignOutReturnPath =>
+        LoadState == WorkspaceLoadState.Ready ? CurrentLocalPath : "/";
 
     private string DevelopmentSignInPath =>
         $"{ExternalIdBrowserEndpoints.SignInPath}?returnUrl={Uri.EscapeDataString(CurrentLocalPath)}";
@@ -300,10 +419,12 @@ public partial class WorkspaceRoot
     }
 
     private string PlanListPath => $"/workspace/creators/{AddressedCreatorId.Value}/plans";
+    private string PlannerHeroImageUrl => PlatformHostConfiguration.Value.JourneyImageUrl;
     private string CreatePlanPath => $"{PlanListPath}/create";
     private string CreateFromTemplatePath => $"{PlanListPath}/create-from-template";
     private string EditPlanPath => $"{PlanListPath}/{Plan!.Id.Value}/overview";
     private string AddDestinationPath => $"{PlanListPath}/{Plan!.Id.Value}/destinations";
+    private string ReorderDestinationPath => $"{AddDestinationPath}/reorder";
     private string ApplyDestinationFootStepPath => $"{PlanListPath}/{Plan!.Id.Value}/footsteps/destination";
     private string AddDayPath => $"{PlanListPath}/{Plan!.Id.Value}/days";
     private string AddActivityPath => $"{PlanListPath}/{Plan!.Id.Value}/activities";
@@ -355,6 +476,19 @@ public partial class WorkspaceRoot
             "conflict" => "This plan changed. Review the current route and try again.",
             "validation" => "Review the destination name, dates, and IANA time zone.",
             "failure" => "The destination could not be added. Please try again.",
+            _ => null
+        };
+    private string? RouteStatusMessage =>
+        GetQueryValue("route") switch
+        {
+            "reordered" => "The route and linked dates were updated.",
+            "unchanged" => "The destination is already in that position.",
+            "booking-locked" => "This route cannot be reordered automatically because booked or committed items would be affected.",
+            "schedule-conflict" => "This route order conflicts with an existing transportation schedule. Adjust or remove the proposed transportation segment, then try again.",
+            "denied" => "The route could not be reordered.",
+            "conflict" => "This plan changed. Review the current route and try again.",
+            "validation" => "Review the destination order and try again.",
+            "failure" => "The route could not be reordered. Your plan was not changed.",
             _ => null
         };
     private string? FootStepStatusMessage =>

@@ -1,17 +1,22 @@
 @namespace TheSimontonAdventures.Web.Components
 
-<section class="planner-board" aria-labelledby="planner-board-heading">
-    <header class="planner-board__header">
-        <div>
-            <p class="planner-board__eyebrow">Itinerary board</p>
-            <h3 id="planner-board-heading">Plan the journey</h3>
+<section class="planner-board" aria-label="Journey planning board">
+    @if (IsDestinationFootStepDragging)
+    {
+        <div class="planner-board__floating-drop" data-planner-destination-drop="true" role="status">
+            Drop to review this destination
+            <span>Your Journey will not change until you confirm.</span>
         </div>
-        <p>Authorized plan details only. Proposed items are not bookings or confirmations.</p>
-    </header>
-
-    <section class="planner-board__card planner-board__route" aria-labelledby="plan-route">
-        <h4 id="plan-route">Destinations and route</h4>
+    }
+    <section class="@PanelClasses(PlannerWorkspacePanel.Route, RouteCardClasses)" data-planner-destination-drop="true" aria-labelledby="plan-route" @ondragover:preventDefault="true" @ondrop="DropDestinationFootStepAsync">
+        <PlannerPanelHeader Panel="PlannerWorkspacePanel.Route" Title="Destinations and route" Summary="@RouteSummary" HeadingId="plan-route" ContentId="plan-route-content" IsExpanded="@IsExpanded(PlannerWorkspacePanel.Route)" IsFocused="@IsFocused(PlannerWorkspacePanel.Route)" OnToggle="OnPanelToggle" />
+        <div id="plan-route-content" hidden="@(!IsExpanded(PlannerWorkspacePanel.Route))">
+        @if (IsDestinationFootStepDragging)
+        {
+            <p class="planner-board__drop-target" role="status">Drop the FootStep here to review it. Your Journey will not change yet.</p>
+        }
         @Status(DestinationStatusMessage)
+        @Status(RouteStatusMessage)
         @if (Plan.Destinations.Count == 0)
         {
             <p class="planner-board__empty">No destinations have been added.</p>
@@ -21,12 +26,41 @@
             <ol class="planner-board__route-list">
                 @foreach (var destination in Plan.Destinations.OrderBy(item => item.Sequence))
                 {
-                    <li class="@(IsSelected(destination) ? "planner-board__selected" : null)">
+                    <li class="@DestinationCardClasses(destination)" draggable="@(CanEdit ? "true" : "false")" @ondragstart="() => BeginDestinationMove(destination.Id)" @ondragend="EndDestinationDrag" @ondragenter="() => HighlightDestinationDrop(destination.Sequence)" @ondragover:preventDefault="true" @ondrop:stopPropagation="true" @ondrop="() => ReviewDestinationDrop(destination.Sequence)">
                         <span class="planner-board__sequence" aria-hidden="true">@destination.Sequence</span>
                         <div><button type="button" class="planner-board__context-button" aria-pressed="@IsSelected(destination)" @onclick="() => SelectDestination(destination)"><strong>@destination.Name</strong><span><time datetime="@DateValue(destination.Dates.Start)">@FormatDate(destination.Dates.Start)</time>–<time datetime="@DateValue(destination.Dates.End)">@FormatDate(destination.Dates.End)</time> · @destination.TimeZone</span></button></div>
+                        @if (CanEdit)
+                        {
+                            <div class="planner-board__reorder-controls" aria-label="Reorder @destination.Name"><button type="button" disabled="@(destination.Sequence == 1)" aria-label="Move @destination.Name earlier" @onclick="() => ReviewDestinationMove(destination.Id, destination.Sequence - 1)">↑</button><button type="button" disabled="@(destination.Sequence == Plan.Destinations.Count)" aria-label="Move @destination.Name later" @onclick="() => ReviewDestinationMove(destination.Id, destination.Sequence + 1)">↓</button></div>
+                        }
                     </li>
                 }
             </ol>
+            @if (pendingDestinationMove is not null)
+            {
+                <form class="planner-board__route-review" method="post" action="@ReorderDestinationPath">
+                    <AntiforgeryToken />
+                    <input type="hidden" name="expectedVersion" value="@Plan.Version" />
+                    <input type="hidden" name="destinationVisitId" value="@pendingDestinationMove.Id.Value" />
+                    <input type="hidden" name="targetSequence" value="@pendingDestinationSequence" />
+                    <p><strong>Review route change</strong></p>
+                    <p>Move @pendingDestinationMove.Name to position @pendingDestinationSequence? Destination blocks and the travel days between them will move together.</p>
+                    <p>Linked itinerary days, stays, and proposed transportation dates will be recalculated. Booked or committed items remain protected.</p>
+                    <div>
+                        <button type="submit">Apply new order</button>
+                        <button type="button" @onclick="CancelDestinationMove">Cancel</button>
+                    </div>
+                </form>
+            }
+        }
+        @if (CanEdit && PendingDestinationFootStep?.DestinationDraft is not null && !string.IsNullOrWhiteSpace(ApplyDestinationFootStepPath))
+        {
+            <PlannerDestinationFootStepReview FootStep="@PendingDestinationFootStep"
+                                              ApplyPath="@ApplyDestinationFootStepPath"
+                                              ExpectedVersion="@Plan.Version"
+                                              PlanStartDate="@Plan.Dates.Start"
+                                              PlanEndDate="@Plan.Dates.End"
+                                              OnCancel="@OnDestinationFootStepReviewCancelled" />
         }
         @if (CanEdit)
         {
@@ -44,26 +78,44 @@
                 </form>
             </details>
         }
+        </div>
     </section>
 
-    <section class="planner-board__card planner-board__days" aria-labelledby="plan-itinerary">
-        <h4 id="plan-itinerary">Daily itinerary</h4>
+    <section class="@PanelClasses(PlannerWorkspacePanel.Itinerary, $"planner-board__card planner-board__days{(IsActivityFocus ? " planner-board__activities-focus" : string.Empty)}")" aria-labelledby="plan-itinerary">
+        <PlannerPanelHeader Panel="PlannerWorkspacePanel.Itinerary" Title="@(IsActivityFocus ? "Activities by day" : "Daily itinerary")" Summary="@ItinerarySummary" HeadingId="plan-itinerary" ContentId="plan-itinerary-content" IsExpanded="@IsExpanded(PlannerWorkspacePanel.Itinerary)" IsFocused="@IsFocused(PlannerWorkspacePanel.Itinerary)" OnToggle="OnPanelToggle" />
+        <div id="plan-itinerary-content" hidden="@(!IsExpanded(PlannerWorkspacePanel.Itinerary))">
+        @if (IsActivityFocus)
+        {
+            <div class="planner-board__activity-focus-message" role="status">
+                <strong>Activity focus</strong>
+                <span>Select a day to find matching Activity FootSteps, or review the saved activities below.</span>
+            </div>
+        }
         @Status(DayEditStatusMessage)
         @Status(ActivityEditStatusMessage)
         @Status(ActivityStatusMessage)
         @Status(DayStatusMessage)
-        @if (Plan.Days.Count == 0)
+        @if (SelectedDestination is { } selectedDestination)
         {
-            <p class="planner-board__empty">No itinerary days have been added.</p>
+            <div class="planner-board__itinerary-context" role="status">
+                <span>Showing itinerary for <strong>@selectedDestination.Name</strong></span>
+                <button type="button" @onclick="ShowEntireJourneyAsync">Show entire itinerary</button>
+            </div>
+        }
+        @if (VisibleDays.Count == 0)
+        {
+            <p class="planner-board__empty">@(SelectedDestination is { } destination ? $"No itinerary days have been added for {destination.Name}." : "No itinerary days have been added.")</p>
         }
         else
         {
             <ol class="planner-board__day-list">
-                @foreach (var day in Plan.Days)
+                @foreach (var day in VisibleDays)
                 {
                     <li><article class="planner-board__day @(IsSelected(day) ? "planner-board__selected" : null)">
+                        <PlannerCalendarThumbnail Date="@day.Date" />
+                        <div class="planner-board__day-content">
                         <header><p><time datetime="@DateValue(day.Date)">@day.Date.ToString("ddd, MMM d, yyyy")</time> · @day.TimeZone</p><h5>@day.Title</h5>@if (DestinationName(day) is { } destinationName){<span>@destinationName</span>}</header>
-                        <button type="button" class="planner-board__context-button planner-board__day-context" aria-pressed="@IsSelected(day)" @onclick="() => SelectDay(day)">Explore FootSteps for @day.Title</button>
+                        <button type="button" class="planner-board__context-button planner-board__day-context" aria-pressed="@IsSelected(day)" @onclick="() => SelectDay(day)">@(IsActivityFocus ? $"Find Activity FootSteps for {day.Title}" : $"Explore FootSteps for {day.Title}")</button>
                         @if (CanEdit)
                         {
                             <details class="planner-board__disclosure planner-board__day-editor" name="planner-board-action">
@@ -119,6 +171,7 @@
                                 </form>
                             </details>
                         }
+                        </div>
                     </article></li>
                 }
             </ol>
@@ -140,22 +193,30 @@
         {
             <p class="planner-board__boundary">Add a destination before adding an itinerary day.</p>
         }
+        </div>
     </section>
 
-    <section class="planner-board__card" aria-labelledby="plan-transportation">
-        <h4 id="plan-transportation">Transportation</h4>
+    <section class="@PanelClasses(PlannerWorkspacePanel.Transportation, "planner-board__card")" aria-labelledby="plan-transportation">
+        <PlannerPanelHeader Panel="PlannerWorkspacePanel.Transportation" Title="Transportation" Summary="@TransportationSummary" HeadingId="plan-transportation" ContentId="plan-transportation-content" IsExpanded="@IsExpanded(PlannerWorkspacePanel.Transportation)" IsFocused="@IsFocused(PlannerWorkspacePanel.Transportation)" OnToggle="OnPanelToggle" />
+        <div id="plan-transportation-content" hidden="@(!IsExpanded(PlannerWorkspacePanel.Transportation))">
         @Status(TransportationEditStatusMessage)
         @Status(TransportationStatusMessage)
-        @if (Plan.Transportation.Count == 0)
+        @if (SelectedDestination is { } transportationDestination)
         {
-            <p class="planner-board__empty">No transportation has been added.</p>
+            <div class="planner-board__itinerary-context" role="status"><span>Showing transportation for <strong>@transportationDestination.Name</strong></span><button type="button" @onclick="ShowEntireJourneyAsync">Show all transportation</button></div>
+        }
+        @if (VisibleTransportation.Count == 0)
+        {
+            <p class="planner-board__empty">@(SelectedDestination is { } destination ? $"No transportation is linked to {destination.Name}." : "No transportation has been added.")</p>
         }
         else
         {
             <ul class="planner-board__summary-list">
-                @foreach (var segment in Plan.Transportation)
+                @foreach (var segment in VisibleTransportation)
                 {
-                    <li>
+                    <li class="planner-board__dated-summary">
+                        <PlannerCalendarThumbnail Date="@segment.DepartureDate" EndDate="@segment.ArrivalDate" />
+                        <div class="planner-board__summary-content">
                         <strong>@segment.Mode: @segment.From to @segment.To</strong>
                         <span><time datetime="@DateValue(segment.DepartureDate)">@FormatDate(segment.DepartureDate)</time>@FormatOptionalTime(segment.DepartureTimeLocal) · @segment.DepartureTimeZone</span>
                         <span>Arrives <time datetime="@DateValue(segment.ArrivalDate)">@FormatDate(segment.ArrivalDate)</time>@FormatOptionalTime(segment.ArrivalTimeLocal) · @segment.ArrivalTimeZone</span>
@@ -163,13 +224,15 @@
                         @if (CanEdit)
                         {
                             <details class="planner-board__disclosure planner-board__transportation-editor" name="planner-board-action">
-                                <summary>Edit transportation: @segment.Mode from @segment.From to @segment.To</summary>
+                                <summary aria-label="Edit transportation: @segment.Mode from @segment.From to @segment.To"><span aria-hidden="true">Edit</span></summary>
                                 <form class="planner-board__form" method="post" action="@EditTransportationPath(segment.Id)">
                                     <AntiforgeryToken />
                                     <input type="hidden" name="expectedVersion" value="@Plan.Version" />
                                     <label for="@TransportationFieldId(segment.Id, "mode")">Mode for @segment.From to @segment.To</label><input id="@TransportationFieldId(segment.Id, "mode")" name="mode" value="@segment.Mode" required maxlength="100" autocomplete="off" />
                                     <label for="@TransportationFieldId(segment.Id, "from")">Origin for @segment.Mode transportation</label><input id="@TransportationFieldId(segment.Id, "from")" name="from" value="@segment.From" required maxlength="200" autocomplete="off" />
+                                    <label for="@TransportationFieldId(segment.Id, "departure-visit")">Departure destination context <span>(optional)</span></label><select id="@TransportationFieldId(segment.Id, "departure-visit")" name="departureDestinationVisitId"><option value="">Outside a destination visit</option>@foreach (var destination in Plan.Destinations.OrderBy(item => item.Sequence)){<option value="@destination.Id.Value" selected="@(segment.DepartureDestinationVisitId == destination.Id)">@destination.Name</option>}</select>
                                     <label for="@TransportationFieldId(segment.Id, "to")">Destination for @segment.Mode transportation</label><input id="@TransportationFieldId(segment.Id, "to")" name="to" value="@segment.To" required maxlength="200" autocomplete="off" />
+                                    <label for="@TransportationFieldId(segment.Id, "arrival-visit")">Arrival destination context <span>(optional)</span></label><select id="@TransportationFieldId(segment.Id, "arrival-visit")" name="arrivalDestinationVisitId"><option value="">Outside a destination visit</option>@foreach (var destination in Plan.Destinations.OrderBy(item => item.Sequence)){<option value="@destination.Id.Value" selected="@(segment.ArrivalDestinationVisitId == destination.Id)">@destination.Name</option>}</select>
                                     <div class="planner-board__form-columns">
                                         <div><label for="@TransportationFieldId(segment.Id, "departure-date")">Departure date for @segment.Mode from @segment.From</label><input id="@TransportationFieldId(segment.Id, "departure-date")" type="date" name="departureDate" value="@DateValue(segment.DepartureDate)" min="@DateValue(Plan.Dates.Start)" max="@DateValue(Plan.Dates.End)" required /></div>
                                         <div><label for="@TransportationFieldId(segment.Id, "departure-time")">Departure time for @segment.Mode from @segment.From <span>(optional)</span></label><input id="@TransportationFieldId(segment.Id, "departure-time")" type="time" name="departureTimeLocal" value="@TimeValue(segment.DepartureTimeLocal)" /></div>
@@ -184,6 +247,7 @@
                                 </form>
                             </details>
                         }
+                        </div>
                     </li>
                 }
             </ul>
@@ -192,36 +256,45 @@
         {
             <details class="planner-board__disclosure planner-board__action" name="planner-board-action">
                 <summary>Add transportation</summary>
-                <form class="planner-board__form" method="post" action="@AddTransportationPath"><AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" /><label for="add-transportation-mode">Mode</label><input id="add-transportation-mode" name="mode" required maxlength="100" placeholder="Flight, rail, cruise, or car" /><label for="add-transportation-from">From</label><input id="add-transportation-from" name="from" required maxlength="200" /><label for="add-transportation-to">To</label><input id="add-transportation-to" name="to" required maxlength="200" /><div class="planner-board__form-columns"><div><label for="add-transportation-departure-date">Departure date</label><input id="add-transportation-departure-date" type="date" name="departureDate" required /></div><div><label for="add-transportation-departure-time">Departure time <span>(optional)</span></label><input id="add-transportation-departure-time" type="time" name="departureTimeLocal" /></div></div><label for="add-transportation-departure-time-zone">Departure time zone</label><input id="add-transportation-departure-time-zone" name="departureTimeZoneId" required maxlength="100" placeholder="America/Phoenix" /><div class="planner-board__form-columns"><div><label for="add-transportation-arrival-date">Arrival date</label><input id="add-transportation-arrival-date" type="date" name="arrivalDate" required /></div><div><label for="add-transportation-arrival-time">Arrival time <span>(optional)</span></label><input id="add-transportation-arrival-time" type="time" name="arrivalTimeLocal" /></div></div><label for="add-transportation-arrival-time-zone">Arrival time zone</label><input id="add-transportation-arrival-time-zone" name="arrivalTimeZoneId" required maxlength="100" placeholder="Europe/Rome" /><button type="submit">Add proposed transportation</button></form>
+                <form class="planner-board__form" method="post" action="@AddTransportationPath"><AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" /><label for="add-transportation-mode">Mode</label><input id="add-transportation-mode" name="mode" required maxlength="100" placeholder="Flight, rail, cruise, or car" /><label for="add-transportation-from">From</label><input id="add-transportation-from" name="from" required maxlength="200" /><label for="add-transportation-departure-visit">Departure destination context <span>(optional)</span></label><select id="add-transportation-departure-visit" name="departureDestinationVisitId"><option value="">Outside a destination visit</option>@foreach (var destination in Plan.Destinations.OrderBy(item => item.Sequence)){<option value="@destination.Id.Value">@destination.Name</option>}</select><label for="add-transportation-to">To</label><input id="add-transportation-to" name="to" required maxlength="200" /><label for="add-transportation-arrival-visit">Arrival destination context <span>(optional)</span></label><select id="add-transportation-arrival-visit" name="arrivalDestinationVisitId"><option value="">Outside a destination visit</option>@foreach (var destination in Plan.Destinations.OrderBy(item => item.Sequence)){<option value="@destination.Id.Value">@destination.Name</option>}</select><div class="planner-board__form-columns"><div><label for="add-transportation-departure-date">Departure date</label><input id="add-transportation-departure-date" type="date" name="departureDate" required /></div><div><label for="add-transportation-departure-time">Departure time <span>(optional)</span></label><input id="add-transportation-departure-time" type="time" name="departureTimeLocal" /></div></div><label for="add-transportation-departure-time-zone">Departure time zone</label><input id="add-transportation-departure-time-zone" name="departureTimeZoneId" required maxlength="100" placeholder="America/Phoenix" /><div class="planner-board__form-columns"><div><label for="add-transportation-arrival-date">Arrival date</label><input id="add-transportation-arrival-date" type="date" name="arrivalDate" required /></div><div><label for="add-transportation-arrival-time">Arrival time <span>(optional)</span></label><input id="add-transportation-arrival-time" type="time" name="arrivalTimeLocal" /></div></div><label for="add-transportation-arrival-time-zone">Arrival time zone</label><input id="add-transportation-arrival-time-zone" name="arrivalTimeZoneId" required maxlength="100" placeholder="Europe/Rome" /><button type="submit">Add proposed transportation</button></form>
             </details>
         }
+        </div>
     </section>
 
-    <section class="planner-board__card" aria-labelledby="plan-accommodations">
-        <h4 id="plan-accommodations">Accommodations</h4>
+    <section class="@PanelClasses(PlannerWorkspacePanel.Accommodations, "planner-board__card")" aria-labelledby="plan-accommodations">
+        <PlannerPanelHeader Panel="PlannerWorkspacePanel.Accommodations" Title="Accommodations" Summary="@AccommodationSummary" HeadingId="plan-accommodations" ContentId="plan-accommodations-content" IsExpanded="@IsExpanded(PlannerWorkspacePanel.Accommodations)" IsFocused="@IsFocused(PlannerWorkspacePanel.Accommodations)" OnToggle="OnPanelToggle" />
+        <div id="plan-accommodations-content" hidden="@(!IsExpanded(PlannerWorkspacePanel.Accommodations))">
         @Status(AccommodationEditStatusMessage)
         @Status(AccommodationStatusMessage)
-        @if (Plan.Accommodations.Count == 0)
+        @if (SelectedDestination is { } accommodationDestination)
         {
-            <p class="planner-board__empty">No accommodations have been added.</p>
+            <div class="planner-board__itinerary-context" role="status"><span>Showing accommodations for <strong>@accommodationDestination.Name</strong></span><button type="button" @onclick="ShowEntireJourneyAsync">Show all accommodations</button></div>
+        }
+        @if (VisibleAccommodations.Count == 0)
+        {
+            <p class="planner-board__empty">@(SelectedDestination is { } destination ? $"No accommodations are linked to {destination.Name}." : "No accommodations have been added.")</p>
         }
         else
         {
             <ul class="planner-board__summary-list">
-                @foreach (var accommodation in Plan.Accommodations)
+                @foreach (var accommodation in VisibleAccommodations)
                 {
-                    <li>
+                    <li class="planner-board__dated-summary">
+                        <PlannerCalendarThumbnail Date="@accommodation.Dates.Start" EndDate="@accommodation.Dates.End" />
+                        <div class="planner-board__summary-content">
                         <strong>@accommodation.Name</strong>
                         <span>Start date <time datetime="@DateValue(accommodation.Dates.Start)">@FormatDate(accommodation.Dates.Start)</time> · End date <time datetime="@DateValue(accommodation.Dates.End)">@FormatDate(accommodation.Dates.End)</time> · @accommodation.TimeZone</span>
                         <small>@FormatStatus(accommodation.Status)</small>
                         @if (CanEdit)
                         {
                             <details class="planner-board__disclosure planner-board__accommodation-editor" name="planner-board-action">
-                                <summary>Edit accommodation: @accommodation.Name</summary>
+                                <summary aria-label="Edit accommodation: @accommodation.Name"><span aria-hidden="true">Edit</span></summary>
                                 <form class="planner-board__form" method="post" action="@EditAccommodationPath(accommodation.Id)">
                                     <AntiforgeryToken />
                                     <input type="hidden" name="expectedVersion" value="@Plan.Version" />
                                     <label for="@AccommodationFieldId(accommodation.Id, "name")">Accommodation name for @accommodation.Name</label><input id="@AccommodationFieldId(accommodation.Id, "name")" name="name" value="@accommodation.Name" required maxlength="200" autocomplete="off" />
+                                    <label for="@AccommodationFieldId(accommodation.Id, "visit")">Destination context <span>(optional)</span></label><select id="@AccommodationFieldId(accommodation.Id, "visit")" name="destinationVisitId"><option value="">Outside a destination visit</option>@foreach (var destination in Plan.Destinations.OrderBy(item => item.Sequence)){<option value="@destination.Id.Value" selected="@(accommodation.DestinationVisitId == destination.Id)">@destination.Name</option>}</select>
                                     <div class="planner-board__form-columns">
                                         <div><label for="@AccommodationFieldId(accommodation.Id, "start-date")">Start date for @accommodation.Name</label><input id="@AccommodationFieldId(accommodation.Id, "start-date")" type="date" name="startDate" value="@DateValue(accommodation.Dates.Start)" min="@DateValue(Plan.Dates.Start)" max="@DateValue(Plan.Dates.End)" required /></div>
                                         <div><label for="@AccommodationFieldId(accommodation.Id, "end-date")">End date for @accommodation.Name</label><input id="@AccommodationFieldId(accommodation.Id, "end-date")" type="date" name="endDate" value="@DateValue(accommodation.Dates.End)" min="@DateValue(Plan.Dates.Start)" max="@DateValue(Plan.Dates.End)" required /></div>
@@ -231,6 +304,7 @@
                                 </form>
                             </details>
                         }
+                        </div>
                     </li>
                 }
             </ul>
@@ -239,20 +313,25 @@
         {
             <details class="planner-board__disclosure planner-board__action" name="planner-board-action">
                 <summary>Add accommodation</summary>
-                <form class="planner-board__form" method="post" action="@AddAccommodationPath"><AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" /><label for="add-accommodation-name">Accommodation name</label><input id="add-accommodation-name" name="name" required maxlength="200" /><div class="planner-board__form-columns"><div><label for="add-accommodation-start-date">Start date</label><input id="add-accommodation-start-date" type="date" name="startDate" required /></div><div><label for="add-accommodation-end-date">End date</label><input id="add-accommodation-end-date" type="date" name="endDate" required /></div></div><label for="add-accommodation-time-zone">Property time zone</label><input id="add-accommodation-time-zone" name="timeZoneId" required maxlength="100" placeholder="Europe/Rome" /><button type="submit">Add proposed accommodation</button></form>
+                <form class="planner-board__form" method="post" action="@AddAccommodationPath"><AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" /><label for="add-accommodation-name">Accommodation name</label><input id="add-accommodation-name" name="name" required maxlength="200" /><label for="add-accommodation-visit">Destination context <span>(optional)</span></label><select id="add-accommodation-visit" name="destinationVisitId"><option value="">Outside a destination visit</option>@foreach (var destination in Plan.Destinations.OrderBy(item => item.Sequence)){<option value="@destination.Id.Value">@destination.Name</option>}</select><div class="planner-board__form-columns"><div><label for="add-accommodation-start-date">Start date</label><input id="add-accommodation-start-date" type="date" name="startDate" required /></div><div><label for="add-accommodation-end-date">End date</label><input id="add-accommodation-end-date" type="date" name="endDate" required /></div></div><label for="add-accommodation-time-zone">Property time zone</label><input id="add-accommodation-time-zone" name="timeZoneId" required maxlength="100" placeholder="Europe/Rome" /><button type="submit">Add proposed accommodation</button></form>
             </details>
         }
+        </div>
     </section>
 
-    <section class="planner-board__card planner-board__reservations" aria-labelledby="plan-reservations">
-        <h4 id="plan-reservations">Reservation summaries</h4><p class="planner-board__boundary">Credential-free planning summaries only. A summary does not prove a booking or confirmation.</p>@Status(ReservationStatusMessage)
-        @if (Plan.Reservations.Count == 0){<p class="planner-board__empty">No reservation summaries have been added.</p>}else{<ul class="planner-board__summary-list">@foreach(var reservation in Plan.Reservations){<li><strong>@reservation.Subject</strong><small>@FormatStatus(reservation.Status)</small></li>}</ul>}
+    <section class="@PanelClasses(PlannerWorkspacePanel.Reservations, "planner-board__card planner-board__reservations")" aria-labelledby="plan-reservations">
+        <PlannerPanelHeader Panel="PlannerWorkspacePanel.Reservations" Title="Reservation summaries" Summary="@ReservationSummary" HeadingId="plan-reservations" ContentId="plan-reservations-content" IsExpanded="@IsExpanded(PlannerWorkspacePanel.Reservations)" IsFocused="@IsFocused(PlannerWorkspacePanel.Reservations)" OnToggle="OnPanelToggle" />
+        <div id="plan-reservations-content" hidden="@(!IsExpanded(PlannerWorkspacePanel.Reservations))">
+        <p class="planner-board__boundary">Credential-free planning summaries only. A summary does not prove a booking or confirmation.</p>@Status(ReservationStatusMessage)
+        @if (SelectedDestination is { } selectedReservationDestination){<p class="planner-board__context">Showing reservation summaries linked to <strong>@selectedReservationDestination.Name</strong>.</p>}
+        @if (VisibleReservations.Count == 0){<p class="planner-board__empty">@(SelectedDestination is { } destination ? $"No reservation summaries are linked to {destination.Name}." : "No reservation summaries have been added.")</p>}else{<ul class="planner-board__summary-list">@foreach(var reservation in VisibleReservations){<li><strong>@reservation.Subject</strong><small>@FormatStatus(reservation.Status)</small></li>}</ul>}
         @if (CanEdit)
         {
             <details class="planner-board__disclosure planner-board__action" name="planner-board-action">
                 <summary>Add reservation summary</summary>
-                <form class="planner-board__form" method="post" action="@AddReservationPath"><AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" /><label for="add-reservation-subject">Reservation subject</label><input id="add-reservation-subject" name="subject" required maxlength="200" autocomplete="off" placeholder="Hotel, tour, or transportation hold" /><p>Confirmation references are added through a separate protected workflow.</p><button type="submit">Add proposed reservation</button></form>
+                <form class="planner-board__form" method="post" action="@AddReservationPath"><AntiforgeryToken /><input type="hidden" name="expectedVersion" value="@Plan.Version" /><label for="add-reservation-subject">Reservation subject</label><input id="add-reservation-subject" name="subject" required maxlength="200" autocomplete="off" placeholder="Hotel, tour, or transportation hold" /><label for="add-reservation-visit">Destination context <span>(optional)</span></label><select id="add-reservation-visit" name="destinationVisitId"><option value="">Entire Journey</option>@foreach (var destination in Plan.Destinations.OrderBy(item => item.Sequence)){<option value="@destination.Id.Value" selected="@(SelectedDestination?.Id == destination.Id)">@destination.Name</option>}</select><p>Confirmation references are added through a separate protected workflow.</p><button type="submit">Add proposed reservation</button></form>
             </details>
         }
+        </div>
     </section>
 </section>

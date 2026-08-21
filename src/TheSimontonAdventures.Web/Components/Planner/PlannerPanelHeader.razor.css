@@ -1,0 +1,12 @@
+.planner-panel-header { background: var(--planner-shell-surface-muted); border-bottom: 1px solid var(--planner-shell-border); border-left: .25rem solid transparent; margin: -1.25rem -1.25rem 1rem; }
+.planner-panel-header button { align-items: center; background: transparent; border: 0; color: var(--planner-shell-text); cursor: pointer; display: flex; font: inherit; gap: 1rem; justify-content: space-between; padding: .85rem 1rem; text-align: left; width: 100%; }
+.planner-panel-header button:focus-visible { outline: 3px solid var(--planner-shell-focus); outline-offset: -3px; }
+.planner-panel-header__copy { display: flex; flex-direction: column; gap: .18rem; min-width: 0; }
+.planner-panel-header__copy strong { font: 700 1.18rem Georgia, serif; }
+.planner-panel-header__copy small { color: var(--planner-shell-text-muted); font-size: .72rem; }
+.planner-panel-header svg { fill: none; flex: 0 0 auto; height: 1.15rem; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; transform: rotate(-90deg); transition: transform 120ms ease; width: 1.15rem; }
+.planner-panel-header button[aria-expanded="true"] svg { transform: rotate(0); }
+.planner-panel-header--open { background: color-mix(in srgb, var(--planner-shell-accent) 12%, var(--planner-shell-surface)); border-left-color: var(--planner-shell-accent); }
+.planner-panel-header--focused { background: var(--planner-shell-primary); border-left-color: var(--planner-shell-accent); }
+.planner-panel-header--focused button, .planner-panel-header--focused .planner-panel-header__copy small { color: var(--planner-shell-surface); }
+@media (prefers-reduced-motion: reduce) { .planner-panel-header svg { transition: none; } }

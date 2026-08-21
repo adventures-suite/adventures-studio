@@ -22,6 +22,15 @@
         </div>
 
         <button type="button"
+                class="planner-sidebar__collapse-toggle"
+                aria-label="@(IsCollapsed ? "Expand Planner navigation" : "Collapse Planner navigation")"
+                title="@(IsCollapsed ? "Expand navigation" : "Collapse navigation")"
+                aria-expanded="@(!IsCollapsed ? "true" : "false")"
+                @onclick="OnCollapseRequested">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="@(IsCollapsed ? "m9 5 7 7-7 7" : "m15 5-7 7 7 7")" /></svg>
+        </button>
+
+        <button type="button"
                 class="planner-sidebar__mobile-close"
                 aria-label="Close Planner navigation"
                 @onclick="OnMobileCloseRequested">
@@ -102,22 +111,8 @@
     </nav>
 
     <div class="planner-sidebar__controls" aria-label="Navigation panel controls">
-        <button type="button"
-                aria-label="@(IsCollapsed ? "Expand Planner navigation" : "Collapse Planner navigation")"
-                aria-expanded="@(!IsCollapsed ? "true" : "false")"
-                @onclick="OnCollapseRequested">
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="@(IsCollapsed ? "m9 5 7 7-7 7" : "m15 5-7 7 7 7")" /></svg>
-            @if (!IsCollapsed)
-            {
-                <span>Collapse</span>
-            }
-        </button>
-        <button type="button" aria-label="Hide Planner navigation" @onclick="OnHideRequested">
+        <button type="button" aria-label="Hide Planner navigation" title="Hide navigation" @onclick="OnHideRequested">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 12h18M7 8l-4 4 4 4" /></svg>
-            @if (!IsCollapsed)
-            {
-                <span>Hide</span>
-            }
         </button>
     </div>
 

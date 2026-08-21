@@ -43,8 +43,11 @@ public sealed class CreatorWorkspaceDirectoryService(
     ICreatorService creatorService,
     ICreatorMembershipProvider membershipProvider,
     IAuthorizationPolicyEvaluator authorizationPolicyEvaluator,
-    IHostEnvironment hostEnvironment) : ICreatorWorkspaceDirectoryService
+    IHostEnvironment hostEnvironment,
+    IConfiguration? configuration = null) : ICreatorWorkspaceDirectoryService
 {
+    private static readonly CreatorId LocalAlphaCreatorId = new("creator_local_alpha");
+
     /// <inheritdoc />
     public async Task<IReadOnlyList<CreatorWorkspaceChoice>> ListAsync(
         ActorIdentity actor,
@@ -56,15 +59,26 @@ public sealed class CreatorWorkspaceDirectoryService(
         }
 
         var creators = await creatorService.GetAllAsync(cancellationToken);
-        var choices = new List<CreatorWorkspaceChoice>();
-        foreach (var creator in creators
+        var candidates = creators
             .Where(creator => creator.Status == CreatorStatus.Active)
             .Where(creator => hostEnvironment.IsDevelopment() || !creator.DevelopmentOnly)
-            .OrderBy(creator => creator.DisplayName, StringComparer.OrdinalIgnoreCase))
+            .Select(creator => new CreatorWorkspaceChoice(creator.Id, creator.DisplayName))
+            .ToList();
+        if (IsLocalAlphaEnabled()
+            && candidates.All(candidate => candidate.CreatorId != LocalAlphaCreatorId))
+        {
+            candidates.Add(new CreatorWorkspaceChoice(
+                LocalAlphaCreatorId,
+                "Local Alpha Adventures"));
+        }
+
+        var choices = new List<CreatorWorkspaceChoice>();
+        foreach (var candidate in candidates
+            .OrderBy(candidate => candidate.DisplayName, StringComparer.OrdinalIgnoreCase))
         {
             var membership = await membershipProvider.GetMembershipAsync(
                 actor.UserId.Value,
-                creator.Id,
+                candidate.CreatorId,
                 cancellationToken);
             if (membership is null)
             {
@@ -76,16 +90,27 @@ public sealed class CreatorWorkspaceDirectoryService(
                     actor,
                     Permissions.AdventurePlanView,
                     AuthorizationResourceScope.ForCollection(
-                        creator.Id,
+                        candidate.CreatorId,
                         AuthorizationResourceTypes.AdventurePlan),
                     membershipVersion: membership.Version),
                 cancellationToken);
             if (decision.IsAllowed)
             {
-                choices.Add(new CreatorWorkspaceChoice(creator.Id, creator.DisplayName));
+                choices.Add(candidate);
             }
         }
 
         return choices;
     }
+
+    private bool IsLocalAlphaEnabled() =>
+        hostEnvironment.IsDevelopment()
+        && string.Equals(
+            configuration?["Authentication:Mode"],
+            "Development",
+            StringComparison.OrdinalIgnoreCase)
+        && string.Equals(
+            configuration?["ADVENTURESSUITE_LOCAL_ALPHA_ENABLED"],
+            "true",
+            StringComparison.Ordinal);
 }

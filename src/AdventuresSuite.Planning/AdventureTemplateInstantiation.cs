@@ -95,6 +95,8 @@ public sealed record AdventureTemplateActivity(
 /// <param name="ArrivalDayOffset">The zero-based arrival-date offset.</param>
 /// <param name="ArrivalTimeLocal">The optional local arrival time.</param>
 /// <param name="ArrivalTimeZone">The arrival IANA time zone.</param>
+/// <param name="DepartureDestinationKey">The optional template destination from which the segment departs.</param>
+/// <param name="ArrivalDestinationKey">The optional template destination at which the segment arrives.</param>
 public sealed record AdventureTemplateTransportation(
     string Mode,
     string From,
@@ -104,18 +106,22 @@ public sealed record AdventureTemplateTransportation(
     IanaTimeZone DepartureTimeZone,
     int ArrivalDayOffset,
     TimeOnly? ArrivalTimeLocal,
-    IanaTimeZone ArrivalTimeZone);
+    IanaTimeZone ArrivalTimeZone,
+    string? DepartureDestinationKey = null,
+    string? ArrivalDestinationKey = null);
 
 /// <summary>Defines one provider-neutral proposed stay pattern.</summary>
 /// <param name="Name">The proposed accommodation name.</param>
 /// <param name="StartDayOffset">The zero-based inclusive start-date offset.</param>
 /// <param name="EndDayOffset">The zero-based inclusive end-date offset.</param>
 /// <param name="TimeZone">The accommodation IANA time zone.</param>
+/// <param name="DestinationKey">The optional template destination containing the stay.</param>
 public sealed record AdventureTemplateAccommodation(
     string Name,
     int StartDayOffset,
     int EndDayOffset,
-    IanaTimeZone TimeZone);
+    IanaTimeZone TimeZone,
+    string? DestinationKey = null);
 
 /// <summary>Contains a validated immutable blueprint safe for plan materialization.</summary>
 public sealed record AdventureTemplateBlueprint
@@ -387,10 +393,16 @@ public sealed class AdventureTemplateInstantiateService(
                 || !ValidText(item.From, 200) || !ValidText(item.To, 200)
                 || item.DepartureDayOffset < 0
                 || item.ArrivalDayOffset < item.DepartureDayOffset
-                || item.ArrivalDayOffset >= template.DurationDays)
+                || item.ArrivalDayOffset >= template.DurationDays
+                || (item.DepartureDestinationKey is not null
+                    && !destinations.Any(destination => destination.Key == item.DepartureDestinationKey))
+                || (item.ArrivalDestinationKey is not null
+                    && !destinations.Any(destination => destination.Key == item.ArrivalDestinationKey)))
             || accommodations.Any(item => !ValidText(item.Name, 200)
                 || item.StartDayOffset < 0 || item.EndDayOffset < item.StartDayOffset
-                || item.EndDayOffset >= template.DurationDays))
+                || item.EndDayOffset >= template.DurationDays
+                || (item.DestinationKey is not null
+                    && !destinations.Any(destination => destination.Key == item.DestinationKey))))
         {
             return false;
         }
@@ -438,6 +450,8 @@ public sealed class AdventureTemplateInstantiateService(
                 transportation: transportation.Select(item => new TransportationSegment
                 {
                     Id = ids.NewTransportationSegmentId(),
+                    DepartureDestinationVisitId = item.DepartureDestinationKey is null ? null : visitIds[item.DepartureDestinationKey],
+                    ArrivalDestinationVisitId = item.ArrivalDestinationKey is null ? null : visitIds[item.ArrivalDestinationKey],
                     Mode = item.Mode,
                     From = item.From,
                     To = item.To,
@@ -452,6 +466,7 @@ public sealed class AdventureTemplateInstantiateService(
                 accommodations: accommodations.Select(item => new Accommodation
                 {
                     Id = ids.NewAccommodationId(),
+                    DestinationVisitId = item.DestinationKey is null ? null : visitIds[item.DestinationKey],
                     Name = item.Name,
                     Dates = new PlanningDateRange(
                         command.StartDate.AddDays(item.StartDayOffset),

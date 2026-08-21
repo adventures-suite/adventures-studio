@@ -94,7 +94,9 @@ public static class TransportationSegmentAddEndpoints
             || !DateOnly.TryParseExact(form["arrivalDate"], "yyyy-MM-dd",
                 CultureInfo.InvariantCulture, DateTimeStyles.None, out var arrivalDate)
             || !TryReadOptionalTime(form["departureTimeLocal"].ToString(), out var departureTime)
-            || !TryReadOptionalTime(form["arrivalTimeLocal"].ToString(), out var arrivalTime))
+            || !TryReadOptionalTime(form["arrivalTimeLocal"].ToString(), out var arrivalTime)
+            || !TryReadOptionalDestinationVisitId(form["departureDestinationVisitId"], out var departureVisitId)
+            || !TryReadOptionalDestinationVisitId(form["arrivalDestinationVisitId"], out var arrivalVisitId))
         {
             return false;
         }
@@ -104,8 +106,16 @@ public static class TransportationSegmentAddEndpoints
             form["mode"].ToString().Trim(), form["from"].ToString().Trim(),
             form["to"].ToString().Trim(), departureDate, departureTime,
             form["departureTimeZoneId"].ToString().Trim(), arrivalDate, arrivalTime,
-            form["arrivalTimeZoneId"].ToString().Trim());
+            form["arrivalTimeZoneId"].ToString().Trim(), departureVisitId, arrivalVisitId);
         return true;
+    }
+
+    private static bool TryReadOptionalDestinationVisitId(string? value, out DestinationVisitId? visitId)
+    {
+        visitId = null;
+        if (string.IsNullOrWhiteSpace(value)) return true;
+        try { visitId = new(value.Trim()); return true; }
+        catch (ArgumentException) { return false; }
     }
 
     private static bool TryReadOptionalTime(string value, out TimeOnly? time)

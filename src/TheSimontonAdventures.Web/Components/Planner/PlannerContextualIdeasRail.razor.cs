@@ -115,12 +115,14 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
     private bool FocusCloseAfterRender { get; set; }
     private bool FocusOpenAfterRender { get; set; }
     private IJSObjectReference? PreferenceModule { get; set; }
+    private DotNetObjectReference<PlannerContextualIdeasRail>? DragDropReference { get; set; }
 
     [Inject]
     private IJSRuntime JavaScript { get; set; } = null!;
     private string? PreviousContextKey { get; set; }
     private string? SelectedType { get; set; }
     private HashSet<string> SelectedFacets { get; } = new(StringComparer.Ordinal);
+    private HashSet<string> SelectedExplorationAreas { get; } = new(StringComparer.Ordinal);
     private int? MinimumDays { get; set; }
     private int? MaximumDays { get; set; }
     private int PageSize { get; set; } = 3;
@@ -151,6 +153,12 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
     /// <summary>Gets or sets the protected Destination FootStep application path.</summary>
     [Parameter]
     public string ApplyDestinationPath { get; set; } = string.Empty;
+    /// <summary>Gets or sets the protected manual activity creation path.</summary>
+    [Parameter]
+    public string AddActivityPath { get; set; } = string.Empty;
+    /// <summary>Gets or sets the authorized itinerary-day targets for the selected context.</summary>
+    [Parameter]
+    public IReadOnlyList<PlannerActivityTarget> ActivityTargets { get; set; } = [];
     /// <summary>Gets or sets safe Post/Redirect/Get feedback for FootStep application.</summary>
     [Parameter]
     public string? ApplicationStatusMessage { get; set; }
@@ -166,6 +174,15 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
     /// <summary>Gets or sets the callback that restores whole-Adventure context.</summary>
     [Parameter]
     public EventCallback OnAdventureContextRequested { get; set; }
+    /// <summary>Gets or sets the callback raised when an applicable destination FootStep begins dragging.</summary>
+    [Parameter]
+    public EventCallback<PlannerFootStepDefinition> OnDestinationDragStarted { get; set; }
+    /// <summary>Gets or sets the callback raised when destination FootStep dragging ends.</summary>
+    [Parameter]
+    public EventCallback OnDestinationDragEnded { get; set; }
+    /// <summary>Gets or sets the callback raised after a dropped catalog item is revalidated.</summary>
+    [Parameter]
+    public EventCallback<PlannerFootStepDefinition> OnDestinationDropped { get; set; }
     /// <summary>Gets whether the desktop rail is collapsed.</summary>
     public bool IsCollapsed { get; private set; }
     /// <summary>Gets whether the narrow-screen drawer is open.</summary>
@@ -187,7 +204,11 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
         ? Ideas
         : Ideas.Where(idea => idea.Kind == SelectedType).ToArray();
     /// <summary>Gets the cards matching every selected stable facet.</summary>
-    internal IReadOnlyList<PlannerFootStepDefinition> FacetedIdeas => FilteredIdeas
+    internal IReadOnlyList<PlannerFootStepDefinition> GeographicallyFilteredIdeas => SelectedExplorationAreas.Count == 0
+        ? FilteredIdeas
+        : FilteredIdeas.Where(MatchesExplorationArea).ToArray();
+    /// <summary>Gets the cards matching every selected stable facet.</summary>
+    internal IReadOnlyList<PlannerFootStepDefinition> FacetedIdeas => GeographicallyFilteredIdeas
         .Where(MatchesSelectedFacets)
         .Where(item => !MinimumDays.HasValue || item.DurationDays >= MinimumDays)
         .Where(item => !MaximumDays.HasValue || item.DurationDays <= MaximumDays)
@@ -199,7 +220,10 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
         PlannerFootStepSort.ShortestDuration => FacetedIdeas.OrderBy(item => item.DurationDays ?? int.MaxValue).ThenBy(item => item.Title, StringComparer.Ordinal).ToArray(),
         PlannerFootStepSort.LongestDuration => FacetedIdeas.OrderByDescending(item => item.DurationDays ?? int.MinValue).ThenBy(item => item.Title, StringComparer.Ordinal).ToArray(),
         PlannerFootStepSort.Source => FacetedIdeas.OrderBy(item => item.Attribution, StringComparer.Ordinal).ThenBy(item => item.Title, StringComparer.Ordinal).ToArray(),
-        _ => FacetedIdeas
+        _ => SelectedExplorationAreas.Count == 0
+            ? FacetedIdeas
+            : FacetedIdeas.OrderByDescending(GeographicMatchScore)
+                .ThenBy(item => item.Title, StringComparer.Ordinal).ToArray()
     };
     /// <summary>Gets the FootSteps visible on the selected page.</summary>
     internal IReadOnlyList<PlannerFootStepDefinition> PagedIdeas => SortedIdeas
@@ -219,6 +243,7 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
 
     private ElementReference OpenButton { get; set; }
     private ElementReference CloseButton { get; set; }
+    private ElementReference RailElement { get; set; }
     private void ToggleCollapsed() => IsCollapsed = !IsCollapsed;
     private void SelectType(string? type)
     {
@@ -226,6 +251,38 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
         CurrentPage = 1;
     }
     private Task ShowWholeAdventureAsync() => OnAdventureContextRequested.InvokeAsync();
+    private bool CanDrag(PlannerFootStepDefinition item) =>
+        CanEdit && item.DestinationDraft is not null && !string.IsNullOrWhiteSpace(ApplyDestinationPath);
+    private string DraggableValue(PlannerFootStepDefinition item) => CanDrag(item) ? "true" : "false";
+    private Task BeginDestinationDragAsync(PlannerFootStepDefinition item) =>
+        CanDrag(item) ? OnDestinationDragStarted.InvokeAsync(item) : Task.CompletedTask;
+    private Task EndDestinationDragAsync() => OnDestinationDragEnded.InvokeAsync();
+
+    /// <summary>Revalidates an untrusted browser drop against authorized destination FootSteps.</summary>
+    [JSInvokable]
+    public Task HandleDestinationFootStepDropAsync(string footStepId)
+    {
+        var item = AuthorizedItems.FirstOrDefault(candidate =>
+            string.Equals(candidate.Id, footStepId, StringComparison.Ordinal));
+        return item is not null && CanDrag(item)
+            ? OnDestinationDropped.InvokeAsync(item)
+            : Task.CompletedTask;
+    }
+
+    /// <summary>Revalidates a pointer drag start before exposing a drop target.</summary>
+    [JSInvokable]
+    public Task HandleDestinationFootStepDragStartedAsync(string footStepId)
+    {
+        var item = AuthorizedItems.FirstOrDefault(candidate =>
+            string.Equals(candidate.Id, footStepId, StringComparison.Ordinal));
+        return item is not null && CanDrag(item)
+            ? OnDestinationDragStarted.InvokeAsync(item)
+            : Task.CompletedTask;
+    }
+
+    /// <summary>Ends the transient pointer drag presentation without changing the Journey.</summary>
+    [JSInvokable]
+    public Task HandleDestinationFootStepDragEndedAsync() => OnDestinationDragEnded.InvokeAsync();
 
     /// <inheritdoc />
     protected override void OnParametersSet()
@@ -236,6 +293,7 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
             PreviousContextKey = contextKey;
             SelectedType = null;
             SelectedFacets.Clear();
+            SelectedExplorationAreas.Clear();
             MinimumDays = null;
             MaximumDays = null;
             SortBy = PlannerFootStepSort.Catalog;
@@ -282,6 +340,13 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
         if (Enum.TryParse<PlannerFootStepGrouping>(args.Value?.ToString(), out var value)) GroupBy = value;
     }
     private void ChangeView(PlannerFootStepView view) => ViewType = view;
+    private Task ChangeExplorationAreasAsync(IReadOnlySet<string> selectedAreas)
+    {
+        SelectedExplorationAreas.Clear();
+        SelectedExplorationAreas.UnionWith(selectedAreas);
+        CurrentPage = 1;
+        return Task.CompletedTask;
+    }
     private string GroupKey(PlannerFootStepDefinition item) => GroupBy switch
     {
         PlannerFootStepGrouping.Kind => item.Kind,
@@ -308,7 +373,12 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
         .Concat(Options("language", item.Languages)).ToHashSet();
     private static IEnumerable<PlannerFacetOption> Options(string group, IEnumerable<string> values) =>
         values.Select(value => new PlannerFacetOption(group, value));
-    private static string DisplayFacet(string value) => string.Join(' ', value.Split('-'));
+    private static string DisplayFacet(string value) => value switch
+    {
+        "journey-pattern" => "Journey Blueprint",
+        "route-pattern" => "Route Style",
+        _ => string.Join(' ', value.Split('-'))
+    };
     private static string DisplayValues(IEnumerable<string> values)
     {
         var labels = values.OrderBy(value => value, StringComparer.Ordinal).Select(DisplayFacet).ToArray();
@@ -344,6 +414,36 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
         PlannerIdeasContextKind.Destination => "Matches the selected destination visit.",
         _ => "Helps develop the whole Adventure."
     };
+    private string EmptyMatchMessage => SelectedExplorationAreas.Count == 0
+        ? "Your plan is unchanged. Remove a filter or clear all filters to see more inspiration."
+        : "Your plan is unchanged. Explore another region or use Add destination to enter a place manually.";
+    private bool MatchesExplorationArea(PlannerFootStepDefinition item) =>
+        SelectedExplorationAreas.Any(selectedArea => item.Places.Any(place =>
+            PlannerJourneyExplorationFocus.AreaIsSameOrDescendant(
+                PlannerJourneyExplorationFocus.DefaultAreas, place, selectedArea)));
+    private int GeographicMatchScore(PlannerFootStepDefinition item) => item.Places
+        .SelectMany(place => SelectedExplorationAreas.Select(selected => GeographicMatchScore(place, selected)))
+        .DefaultIfEmpty(0)
+        .Max();
+    private static int GeographicMatchScore(string place, string selected) =>
+        string.Equals(place, selected, StringComparison.Ordinal) ? 3
+        : PlannerJourneyExplorationFocus.AreaIsSameOrDescendant(
+            PlannerJourneyExplorationFocus.DefaultAreas, place, selected) ? 2
+        : 0;
+    private string WhyThisFootStep(PlannerFootStepDefinition item)
+    {
+        if (SelectedExplorationAreas.Count == 0)
+        {
+            return ContextReason;
+        }
+
+        var matches = SelectedExplorationAreas
+            .Where(selected => item.Places.Any(place => PlannerJourneyExplorationFocus.AreaIsSameOrDescendant(
+                PlannerJourneyExplorationFocus.DefaultAreas, place, selected)))
+            .Select(selected => PlannerJourneyExplorationFocus.DefaultAreas.First(area => area.Id == selected).Name)
+            .ToArray();
+        return $"Matches your {string.Join(" and ", matches)} exploration focus.";
+    }
     private async Task ChangePageSizeAsync(int pageSize)
     {
         PageSize = pageSize;
@@ -380,6 +480,9 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
         {
             PreferenceModule = await JavaScript.InvokeAsync<IJSObjectReference>(
                 "import", "./js/plannerPreferences.js");
+            DragDropReference = DotNetObjectReference.Create(this);
+            await PreferenceModule.InvokeVoidAsync(
+                "enableDestinationDragDrop", RailElement, DragDropReference);
             var savedPageSize = await PreferenceModule.InvokeAsync<int?>(
                 "readPageSize", PageSizePreferenceKey);
             if (savedPageSize is { } value && RailPageSizeOptions.Contains(value) && value != PageSize)
@@ -453,6 +556,7 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
         {
             try
             {
+                await PreferenceModule.InvokeVoidAsync("disableDestinationDragDrop", RailElement);
                 await PreferenceModule.DisposeAsync();
             }
             catch (JSDisconnectedException)
@@ -460,6 +564,8 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
                 // Browser teardown already owns the disconnected module.
             }
         }
+
+        DragDropReference?.Dispose();
 
         GC.SuppressFinalize(this);
     }

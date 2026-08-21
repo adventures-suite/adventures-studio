@@ -102,7 +102,9 @@ public static class TransportationSegmentEditEndpoints
             || !TryReadOptionalTime(
                 form["departureTimeLocal"].ToString(), out var departureTime)
             || !TryReadOptionalTime(
-                form["arrivalTimeLocal"].ToString(), out var arrivalTime))
+                form["arrivalTimeLocal"].ToString(), out var arrivalTime)
+            || !TryReadOptionalDestinationVisitId(form["departureDestinationVisitId"], out var departureVisitId)
+            || !TryReadOptionalDestinationVisitId(form["arrivalDestinationVisitId"], out var arrivalVisitId))
         {
             return false;
         }
@@ -112,7 +114,7 @@ public static class TransportationSegmentEditEndpoints
             form["mode"].ToString().Trim(), form["from"].ToString().Trim(),
             form["to"].ToString().Trim(), departureDate, departureTime,
             form["departureTimeZoneId"].ToString().Trim(), arrivalDate, arrivalTime,
-            form["arrivalTimeZoneId"].ToString().Trim());
+            form["arrivalTimeZoneId"].ToString().Trim(), departureVisitId, arrivalVisitId);
         return true;
     }
 
@@ -132,6 +134,14 @@ public static class TransportationSegmentEditEndpoints
 
         time = parsed;
         return true;
+    }
+
+    private static bool TryReadOptionalDestinationVisitId(string? value, out DestinationVisitId? visitId)
+    {
+        visitId = null;
+        if (string.IsNullOrWhiteSpace(value)) return true;
+        try { visitId = new(value.Trim()); return true; }
+        catch (ArgumentException) { return false; }
     }
 
     private static void Redirect(HttpContext context, string location)

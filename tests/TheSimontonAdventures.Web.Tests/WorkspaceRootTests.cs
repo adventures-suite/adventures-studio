@@ -55,14 +55,25 @@ public sealed class WorkspaceRootTests
     [Fact]
     public async Task AuthenticatedWorkspace_RendersProtectedPostSignOut()
     {
-        var html = await RenderAsync(new ClaimsPrincipal(new ClaimsIdentity(
-            [new Claim(ClaimTypes.NameIdentifier, "opaque-user")],
-            authenticationType: "test")));
+        var html = await RenderAsync(
+            ApplicationPrincipal(),
+            "/workspace/creators/creator_tsa_01/plans",
+            services =>
+            {
+                services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>();
+                services.AddSingleton<IPlannerWorkspaceQueryService>(
+                    new StubPlannerWorkspaceQueryService(PlannerWorkspaceResult.Allowed([])));
+            });
 
-        Assert.Contains("You are signed in", html);
+        Assert.Contains("Private workspace", html);
+        Assert.Contains("Authorization is verified before private plan data is read.", html);
+        Assert.DoesNotContain("You are signed in to the private workspace.", html);
         Assert.Contains("method=\"post\"", html);
         Assert.Contains("action=\"/authentication/sign-out\"", html);
-        Assert.DoesNotContain("opaque-user", html);
+        Assert.Contains(
+            "name=\"returnUrl\" value=\"/workspace/creators/creator_tsa_01/plans\"",
+            html);
+        Assert.DoesNotContain("user_alpha_01", html);
     }
 
     /// <summary>A sole authorized Creator renders direct new and existing Adventure entry points.</summary>
@@ -307,6 +318,9 @@ public sealed class WorkspaceRootTests
             });
 
         Assert.Contains("Spain and Atlantic", html);
+        Assert.Contains("Journey cover", html);
+        Assert.Contains("Passports and travel keepsakes representing the beginning of a Journey", html, StringComparison.Ordinal);
+        Assert.Contains("Illustrative placeholder", html, StringComparison.Ordinal);
         Assert.Contains("Madrid", html);
         Assert.Contains("Prado Museum", html);
         Assert.Contains("Sensitive confirmation references", html);
@@ -368,6 +382,8 @@ public sealed class WorkspaceRootTests
             });
 
         Assert.Contains("action=\"/workspace/creators/creator_alpha_01/plans/plan_spain_2027/overview\"", html);
+        Assert.Contains("planner-panel--focused", html, StringComparison.Ordinal);
+        Assert.Equal(5, Count(html, "planner-board__panel--collapsed"));
         Assert.Contains("name=\"expectedVersion\" value=\"7\"", html);
         Assert.Contains("name=\"title\" value=\"Spain and Atlantic\"", html);
         Assert.Contains("name=\"description\"", html);

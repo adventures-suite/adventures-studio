@@ -1,10 +1,13 @@
 .planner-sidebar {
-    position: relative;
+    position: sticky;
+    top: 0;
     display: flex;
     flex-direction: column;
     gap: 1rem;
     width: var(--planner-sidebar-width);
-    min-height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
     padding: 1.25rem .8rem 1rem;
     background: var(--planner-shell-surface);
     border-right: 1px solid var(--planner-shell-border);
@@ -17,20 +20,23 @@
     display: flex;
     align-items: center;
 }
-.planner-sidebar__header { justify-content: space-between; gap: .5rem; min-height: 3rem; }
+.planner-sidebar__header { gap: .5rem; min-height: 3rem; }
 .planner-sidebar__brand { gap: .65rem; min-width: 0; }
+.planner-sidebar__collapse-toggle { flex: 0 0 auto; margin-left: auto; }
 .planner-sidebar__brand-mark { width: 2rem; height: 2rem; fill: none; stroke: currentColor; stroke-width: 2; }
 .planner-sidebar__brand-name { font-size: .76rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; }
-.planner-sidebar__nav { flex: 1; padding-top: .5rem; }
+.planner-sidebar__nav { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: .5rem .15rem; scrollbar-width: thin; }
 .planner-sidebar__current { gap: .7rem; border-radius: .8rem; background: var(--planner-shell-hover); padding: .72rem .8rem; font-weight: 700; }
 .planner-sidebar__applications { display: grid; gap: .4rem; margin-top: .65rem; }
 .planner-sidebar__applications button, .planner-sidebar__applications a { align-items: center; display: grid; gap: .65rem; grid-template-columns: 1.15rem minmax(0, 1fr) auto; text-align: left; }
 .planner-sidebar__applications button:disabled { cursor: not-allowed; opacity: .62; }
 .planner-sidebar__applications small { font-size: .66rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
 .planner-sidebar__icon { width: 1.15rem; height: 1.15rem; min-width: 1.15rem; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
-.planner-sidebar__controls { display: grid; gap: .5rem; }
-.planner-sidebar__controls button { gap: .55rem; width: 100%; }
+.planner-sidebar__controls { align-self: center; display: flex; flex: 0 0 auto; gap: .35rem; }
+.planner-sidebar__controls button, .planner-sidebar__collapse-toggle { background: transparent; border: 0; border-radius: 999px; display: inline-grid; height: 2.35rem; padding: 0; place-items: center; width: 2.35rem; }
+.planner-sidebar__controls button:hover, .planner-sidebar__collapse-toggle:hover { background: var(--planner-shell-hover); }
 .planner-sidebar button, .planner-sidebar__applications a { min-height: 2.5rem; border: 1px solid var(--planner-shell-border); border-radius: .65rem; background: transparent; color: inherit; cursor: pointer; padding: .45rem .65rem; text-decoration: none; }
+.planner-sidebar .planner-sidebar__collapse-toggle, .planner-sidebar .planner-sidebar__controls button { background: transparent; border: 0; border-radius: 999px; min-height: 2.35rem; padding: 0; }
 .planner-sidebar button:hover, .planner-sidebar button:focus-visible, .planner-sidebar__applications a:hover, .planner-sidebar__applications a:focus-visible, .planner-sidebar__separator:focus-visible { outline: 3px solid var(--planner-shell-focus); outline-offset: 2px; }
 .planner-sidebar button svg, .planner-sidebar__mobile-close svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
 .planner-sidebar__resize-controls { justify-content: space-between; gap: .4rem; font-size: .8rem; }
@@ -40,12 +46,13 @@
 .planner-sidebar--collapsed .planner-sidebar__current, .planner-sidebar--collapsed .planner-sidebar__controls button { justify-content: center; }
 .planner-sidebar--collapsed .planner-sidebar__applications { justify-items: center; }
 .planner-sidebar--collapsed .planner-sidebar__applications button, .planner-sidebar--collapsed .planner-sidebar__applications a { display: inline-grid; height: 2.75rem; padding: 0; place-items: center; width: 2.75rem; }
-.planner-sidebar--collapsed .planner-sidebar__header { min-height: 0; }
+.planner-sidebar--collapsed .planner-sidebar__header { min-height: 2.75rem; }
 .planner-sidebar--collapsed .planner-sidebar__brand { display: none; }
+.planner-sidebar--collapsed .planner-sidebar__collapse-toggle { margin: 0 auto; }
 .planner-sidebar--collapsed .planner-sidebar__nav { padding-top: 0; }
-.planner-sidebar--collapsed .planner-sidebar__current, .planner-sidebar--collapsed .planner-sidebar__controls button { height: 2.75rem; padding: 0; width: 2.75rem; }
+.planner-sidebar--collapsed .planner-sidebar__current { height: 2.75rem; padding: 0; width: 2.75rem; }
 .planner-sidebar--collapsed .planner-sidebar__icon { height: 1.35rem; min-width: 1.35rem; width: 1.35rem; }
-.planner-sidebar--collapsed .planner-sidebar__controls { justify-items: center; }
+.planner-sidebar--collapsed .planner-sidebar__controls { align-items: center; flex-direction: column; }
 
 @media (max-width: 52rem) {
     .planner-sidebar {

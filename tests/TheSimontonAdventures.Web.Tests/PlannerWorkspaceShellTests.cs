@@ -24,7 +24,10 @@ public sealed class PlannerWorkspaceShellTests
         Assert.Contains("aria-label=\"Planner navigation\"", html, StringComparison.Ordinal);
         Assert.Contains("aria-controls=\"planner-workspace-sidebar\"", html, StringComparison.Ordinal);
         Assert.Contains("aria-expanded=\"false\"", html, StringComparison.Ordinal);
-        Assert.Contains("aria-label=\"Planner color theme\"", html, StringComparison.Ordinal);
+        Assert.Contains("aria-label=\"Account and appearance\"", html, StringComparison.Ordinal);
+        Assert.Contains("aria-expanded=\"false\"", html, StringComparison.Ordinal);
+        Assert.Contains(">Appearance</legend>", html, StringComparison.Ordinal);
+        Assert.Contains("aria-pressed=\"true\"", html, StringComparison.Ordinal);
         Assert.Contains("Authorized plan content", html, StringComparison.Ordinal);
         Assert.DoesNotContain(">Destinations<", html, StringComparison.Ordinal);
         Assert.DoesNotContain(">Settings<", html, StringComparison.Ordinal);
@@ -65,6 +68,7 @@ public sealed class PlannerWorkspaceShellTests
         Assert.Contains("@onclick:preventDefault=\"true\"", markup, StringComparison.Ordinal);
         Assert.Contains("@ref=\"MainContent\"", markup, StringComparison.Ordinal);
         Assert.Contains("tabindex=\"-1\"", markup, StringComparison.Ordinal);
+        Assert.Contains("IsCollapsed=\"@(IsMobileNavigationOpen ? false : IsSidebarCollapsed)\"", markup, StringComparison.Ordinal);
         Assert.Contains("FocusModule.InvokeVoidAsync(\"focusElement\", MainContent)", codeBehind, StringComparison.Ordinal);
         Assert.Contains("Navigation.ToBaseRelativePath(Navigation.Uri)", codeBehind, StringComparison.Ordinal);
         var focusModule = File.ReadAllText(Path.Combine(

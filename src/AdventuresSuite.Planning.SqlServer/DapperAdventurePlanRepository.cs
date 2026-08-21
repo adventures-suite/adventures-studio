@@ -84,14 +84,14 @@ internal sealed class DapperAdventurePlanRepository(
             SELECT PlannedActivityId,ItineraryDayId,Title,StartsAtLocal,EndsAtLocal,Status
               FROM planning.PlannedActivities
              WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY ItineraryDayId,StartsAtLocal,PlannedActivityId;
-            SELECT TransportationSegmentId,Mode,Origin,Destination,DepartureDate,DepartureTimeLocal,
+            SELECT TransportationSegmentId,DepartureDestinationVisitId,ArrivalDestinationVisitId,Mode,Origin,Destination,DepartureDate,DepartureTimeLocal,
                    DepartureTimeZone,ArrivalDate,ArrivalTimeLocal,ArrivalTimeZone,Status
               FROM planning.TransportationSegments
              WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY DepartureDate,DepartureTimeLocal,TransportationSegmentId;
-            SELECT AccommodationId,Name,StartDate,EndDate,TimeZone,Status
+            SELECT AccommodationId,DestinationVisitId,Name,StartDate,EndDate,TimeZone,Status
               FROM planning.Accommodations
              WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY StartDate,AccommodationId;
-            SELECT ReservationId,Subject,Status
+            SELECT ReservationId,DestinationVisitId,Subject,Status
               FROM planning.Reservations
              WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY ReservationId;
             """;
@@ -136,13 +136,17 @@ internal sealed class DapperAdventurePlanRepository(
                 DateOnly.FromDateTime(row.DepartureDate), ToTimeOnly(row.DepartureTimeLocal),
                 new(row.DepartureTimeZone), DateOnly.FromDateTime(row.ArrivalDate),
                 ToTimeOnly(row.ArrivalTimeLocal), new(row.ArrivalTimeZone),
-                Enum.Parse<PlanItemStatus>(row.Status))).ToArray(),
+                Enum.Parse<PlanItemStatus>(row.Status),
+                row.DepartureDestinationVisitId is null ? null : new(row.DepartureDestinationVisitId),
+                row.ArrivalDestinationVisitId is null ? null : new(row.ArrivalDestinationVisitId))).ToArray(),
             Accommodations = accommodations.Select(row => new AccommodationDetail(
                 new(row.AccommodationId), row.Name, Range(row.StartDate, row.EndDate),
-                new(row.TimeZone), Enum.Parse<PlanItemStatus>(row.Status))).ToArray(),
+                new(row.TimeZone), Enum.Parse<PlanItemStatus>(row.Status),
+                row.DestinationVisitId is null ? null : new(row.DestinationVisitId))).ToArray(),
             Reservations = reservations.Select(row => new ReservationDetail(
                 new(row.ReservationId), row.Subject,
-                Enum.Parse<PlanItemStatus>(row.Status))).ToArray()
+                Enum.Parse<PlanItemStatus>(row.Status),
+                row.DestinationVisitId is null ? null : new(row.DestinationVisitId))).ToArray()
         };
     }
 
@@ -160,9 +164,9 @@ internal sealed class DapperAdventurePlanRepository(
             SELECT DestinationVisitId,Name,StartDate,EndDate,TimeZone,Sequence,Notes FROM planning.DestinationVisits WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY Sequence;
             SELECT ItineraryDayId,DestinationVisitId,LocalDate,TimeZone,Title FROM planning.ItineraryDays WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY LocalDate;
             SELECT PlannedActivityId,ItineraryDayId,Title,StartsAtLocal,EndsAtLocal,Status FROM planning.PlannedActivities WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY PlannedActivityId;
-            SELECT TransportationSegmentId,Mode,Origin,Destination,DepartureDate,DepartureTimeLocal,DepartureTimeZone,ArrivalDate,ArrivalTimeLocal,ArrivalTimeZone,Status FROM planning.TransportationSegments WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY DepartureDate, TransportationSegmentId;
-            SELECT AccommodationId,Name,StartDate,EndDate,TimeZone,Status FROM planning.Accommodations WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY StartDate, AccommodationId;
-            SELECT ReservationId,Subject,ConfirmationReference,Status FROM planning.Reservations WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY ReservationId;
+            SELECT TransportationSegmentId,DepartureDestinationVisitId,ArrivalDestinationVisitId,Mode,Origin,Destination,DepartureDate,DepartureTimeLocal,DepartureTimeZone,ArrivalDate,ArrivalTimeLocal,ArrivalTimeZone,Status FROM planning.TransportationSegments WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY DepartureDate, TransportationSegmentId;
+            SELECT AccommodationId,DestinationVisitId,Name,StartDate,EndDate,TimeZone,Status FROM planning.Accommodations WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY StartDate, AccommodationId;
+            SELECT ReservationId,DestinationVisitId,Subject,ConfirmationReference,Status FROM planning.Reservations WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY ReservationId;
             SELECT PlanningNoteId,NoteText FROM planning.PlanningNotes WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY PlanningNoteId;
             SELECT PlanningTaskId,Description,DueDate,IsCompleted FROM planning.PlanningTasks WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY DueDate, PlanningTaskId;
             SELECT BudgetItemId,Description,Amount,CurrencyCode FROM planning.BudgetItems WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId ORDER BY BudgetItemId;
@@ -654,12 +658,18 @@ internal sealed class DapperAdventurePlanRepository(
             }
 
             await ExecuteAsync(
-                "INSERT planning.TransportationSegments VALUES (@CreatorId,@PlanId,@Id,@Mode,@From,@To,@DepartureDate,@DepartureTime,@DepartureZone,@ArrivalDate,@ArrivalTime,@ArrivalZone,@Status);",
+                """
+                INSERT planning.TransportationSegments
+                    (CreatorId,AdventurePlanId,TransportationSegmentId,DepartureDestinationVisitId,ArrivalDestinationVisitId,Mode,Origin,Destination,DepartureDate,DepartureTimeLocal,DepartureTimeZone,ArrivalDate,ArrivalTimeLocal,ArrivalTimeZone,Status)
+                VALUES (@CreatorId,@PlanId,@Id,@DepartureVisitId,@ArrivalVisitId,@Mode,@From,@To,@DepartureDate,@DepartureTime,@DepartureZone,@ArrivalDate,@ArrivalTime,@ArrivalZone,@Status);
+                """,
                 new
                 {
                     CreatorId = creatorId.Value,
                     PlanId = plan.Id.Value,
                     Id = segment.Id.Value,
+                    DepartureVisitId = segment.DepartureDestinationVisitId?.Value,
+                    ArrivalVisitId = segment.ArrivalDestinationVisitId?.Value,
                     segment.Mode,
                     segment.From,
                     segment.To,
@@ -716,7 +726,9 @@ internal sealed class DapperAdventurePlanRepository(
 
             var segmentRows = await connection.ExecuteAsync(Command("""
                 UPDATE planning.TransportationSegments
-                   SET Mode=@Mode, Origin=@From, Destination=@To,
+                   SET DepartureDestinationVisitId=@DepartureVisitId,
+                       ArrivalDestinationVisitId=@ArrivalVisitId,
+                       Mode=@Mode, Origin=@From, Destination=@To,
                        DepartureDate=@DepartureDate, DepartureTimeLocal=@DepartureTime,
                        DepartureTimeZone=@DepartureZone, ArrivalDate=@ArrivalDate,
                        ArrivalTimeLocal=@ArrivalTime, ArrivalTimeZone=@ArrivalZone
@@ -727,6 +739,8 @@ internal sealed class DapperAdventurePlanRepository(
                 CreatorId = creatorId.Value,
                 PlanId = plan.Id.Value,
                 Id = segment.Id.Value,
+                DepartureVisitId = segment.DepartureDestinationVisitId?.Value,
+                ArrivalVisitId = segment.ArrivalDestinationVisitId?.Value,
                 segment.Mode,
                 segment.From,
                 segment.To,
@@ -786,12 +800,17 @@ internal sealed class DapperAdventurePlanRepository(
             }
 
             await ExecuteAsync(
-                "INSERT planning.Accommodations VALUES (@CreatorId,@PlanId,@Id,@Name,@Start,@End,@Zone,@Status);",
+                """
+                INSERT planning.Accommodations
+                    (CreatorId,AdventurePlanId,AccommodationId,DestinationVisitId,Name,StartDate,EndDate,TimeZone,Status)
+                VALUES (@CreatorId,@PlanId,@Id,@VisitId,@Name,@Start,@End,@Zone,@Status);
+                """,
                 new
                 {
                     CreatorId = creatorId.Value,
                     PlanId = plan.Id.Value,
                     Id = accommodation.Id.Value,
+                    VisitId = accommodation.DestinationVisitId?.Value,
                     accommodation.Name,
                     Start = accommodation.Dates.Start.ToDateTime(TimeOnly.MinValue),
                     End = accommodation.Dates.End.ToDateTime(TimeOnly.MinValue),
@@ -843,7 +862,7 @@ internal sealed class DapperAdventurePlanRepository(
 
             var accommodationRows = await connection.ExecuteAsync(Command("""
                 UPDATE planning.Accommodations
-                   SET Name=@Name, StartDate=@Start, EndDate=@End, TimeZone=@Zone
+                   SET DestinationVisitId=@VisitId, Name=@Name, StartDate=@Start, EndDate=@End, TimeZone=@Zone
                  WHERE CreatorId=@CreatorId AND AdventurePlanId=@PlanId
                    AND AccommodationId=@Id;
                 """, new
@@ -851,6 +870,7 @@ internal sealed class DapperAdventurePlanRepository(
                 CreatorId = creatorId.Value,
                 PlanId = plan.Id.Value,
                 Id = accommodation.Id.Value,
+                VisitId = accommodation.DestinationVisitId?.Value,
                 accommodation.Name,
                 Start = accommodation.Dates.Start.ToDateTime(TimeOnly.MinValue),
                 End = accommodation.Dates.End.ToDateTime(TimeOnly.MinValue),
@@ -906,12 +926,13 @@ internal sealed class DapperAdventurePlanRepository(
             }
 
             await ExecuteAsync(
-                "INSERT planning.Reservations VALUES (@CreatorId,@PlanId,@Id,@Subject,NULL,@Status);",
+                "INSERT planning.Reservations (CreatorId,AdventurePlanId,ReservationId,DestinationVisitId,Subject,ConfirmationReference,Status) VALUES (@CreatorId,@PlanId,@Id,@VisitId,@Subject,NULL,@Status);",
                 new
                 {
                     CreatorId = creatorId.Value,
                     PlanId = plan.Id.Value,
                     Id = reservation.Id.Value,
+                    VisitId = reservation.DestinationVisitId?.Value,
                     reservation.Subject,
                     Status = reservation.Status.ToString()
                 }, cancellationToken);
@@ -948,14 +969,14 @@ internal sealed class DapperAdventurePlanRepository(
             await ExecuteAsync("INSERT planning.PlannedActivities VALUES (@CreatorId,@PlanId,@Id,@DayId,@Title,@Start,@End,@Status);",
                 new { owner.CreatorId, owner.PlanId, Id = item.Id.Value, DayId = item.ItineraryDayId.Value, item.Title, Start = item.StartsAtLocal?.ToTimeSpan(), End = item.EndsAtLocal?.ToTimeSpan(), Status = item.Status.ToString() }, cancellationToken);
         foreach (var item in plan.Transportation)
-            await ExecuteAsync("INSERT planning.TransportationSegments VALUES (@CreatorId,@PlanId,@Id,@Mode,@From,@To,@DepartureDate,@DepartureTime,@DepartureZone,@ArrivalDate,@ArrivalTime,@ArrivalZone,@Status);",
-                new { owner.CreatorId, owner.PlanId, Id = item.Id.Value, item.Mode, item.From, item.To, DepartureDate = item.DepartureDate.ToDateTime(TimeOnly.MinValue), DepartureTime = item.DepartureTimeLocal?.ToTimeSpan(), DepartureZone = item.DepartureTimeZone.Value, ArrivalDate = item.ArrivalDate.ToDateTime(TimeOnly.MinValue), ArrivalTime = item.ArrivalTimeLocal?.ToTimeSpan(), ArrivalZone = item.ArrivalTimeZone.Value, Status = item.Status.ToString() }, cancellationToken);
+            await ExecuteAsync("INSERT planning.TransportationSegments (CreatorId,AdventurePlanId,TransportationSegmentId,DepartureDestinationVisitId,ArrivalDestinationVisitId,Mode,Origin,Destination,DepartureDate,DepartureTimeLocal,DepartureTimeZone,ArrivalDate,ArrivalTimeLocal,ArrivalTimeZone,Status) VALUES (@CreatorId,@PlanId,@Id,@DepartureVisitId,@ArrivalVisitId,@Mode,@From,@To,@DepartureDate,@DepartureTime,@DepartureZone,@ArrivalDate,@ArrivalTime,@ArrivalZone,@Status);",
+                new { owner.CreatorId, owner.PlanId, Id = item.Id.Value, DepartureVisitId = item.DepartureDestinationVisitId?.Value, ArrivalVisitId = item.ArrivalDestinationVisitId?.Value, item.Mode, item.From, item.To, DepartureDate = item.DepartureDate.ToDateTime(TimeOnly.MinValue), DepartureTime = item.DepartureTimeLocal?.ToTimeSpan(), DepartureZone = item.DepartureTimeZone.Value, ArrivalDate = item.ArrivalDate.ToDateTime(TimeOnly.MinValue), ArrivalTime = item.ArrivalTimeLocal?.ToTimeSpan(), ArrivalZone = item.ArrivalTimeZone.Value, Status = item.Status.ToString() }, cancellationToken);
         foreach (var item in plan.Accommodations)
-            await ExecuteAsync("INSERT planning.Accommodations VALUES (@CreatorId,@PlanId,@Id,@Name,@Start,@End,@Zone,@Status);",
-                new { owner.CreatorId, owner.PlanId, Id = item.Id.Value, item.Name, Start = item.Dates.Start.ToDateTime(TimeOnly.MinValue), End = item.Dates.End.ToDateTime(TimeOnly.MinValue), Zone = item.TimeZone.Value, Status = item.Status.ToString() }, cancellationToken);
+            await ExecuteAsync("INSERT planning.Accommodations (CreatorId,AdventurePlanId,AccommodationId,DestinationVisitId,Name,StartDate,EndDate,TimeZone,Status) VALUES (@CreatorId,@PlanId,@Id,@VisitId,@Name,@Start,@End,@Zone,@Status);",
+                new { owner.CreatorId, owner.PlanId, Id = item.Id.Value, VisitId = item.DestinationVisitId?.Value, item.Name, Start = item.Dates.Start.ToDateTime(TimeOnly.MinValue), End = item.Dates.End.ToDateTime(TimeOnly.MinValue), Zone = item.TimeZone.Value, Status = item.Status.ToString() }, cancellationToken);
         foreach (var item in plan.Reservations)
-            await ExecuteAsync("INSERT planning.Reservations VALUES (@CreatorId,@PlanId,@Id,@Subject,@Reference,@Status);",
-                new { owner.CreatorId, owner.PlanId, Id = item.Id.Value, item.Subject, Reference = item.ConfirmationReference, Status = item.Status.ToString() }, cancellationToken);
+            await ExecuteAsync("INSERT planning.Reservations (CreatorId,AdventurePlanId,ReservationId,DestinationVisitId,Subject,ConfirmationReference,Status) VALUES (@CreatorId,@PlanId,@Id,@VisitId,@Subject,@Reference,@Status);",
+                new { owner.CreatorId, owner.PlanId, Id = item.Id.Value, VisitId = item.DestinationVisitId?.Value, item.Subject, Reference = item.ConfirmationReference, Status = item.Status.ToString() }, cancellationToken);
         foreach (var item in plan.Notes)
             await ExecuteAsync("INSERT planning.PlanningNotes VALUES (@CreatorId,@PlanId,@Id,@Text);",
                 new { owner.CreatorId, owner.PlanId, Id = item.Id.Value, item.Text }, cancellationToken);
@@ -1058,6 +1079,8 @@ internal sealed class DapperAdventurePlanRepository(
         transportationRows.Select(row => new TransportationSegment
         {
             Id = new(row.TransportationSegmentId),
+            DepartureDestinationVisitId = row.DepartureDestinationVisitId is null ? null : new(row.DepartureDestinationVisitId),
+            ArrivalDestinationVisitId = row.ArrivalDestinationVisitId is null ? null : new(row.ArrivalDestinationVisitId),
             Mode = row.Mode,
             From = row.Origin,
             To = row.Destination,
@@ -1069,8 +1092,8 @@ internal sealed class DapperAdventurePlanRepository(
             ArrivalTimeZone = new(row.ArrivalTimeZone),
             Status = Enum.Parse<PlanItemStatus>(row.Status)
         }).ToArray(),
-        accommodationRows.Select(row => new Accommodation { Id = new(row.AccommodationId), Name = row.Name, Dates = new(DateOnly.FromDateTime(row.StartDate), DateOnly.FromDateTime(row.EndDate)), TimeZone = new(row.TimeZone), Status = Enum.Parse<PlanItemStatus>(row.Status) }).ToArray(),
-        reservationRows.Select(row => new Reservation { Id = new(row.ReservationId), Subject = row.Subject, ConfirmationReference = row.ConfirmationReference, Status = Enum.Parse<PlanItemStatus>(row.Status) }).ToArray(),
+        accommodationRows.Select(row => new Accommodation { Id = new(row.AccommodationId), DestinationVisitId = row.DestinationVisitId is null ? null : new(row.DestinationVisitId), Name = row.Name, Dates = new(DateOnly.FromDateTime(row.StartDate), DateOnly.FromDateTime(row.EndDate)), TimeZone = new(row.TimeZone), Status = Enum.Parse<PlanItemStatus>(row.Status) }).ToArray(),
+        reservationRows.Select(row => new Reservation { Id = new(row.ReservationId), DestinationVisitId = row.DestinationVisitId is null ? null : new(row.DestinationVisitId), Subject = row.Subject, ConfirmationReference = row.ConfirmationReference, Status = Enum.Parse<PlanItemStatus>(row.Status) }).ToArray(),
         noteRows.Select(row => new PlanningNote { Id = new(row.PlanningNoteId), Text = row.NoteText }).ToArray(),
         taskRows.Select(row => new PlanningTask { Id = new(row.PlanningTaskId), Description = row.Description, DueDate = row.DueDate is null ? null : DateOnly.FromDateTime(row.DueDate.Value), IsCompleted = row.IsCompleted }).ToArray(),
         budgetRows.Select(row => new BudgetItem { Id = new(row.BudgetItemId), Description = row.Description, Amount = row.Amount, CurrencyCode = row.CurrencyCode.Trim() }).ToArray(),
@@ -1118,10 +1141,10 @@ internal sealed class DapperAdventurePlanRepository(
     private sealed record VisitRow(string DestinationVisitId, string Name, DateTime StartDate, DateTime EndDate, string TimeZone, int Sequence, string? Notes);
     private sealed record DayRow(string ItineraryDayId, string? DestinationVisitId, DateTime LocalDate, string TimeZone, string Title);
     private sealed record ActivityRow(string PlannedActivityId, string ItineraryDayId, string Title, TimeSpan? StartsAtLocal, TimeSpan? EndsAtLocal, string Status);
-    private sealed record TransportationRow(string TransportationSegmentId, string Mode, string Origin, string Destination, DateTime DepartureDate, TimeSpan? DepartureTimeLocal, string DepartureTimeZone, DateTime ArrivalDate, TimeSpan? ArrivalTimeLocal, string ArrivalTimeZone, string Status);
-    private sealed record AccommodationRow(string AccommodationId, string Name, DateTime StartDate, DateTime EndDate, string TimeZone, string Status);
-    private sealed record ReservationSummaryRow(string ReservationId, string Subject, string Status);
-    private sealed record ReservationRow(string ReservationId, string Subject, string? ConfirmationReference, string Status);
+    private sealed record TransportationRow(string TransportationSegmentId, string? DepartureDestinationVisitId, string? ArrivalDestinationVisitId, string Mode, string Origin, string Destination, DateTime DepartureDate, TimeSpan? DepartureTimeLocal, string DepartureTimeZone, DateTime ArrivalDate, TimeSpan? ArrivalTimeLocal, string ArrivalTimeZone, string Status);
+    private sealed record AccommodationRow(string AccommodationId, string? DestinationVisitId, string Name, DateTime StartDate, DateTime EndDate, string TimeZone, string Status);
+    private sealed record ReservationSummaryRow(string ReservationId, string? DestinationVisitId, string Subject, string Status);
+    private sealed record ReservationRow(string ReservationId, string? DestinationVisitId, string Subject, string? ConfirmationReference, string Status);
     private sealed record DashboardRow(
         string AdventurePlanId,
         string Title,

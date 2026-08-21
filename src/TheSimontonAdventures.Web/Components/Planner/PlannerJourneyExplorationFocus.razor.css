@@ -1,0 +1,43 @@
+.planner-exploration { border: 1px solid var(--planner-shell-border); border-radius: .8rem; background: var(--planner-shell-surface-muted); margin-bottom: .8rem; padding: .8rem; }
+.planner-exploration__heading { align-items: flex-start; display: flex; gap: .75rem; justify-content: space-between; }
+.planner-exploration__heading-actions { align-items: center; display: flex; flex: 0 0 auto; flex-wrap: wrap; gap: .35rem; justify-content: flex-end; }
+.planner-exploration__heading p { color: var(--planner-shell-accent); font-size: .67rem; font-weight: 800; letter-spacing: .08em; margin: 0 0 .2rem; text-transform: uppercase; }
+.planner-exploration__heading h4 { font: 700 1.05rem Georgia, serif; margin: 0; }
+.planner-exploration__clear { flex: 0 0 auto; }
+.planner-exploration__toggle { align-items: center; background: transparent; border: 0; border-radius: .35rem; display: inline-flex; justify-content: center; padding: .35rem; }
+.planner-exploration__toggle:hover, .planner-exploration__toggle:focus-visible { background: color-mix(in srgb, var(--planner-shell-accent) 14%, transparent); }
+.planner-exploration__toggle:focus-visible { outline: 3px solid var(--planner-shell-focus); outline-offset: 2px; }
+.planner-exploration__toggle svg { fill: none; height: 1.1rem; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; transform: rotate(0); transition: transform 120ms ease; width: 1.1rem; }
+.planner-exploration__toggle[aria-expanded="false"] svg { transform: rotate(-90deg); }
+.planner-exploration__compact { align-items: flex-start; background: transparent; border: 0; border-radius: .55rem; display: flex; flex-direction: column; margin-top: .65rem; padding: .5rem; text-align: left; width: 100%; }
+.planner-exploration__compact span:first-child { color: var(--planner-shell-text); font-weight: 800; }
+.planner-exploration__compact span:last-child { color: var(--planner-shell-text-muted); font-size: .72rem; margin-top: .15rem; }
+.planner-exploration--collapsed { padding-bottom: .6rem; }
+.planner-exploration__help, .planner-exploration__status { color: var(--planner-shell-text-muted); font-size: .78rem; line-height: 1.45; }
+.planner-exploration__map { display: block; filter: drop-shadow(0 .6rem 1.2rem color-mix(in srgb, var(--planner-shell-text) 10%, transparent)); height: auto; margin: .75rem 0; max-height: 22rem; width: 100%; }
+.planner-exploration__ocean { fill: url(#planner-ocean-gradient); stroke: color-mix(in srgb, var(--planner-shell-primary) 44%, var(--planner-shell-border)); stroke-width: 1.5; }
+.planner-exploration__ocean-start { stop-color: color-mix(in srgb, var(--planner-shell-primary) 18%, var(--planner-shell-surface)); }
+.planner-exploration__ocean-end { stop-color: color-mix(in srgb, var(--planner-shell-primary) 5%, var(--planner-shell-surface-muted)); }
+.planner-exploration__graticule { fill: none; pointer-events: none; stroke: color-mix(in srgb, var(--planner-shell-primary) 18%, transparent); stroke-dasharray: 2 7; stroke-width: 1; }
+.planner-exploration__region { cursor: pointer; }
+.planner-exploration__region path, .planner-exploration__region use { fill: color-mix(in srgb, var(--planner-shell-accent) 31%, var(--planner-shell-surface)); filter: url(#planner-land-shadow); stroke: color-mix(in srgb, var(--planner-shell-text-muted) 72%, var(--planner-shell-surface)); stroke-linejoin: round; stroke-width: 1.05; transition: fill 120ms ease, stroke-width 120ms ease; }
+.planner-exploration__region text { fill: var(--planner-shell-text); font: 800 12px system-ui, sans-serif; paint-order: stroke; pointer-events: none; stroke: var(--planner-shell-surface); stroke-linejoin: round; stroke-width: 4px; }
+.planner-exploration__region:hover path, .planner-exploration__region:hover use, .planner-exploration__region:focus-visible path, .planner-exploration__region:focus-visible use { fill: color-mix(in srgb, var(--planner-shell-accent) 58%, var(--planner-shell-surface)); stroke: var(--planner-shell-focus); stroke-width: 2.5; }
+.planner-exploration__region:focus-visible { outline: none; }
+.planner-exploration__region--selected path, .planner-exploration__region--selected use { fill: var(--planner-shell-primary); stroke: var(--planner-shell-focus); stroke-width: 2.5; }
+.planner-exploration__region--selected text { fill: var(--planner-shell-surface); stroke: var(--planner-shell-primary); }
+.planner-exploration__breadcrumb { align-items: center; display: flex; flex-wrap: wrap; gap: .25rem; margin-bottom: .55rem; }
+.planner-exploration__breadcrumb button { background: transparent; border-color: transparent; font-size: .72rem; padding: .25rem .35rem; }
+.planner-exploration__breadcrumb button[aria-current="location"] { color: var(--planner-shell-accent); font-weight: 800; }
+.planner-exploration__regions { border: 0; display: flex; flex-wrap: wrap; gap: .35rem; margin: 0; min-width: 0; padding: 0; }
+.planner-exploration__regions legend { color: var(--planner-shell-text-muted); font-size: .72rem; font-weight: 800; margin-bottom: .4rem; width: 100%; }
+.planner-exploration__regions button { font-size: .72rem; padding: .35rem .55rem; }
+.planner-exploration__regions button[aria-pressed="true"] { background: var(--planner-shell-primary); border-color: var(--planner-shell-accent); color: var(--planner-shell-surface); }
+.planner-exploration__selections { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .65rem; }
+.planner-exploration__selections button { background: var(--planner-shell-primary); color: var(--planner-shell-surface); font-size: .7rem; padding: .35rem .55rem; text-align: left; }
+.planner-exploration__status { border-top: 1px solid var(--planner-shell-border); margin: .7rem 0 0; padding-top: .6rem; }
+.planner-exploration__auto-hide { align-items: flex-start; color: var(--planner-shell-text-muted); display: flex; font-size: .74rem; gap: .45rem; line-height: 1.35; margin-top: .55rem; }
+.planner-exploration__auto-hide input { flex: 0 0 auto; margin-top: .12rem; }
+.planner-exploration__manual { color: var(--planner-shell-text-muted); font-size: .74rem; margin: .45rem 0 0; }
+@media (max-width: 36rem) { .planner-exploration__heading { align-items: stretch; flex-direction: column; } .planner-exploration__heading-actions { justify-content: flex-start; } }
+@media (prefers-reduced-motion: reduce) { .planner-exploration__region path, .planner-exploration__region use, .planner-exploration__toggle svg { transition: none; } }

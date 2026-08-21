@@ -66,12 +66,19 @@ public static class ReservationAddEndpoints
             return;
         }
 
+        if (!TryReadOptionalDestinationVisitId(form["destinationVisitId"].ToString(), out var destinationVisitId))
+        {
+            Redirect(context, $"{detailPath}?reservation=validation");
+            return;
+        }
+
         var command = new AddReservationCommand(
             actor,
             creator,
             plan,
             version,
-            form["subject"].ToString().Trim());
+            form["subject"].ToString().Trim(),
+            destinationVisitId);
         var result = await addService.AddAsync(command, cancellationToken);
         var state = result.Outcome switch
         {
@@ -88,5 +95,22 @@ public static class ReservationAddEndpoints
     {
         context.Response.StatusCode = StatusCodes.Status303SeeOther;
         context.Response.Headers.Location = location;
+    }
+
+    private static bool TryReadOptionalDestinationVisitId(
+        string? value,
+        out DestinationVisitId? destinationVisitId)
+    {
+        destinationVisitId = null;
+        if (string.IsNullOrWhiteSpace(value)) return true;
+        try
+        {
+            destinationVisitId = new(value.Trim());
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
     }
 }

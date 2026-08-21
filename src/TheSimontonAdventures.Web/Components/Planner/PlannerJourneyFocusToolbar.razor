@@ -1,0 +1,15 @@
+@namespace TheSimontonAdventures.Web.Components
+
+<nav class="planner-focus-toolbar" aria-label="Journey focus">
+    @foreach (var panel in Panels)
+    {
+        <button type="button"
+                class="@(panel == FocusedPanel ? "planner-focus-toolbar__item planner-focus-toolbar__item--active" : "planner-focus-toolbar__item")"
+                aria-pressed="@(panel == FocusedPanel)"
+                @onclick="() => SelectAsync(panel)">
+            @Icon(panel)
+            <span>@Label(panel)</span>
+            <small>@Count(panel)</small>
+        </button>
+    }
+</nav>

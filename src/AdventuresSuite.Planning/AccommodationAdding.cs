@@ -11,11 +11,13 @@ public sealed record AddAccommodationCommand
     /// <summary>Initializes one provider-neutral accommodation request.</summary>
     public AddAccommodationCommand(ActorIdentity actor, CreatorId creatorId,
         AdventurePlanId adventurePlanId, long expectedVersion, string name,
-        DateOnly startDate, DateOnly endDate, string timeZoneId)
+        DateOnly startDate, DateOnly endDate, string timeZoneId,
+        DestinationVisitId? destinationVisitId = null)
     {
         Actor = actor; CreatorId = creatorId; AdventurePlanId = adventurePlanId;
         ExpectedVersion = expectedVersion; Name = name; StartDate = startDate;
         EndDate = endDate; TimeZoneId = timeZoneId;
+        DestinationVisitId = destinationVisitId;
     }
 
     /// <summary>Gets the authenticated human actor.</summary>
@@ -34,6 +36,8 @@ public sealed record AddAccommodationCommand
     public DateOnly EndDate { get; init; }
     /// <summary>Gets the property's IANA time zone.</summary>
     public string TimeZoneId { get; init; }
+    /// <summary>Gets the optional authoritative destination visit containing the stay.</summary>
+    public DestinationVisitId? DestinationVisitId { get; init; }
 }
 
 /// <summary>Classifies non-disclosing accommodation outcomes.</summary>
@@ -118,10 +122,14 @@ public sealed class AccommodationAddService(
                 return Result(AddAccommodationOutcome.Conflict);
             if (!current.Dates.Contains(dates))
                 return Result(AddAccommodationOutcome.ValidationFailed);
+            if (command.DestinationVisitId is { } destinationVisitId
+                && current.DestinationVisits.All(visit => visit.Id != destinationVisitId))
+                return Result(AddAccommodationOutcome.Denied);
 
             var accommodation = new Accommodation
             {
                 Id = identityGenerator.NewAccommodationId(),
+                DestinationVisitId = command.DestinationVisitId,
                 Name = command.Name,
                 Dates = dates,
                 TimeZone = zone,

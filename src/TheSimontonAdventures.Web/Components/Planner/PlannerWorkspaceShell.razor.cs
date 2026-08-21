@@ -36,7 +36,10 @@ public static class PlannerWorkspaceThemeExtensions
 public partial class PlannerWorkspaceShell : ComponentBase, IAsyncDisposable
 {
     private ElementReference MainContent { get; set; }
+    private ElementReference ShellElement { get; set; }
+    private ElementReference PinnedHeader { get; set; }
     private IJSObjectReference? FocusModule { get; set; }
+    private bool IsAccountMenuOpen { get; set; }
 
     [Inject]
     private IJSRuntime JavaScript { get; set; } = null!;
@@ -83,6 +86,10 @@ public partial class PlannerWorkspaceShell : ComponentBase, IAsyncDisposable
     /// <summary>Gets or sets optional toolbar content such as an authenticated sign-out action.</summary>
     [Parameter]
     public RenderFragment? ToolbarContent { get; set; }
+
+    /// <summary>Gets or sets the contextual workspace toolbar pinned beneath the shell header.</summary>
+    [Parameter]
+    public RenderFragment? WorkspaceToolbarContent { get; set; }
 
     /// <summary>Gets or sets the shell content.</summary>
     [Parameter]
@@ -183,12 +190,24 @@ public partial class PlannerWorkspaceShell : ComponentBase, IAsyncDisposable
     /// <param name="args">The select change event.</param>
     public Task ChangeThemeAsync(ChangeEventArgs args)
     {
-        Theme = args.Value?.ToString() switch
+        return SetThemeAsync(args.Value?.ToString() switch
         {
             "light" => PlannerWorkspaceTheme.Light,
             "dark" => PlannerWorkspaceTheme.Dark,
             _ => PlannerWorkspaceTheme.System
-        };
+        });
+    }
+
+    private Task SetThemeAsync(PlannerWorkspaceTheme theme)
+    {
+        Theme = Enum.IsDefined(theme) ? theme : PlannerWorkspaceTheme.System;
+        IsAccountMenuOpen = false;
+        return Task.CompletedTask;
+    }
+
+    private Task ToggleAccountMenuAsync()
+    {
+        IsAccountMenuOpen = !IsAccountMenuOpen;
         return Task.CompletedTask;
     }
 
@@ -200,6 +219,13 @@ public partial class PlannerWorkspaceShell : ComponentBase, IAsyncDisposable
             FocusModule = await JavaScript.InvokeAsync<IJSObjectReference>(
                 "import",
                 "./Components/Planner/PlannerWorkspaceShell.razor.js");
+            if (FocusModule is not null)
+            {
+                await FocusModule.InvokeVoidAsync(
+                    "observePinnedHeader",
+                    ShellElement,
+                    PinnedHeader);
+            }
         }
     }
 
@@ -222,6 +248,7 @@ public partial class PlannerWorkspaceShell : ComponentBase, IAsyncDisposable
         {
             try
             {
+                await FocusModule.InvokeVoidAsync("disconnectPinnedHeader", ShellElement);
                 await FocusModule.DisposeAsync();
             }
             catch (JSDisconnectedException)

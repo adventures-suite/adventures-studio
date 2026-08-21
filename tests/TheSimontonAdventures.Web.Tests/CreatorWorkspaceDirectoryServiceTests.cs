@@ -1,4 +1,5 @@
 using AdventuresSuite.Identity;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.FileProviders;
 using TheSimontonAdventures.Web.Authorization;
 using TheSimontonAdventures.Web.Creators;
@@ -96,6 +97,35 @@ public sealed class CreatorWorkspaceDirectoryServiceTests
 
         Assert.Empty(result);
         Assert.Equal(0, creators.CallCount);
+    }
+
+    /// <summary>The explicitly enabled local Alpha Creator is discoverable only after normal authorization.</summary>
+    [Fact]
+    public async Task ListAsync_EnabledLocalAlpha_ReturnsAuthorizedSyntheticWorkspace()
+    {
+        var localCreatorId = new CreatorId("creator_local_alpha");
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Authentication:Mode"] = "Development",
+                ["ADVENTURESSUITE_LOCAL_ALPHA_ENABLED"] = "true"
+            })
+            .Build();
+        var service = new CreatorWorkspaceDirectoryService(
+            new CreatorService([]),
+            new MembershipProvider(new Dictionary<CreatorId, CreatorMembershipSnapshot>
+            {
+                [localCreatorId] = Membership(localCreatorId, 1)
+            }),
+            new AuthorizationEvaluator(localCreatorId),
+            new HostEnvironment(Environments.Development),
+            configuration);
+
+        var result = await service.ListAsync(Actor);
+
+        var choice = Assert.Single(result);
+        Assert.Equal(localCreatorId, choice.CreatorId);
+        Assert.Equal("Local Alpha Adventures", choice.DisplayName);
     }
 
     private static Creator Creator(string id, string displayName, bool developmentOnly = false) => new()
