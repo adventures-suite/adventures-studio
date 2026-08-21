@@ -374,11 +374,12 @@ public sealed class PlannerItineraryBoardTests
             pendingActivity: new(ActivityFootStep(), target));
 
         Assert.Contains("data-planner-activity-drop=\"day_madrid_01\"", html, StringComparison.Ordinal);
-        Assert.Contains("Drop here to review this activity for Arrival day", html, StringComparison.Ordinal);
+        Assert.Contains("Drop activity here", html, StringComparison.Ordinal);
+        Assert.Contains("Review it for Arrival day before anything is added", html, StringComparison.Ordinal);
         Assert.Contains("Use as an activity starting point", html, StringComparison.Ordinal);
         Assert.Contains("name=\"itineraryDayId\" value=\"day_madrid_01\"", html, StringComparison.Ordinal);
         Assert.Contains("name=\"title\" value=\"Evening tapas walk\"", html, StringComparison.Ordinal);
-        Assert.Contains("Nothing is booked", html, StringComparison.Ordinal);
+        Assert.Contains("planning idea, not a booking", html, StringComparison.Ordinal);
     }
 
     private static readonly IReadOnlyDictionary<string, string> Paths = new Dictionary<string, string>

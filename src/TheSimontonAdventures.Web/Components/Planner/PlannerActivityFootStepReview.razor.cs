@@ -26,6 +26,10 @@ public partial class PlannerActivityFootStepReview
     [Parameter]
     public string AddActivityPath { get; set; } = string.Empty;
 
+    /// <summary>Gets or sets the visible disclosure action.</summary>
+    [Parameter]
+    public string SummaryText { get; set; } = "Use as an activity starting point";
+
     private static string? TimeValue(TimeOnly? value) => value?.ToString("HH:mm");
 }
 

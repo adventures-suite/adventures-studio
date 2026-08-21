@@ -296,15 +296,22 @@ public sealed class PlannerContextualIdeasRailTests
             [nameof(PlannerContextualIdeasRail.AddActivityPath)] = "/activities"
         });
 
-        Assert.Contains("Use as an activity starting point", html, StringComparison.Ordinal);
+        Assert.Contains("planner-activity-footstep-card", html, StringComparison.Ordinal);
+        Assert.Contains("Activity FootStep", html, StringComparison.Ordinal);
+        Assert.Contains("9:30 AM", html, StringComparison.Ordinal);
+        Assert.Contains("11:30 AM", html, StringComparison.Ordinal);
+        Assert.Contains("Suggested for May 2", html, StringComparison.Ordinal);
+        Assert.Contains("Arrival day", html, StringComparison.Ordinal);
+        Assert.Contains("Review &amp; add activity", html, StringComparison.Ordinal);
         Assert.Contains("action=\"/activities\"", html, StringComparison.Ordinal);
         Assert.Contains("name=\"expectedVersion\" value=\"7\"", html, StringComparison.Ordinal);
         Assert.Contains("name=\"itineraryDayId\" value=\"day-1\"", html, StringComparison.Ordinal);
         Assert.Contains("name=\"title\" value=\"Explore a neighborhood on foot\"", html, StringComparison.Ordinal);
         Assert.Contains("name=\"startsAtLocal\" value=\"09:30\"", html, StringComparison.Ordinal);
         Assert.Contains("name=\"endsAtLocal\" value=\"11:30\"", html, StringComparison.Ordinal);
-        Assert.Contains("Nothing is booked", html, StringComparison.Ordinal);
-        Assert.Contains("normal plan activity after review", html, StringComparison.Ordinal);
+        Assert.Contains("planning idea, not a booking", html, StringComparison.Ordinal);
+        Assert.Contains("Add to itinerary", html, StringComparison.Ordinal);
+        Assert.Contains("FootStep source tracking is planned separately", html, StringComparison.Ordinal);
     }
 
     /// <summary>Activity starting points expose no mutation when editing or a valid day target is absent.</summary>
@@ -345,8 +352,8 @@ public sealed class PlannerContextualIdeasRailTests
 
         Assert.Contains("draggable=\"true\"", html, StringComparison.Ordinal);
         Assert.Contains("data-planner-footstep-kind=\"activity\"", html, StringComparison.Ordinal);
-        Assert.Contains("Drag to an itinerary day", html, StringComparison.Ordinal);
-        Assert.Contains("Use as an activity starting point", html, StringComparison.Ordinal);
+        Assert.Contains("Drag onto an itinerary day", html, StringComparison.Ordinal);
+        Assert.Contains("Review &amp; add activity", html, StringComparison.Ordinal);
         Assert.Contains("action=\"/activities\"", html, StringComparison.Ordinal);
     }
 

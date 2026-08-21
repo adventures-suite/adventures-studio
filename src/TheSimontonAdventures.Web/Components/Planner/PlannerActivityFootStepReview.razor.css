@@ -1,8 +1,15 @@
-.planner-activity-footstep-review { margin-top: .8rem; border-top: 1px solid var(--planner-border); padding-top: .75rem; }
-.planner-activity-footstep-review summary { cursor: pointer; font-weight: 700; color: var(--planner-primary); }
+.planner-activity-footstep-review { margin-top: .1rem; }
+.planner-activity-footstep-review summary { align-items: center; background: var(--planner-shell-primary); border-radius: 999px; color: var(--planner-shell-surface); cursor: pointer; display: inline-flex; font-weight: 800; min-height: 2.65rem; padding: .55rem .85rem; }
+.planner-activity-footstep-review summary:focus-visible { outline: 3px solid var(--planner-shell-focus); outline-offset: 2px; }
+.planner-activity-footstep-review[open] summary { border-radius: .65rem; }
+.planner-activity-footstep-review__intro { background: var(--planner-shell-surface-muted); border-left: .2rem solid var(--planner-shell-accent); margin-top: .7rem; padding: .7rem .8rem; }
+.planner-activity-footstep-review__intro p { color: var(--planner-shell-text-muted); font-size: .82rem; margin: .2rem 0 0; }
 .planner-activity-footstep-review form { display: grid; gap: .7rem; margin-top: .7rem; }
 .planner-activity-footstep-review label { display: grid; gap: .3rem; font-weight: 650; }
-.planner-activity-footstep-review input, .planner-activity-footstep-review select { min-width: 0; width: 100%; box-sizing: border-box; }
+.planner-activity-footstep-review input, .planner-activity-footstep-review select { background: var(--planner-shell-surface); border: 1px solid var(--planner-shell-border); border-radius: .45rem; box-sizing: border-box; color: var(--planner-shell-text); font: inherit; min-height: 2.65rem; min-width: 0; padding: .55rem; width: 100%; }
+.planner-activity-footstep-review input:focus-visible, .planner-activity-footstep-review select:focus-visible, .planner-activity-footstep-review button:focus-visible { outline: 3px solid var(--planner-shell-focus); outline-offset: 2px; }
 .planner-activity-footstep-review__times { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; }
 .planner-activity-footstep-review__day { margin: 0; }
+.planner-activity-footstep-review button { background: var(--planner-shell-primary); border: 0; border-radius: 999px; color: var(--planner-shell-surface); cursor: pointer; font: inherit; font-weight: 800; justify-self: start; min-height: 2.65rem; padding: .6rem 1rem; }
+.planner-activity-footstep-review > small { color: var(--planner-shell-text-muted); display: block; font-size: .7rem; line-height: 1.4; margin-top: .65rem; }
 @media (max-width: 36rem) { .planner-activity-footstep-review__times { grid-template-columns: 1fr; } }
