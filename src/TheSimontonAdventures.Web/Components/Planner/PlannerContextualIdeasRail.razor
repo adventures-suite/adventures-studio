@@ -69,6 +69,17 @@
                         <button type="button" aria-pressed="@(SelectedType == type ? "true" : "false")" @onclick="() => SelectType(type)">@DisplayFacet(type)</button>
                     }
                 </nav>
+                @if (FilteredIdeas.Any(item => item.ActivityDraft is not null))
+                {
+                    <fieldset class="planner-ideas__time-filter">
+                        <legend>When?</legend>
+                        <button type="button" aria-pressed="@(ActivityTimeFilter == PlannerActivityTimeFilter.Any)" @onclick="() => SelectActivityTime(PlannerActivityTimeFilter.Any)">Any time</button>
+                        <button type="button" aria-pressed="@(ActivityTimeFilter == PlannerActivityTimeFilter.Morning)" @onclick="() => SelectActivityTime(PlannerActivityTimeFilter.Morning)">Morning</button>
+                        <button type="button" aria-pressed="@(ActivityTimeFilter == PlannerActivityTimeFilter.Afternoon)" @onclick="() => SelectActivityTime(PlannerActivityTimeFilter.Afternoon)">Afternoon</button>
+                        <button type="button" aria-pressed="@(ActivityTimeFilter == PlannerActivityTimeFilter.Evening)" @onclick="() => SelectActivityTime(PlannerActivityTimeFilter.Evening)">Evening</button>
+                        <button type="button" aria-pressed="@(ActivityTimeFilter == PlannerActivityTimeFilter.Flexible)" @onclick="() => SelectActivityTime(PlannerActivityTimeFilter.Flexible)">Flexible</button>
+                    </fieldset>
+                }
                 <details class="planner-ideas__filters">
                     <summary>Filter (@FacetedIdeas.Count)</summary>
                     <div class="planner-ideas__filter-groups">
@@ -94,10 +105,11 @@
                             </details>
                         }
                     </div>
-                    @if (SelectedType is not null || SelectedFacets.Count > 0 || MinimumDays.HasValue || MaximumDays.HasValue)
+                    @if (SelectedType is not null || ActivityTimeFilter != PlannerActivityTimeFilter.Any || SelectedFacets.Count > 0 || MinimumDays.HasValue || MaximumDays.HasValue)
                     {
                         <div class="planner-ideas__chips" aria-label="Active FootStep filters">
                             @if (SelectedType is not null) { <button type="button" @onclick="() => SelectType(null)">@DisplayFacet(SelectedType) ×</button> }
+                            @if (ActivityTimeFilter != PlannerActivityTimeFilter.Any) { <button type="button" @onclick="() => SelectActivityTime(PlannerActivityTimeFilter.Any)">@ActivityTimeFilter ×</button> }
                             @foreach (var key in SelectedFacets) { var facet = PlannerFacetOption.Parse(key); <button type="button" @onclick="() => ToggleFacet(facet)">@DisplayFacet(facet.Value) ×</button> }
                             <button type="button" @onclick="ClearFilters">Clear all</button>
                         </div>
@@ -191,6 +203,8 @@
                             @if (idea.ActivityDraft is not null)
                             {
                                 <PlannerActivityFootStepCard FootStep="@idea"
+                                                             ContextLabel="@Context.Label"
+                                                             ContextKind="@Context.Kind"
                                                              Targets="@ActivityTargets"
                                                              CanEdit="@CanEdit"
                                                              IsDraggable="@CanDragActivity(idea)"

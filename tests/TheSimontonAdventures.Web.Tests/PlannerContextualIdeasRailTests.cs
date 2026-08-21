@@ -301,6 +301,13 @@ public sealed class PlannerContextualIdeasRailTests
         Assert.Contains("9:30 AM", html, StringComparison.Ordinal);
         Assert.Contains("11:30 AM", html, StringComparison.Ordinal);
         Assert.Contains("Suggested for May 2", html, StringComparison.Ordinal);
+        Assert.Contains("Shown for Arrival day", html, StringComparison.Ordinal);
+        Assert.Contains(">When?</legend>", html, StringComparison.Ordinal);
+        Assert.Contains(">Any time</button>", html, StringComparison.Ordinal);
+        Assert.Contains(">Morning</button>", html, StringComparison.Ordinal);
+        Assert.Contains(">Afternoon</button>", html, StringComparison.Ordinal);
+        Assert.Contains(">Evening</button>", html, StringComparison.Ordinal);
+        Assert.Contains(">Flexible</button>", html, StringComparison.Ordinal);
         Assert.Contains("Arrival day", html, StringComparison.Ordinal);
         Assert.Contains("Review &amp; add activity", html, StringComparison.Ordinal);
         Assert.Contains("action=\"/activities\"", html, StringComparison.Ordinal);
