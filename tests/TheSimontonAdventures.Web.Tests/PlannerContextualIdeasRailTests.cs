@@ -43,6 +43,8 @@ public sealed class PlannerContextualIdeasRailTests
         Assert.Contains("Filter (", developmentHtml, StringComparison.Ordinal);
         Assert.DoesNotContain("Filter FootSteps", developmentHtml, StringComparison.Ordinal);
         Assert.Contains("Minimum days", developmentHtml, StringComparison.Ordinal);
+        Assert.Contains(">category</summary>", developmentHtml, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("(category)", developmentHtml, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("motorcycle", developmentHtml, StringComparison.Ordinal);
     }
 
@@ -389,7 +391,9 @@ public sealed class PlannerContextualIdeasRailTests
         TransportationModes = new HashSet<string>(StringComparer.Ordinal) { "motorcycle" },
         Categories = new HashSet<string>(StringComparer.Ordinal) { "outdoors" },
         RouteStyles = new HashSet<string>(StringComparer.Ordinal) { "scenic" },
-        Surfaces = new HashSet<string>(StringComparer.Ordinal) { "paved" }
+        Surfaces = new HashSet<string>(StringComparer.Ordinal) { "paved" },
+        Accessibility = new HashSet<string>(StringComparer.Ordinal) { "step-free" },
+        BudgetBands = new HashSet<string>(StringComparer.Ordinal) { "moderate" }
     };
 
     private static PlannerFootStepDefinition DestinationItem() => new()
