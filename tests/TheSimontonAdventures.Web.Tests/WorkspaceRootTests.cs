@@ -189,6 +189,37 @@ public sealed class WorkspaceRootTests
         Assert.DoesNotContain("creator_private_01", html);
     }
 
+    /// <summary>The Web preview links to the configured public Creator site without implying workspace functionality.</summary>
+    [Fact]
+    public async Task WebWorkspace_WithConfiguredPublicSite_RendersExplicitPreviewLink()
+    {
+        var publicSite = new Uri("https://simonton.example/adventures");
+        var query = new StubPlannerWorkspaceQueryService(PlannerWorkspaceResult.Allowed([]));
+        var html = await RenderAsync(
+            ApplicationPrincipal(),
+            "/workspace/creators/creator_tsa_01/web",
+            services =>
+            {
+                services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>();
+                services.AddSingleton(new WorkspaceNavigationConfiguration
+                {
+                    SimontonAdventuresUrl = publicSite
+                });
+                services.AddSingleton<ICreatorWorkspaceDirectoryService>(
+                    new StubCreatorWorkspaceDirectoryService([
+                        new(new("creator_tsa_01"), "The Simonton Adventures")
+                    ]));
+                services.AddSingleton<IPlannerWorkspaceQueryService>(query);
+            });
+
+        Assert.Contains("Visit The Simonton Adventures", html, StringComparison.Ordinal);
+        Assert.Contains($"href=\"{publicSite.AbsoluteUri}\"", html, StringComparison.Ordinal);
+        Assert.Contains("target=\"_blank\"", html, StringComparison.Ordinal);
+        Assert.Contains("rel=\"noopener noreferrer\"", html, StringComparison.Ordinal);
+        Assert.Contains("In development", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Publish now", html, StringComparison.Ordinal);
+    }
+
     /// <summary>
     /// An authenticated user without a Creator workspace can obtain only their own opaque
     /// platform identifier for a bounded support operation.

@@ -40,6 +40,7 @@ public partial class PlannerWorkspaceShell : ComponentBase, IAsyncDisposable
     private ElementReference PinnedHeader { get; set; }
     private IJSObjectReference? FocusModule { get; set; }
     private bool IsAccountMenuOpen { get; set; }
+    private bool PreferencesRestored { get; set; }
 
     [Inject]
     private IJSRuntime JavaScript { get; set; } = null!;
@@ -135,25 +136,25 @@ public partial class PlannerWorkspaceShell : ComponentBase, IAsyncDisposable
         IsContentEdgeAligned ? "planner-shell__content--edge-aligned" : string.Empty).Trim();
 
     /// <summary>Toggles the collapsed sidebar state.</summary>
-    public Task ToggleSidebarCollapseAsync()
+    public async Task ToggleSidebarCollapseAsync()
     {
         IsSidebarCollapsed = !IsSidebarCollapsed;
-        return Task.CompletedTask;
+        await PersistPreferencesAsync();
     }
 
     /// <summary>Hides the sidebar and closes mobile navigation.</summary>
-    public Task HideSidebarAsync()
+    public async Task HideSidebarAsync()
     {
         IsSidebarHidden = true;
         IsMobileNavigationOpen = false;
-        return Task.CompletedTask;
+        await PersistPreferencesAsync();
     }
 
     /// <summary>Shows the sidebar.</summary>
-    public Task ShowSidebarAsync()
+    public async Task ShowSidebarAsync()
     {
         IsSidebarHidden = false;
-        return Task.CompletedTask;
+        await PersistPreferencesAsync();
     }
 
     /// <summary>Toggles mobile navigation without changing authorization or route state.</summary>
@@ -173,13 +174,13 @@ public partial class PlannerWorkspaceShell : ComponentBase, IAsyncDisposable
 
     /// <summary>Applies a requested sidebar width after enforcing shell bounds.</summary>
     /// <param name="requestedWidthPixels">The requested width in pixels.</param>
-    public Task ResizeSidebarAsync(int requestedWidthPixels)
+    public async Task ResizeSidebarAsync(int requestedWidthPixels)
     {
         SidebarWidthPixels = Math.Clamp(
             requestedWidthPixels,
             MinimumSidebarWidthPixels,
             MaximumSidebarWidthPixels);
-        return Task.CompletedTask;
+        await PersistPreferencesAsync();
     }
 
     /// <summary>Handles keyboard resizing on the sidebar separator.</summary>
@@ -206,11 +207,11 @@ public partial class PlannerWorkspaceShell : ComponentBase, IAsyncDisposable
         });
     }
 
-    private Task SetThemeAsync(PlannerWorkspaceTheme theme)
+    private async Task SetThemeAsync(PlannerWorkspaceTheme theme)
     {
         Theme = Enum.IsDefined(theme) ? theme : PlannerWorkspaceTheme.System;
         IsAccountMenuOpen = false;
-        return Task.CompletedTask;
+        await PersistPreferencesAsync();
     }
 
     private Task ToggleAccountMenuAsync()
@@ -229,12 +230,61 @@ public partial class PlannerWorkspaceShell : ComponentBase, IAsyncDisposable
                 "./Components/Planner/PlannerWorkspaceShell.razor.js");
             if (FocusModule is not null)
             {
+                await RestorePreferencesAsync();
                 await FocusModule.InvokeVoidAsync(
                     "observePinnedHeader",
                     ShellElement,
                     PinnedHeader);
             }
         }
+    }
+
+    private async Task RestorePreferencesAsync()
+    {
+        if (FocusModule is null || PreferencesRestored)
+        {
+            return;
+        }
+
+        var preferences = await FocusModule.InvokeAsync<WorkspacePreferences?>(
+            "readWorkspacePreferences");
+        PreferencesRestored = true;
+        if (preferences is null)
+        {
+            return;
+        }
+
+        Theme = preferences.Theme switch
+        {
+            "light" => PlannerWorkspaceTheme.Light,
+            "dark" => PlannerWorkspaceTheme.Dark,
+            _ => PlannerWorkspaceTheme.System
+        };
+        IsSidebarCollapsed = preferences.IsSidebarCollapsed;
+        IsSidebarHidden = preferences.IsSidebarHidden;
+        SidebarWidthPixels = Math.Clamp(
+            preferences.SidebarWidthPixels,
+            MinimumSidebarWidthPixels,
+            MaximumSidebarWidthPixels);
+        StateHasChanged();
+    }
+
+    private async Task PersistPreferencesAsync()
+    {
+        if (FocusModule is null || !PreferencesRestored)
+        {
+            return;
+        }
+
+        await FocusModule.InvokeVoidAsync(
+            "writeWorkspacePreferences",
+            new WorkspacePreferences
+            {
+                Theme = Theme.ToDataAttribute(),
+                IsSidebarCollapsed = IsSidebarCollapsed,
+                IsSidebarHidden = IsSidebarHidden,
+                SidebarWidthPixels = SidebarWidthPixels
+            });
     }
 
     private async Task FocusMainContentAsync()
@@ -266,5 +316,13 @@ public partial class PlannerWorkspaceShell : ComponentBase, IAsyncDisposable
         }
 
         GC.SuppressFinalize(this);
+    }
+
+    private sealed class WorkspacePreferences
+    {
+        public string Theme { get; init; } = "system";
+        public bool IsSidebarCollapsed { get; init; }
+        public bool IsSidebarHidden { get; init; }
+        public int SidebarWidthPixels { get; init; } = 280;
     }
 }
