@@ -262,6 +262,24 @@ public sealed class MigrationOperationRunnerTests
                 state, MigrationJournalOutcome.At0008));
     }
 
+    [Fact]
+    public void Exact0012IsAcceptedOnlyAsTheCompleteRepairForwardState()
+    {
+        var state = State(MigrationJournalOutcome.At0012, fingerprint: "SAME", complete: true,
+            policyComplete: true, templateComplete: true, footStepComplete: true);
+
+        MigrationOperationRunner.ValidatePreMigrationState(
+            state, MigrationJournalOutcome.At0012);
+
+        Assert.Throws<InvalidOperationException>(() =>
+            MigrationOperationRunner.ValidatePreMigrationState(
+                state with { PlanningPermissions = state.PlanningPermissions.Skip(1).ToArray() },
+                MigrationJournalOutcome.At0012));
+        Assert.Throws<InvalidOperationException>(() =>
+            MigrationOperationRunner.ValidatePreMigrationState(
+                state, MigrationJournalOutcome.At0011));
+    }
+
     private static MigrationStateEvidence State(
         MigrationJournalOutcome outcome,
         string fingerprint,
