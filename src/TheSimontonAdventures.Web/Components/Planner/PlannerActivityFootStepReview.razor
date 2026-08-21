@@ -3,8 +3,11 @@
 @if (CanEdit && FootStep.ActivityDraft is { } draft && Targets.Count > 0 && !string.IsNullOrWhiteSpace(AddActivityPath))
 {
     <details class="planner-activity-footstep-review">
-        <summary>Use as an activity starting point</summary>
-        <p>Review the day, title, and local times before adding this proposed activity. Nothing is booked.</p>
+        <summary>@SummaryText</summary>
+        <div class="planner-activity-footstep-review__intro">
+            <strong>Make it yours before adding it.</strong>
+            <p>Confirm the day, title, and local times. This is a planning idea, not a booking.</p>
+        </div>
         <form method="post" action="@AddActivityPath">
             <AntiforgeryToken />
             <input type="hidden" name="expectedVersion" value="@ExpectedVersion" />
@@ -35,8 +38,8 @@
                     <input type="time" name="endsAtLocal" value="@TimeValue(draft.SuggestedEndTime)" />
                 </label>
             </div>
-            <button type="submit">Add proposed activity</button>
+            <button type="submit">Add to itinerary</button>
         </form>
-        <small>This first slice creates a normal plan activity after review; durable FootStep provenance is a later persistence slice.</small>
+        <small>The activity will be editable like any other plan item. FootStep source tracking is planned separately.</small>
     </details>
 }

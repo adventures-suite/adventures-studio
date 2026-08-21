@@ -187,7 +187,19 @@
                         <ul class="planner-ideas__list">
                         @foreach (var idea in group.Items)
                         {
-                            <li><article class="planner-ideas__card" draggable="@DraggableValue(idea)" data-planner-footstep-kind="@DragKind(idea)" data-planner-footstep-id="@idea.Id">
+                            <li>
+                            @if (idea.ActivityDraft is not null)
+                            {
+                                <PlannerActivityFootStepCard FootStep="@idea"
+                                                             Targets="@ActivityTargets"
+                                                             CanEdit="@CanEdit"
+                                                             IsDraggable="@CanDragActivity(idea)"
+                                                             ExpectedVersion="@ExpectedVersion"
+                                                             AddActivityPath="@AddActivityPath" />
+                            }
+                            else
+                            {
+                            <article class="planner-ideas__card" draggable="@DraggableValue(idea)" data-planner-footstep-kind="@DragKind(idea)" data-planner-footstep-id="@idea.Id">
                                 <div class="planner-ideas__thumbnail" aria-hidden="true">@Monogram(idea)</div>
                                 <p class="planner-ideas__type">@DisplayFacet(idea.Kind) · suggestion</p>
                                 <h4>@idea.Title</h4>
@@ -220,7 +232,9 @@
                                                                                       CanEdit="@CanEdit"
                                                                                       ExpectedVersion="@ExpectedVersion"
                                                                                       AddActivityPath="@AddActivityPath" />
-                            </article></li>
+                            </article>
+                            }
+                            </li>
                         }
                         </ul>
                     }

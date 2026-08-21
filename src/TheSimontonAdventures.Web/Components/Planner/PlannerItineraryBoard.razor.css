@@ -6,8 +6,12 @@
 .planner-board__route, .planner-board__days, .planner-board__reservations { grid-column: 1 / -1; }
 .planner-board__route--drop-ready { border: 2px dashed var(--planner-shell-primary); }
 .planner-board__route--pointer-over { box-shadow: 0 0 0 4px var(--planner-shell-focus); }
-.planner-board__drop-target { border-radius: .6rem; background: var(--planner-shell-surface-muted); color: var(--planner-shell-primary); font-weight: 700; padding: .85rem; }
-.planner-board__day--drop-ready { border: 2px dashed var(--planner-shell-primary); }
+.planner-board__drop-target { align-items: center; background: color-mix(in srgb, var(--planner-shell-primary) 7%, var(--planner-shell-surface)); border: 2px dashed var(--planner-shell-primary); border-radius: .7rem; color: var(--planner-shell-primary); display: flex; gap: .65rem; margin-top: .75rem; padding: .8rem; }
+.planner-board__drop-target svg { fill: none; flex: 0 0 1.35rem; height: 1.35rem; stroke: currentColor; stroke-linecap: round; stroke-width: 2; width: 1.35rem; }
+.planner-board__drop-target span, .planner-board__drop-target strong { display: block; }
+.planner-board__drop-target span { color: var(--planner-shell-text-muted); font-size: .78rem; }
+.planner-board__drop-target strong { color: var(--planner-shell-primary); font-size: .86rem; }
+.planner-board__day--drop-ready { border: 2px dashed color-mix(in srgb, var(--planner-shell-primary) 70%, var(--planner-shell-border)); }
 .planner-board__day--drop-ready.planner-board__route--pointer-over { box-shadow: 0 0 0 5px var(--planner-shell-focus); }
 .planner-board__floating-drop { position: fixed; z-index: 50; right: min(34vw, 28rem); bottom: 1.25rem; left: max(1rem, 18vw); border: 3px dashed var(--planner-shell-primary); border-radius: .9rem; background: var(--planner-shell-surface); box-shadow: var(--planner-shell-shadow); color: var(--planner-shell-primary); font-size: 1.05rem; font-weight: 700; padding: 1rem 1.25rem; text-align: center; }
 .planner-board__floating-drop span { display: block; color: var(--planner-shell-text-muted); font-size: .8rem; font-weight: 400; margin-top: .2rem; }

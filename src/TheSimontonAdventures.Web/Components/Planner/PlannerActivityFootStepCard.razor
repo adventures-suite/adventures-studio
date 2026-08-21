@@ -1,0 +1,63 @@
+@namespace TheSimontonAdventures.Web.Components
+
+<article class="planner-activity-footstep-card"
+         draggable="@DraggableValue"
+         data-planner-footstep-kind="@(IsDraggable ? "activity" : null)"
+         data-planner-footstep-id="@FootStep.Id">
+    <header class="planner-activity-footstep-card__header">
+        <span class="planner-activity-footstep-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false"><path d="m12 3 1.7 5.3L19 10l-5.3 1.7L12 17l-1.7-5.3L5 10l5.3-1.7Z"/><path d="m19 16 .8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8Z"/></svg>
+        </span>
+        <div>
+            <p>Activity FootStep</p>
+            <h4>@FootStep.Title</h4>
+        </div>
+        @if (IsDraggable)
+        {
+            <span class="planner-activity-footstep-card__drag-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false"><circle cx="8" cy="6" r="1"/><circle cx="16" cy="6" r="1"/><circle cx="8" cy="12" r="1"/><circle cx="16" cy="12" r="1"/><circle cx="8" cy="18" r="1"/><circle cx="16" cy="18" r="1"/></svg>
+            </span>
+        }
+    </header>
+
+    <p class="planner-activity-footstep-card__summary">@FootStep.Summary</p>
+
+    <div class="planner-activity-footstep-card__facts" aria-label="Activity suggestion details">
+        @if (SuggestedTime is not null)
+        {
+            <span><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>@SuggestedTime</span>
+        }
+        @if (PrimaryPlace is not null)
+        {
+            <span><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 21s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12Z"/><circle cx="12" cy="9" r="2"/></svg>@PrimaryPlace</span>
+        }
+        @if (PrimaryCategory is not null)
+        {
+            <span>@PrimaryCategory</span>
+        }
+    </div>
+
+    <div class="planner-activity-footstep-card__target">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+        <span>@TargetSummary</span>
+    </div>
+
+    <footer class="planner-activity-footstep-card__footer">
+        <p><span>From</span> @FootStep.Attribution</p>
+        <span class="planner-activity-footstep-card__boundary">Review before adding</span>
+    </footer>
+
+    @if (IsDraggable)
+    {
+        <p class="planner-activity-footstep-card__drag-hint">
+            <span aria-hidden="true">↗</span> Drag onto an itinerary day, or use the review action.
+        </p>
+    }
+
+    <PlannerActivityFootStepReview FootStep="@FootStep"
+                                   Targets="@Targets"
+                                   CanEdit="@CanEdit"
+                                   ExpectedVersion="@ExpectedVersion"
+                                   AddActivityPath="@AddActivityPath"
+                                   SummaryText="Review &amp; add activity" />
+</article>

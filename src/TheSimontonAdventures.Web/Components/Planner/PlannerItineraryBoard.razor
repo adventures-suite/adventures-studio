@@ -119,7 +119,10 @@
                         <button type="button" class="planner-board__context-button planner-board__day-context" aria-pressed="@IsSelected(day)" @onclick="() => SelectDay(day)">@(IsActivityFocus ? $"Find Activity FootSteps for {day.Title}" : $"Explore FootSteps for {day.Title}")</button>
                         @if (IsActivityFootStepDragging)
                         {
-                            <p class="planner-board__drop-target" role="status">Drop here to review this activity for @day.Title.</p>
+                            <div class="planner-board__drop-target" role="status">
+                                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg>
+                                <span><strong>Drop activity here</strong>Review it for @day.Title before anything is added.</span>
+                            </div>
                         }
                         @if (CanEdit && PendingActivityFootStep is { } pending
                             && pending.Target.Id == day.Id.Value)

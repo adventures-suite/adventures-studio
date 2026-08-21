@@ -40,6 +40,9 @@
 .planner-ideas--list-view .planner-ideas__card > h4,
 .planner-ideas--list-view .planner-ideas__card > dl { grid-column: 2; }
 .planner-ideas--list-view .planner-ideas__card > dl { display: none; }
+.planner-ideas--list-view ::deep .planner-activity-footstep-card { box-shadow: none; gap: .55rem; padding: .75rem; }
+.planner-ideas--list-view ::deep .planner-activity-footstep-card__summary,
+.planner-ideas--list-view ::deep .planner-activity-footstep-card__target { font-size: .75rem; }
 .planner-ideas__table-region { max-width: 100%; overflow-x: auto; border: 1px solid var(--planner-shell-border); border-radius: .75rem; }
 .planner-ideas__table-region:focus-visible { outline: 3px solid var(--planner-shell-focus); outline-offset: 2px; }
 .planner-ideas__table { border-collapse: collapse; min-width: 52rem; width: 100%; font-size: .78rem; }
