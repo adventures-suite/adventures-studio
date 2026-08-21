@@ -98,6 +98,21 @@ public enum PlannerFootStepView
     Tabular
 }
 
+/// <summary>Defines a presentation-only local-time window for Activity FootSteps.</summary>
+public enum PlannerActivityTimeFilter
+{
+    /// <summary>Shows activities in every time window.</summary>
+    Any,
+    /// <summary>Shows activities suggested before noon.</summary>
+    Morning,
+    /// <summary>Shows activities suggested from noon through late afternoon.</summary>
+    Afternoon,
+    /// <summary>Shows activities suggested at or after 5 PM.</summary>
+    Evening,
+    /// <summary>Shows activities without a suggested start time.</summary>
+    Flexible
+}
+
 /// <summary>Renders a responsive, presentation-only projection beside the authoritative itinerary.</summary>
 public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposable
 {
@@ -121,6 +136,7 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
     private IJSRuntime JavaScript { get; set; } = null!;
     private string? PreviousContextKey { get; set; }
     private string? SelectedType { get; set; }
+    private PlannerActivityTimeFilter ActivityTimeFilter { get; set; }
     private HashSet<string> SelectedFacets { get; } = new(StringComparer.Ordinal);
     private HashSet<string> SelectedExplorationAreas { get; } = new(StringComparer.Ordinal);
     private int? MinimumDays { get; set; }
@@ -219,6 +235,7 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
     /// <summary>Gets the cards matching every selected stable facet.</summary>
     internal IReadOnlyList<PlannerFootStepDefinition> FacetedIdeas => GeographicallyFilteredIdeas
         .Where(MatchesSelectedFacets)
+        .Where(MatchesActivityTime)
         .Where(item => !MinimumDays.HasValue || item.DurationDays >= MinimumDays)
         .Where(item => !MaximumDays.HasValue || item.DurationDays <= MaximumDays)
         .ToArray();
@@ -257,6 +274,11 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
     private void SelectType(string? type)
     {
         SelectedType = type;
+        CurrentPage = 1;
+    }
+    private void SelectActivityTime(PlannerActivityTimeFilter filter)
+    {
+        ActivityTimeFilter = filter;
         CurrentPage = 1;
     }
     private Task ShowWholeAdventureAsync() => OnAdventureContextRequested.InvokeAsync();
@@ -333,6 +355,7 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
         {
             PreviousContextKey = contextKey;
             SelectedType = null;
+            ActivityTimeFilter = PlannerActivityTimeFilter.Any;
             SelectedFacets.Clear();
             SelectedExplorationAreas.Clear();
             MinimumDays = null;
@@ -361,6 +384,7 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
     private void ClearFilters()
     {
         SelectedType = null;
+        ActivityTimeFilter = PlannerActivityTimeFilter.Any;
         SelectedFacets.Clear();
         MinimumDays = null;
         MaximumDays = null;
@@ -408,6 +432,21 @@ public partial class PlannerContextualIdeasRail : ComponentBase, IAsyncDisposabl
     private bool MatchesSelectedFacets(PlannerFootStepDefinition item) => SelectedFacets
         .Select(PlannerFacetOption.Parse).GroupBy(option => option.Group, StringComparer.Ordinal)
         .All(group => group.Any(selected => Facets(item).Contains(selected)));
+    private bool MatchesActivityTime(PlannerFootStepDefinition item)
+    {
+        if (ActivityTimeFilter == PlannerActivityTimeFilter.Any || item.ActivityDraft is null)
+        {
+            return true;
+        }
+
+        return item.ActivityDraft.SuggestedStartTime switch
+        {
+            null => ActivityTimeFilter == PlannerActivityTimeFilter.Flexible,
+            { Hour: < 12 } => ActivityTimeFilter == PlannerActivityTimeFilter.Morning,
+            { Hour: < 17 } => ActivityTimeFilter == PlannerActivityTimeFilter.Afternoon,
+            _ => ActivityTimeFilter == PlannerActivityTimeFilter.Evening
+        };
+    }
     private static IReadOnlySet<PlannerFacetOption> Facets(PlannerFootStepDefinition item) =>
         Options("place", item.Places).Concat(Options("transportation", item.TransportationModes))
         .Concat(Options("category", item.Categories)).Concat(Options("route style", item.RouteStyles))
