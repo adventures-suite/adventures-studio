@@ -84,6 +84,12 @@ public partial class PlannerItineraryBoard : ComponentBase
     [Parameter] public string? AccommodationEditStatusMessage { get; set; }
     /// <summary>Gets or sets the allowlisted reservation PRG message.</summary>
     [Parameter] public string? ReservationStatusMessage { get; set; }
+    /// <summary>Gets or sets whether an Activity FootStep is currently being dragged.</summary>
+    [Parameter] public bool IsActivityFootStepDragging { get; set; }
+    /// <summary>Gets or sets the reviewed Activity FootStep and target selected by a drop.</summary>
+    [Parameter] public PlannerActivityFootStepDrop? PendingActivityFootStep { get; set; }
+    /// <summary>Gets or sets the callback that dismisses the pending Activity FootStep review.</summary>
+    [Parameter] public EventCallback OnActivityFootStepReviewCancelled { get; set; }
 
     private string RouteCardClasses => $"planner-board__card planner-board__route{(IsDestinationFootStepDragging ? " planner-board__route--drop-ready" : string.Empty)}";
     private bool IsExpanded(PlannerWorkspacePanel panel) => ExpandedPanels.Contains(panel);

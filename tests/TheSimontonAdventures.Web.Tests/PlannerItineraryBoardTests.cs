@@ -365,6 +365,22 @@ public sealed class PlannerItineraryBoardTests
         Assert.Contains(">Cancel</button>", html, StringComparison.Ordinal);
     }
 
+    /// <summary>A dropped Activity FootStep targets one authorized day and still requires confirmation.</summary>
+    [Fact]
+    public async Task Board_DroppedActivityFootStep_RendersDayTargetAndReviewBeforeMutation()
+    {
+        var target = new PlannerActivityTarget("day_madrid_01", "Oct 25 · Arrival day");
+        var html = await RenderAsync(canEdit: true, activityDragging: true,
+            pendingActivity: new(ActivityFootStep(), target));
+
+        Assert.Contains("data-planner-activity-drop=\"day_madrid_01\"", html, StringComparison.Ordinal);
+        Assert.Contains("Drop here to review this activity for Arrival day", html, StringComparison.Ordinal);
+        Assert.Contains("Use as an activity starting point", html, StringComparison.Ordinal);
+        Assert.Contains("name=\"itineraryDayId\" value=\"day_madrid_01\"", html, StringComparison.Ordinal);
+        Assert.Contains("name=\"title\" value=\"Evening tapas walk\"", html, StringComparison.Ordinal);
+        Assert.Contains("Nothing is booked", html, StringComparison.Ordinal);
+    }
+
     private static readonly IReadOnlyDictionary<string, string> Paths = new Dictionary<string, string>
     {
         ["destination"] = "/workspace/creators/creator_alpha_01/plans/plan_spain_2027/destinations",
@@ -381,6 +397,8 @@ public sealed class PlannerItineraryBoardTests
         AdventurePlanDetail? plan = null,
         PlannerFootStepDefinition? pendingFootStep = null,
         bool dragging = false,
+        bool activityDragging = false,
+        PlannerActivityFootStepDrop? pendingActivity = null,
         IReadOnlySet<PlannerWorkspacePanel>? expandedPanels = null,
         PlannerWorkspacePanel focusedPanel = PlannerWorkspacePanel.Transportation,
         PlannerIdeasContext? selectedContext = null)
@@ -423,6 +441,8 @@ public sealed class PlannerItineraryBoardTests
                 parameters[nameof(PlannerItineraryBoard.FocusedPanel)] = focusedPanel;
             }
             parameters[nameof(PlannerItineraryBoard.IsDestinationFootStepDragging)] = dragging;
+            parameters[nameof(PlannerItineraryBoard.IsActivityFootStepDragging)] = activityDragging;
+            parameters[nameof(PlannerItineraryBoard.PendingActivityFootStep)] = pendingActivity;
             parameters[nameof(PlannerItineraryBoard.SelectedContext)] = selectedContext;
             parameters[nameof(PlannerItineraryBoard.PendingDestinationFootStep)] = pendingFootStep;
             parameters[nameof(PlannerItineraryBoard.ApplyDestinationFootStepPath)] =
@@ -461,6 +481,19 @@ public sealed class PlannerItineraryBoardTests
         ContextKinds = new HashSet<PlannerFootStepContextKind> { PlannerFootStepContextKind.Adventure },
         DestinationDraft = new("Barbados", "America/Barbados"),
         DurationDays = 4
+    };
+
+    private static PlannerFootStepDefinition ActivityFootStep() => new()
+    {
+        Id = "footstep_activity_tapas_walk",
+        Version = "1.0",
+        Kind = "activity",
+        Title = "Evening tapas walk",
+        Summary = "A reviewable local activity starting point.",
+        Attribution = "AdventuresSuite curated test",
+        Freshness = "Reviewed for testing",
+        ContextKinds = new HashSet<PlannerFootStepContextKind> { PlannerFootStepContextKind.Day },
+        ActivityDraft = new("Evening tapas walk", new(18, 0), new(20, 0))
     };
 
     private static AdventurePlanDetail FullPlan() => new()

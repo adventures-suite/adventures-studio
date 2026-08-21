@@ -29,19 +29,27 @@ export function enableDestinationDragDrop(rail, dotNetReference) {
         return;
     }
 
+    let nativeDragKind = null;
     const onDragStart = event => {
-        const source = event.target.closest('[data-planner-destination-footstep="true"]');
+        const source = event.target.closest('[data-planner-footstep-kind]');
         if (!source || !rail.contains(source) || !event.dataTransfer) {
             return;
         }
 
         event.dataTransfer.effectAllowed = 'copy';
+        nativeDragKind = source.dataset.plannerFootstepKind;
         event.dataTransfer.setData('application/x-adventures-suite-footstep', source.dataset.plannerFootstepId);
-        event.dataTransfer.setData('text/plain', 'AdventuresSuite destination FootStep');
+        event.dataTransfer.setData('application/x-adventures-suite-footstep-kind', source.dataset.plannerFootstepKind);
+        event.dataTransfer.setData('text/plain', 'AdventuresSuite FootStep');
+        void dotNetReference.invokeMethodAsync(source.dataset.plannerFootstepKind === 'activity'
+            ? 'HandleActivityFootStepDragStartedAsync'
+            : 'HandleDestinationFootStepDragStartedAsync', source.dataset.plannerFootstepId);
     };
 
     const onDragOver = event => {
-        const target = event.target.closest('[data-planner-destination-drop="true"]');
+        const kind = nativeDragKind || event.dataTransfer?.getData('application/x-adventures-suite-footstep-kind');
+        const selector = kind === 'activity' ? '[data-planner-activity-drop]' : '[data-planner-destination-drop="true"]';
+        const target = event.target.closest(selector);
         if (!target || !event.dataTransfer) {
             return;
         }
@@ -51,7 +59,9 @@ export function enableDestinationDragDrop(rail, dotNetReference) {
     };
 
     const onDrop = event => {
-        const target = event.target.closest('[data-planner-destination-drop="true"]');
+        const kind = nativeDragKind || event.dataTransfer?.getData('application/x-adventures-suite-footstep-kind');
+        const selector = kind === 'activity' ? '[data-planner-activity-drop]' : '[data-planner-destination-drop="true"]';
+        const target = event.target.closest(selector);
         if (!target || !event.dataTransfer) {
             return;
         }
@@ -62,7 +72,22 @@ export function enableDestinationDragDrop(rail, dotNetReference) {
         }
 
         event.preventDefault();
-        void dotNetReference.invokeMethodAsync('HandleDestinationFootStepDropAsync', footStepId);
+        if (kind === 'activity') {
+            void dotNetReference.invokeMethodAsync('HandleActivityFootStepDropAsync', footStepId, target.dataset.plannerActivityDrop);
+        } else {
+            void dotNetReference.invokeMethodAsync('HandleDestinationFootStepDropAsync', footStepId);
+        }
+        nativeDragKind = null;
+    };
+
+    const onDragEnd = () => {
+        if (!nativeDragKind) {
+            return;
+        }
+        void dotNetReference.invokeMethodAsync(nativeDragKind === 'activity'
+            ? 'HandleActivityFootStepDragEndedAsync'
+            : 'HandleDestinationFootStepDragEndedAsync');
+        nativeDragKind = null;
     };
 
     let pointerDrag = null;
@@ -71,7 +96,7 @@ export function enableDestinationDragDrop(rail, dotNetReference) {
             return;
         }
 
-        const source = event.target.closest('[data-planner-destination-footstep="true"]');
+        const source = event.target.closest('[data-planner-footstep-kind]');
         if (!source || !rail.contains(source)) {
             return;
         }
@@ -79,11 +104,15 @@ export function enableDestinationDragDrop(rail, dotNetReference) {
         event.preventDefault();
         pointerDrag = {
             id: source.dataset.plannerFootstepId,
+            kind: source.dataset.plannerFootstepKind,
             startX: event.clientX,
             startY: event.clientY,
             active: false
         };
-        void dotNetReference.invokeMethodAsync('HandleDestinationFootStepDragStartedAsync', pointerDrag.id);
+        const method = pointerDrag.kind === 'activity'
+            ? 'HandleActivityFootStepDragStartedAsync'
+            : 'HandleDestinationFootStepDragStartedAsync';
+        void dotNetReference.invokeMethodAsync(method, pointerDrag.id);
     };
 
     const onPointerMove = event => {
@@ -100,7 +129,8 @@ export function enableDestinationDragDrop(rail, dotNetReference) {
         }
 
         event.preventDefault();
-        document.querySelectorAll('[data-planner-destination-drop="true"]')
+        const selector = pointerDrag.kind === 'activity' ? '[data-planner-activity-drop]' : '[data-planner-destination-drop="true"]';
+        document.querySelectorAll(selector)
             .forEach(target => target.classList.toggle(
                 'planner-board__route--pointer-over', target.contains(document.elementFromPoint(event.clientX, event.clientY))));
     };
@@ -110,28 +140,36 @@ export function enableDestinationDragDrop(rail, dotNetReference) {
             return;
         }
 
-        const target = document.elementFromPoint(event.clientX, event.clientY)
-            ?.closest('[data-planner-destination-drop="true"]');
+        const selector = pointerDrag.kind === 'activity' ? '[data-planner-activity-drop]' : '[data-planner-destination-drop="true"]';
+        const target = document.elementFromPoint(event.clientX, event.clientY)?.closest(selector);
         const completed = pointerDrag.active && target;
         const footStepId = pointerDrag.id;
+        const kind = pointerDrag.kind;
         pointerDrag = null;
-        document.querySelectorAll('[data-planner-destination-drop="true"]')
+        document.querySelectorAll(selector)
             .forEach(candidate => candidate.classList.remove('planner-board__route--pointer-over'));
         if (completed) {
-            void dotNetReference.invokeMethodAsync('HandleDestinationFootStepDropAsync', footStepId);
+            if (kind === 'activity') {
+                void dotNetReference.invokeMethodAsync('HandleActivityFootStepDropAsync', footStepId, target.dataset.plannerActivityDrop);
+            } else {
+                void dotNetReference.invokeMethodAsync('HandleDestinationFootStepDropAsync', footStepId);
+            }
         }
-        void dotNetReference.invokeMethodAsync('HandleDestinationFootStepDragEndedAsync');
+        void dotNetReference.invokeMethodAsync(kind === 'activity'
+            ? 'HandleActivityFootStepDragEndedAsync'
+            : 'HandleDestinationFootStepDragEndedAsync');
     };
 
     document.addEventListener('dragstart', onDragStart, true);
     document.addEventListener('dragover', onDragOver, true);
     document.addEventListener('drop', onDrop, true);
+    document.addEventListener('dragend', onDragEnd, true);
     rail.addEventListener('pointerdown', onPointerDown, true);
     document.addEventListener('pointermove', onPointerMove, { capture: true, passive: false });
     document.addEventListener('pointerup', finishPointerDrag, true);
     document.addEventListener('pointercancel', finishPointerDrag, true);
     destinationDragBindings.set(rail, {
-        onDragStart, onDragOver, onDrop, onPointerDown, onPointerMove, finishPointerDrag
+        onDragStart, onDragOver, onDrop, onDragEnd, onPointerDown, onPointerMove, finishPointerDrag
     });
 }
 
@@ -144,6 +182,7 @@ export function disableDestinationDragDrop(rail) {
     document.removeEventListener('dragstart', binding.onDragStart, true);
     document.removeEventListener('dragover', binding.onDragOver, true);
     document.removeEventListener('drop', binding.onDrop, true);
+    document.removeEventListener('dragend', binding.onDragEnd, true);
     rail.removeEventListener('pointerdown', binding.onPointerDown, true);
     document.removeEventListener('pointermove', binding.onPointerMove, true);
     document.removeEventListener('pointerup', binding.finishPointerDrag, true);

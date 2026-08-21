@@ -33,3 +33,10 @@ public partial class PlannerActivityFootStepReview
 /// <param name="Id">The stable itinerary-day identity.</param>
 /// <param name="Label">The authorized date and day label.</param>
 public sealed record PlannerActivityTarget(string Id, string Label);
+
+/// <summary>Pairs a revalidated Activity FootStep with an authorized itinerary-day drop target.</summary>
+/// <param name="FootStep">The authorized exact-version FootStep projection.</param>
+/// <param name="Target">The authorized plan-owned itinerary day.</param>
+public sealed record PlannerActivityFootStepDrop(
+    PlannerFootStepDefinition FootStep,
+    PlannerActivityTarget Target);

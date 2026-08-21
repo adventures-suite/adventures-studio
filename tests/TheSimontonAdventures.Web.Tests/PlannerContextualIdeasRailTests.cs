@@ -243,7 +243,7 @@ public sealed class PlannerContextualIdeasRailTests
         Assert.Contains("Preview destination", html, StringComparison.Ordinal);
         Assert.Contains("Add destination to Journey", html, StringComparison.Ordinal);
         Assert.Contains("draggable=\"true\"", html, StringComparison.Ordinal);
-        Assert.Contains("data-planner-destination-footstep=\"true\"", html, StringComparison.Ordinal);
+        Assert.Contains("data-planner-footstep-kind=\"destination\"", html, StringComparison.Ordinal);
         Assert.Contains("data-planner-footstep-id=\"footstep_destination_lisbon_gateway\"", html, StringComparison.Ordinal);
         Assert.Contains("Drag to Destinations and route", html, StringComparison.Ordinal);
         Assert.Contains("Lisbon, Portugal", html, StringComparison.Ordinal);
@@ -324,6 +324,28 @@ public sealed class PlannerContextualIdeasRailTests
         });
 
         Assert.DoesNotContain("action=\"/activities\"", html, StringComparison.Ordinal);
+    }
+
+    /// <summary>Activity FootSteps expose copy semantics and retain the equivalent review action.</summary>
+    [Fact]
+    public async Task Rail_ActivityFootStep_WithAuthorizedTarget_IsDraggableAndReviewable()
+    {
+        var html = await RenderAsync(new()
+        {
+            [nameof(PlannerContextualIdeasRail.Context)] = new PlannerIdeasContext(
+                PlannerIdeasContextKind.Day, "day-1", "Arrival day"),
+            [nameof(PlannerContextualIdeasRail.AuthorizedItems)] = new[] { ActivityItem() },
+            [nameof(PlannerContextualIdeasRail.ActivityTargets)] =
+                new[] { new PlannerActivityTarget("day-1", "May 2 · Arrival day") },
+            [nameof(PlannerContextualIdeasRail.CanEdit)] = true,
+            [nameof(PlannerContextualIdeasRail.AddActivityPath)] = "/activities"
+        });
+
+        Assert.Contains("draggable=\"true\"", html, StringComparison.Ordinal);
+        Assert.Contains("data-planner-footstep-kind=\"activity\"", html, StringComparison.Ordinal);
+        Assert.Contains("Drag to an itinerary day", html, StringComparison.Ordinal);
+        Assert.Contains("Use as an activity starting point", html, StringComparison.Ordinal);
+        Assert.Contains("action=\"/activities\"", html, StringComparison.Ordinal);
     }
 
     private static async Task<string> RenderAsync(Dictionary<string, object?> parameters)

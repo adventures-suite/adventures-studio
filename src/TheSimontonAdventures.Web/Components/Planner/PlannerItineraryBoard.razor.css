@@ -7,6 +7,8 @@
 .planner-board__route--drop-ready { border: 2px dashed var(--planner-shell-primary); }
 .planner-board__route--pointer-over { box-shadow: 0 0 0 4px var(--planner-shell-focus); }
 .planner-board__drop-target { border-radius: .6rem; background: var(--planner-shell-surface-muted); color: var(--planner-shell-primary); font-weight: 700; padding: .85rem; }
+.planner-board__day--drop-ready { border: 2px dashed var(--planner-shell-primary); }
+.planner-board__day--drop-ready.planner-board__route--pointer-over { box-shadow: 0 0 0 5px var(--planner-shell-focus); }
 .planner-board__floating-drop { position: fixed; z-index: 50; right: min(34vw, 28rem); bottom: 1.25rem; left: max(1rem, 18vw); border: 3px dashed var(--planner-shell-primary); border-radius: .9rem; background: var(--planner-shell-surface); box-shadow: var(--planner-shell-shadow); color: var(--planner-shell-primary); font-size: 1.05rem; font-weight: 700; padding: 1rem 1.25rem; text-align: center; }
 .planner-board__floating-drop span { display: block; color: var(--planner-shell-text-muted); font-size: .8rem; font-weight: 400; margin-top: .2rem; }
 .planner-board__floating-drop.planner-board__route--pointer-over { box-shadow: 0 0 0 5px var(--planner-shell-focus), var(--planner-shell-shadow); }

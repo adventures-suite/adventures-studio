@@ -53,6 +53,8 @@ public partial class WorkspaceRoot
     private int IdeasWidthPixels { get; set; } = 320;
     private PlannerFootStepDefinition? DraggedDestinationFootStep { get; set; }
     private PlannerFootStepDefinition? PendingDestinationFootStep { get; set; }
+    private PlannerFootStepDefinition? DraggedActivityFootStep { get; set; }
+    private PlannerActivityFootStepDrop? PendingActivityFootStep { get; set; }
     private PlannerWorkspacePanel FocusedPanel { get; set; } = PlannerWorkspacePanel.Overview;
     private HashSet<PlannerWorkspacePanel> ExpandedPanels { get; } = [PlannerWorkspacePanel.Overview];
 
@@ -161,6 +163,35 @@ public partial class WorkspaceRoot
     private Task CancelDestinationFootStepReviewAsync()
     {
         PendingDestinationFootStep = null;
+        return Task.CompletedTask;
+    }
+
+    private Task BeginActivityFootStepDragAsync(PlannerFootStepDefinition footStep)
+    {
+        DraggedActivityFootStep = footStep.ActivityDraft is null ? null : footStep;
+        return Task.CompletedTask;
+    }
+
+    private Task EndActivityFootStepDragAsync()
+    {
+        DraggedActivityFootStep = null;
+        return Task.CompletedTask;
+    }
+
+    private Task ReviewDroppedActivityFootStepAsync(PlannerActivityFootStepDrop drop)
+    {
+        if (DraggedActivityFootStep?.Id == drop.FootStep.Id
+            && ActivityFootStepTargets.Any(target => target.Id == drop.Target.Id))
+        {
+            PendingActivityFootStep = drop;
+        }
+        DraggedActivityFootStep = null;
+        return Task.CompletedTask;
+    }
+
+    private Task CancelActivityFootStepReviewAsync()
+    {
+        PendingActivityFootStep = null;
         return Task.CompletedTask;
     }
 
