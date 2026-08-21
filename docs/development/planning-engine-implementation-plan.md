@@ -372,14 +372,21 @@ protected operation from exact `0009` through current `0013`; the Planner
 feature slice itself still does not alter migration execution authority.
 
 The next stacked customer-workflow slice adds the first direct “Use this
-Journey” consumer of that boundary. In local Alpha only, a JSON-driven fictional
-curated catalog is queried after customer Creator authorization. The user can
+Journey” consumer of that boundary. In explicitly enabled development-preview
+environments, a reviewed JSON-driven catalog is queried after customer Creator
+authorization. The user can
 review the complete destinations, itinerary, transportation, and stay patterns,
 choose a start date, and explicitly create the complete independent private
 plan. The UI uses the antiforgery-protected retry-safe endpoint and no longer
 pretends that title/description prefilling or unsupported customization copied
-the Journey. External-provider environments remain fail-closed until a
-production catalog, entitlement, and licensing adapter is reviewed.
+the Journey. The development catalog includes fictional reference patterns and
+three Creator-owned Journey FootSteps transcribed from The Simonton Adventures'
+approved Italy/Greece/Croatia, Key West/Eastern Caribbean, and
+Spain/transatlantic journey records. These records retain attribution and exact
+template-version provenance, but instantiation creates fresh private plan
+identities with no live link to the public source. Environments without the
+explicit development-preview setting remain fail-closed until a production
+catalog, entitlement, and licensing adapter is reviewed.
 
 Scope:
 

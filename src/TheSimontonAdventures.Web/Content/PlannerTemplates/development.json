@@ -80,5 +80,177 @@
       { "name": "Hvar walkable stay pattern", "startDayOffset": 3, "endDayOffset": 5, "timeZone": "Europe/Zagreb" },
       { "name": "Dubrovnik quieter-evening stay pattern", "startDayOffset": 6, "endDayOffset": 9, "timeZone": "Europe/Zagreb" }
     ]
+  },
+  {
+    "templateId": "creator-tsa.italy-greece-croatia-2026",
+    "version": "1.0",
+    "ownerType": "Creator",
+    "ownerId": "creator_tsa_01",
+    "sourceLocale": "en-US",
+    "attribution": "The Simonton Adventures approved journey record",
+    "title": "Italy, Greece & Croatia",
+    "workingDescription": "A romantic journey through Italy, Greece, and Croatia, including Venice, Florence and an Adriatic and Aegean cruise aboard Explorer of the Seas.",
+    "durationDays": 16,
+    "destinations": [
+      { "key": "venice-arrival", "name": "Venice", "startDayOffset": 1, "endDayOffset": 2, "timeZone": "Europe/Rome", "guidance": "Canal-side arrival and time in Venice before continuing by rail" },
+      { "key": "florence", "name": "Florence", "startDayOffset": 3, "endDayOffset": 5, "timeZone": "Europe/Rome", "guidance": "Florence and Tuscany before continuing toward the cruise" },
+      { "key": "ravenna-embarkation", "name": "Ravenna", "startDayOffset": 6, "endDayOffset": 6, "timeZone": "Europe/Rome", "guidance": "Cruise embarkation from Porto Corsini" },
+      { "key": "dubrovnik", "name": "Dubrovnik", "startDayOffset": 8, "endDayOffset": 8, "timeZone": "Europe/Zagreb", "guidance": "Adriatic port day in Dubrovnik" },
+      { "key": "athens", "name": "Athens", "startDayOffset": 10, "endDayOffset": 10, "timeZone": "Europe/Athens", "guidance": "Arrival through Piraeus for the Athens port day" },
+      { "key": "santorini", "name": "Santorini", "startDayOffset": 11, "endDayOffset": 11, "timeZone": "Europe/Athens", "guidance": "Aegean port day in Santorini" },
+      { "key": "split", "name": "Split", "startDayOffset": 13, "endDayOffset": 13, "timeZone": "Europe/Zagreb", "guidance": "Adriatic port day in Split" },
+      { "key": "venice-departure", "name": "Venice", "startDayOffset": 14, "endDayOffset": 15, "timeZone": "Europe/Rome", "guidance": "Disembarkation transfer and final overnight before flying home" }
+    ],
+    "days": [
+      { "key": "day-1", "dayOffset": 0, "destinationKey": null, "timeZone": "America/Phoenix", "title": "Depart Phoenix for Venice" },
+      { "key": "day-2", "dayOffset": 1, "destinationKey": "venice-arrival", "timeZone": "Europe/Rome", "title": "Arrive in Venice by water taxi" },
+      { "key": "day-3", "dayOffset": 2, "destinationKey": "venice-arrival", "timeZone": "Europe/Rome", "title": "Experience Venice" },
+      { "key": "day-4", "dayOffset": 3, "destinationKey": "florence", "timeZone": "Europe/Rome", "title": "High-speed rail to Florence" },
+      { "key": "day-5", "dayOffset": 4, "destinationKey": "florence", "timeZone": "Europe/Rome", "title": "Explore Florence" },
+      { "key": "day-6", "dayOffset": 5, "destinationKey": "florence", "timeZone": "Europe/Rome", "title": "Tuscany and Florence" },
+      { "key": "day-7", "dayOffset": 6, "destinationKey": "ravenna-embarkation", "timeZone": "Europe/Rome", "title": "Travel by rail to Ravenna" },
+      { "key": "day-8", "dayOffset": 7, "destinationKey": null, "timeZone": "Europe/Rome", "title": "Embark Explorer of the Seas" },
+      { "key": "day-9", "dayOffset": 8, "destinationKey": "dubrovnik", "timeZone": "Europe/Zagreb", "title": "Dubrovnik port day" },
+      { "key": "day-10", "dayOffset": 9, "destinationKey": null, "timeZone": "UTC", "title": "Day at sea" },
+      { "key": "day-11", "dayOffset": 10, "destinationKey": "athens", "timeZone": "Europe/Athens", "title": "Athens through Piraeus" },
+      { "key": "day-12", "dayOffset": 11, "destinationKey": "santorini", "timeZone": "Europe/Athens", "title": "Santorini port day" },
+      { "key": "day-13", "dayOffset": 12, "destinationKey": null, "timeZone": "UTC", "title": "Day at sea" },
+      { "key": "day-14", "dayOffset": 13, "destinationKey": "split", "timeZone": "Europe/Zagreb", "title": "Split port day" },
+      { "key": "day-15", "dayOffset": 14, "destinationKey": "venice-departure", "timeZone": "Europe/Rome", "title": "Disembark and transfer to Venice" },
+      { "key": "day-16", "dayOffset": 15, "destinationKey": "venice-departure", "timeZone": "Europe/Rome", "title": "Return home to Phoenix" }
+    ],
+    "activities": [
+      { "dayKey": "day-3", "title": "Explore Venice's canals and neighborhoods" },
+      { "dayKey": "day-5", "title": "Experience Florence's historic center" },
+      { "dayKey": "day-9", "title": "Explore Dubrovnik" },
+      { "dayKey": "day-11", "title": "Experience Athens" },
+      { "dayKey": "day-12", "title": "Explore Santorini" },
+      { "dayKey": "day-14", "title": "Experience Split" }
+    ],
+    "transportation": [
+      { "mode": "Flight", "from": "Phoenix Sky Harbor International Airport", "to": "Venice Marco Polo Airport", "departureDayOffset": 0, "departureTimeZone": "America/Phoenix", "arrivalDayOffset": 1, "arrivalTimeZone": "Europe/Rome" },
+      { "mode": "Water taxi", "from": "Venice Marco Polo Airport", "to": "Excess Venice Boutique Hotel", "departureDayOffset": 1, "departureTimeZone": "Europe/Rome", "arrivalDayOffset": 1, "arrivalTimeZone": "Europe/Rome" },
+      { "mode": "Train", "from": "Venezia Santa Lucia", "to": "Firenze Santa Maria Novella", "departureDayOffset": 3, "departureTimeZone": "Europe/Rome", "arrivalDayOffset": 3, "arrivalTimeZone": "Europe/Rome" },
+      { "mode": "Train", "from": "Firenze Santa Maria Novella", "to": "Ravenna", "departureDayOffset": 6, "departureTimeZone": "Europe/Rome", "arrivalDayOffset": 6, "arrivalTimeZone": "Europe/Rome" },
+      { "mode": "Cruise", "from": "Ravenna Cruise Port", "to": "Dubrovnik Cruise Port", "departureDayOffset": 7, "departureTimeZone": "Europe/Rome", "arrivalDayOffset": 8, "arrivalTimeZone": "Europe/Zagreb" },
+      { "mode": "Cruise", "from": "Dubrovnik Cruise Port", "to": "Piraeus Cruise Port", "departureDayOffset": 8, "departureTimeZone": "Europe/Zagreb", "arrivalDayOffset": 10, "arrivalTimeZone": "Europe/Athens" },
+      { "mode": "Cruise", "from": "Piraeus Cruise Port", "to": "Santorini", "departureDayOffset": 10, "departureTimeZone": "Europe/Athens", "arrivalDayOffset": 11, "arrivalTimeZone": "Europe/Athens" },
+      { "mode": "Cruise", "from": "Santorini", "to": "Split Cruise Port", "departureDayOffset": 11, "departureTimeZone": "Europe/Athens", "arrivalDayOffset": 13, "arrivalTimeZone": "Europe/Zagreb" },
+      { "mode": "Cruise", "from": "Split Cruise Port", "to": "Ravenna Cruise Port", "departureDayOffset": 13, "departureTimeZone": "Europe/Zagreb", "arrivalDayOffset": 14, "arrivalTimeZone": "Europe/Rome" },
+      { "mode": "Bus", "from": "Ravenna Cruise Port", "to": "Courtyard Venice Airport", "departureDayOffset": 14, "departureTimeZone": "Europe/Rome", "arrivalDayOffset": 14, "arrivalTimeZone": "Europe/Rome" },
+      { "mode": "Flight", "from": "Venice Marco Polo Airport", "to": "Phoenix Sky Harbor International Airport", "departureDayOffset": 15, "departureTimeZone": "Europe/Rome", "arrivalDayOffset": 15, "arrivalTimeZone": "America/Phoenix" }
+    ],
+    "accommodations": [
+      { "name": "Excess Venice Boutique Hotel", "startDayOffset": 1, "endDayOffset": 2, "timeZone": "Europe/Rome" },
+      { "name": "Florence stay", "startDayOffset": 3, "endDayOffset": 5, "timeZone": "Europe/Rome" },
+      { "name": "Explorer of the Seas", "startDayOffset": 7, "endDayOffset": 13, "timeZone": "UTC" },
+      { "name": "Courtyard Venice Airport", "startDayOffset": 14, "endDayOffset": 14, "timeZone": "Europe/Rome" }
+    ]
+  },
+  {
+    "templateId": "creator-tsa.eastern-caribbean-2027",
+    "version": "1.0",
+    "ownerType": "Creator",
+    "ownerId": "creator_tsa_01",
+    "sourceLocale": "en-US",
+    "attribution": "The Simonton Adventures approved journey record",
+    "title": "Key West & Eastern Caribbean Cruise",
+    "workingDescription": "A working journey from Phoenix through Miami and Key West, followed by an Eastern Caribbean cruise aboard Icon of the Seas.",
+    "durationDays": 8,
+    "destinations": [
+      { "key": "miami-arrival", "name": "Miami", "startDayOffset": 0, "endDayOffset": 0, "timeZone": "America/New_York", "guidance": "South Florida arrival before the Keys and cruise" },
+      { "key": "key-west", "name": "Key West", "startDayOffset": 1, "endDayOffset": 1, "timeZone": "America/New_York", "guidance": "Flexible Key West visit before embarkation" },
+      { "key": "miami-embarkation", "name": "Miami", "startDayOffset": 2, "endDayOffset": 2, "timeZone": "America/New_York", "guidance": "Return to Miami for cruise embarkation" },
+      { "key": "philipsburg", "name": "Philipsburg", "startDayOffset": 4, "endDayOffset": 4, "timeZone": "America/Lower_Princes", "guidance": "Port plans remain subject to the cruise itinerary" },
+      { "key": "charlotte-amalie", "name": "Charlotte Amalie", "startDayOffset": 5, "endDayOffset": 5, "timeZone": "America/St_Thomas", "guidance": "Shore plans remain to be confirmed" },
+      { "key": "cococay", "name": "Perfect Day at CocoCay", "startDayOffset": 7, "endDayOffset": 7, "timeZone": "America/Nassau", "guidance": "Activities remain under consideration" }
+    ],
+    "days": [
+      { "key": "day-1", "dayOffset": 0, "destinationKey": "miami-arrival", "timeZone": "America/New_York", "title": "Fly from Phoenix to Miami" },
+      { "key": "day-2", "dayOffset": 1, "destinationKey": "key-west", "timeZone": "America/New_York", "title": "Travel through the Florida Keys" },
+      { "key": "day-3", "dayOffset": 2, "destinationKey": "miami-embarkation", "timeZone": "America/New_York", "title": "Return to Miami and embark" },
+      { "key": "day-4", "dayOffset": 3, "destinationKey": null, "timeZone": "UTC", "title": "Day at sea" },
+      { "key": "day-5", "dayOffset": 4, "destinationKey": "philipsburg", "timeZone": "America/Lower_Princes", "title": "Philipsburg port day" },
+      { "key": "day-6", "dayOffset": 5, "destinationKey": "charlotte-amalie", "timeZone": "America/St_Thomas", "title": "Charlotte Amalie port day" },
+      { "key": "day-7", "dayOffset": 6, "destinationKey": null, "timeZone": "UTC", "title": "Day at sea" },
+      { "key": "day-8", "dayOffset": 7, "destinationKey": "cococay", "timeZone": "America/Nassau", "title": "Perfect Day at CocoCay" }
+    ],
+    "activities": [
+      { "dayKey": "day-2", "title": "Explore Key West" },
+      { "dayKey": "day-5", "title": "Choose a Philipsburg shore experience" },
+      { "dayKey": "day-6", "title": "Choose a Charlotte Amalie shore experience" },
+      { "dayKey": "day-8", "title": "Choose a CocoCay experience" }
+    ],
+    "transportation": [
+      { "mode": "Flight", "from": "Phoenix", "to": "Miami", "departureDayOffset": 0, "departureTimeZone": "America/Phoenix", "arrivalDayOffset": 0, "arrivalTimeZone": "America/New_York" },
+      { "mode": "Car", "from": "Miami", "to": "Key West", "departureDayOffset": 1, "departureTimeZone": "America/New_York", "arrivalDayOffset": 1, "arrivalTimeZone": "America/New_York" },
+      { "mode": "Car", "from": "Key West", "to": "Miami", "departureDayOffset": 2, "departureTimeZone": "America/New_York", "arrivalDayOffset": 2, "arrivalTimeZone": "America/New_York" },
+      { "mode": "Cruise", "from": "Miami", "to": "Philipsburg", "departureDayOffset": 2, "departureTimeZone": "America/New_York", "arrivalDayOffset": 4, "arrivalTimeZone": "America/Lower_Princes" },
+      { "mode": "Cruise", "from": "Philipsburg", "to": "Charlotte Amalie", "departureDayOffset": 4, "departureTimeZone": "America/Lower_Princes", "arrivalDayOffset": 5, "arrivalTimeZone": "America/St_Thomas" },
+      { "mode": "Cruise", "from": "Charlotte Amalie", "to": "Perfect Day at CocoCay", "departureDayOffset": 5, "departureTimeZone": "America/St_Thomas", "arrivalDayOffset": 7, "arrivalTimeZone": "America/Nassau" }
+    ],
+    "accommodations": [
+      { "name": "South Florida pre-cruise stay", "startDayOffset": 0, "endDayOffset": 1, "timeZone": "America/New_York" },
+      { "name": "Icon of the Seas", "startDayOffset": 2, "endDayOffset": 7, "timeZone": "UTC" }
+    ]
+  },
+  {
+    "templateId": "creator-tsa.spain-transatlantic-2027",
+    "version": "1.0",
+    "ownerType": "Creator",
+    "ownerId": "creator_tsa_01",
+    "sourceLocale": "en-US",
+    "attribution": "The Simonton Adventures approved journey record",
+    "title": "Spain & Transatlantic Cruise",
+    "workingDescription": "A working journey from Phoenix to Spain followed by a westbound transatlantic cruise from Barcelona to Fort Lauderdale.",
+    "durationDays": 22,
+    "destinations": [
+      { "key": "barcelona", "name": "Barcelona", "startDayOffset": 1, "endDayOffset": 3, "timeZone": "Europe/Madrid", "guidance": "Flights and the pre-cruise stay remain to be confirmed" },
+      { "key": "palma", "name": "Palma de Mallorca", "startDayOffset": 5, "endDayOffset": 5, "timeZone": "Europe/Madrid", "guidance": "Port timing and shore plans may change" },
+      { "key": "alicante", "name": "Alicante", "startDayOffset": 6, "endDayOffset": 6, "timeZone": "Europe/Madrid", "guidance": "Excursions remain under consideration" },
+      { "key": "malaga", "name": "Málaga", "startDayOffset": 7, "endDayOffset": 7, "timeZone": "Europe/Madrid", "guidance": "Excursions remain under consideration" },
+      { "key": "fort-lauderdale", "name": "Fort Lauderdale", "startDayOffset": 21, "endDayOffset": 21, "timeZone": "America/New_York", "guidance": "Arrival after the westbound Atlantic crossing" }
+    ],
+    "days": [
+      { "key": "day-1", "dayOffset": 0, "destinationKey": null, "timeZone": "America/Phoenix", "title": "Depart Phoenix for Spain" },
+      { "key": "day-2", "dayOffset": 1, "destinationKey": "barcelona", "timeZone": "Europe/Madrid", "title": "Arrive in Barcelona" },
+      { "key": "day-3", "dayOffset": 2, "destinationKey": "barcelona", "timeZone": "Europe/Madrid", "title": "Experience Barcelona" },
+      { "key": "day-4", "dayOffset": 3, "destinationKey": "barcelona", "timeZone": "Europe/Madrid", "title": "Barcelona before embarkation" },
+      { "key": "day-5", "dayOffset": 4, "destinationKey": null, "timeZone": "Europe/Madrid", "title": "Embark the transatlantic cruise" },
+      { "key": "day-6", "dayOffset": 5, "destinationKey": "palma", "timeZone": "Europe/Madrid", "title": "Palma de Mallorca port day" },
+      { "key": "day-7", "dayOffset": 6, "destinationKey": "alicante", "timeZone": "Europe/Madrid", "title": "Alicante port day" },
+      { "key": "day-8", "dayOffset": 7, "destinationKey": "malaga", "timeZone": "Europe/Madrid", "title": "Málaga port day" },
+      { "key": "day-9", "dayOffset": 8, "destinationKey": null, "timeZone": "UTC", "title": "Begin the Atlantic crossing" },
+      { "key": "day-10", "dayOffset": 9, "destinationKey": null, "timeZone": "UTC", "title": "Atlantic crossing" },
+      { "key": "day-11", "dayOffset": 10, "destinationKey": null, "timeZone": "UTC", "title": "Atlantic crossing" },
+      { "key": "day-12", "dayOffset": 11, "destinationKey": null, "timeZone": "UTC", "title": "Atlantic crossing" },
+      { "key": "day-13", "dayOffset": 12, "destinationKey": null, "timeZone": "UTC", "title": "Atlantic crossing" },
+      { "key": "day-14", "dayOffset": 13, "destinationKey": null, "timeZone": "UTC", "title": "Atlantic crossing" },
+      { "key": "day-15", "dayOffset": 14, "destinationKey": null, "timeZone": "UTC", "title": "Atlantic crossing" },
+      { "key": "day-16", "dayOffset": 15, "destinationKey": null, "timeZone": "UTC", "title": "Atlantic crossing" },
+      { "key": "day-17", "dayOffset": 16, "destinationKey": null, "timeZone": "UTC", "title": "Atlantic crossing" },
+      { "key": "day-18", "dayOffset": 17, "destinationKey": null, "timeZone": "UTC", "title": "Atlantic crossing" },
+      { "key": "day-19", "dayOffset": 18, "destinationKey": null, "timeZone": "UTC", "title": "Atlantic crossing" },
+      { "key": "day-20", "dayOffset": 19, "destinationKey": null, "timeZone": "UTC", "title": "Atlantic crossing" },
+      { "key": "day-21", "dayOffset": 20, "destinationKey": null, "timeZone": "UTC", "title": "Final day at sea" },
+      { "key": "day-22", "dayOffset": 21, "destinationKey": "fort-lauderdale", "timeZone": "America/New_York", "title": "Arrive in Fort Lauderdale" }
+    ],
+    "activities": [
+      { "dayKey": "day-3", "title": "Explore Barcelona" },
+      { "dayKey": "day-6", "title": "Choose a Palma de Mallorca shore experience" },
+      { "dayKey": "day-7", "title": "Choose an Alicante shore experience" },
+      { "dayKey": "day-8", "title": "Choose a Málaga shore experience" }
+    ],
+    "transportation": [
+      { "mode": "Flight", "from": "Phoenix", "to": "Barcelona", "departureDayOffset": 0, "departureTimeZone": "America/Phoenix", "arrivalDayOffset": 1, "arrivalTimeZone": "Europe/Madrid" },
+      { "mode": "Cruise", "from": "Barcelona", "to": "Palma de Mallorca", "departureDayOffset": 4, "departureTimeZone": "Europe/Madrid", "arrivalDayOffset": 5, "arrivalTimeZone": "Europe/Madrid" },
+      { "mode": "Cruise", "from": "Palma de Mallorca", "to": "Alicante", "departureDayOffset": 5, "departureTimeZone": "Europe/Madrid", "arrivalDayOffset": 6, "arrivalTimeZone": "Europe/Madrid" },
+      { "mode": "Cruise", "from": "Alicante", "to": "Málaga", "departureDayOffset": 6, "departureTimeZone": "Europe/Madrid", "arrivalDayOffset": 7, "arrivalTimeZone": "Europe/Madrid" },
+      { "mode": "Cruise", "from": "Málaga", "to": "Fort Lauderdale", "departureDayOffset": 7, "departureTimeZone": "Europe/Madrid", "arrivalDayOffset": 21, "arrivalTimeZone": "America/New_York" }
+    ],
+    "accommodations": [
+      { "name": "Barcelona pre-cruise stay", "startDayOffset": 1, "endDayOffset": 3, "timeZone": "Europe/Madrid" },
+      { "name": "Royal Caribbean transatlantic cruise", "startDayOffset": 4, "endDayOffset": 20, "timeZone": "UTC" }
+    ]
   }
 ]
