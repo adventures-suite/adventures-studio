@@ -55,6 +55,7 @@ public sealed class AdventureTemplateCatalogTests
         });
 
         var templates = await source.ListAsync(Creator, "en-US");
+        Assert.Equal(5, templates.Count);
         var portugal = Assert.Single(templates, item =>
             item.VersionId.TemplateId == "platform.portugal-by-rail");
         Assert.Equal("1.0", portugal.VersionId.Version);
@@ -62,6 +63,32 @@ public sealed class AdventureTemplateCatalogTests
         Assert.Equal(3, portugal.Destinations.Count);
         Assert.Equal(2, portugal.Transportation.Count);
         Assert.Equal(3, portugal.Accommodations.Count);
+
+        var mediterranean = Assert.Single(templates, item =>
+            item.VersionId.TemplateId == "creator-tsa.italy-greece-croatia-2026");
+        Assert.Equal(AdventureTemplateOwnerType.Creator, mediterranean.OwnerType);
+        Assert.Equal("creator_tsa_01", mediterranean.OwnerId);
+        Assert.Equal("Italy, Greece & Croatia", mediterranean.Title);
+        Assert.Equal(16, mediterranean.DurationDays);
+        Assert.Equal(11, mediterranean.Transportation.Count);
+
+        var caribbean = Assert.Single(templates, item =>
+            item.VersionId.TemplateId == "creator-tsa.eastern-caribbean-2027");
+        Assert.Equal("Key West & Eastern Caribbean Cruise", caribbean.Title);
+        Assert.Equal(8, caribbean.DurationDays);
+        Assert.Equal(6, caribbean.Transportation.Count);
+
+        var transatlantic = Assert.Single(templates, item =>
+            item.VersionId.TemplateId == "creator-tsa.spain-transatlantic-2027");
+        Assert.Equal("Spain & Transatlantic Cruise", transatlantic.Title);
+        Assert.Equal(22, transatlantic.DurationDays);
+        Assert.Equal(5, transatlantic.Transportation.Count);
+
+        Assert.All(
+            templates.Where(item => item.OwnerType == AdventureTemplateOwnerType.Creator),
+            item => Assert.Equal(
+                "The Simonton Adventures approved journey record",
+                item.Attribution));
 
         var authorized = await source.ResolveUseAsync(
             Actor, Creator, portugal.VersionId, "en-US");

@@ -4,7 +4,7 @@ using TheSimontonAdventures.Web.Creators;
 
 namespace TheSimontonAdventures.Web.Planning;
 
-/// <summary>Loads the fictional, deterministic local-Alpha template collection from JSON.</summary>
+/// <summary>Loads the reviewed, deterministic development-preview template collection from JSON.</summary>
 public sealed class DevelopmentAdventureTemplateCatalogSource : IAdventureTemplateCatalogSource
 {
     private const string RelativeCatalogPath = "Content/PlannerTemplates/development.json";
