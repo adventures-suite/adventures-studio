@@ -30,6 +30,21 @@ public sealed class PlannerWorkspaceShellTests
         Assert.DoesNotContain(">Settings<", html, StringComparison.Ordinal);
     }
 
+    /// <summary>The shell can release the centered width cap for an edge-aligned Journey workspace.</summary>
+    [Fact]
+    public async Task Shell_EdgeAlignedContent_UsesFullWorkspaceWidth()
+    {
+        var html = await RenderAsync<PlannerWorkspaceShell>(new()
+        {
+            [nameof(PlannerWorkspaceShell.IsContentEdgeAligned)] = true,
+            [nameof(PlannerWorkspaceShell.ChildContent)] = (RenderFragment)(builder =>
+                builder.AddContent(0, "Journey detail"))
+        });
+
+        Assert.Contains("planner-shell__content--edge-aligned", html, StringComparison.Ordinal);
+        Assert.Contains("Journey detail", html, StringComparison.Ordinal);
+    }
+
     /// <summary>The skip link wires interactive focus to the focusable Planner content target.</summary>
     [Fact]
     public void Shell_SkipLink_UsesInteractiveMainContentFocusContract()

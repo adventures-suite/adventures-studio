@@ -88,6 +88,10 @@ public partial class PlannerWorkspaceShell : ComponentBase, IAsyncDisposable
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
 
+    /// <summary>Gets or sets whether the content uses the full available workspace width.</summary>
+    [Parameter]
+    public bool IsContentEdgeAligned { get; set; }
+
     /// <summary>Gets the selected semantic theme.</summary>
     public PlannerWorkspaceTheme Theme { get; private set; } = PlannerWorkspaceTheme.System;
 
@@ -109,6 +113,11 @@ public partial class PlannerWorkspaceShell : ComponentBase, IAsyncDisposable
         IsSidebarHidden ? "planner-shell--sidebar-hidden" : string.Empty,
         IsSidebarCollapsed ? "planner-shell--sidebar-collapsed" : string.Empty,
         IsMobileNavigationOpen ? "planner-shell--mobile-open" : string.Empty).Trim();
+
+    /// <summary>Gets the content class list derived from the requested workspace presentation.</summary>
+    public string ContentClasses => string.Join(' ',
+        "planner-shell__content",
+        IsContentEdgeAligned ? "planner-shell__content--edge-aligned" : string.Empty).Trim();
 
     /// <summary>Toggles the collapsed sidebar state.</summary>
     public Task ToggleSidebarCollapseAsync()

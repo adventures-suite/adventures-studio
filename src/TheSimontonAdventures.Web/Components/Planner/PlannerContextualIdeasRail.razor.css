@@ -1,8 +1,12 @@
-.planner-ideas { position: sticky; top: 1rem; min-width: 0; border: 1px solid var(--planner-shell-border); border-radius: .9rem; background: var(--planner-shell-surface); box-shadow: var(--planner-shell-shadow); }
+.planner-ideas { position: sticky; top: 1rem; justify-self: end; width: 100%; min-width: 0; border: 1px solid var(--planner-shell-border); border-radius: .9rem; background: var(--planner-shell-surface); box-shadow: var(--planner-shell-shadow); }
 .planner-ideas__header { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: 1rem; }
 .planner-ideas__header p { margin: 0 0 .2rem; color: var(--planner-shell-accent); font-size: .68rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
 .planner-ideas__header h3 { margin: 0; font: 700 1.5rem Georgia, serif; }
 .planner-ideas__controls { display: flex; gap: .35rem; }
+.planner-ideas__width-controls { display: flex; gap: .2rem; }
+.planner-ideas__width-controls button { align-items: center; display: inline-flex; justify-content: center; min-height: 2.35rem; min-width: 2.35rem; padding: .45rem; }
+.planner-ideas__width-controls button:disabled { cursor: not-allowed; opacity: .45; }
+.planner-ideas__width-controls svg { fill: none; height: 1rem; stroke: currentColor; stroke-linecap: round; stroke-width: 2; width: 1rem; }
 .planner-ideas button { border: 1px solid var(--planner-shell-border); border-radius: 999px; background: var(--planner-shell-surface-muted); color: var(--planner-shell-text); cursor: pointer; font: inherit; padding: .5rem .7rem; }
 .planner-ideas button:focus-visible, .planner-ideas__mobile-open:focus-visible { outline: 3px solid var(--planner-shell-focus); outline-offset: 2px; }
 .planner-ideas__close, .planner-ideas__mobile-open { display: none; }
@@ -65,7 +69,7 @@
 @media (max-width: 72rem) {
     .planner-ideas__mobile-open { display: inline-flex; position: sticky; bottom: 1rem; z-index: 8; margin: 1rem 0; border: 0; border-radius: 999px; background: var(--planner-shell-primary); color: var(--planner-shell-surface); font: inherit; font-weight: 800; padding: .8rem 1.1rem; }
     .planner-ideas { display: none; position: fixed; z-index: 30; inset: 0 0 0 auto; width: min(24rem, 92vw); max-height: 100dvh; overflow: auto; border-radius: 0; }
-    .planner-ideas--drawer-open { display: block; }.planner-ideas__close { display: inline-flex; }.planner-ideas__collapse, .planner-ideas__resize { display: none; }
+    .planner-ideas--drawer-open { display: block; }.planner-ideas__close { display: inline-flex; }.planner-ideas__collapse, .planner-ideas__resize, .planner-ideas__width-controls { display: none; }
     .planner-ideas__backdrop { display: block; position: fixed; z-index: 20; inset: 0; border: 0; background: rgb(0 0 0 / 55%); }
 }
 @media (prefers-reduced-motion: reduce) { .planner-ideas, .planner-ideas__backdrop { scroll-behavior: auto; } }
