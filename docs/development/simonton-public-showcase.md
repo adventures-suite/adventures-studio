@@ -34,6 +34,10 @@ closed when unknown.
 ## Presentation and operations
 
 - Present the experiences as the Simonton family's authentic travel story.
+- Configure the private development workspace's `Web` navigation destination
+  through `WorkspaceNavigation:SimontonAdventuresUrl`; never hardcode the Azure
+  hostname in a Razor component. Missing or invalid configuration leaves the
+  navigation item unavailable.
 - Distinguish published inspiration from future booking or availability
   capabilities.
 - Verify the homepage, current journey, destinations, local images, and private

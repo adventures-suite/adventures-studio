@@ -16,6 +16,10 @@ public partial class PlannerWorkspaceSidebar : ComponentBase
     [Parameter]
     public bool IsMobileOpen { get; set; }
 
+    /// <summary>Gets or sets the optional public site opened by the Web navigation item.</summary>
+    [Parameter]
+    public Uri? SimontonAdventuresUrl { get; set; }
+
     /// <summary>Gets or sets the current bounded width.</summary>
     [Parameter]
     public int WidthPixels { get; set; }

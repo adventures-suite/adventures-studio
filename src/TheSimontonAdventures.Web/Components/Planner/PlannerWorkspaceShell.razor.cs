@@ -76,6 +76,10 @@ public partial class PlannerWorkspaceShell : ComponentBase, IAsyncDisposable
     [Parameter]
     public string Description { get; set; } = string.Empty;
 
+    /// <summary>Gets or sets the optional public site opened by the Web navigation item.</summary>
+    [Parameter]
+    public Uri? SimontonAdventuresUrl { get; set; }
+
     /// <summary>Gets or sets optional toolbar content such as an authenticated sign-out action.</summary>
     [Parameter]
     public RenderFragment? ToolbarContent { get; set; }

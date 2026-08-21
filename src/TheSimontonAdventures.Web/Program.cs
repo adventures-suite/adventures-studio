@@ -19,6 +19,8 @@ builder.Services
     .AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton(
+    WorkspaceNavigationConfiguration.FromConfiguration(builder.Configuration));
 
 // The showcase is an isolated development surface backed only by a validated,
 // fictional JSON fixture. It never changes or bypasses private authentication.
