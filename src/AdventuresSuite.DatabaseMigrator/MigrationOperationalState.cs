@@ -221,7 +221,37 @@ internal static class MigrationOperationalState
                 WHERE object_id = OBJECT_ID(N'planning.PlannerFootStepApplications')
                   AND name IN (N'UX_PlannerFootStepApplications_Target',
                                N'IX_PlannerFootStepApplications_Source');
-                """));
+                """))
+        {
+            DestinationPlanItemLinkColumnCount = await ScalarAsync(connection, """
+                SELECT COUNT(*)
+                FROM sys.columns
+                WHERE (object_id = OBJECT_ID(N'planning.TransportationSegments')
+                       AND name IN (N'DepartureDestinationVisitId', N'ArrivalDestinationVisitId'))
+                   OR (object_id = OBJECT_ID(N'planning.Accommodations')
+                       AND name = N'DestinationVisitId')
+                   OR (object_id = OBJECT_ID(N'planning.Reservations')
+                       AND name = N'DestinationVisitId');
+                """),
+            DestinationPlanItemLinkForeignKeyCount = await ScalarAsync(connection, """
+                SELECT COUNT(*)
+                FROM sys.foreign_keys
+                WHERE name IN (
+                    N'FK_TransportationSegments_DepartureDestinationVisit',
+                    N'FK_TransportationSegments_ArrivalDestinationVisit',
+                    N'FK_Accommodations_DestinationVisit',
+                    N'FK_Reservations_DestinationVisit');
+                """),
+            DestinationPlanItemLinkIndexCount = await ScalarAsync(connection, """
+                SELECT COUNT(*)
+                FROM sys.indexes
+                WHERE name IN (
+                    N'IX_TransportationSegments_DepartureDestinationVisit',
+                    N'IX_TransportationSegments_ArrivalDestinationVisit',
+                    N'IX_Accommodations_DestinationVisit',
+                    N'IX_Reservations_DestinationVisit');
+                """)
+        };
     }
 
     internal static MigrationJournalOutcome Classify(IReadOnlyList<string> journal)
@@ -236,6 +266,7 @@ internal static class MigrationOperationalState
         if (journal.SequenceEqual(catalog.Take(11), StringComparer.Ordinal)) return MigrationJournalOutcome.At0011;
         if (journal.SequenceEqual(catalog.Take(12), StringComparer.Ordinal)) return MigrationJournalOutcome.At0012;
         if (journal.SequenceEqual(catalog.Take(13), StringComparer.Ordinal)) return MigrationJournalOutcome.At0013;
+        if (journal.SequenceEqual(catalog.Take(14), StringComparer.Ordinal)) return MigrationJournalOutcome.At0014;
         return MigrationJournalOutcome.Unexpected;
     }
 
@@ -313,7 +344,17 @@ internal sealed record MigrationStateEvidence(
     bool AdventurePlanTemplateOriginIndexExists,
     bool PlannerFootStepApplicationsExists,
     int PlannerFootStepApplicationConstraintCount,
-    int PlannerFootStepApplicationIndexCount);
+    int PlannerFootStepApplicationIndexCount)
+{
+    /// <summary>Gets the number of reviewed destination-link columns introduced by migration 0014.</summary>
+    internal int DestinationPlanItemLinkColumnCount { get; init; }
+
+    /// <summary>Gets the number of reviewed destination-link foreign keys introduced by migration 0014.</summary>
+    internal int DestinationPlanItemLinkForeignKeyCount { get; init; }
+
+    /// <summary>Gets the number of reviewed destination-link indexes introduced by migration 0014.</summary>
+    internal int DestinationPlanItemLinkIndexCount { get; init; }
+}
 
 internal enum MigrationJournalOutcome
 {
@@ -325,5 +366,6 @@ internal enum MigrationJournalOutcome
     At0011,
     At0012,
     At0013,
+    At0014,
     Unexpected
 }

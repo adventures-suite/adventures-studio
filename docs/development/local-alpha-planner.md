@@ -81,8 +81,8 @@ dotnet run --project src/AdventuresSuite.DatabaseMigrator -- --migrate
 
 Require the final journal count and latest script to match the repository's
 authoritative migration catalog before provisioning the application identity.
-For the current catalog the expected state is 13 scripts ending in
-`0013_grant_planning_runtime_permissions.sql`.
+For the current catalog the expected state is 14 scripts ending in
+`0014_link_plan_items_to_destinations.sql`.
 
 Provision a distinct DML login into only the three migrated runtime roles:
 

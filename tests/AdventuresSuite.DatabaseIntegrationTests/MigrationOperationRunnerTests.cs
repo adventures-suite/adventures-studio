@@ -42,16 +42,31 @@ public sealed class MigrationOperationRunnerTests
     }
 
     [Fact]
-    public void CompleteRequires0013SchemaPermissionsAndUnchangedFingerprint()
+    public void CompleteRequires0014SchemaPermissionsLinksAndUnchangedFingerprint()
     {
         var before = State(MigrationJournalOutcome.At0009, fingerprint: "SAME", complete: true,
             policyPrerequisite: true);
+        var after = State(MigrationJournalOutcome.At0014, fingerprint: "SAME", complete: true,
+            policyComplete: true, templateComplete: true, footStepComplete: true,
+            runtimeComplete: true, destinationLinksComplete: true);
+
+        Assert.Equal(
+            MigrationOperationClassification.Complete,
+            MigrationOperationRunner.ClassifyResult(before, after, MigrationJournalOutcome.At0014, null));
+    }
+
+    [Fact]
+    public void FailureAfter0013IsReportedAsCommittedPartialProgress()
+    {
+        var before = State(MigrationJournalOutcome.At0013, fingerprint: "SAME", complete: true,
+            policyComplete: true, templateComplete: true, footStepComplete: true, runtimeComplete: true);
         var after = State(MigrationJournalOutcome.At0013, fingerprint: "SAME", complete: true,
             policyComplete: true, templateComplete: true, footStepComplete: true, runtimeComplete: true);
 
         Assert.Equal(
-            MigrationOperationClassification.Complete,
-            MigrationOperationRunner.ClassifyResult(before, after, MigrationJournalOutcome.At0013, null));
+            MigrationOperationClassification.Migration0013Committed,
+            MigrationOperationRunner.ClassifyResult(
+                before, after, MigrationJournalOutcome.At0013, new InvalidOperationException()));
     }
 
     [Fact]
@@ -194,8 +209,9 @@ public sealed class MigrationOperationRunnerTests
     [Fact]
     public void CompleteStateRejectsMissingOrUnexpectedPlanningPermissions()
     {
-        var complete = State(MigrationJournalOutcome.At0013, fingerprint: "SAME", complete: true,
-            policyComplete: true, templateComplete: true, footStepComplete: true, runtimeComplete: true);
+        var complete = State(MigrationJournalOutcome.At0014, fingerprint: "SAME", complete: true,
+            policyComplete: true, templateComplete: true, footStepComplete: true,
+            runtimeComplete: true, destinationLinksComplete: true);
         Assert.False(MigrationOperationRunner.VerifyExpectedPostState(complete with
         {
             PlanningPermissions = complete.PlanningPermissions.Skip(1).ToArray()
@@ -226,6 +242,8 @@ public sealed class MigrationOperationRunnerTests
             MigrationOperationalState.Classify(Journal(12)));
         Assert.Equal(MigrationJournalOutcome.At0013,
             MigrationOperationalState.Classify(Journal(13)));
+        Assert.Equal(MigrationJournalOutcome.At0014,
+            MigrationOperationalState.Classify(Journal(14)));
         Assert.Equal(MigrationJournalOutcome.Unexpected,
             MigrationOperationalState.Classify(Journal(8).Reverse().ToArray()));
         Assert.Equal(MigrationJournalOutcome.Unexpected,
@@ -280,6 +298,20 @@ public sealed class MigrationOperationRunnerTests
                 state, MigrationJournalOutcome.At0011));
     }
 
+    [Fact]
+    public void Exact0013IsAcceptedOnlyWithoutPartial0014Residue()
+    {
+        var state = State(MigrationJournalOutcome.At0013, fingerprint: "SAME", complete: true,
+            policyComplete: true, templateComplete: true, footStepComplete: true, runtimeComplete: true);
+
+        MigrationOperationRunner.ValidatePreMigrationState(state, MigrationJournalOutcome.At0013);
+
+        Assert.Throws<InvalidOperationException>(() =>
+            MigrationOperationRunner.ValidatePreMigrationState(
+                state with { DestinationPlanItemLinkColumnCount = 1 },
+                MigrationJournalOutcome.At0013));
+    }
+
     private static MigrationStateEvidence State(
         MigrationJournalOutcome outcome,
         string fingerprint,
@@ -290,7 +322,8 @@ public sealed class MigrationOperationRunnerTests
         bool policyComplete = false,
         bool templateComplete = false,
         bool footStepComplete = false,
-        bool runtimeComplete = false) =>
+        bool runtimeComplete = false,
+        bool destinationLinksComplete = false) =>
         new(
             Journal(outcome switch
             {
@@ -302,6 +335,7 @@ public sealed class MigrationOperationRunnerTests
                 MigrationJournalOutcome.At0011 => 11,
                 MigrationJournalOutcome.At0012 => 12,
                 MigrationJournalOutcome.At0013 => 13,
+                MigrationJournalOutcome.At0014 => 14,
                 _ => 5
             }),
             footStepComplete
@@ -355,7 +389,12 @@ public sealed class MigrationOperationRunnerTests
             templateComplete,
             footStepComplete,
             footStepComplete ? 11 : 0,
-            footStepComplete ? 2 : 0);
+            footStepComplete ? 2 : 0)
+        {
+            DestinationPlanItemLinkColumnCount = destinationLinksComplete ? 4 : 0,
+            DestinationPlanItemLinkForeignKeyCount = destinationLinksComplete ? 4 : 0,
+            DestinationPlanItemLinkIndexCount = destinationLinksComplete ? 4 : 0
+        };
 
     private static IReadOnlyList<string> Journal(int count) =>
         MigrationCatalog.GetOrderedResourceNames(typeof(MigrationCatalog).Assembly)

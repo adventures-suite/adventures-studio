@@ -654,7 +654,7 @@ internal sealed class DapperAdventurePlanRepository(
             }
 
             await ExecuteAsync(
-                "INSERT planning.TransportationSegments VALUES (@CreatorId,@PlanId,@Id,@Mode,@From,@To,@DepartureDate,@DepartureTime,@DepartureZone,@ArrivalDate,@ArrivalTime,@ArrivalZone,@Status);",
+                "INSERT planning.TransportationSegments (CreatorId,AdventurePlanId,TransportationSegmentId,Mode,Origin,Destination,DepartureDate,DepartureTimeLocal,DepartureTimeZone,ArrivalDate,ArrivalTimeLocal,ArrivalTimeZone,Status) VALUES (@CreatorId,@PlanId,@Id,@Mode,@From,@To,@DepartureDate,@DepartureTime,@DepartureZone,@ArrivalDate,@ArrivalTime,@ArrivalZone,@Status);",
                 new
                 {
                     CreatorId = creatorId.Value,
@@ -786,7 +786,7 @@ internal sealed class DapperAdventurePlanRepository(
             }
 
             await ExecuteAsync(
-                "INSERT planning.Accommodations VALUES (@CreatorId,@PlanId,@Id,@Name,@Start,@End,@Zone,@Status);",
+                "INSERT planning.Accommodations (CreatorId,AdventurePlanId,AccommodationId,Name,StartDate,EndDate,TimeZone,Status) VALUES (@CreatorId,@PlanId,@Id,@Name,@Start,@End,@Zone,@Status);",
                 new
                 {
                     CreatorId = creatorId.Value,
@@ -906,7 +906,7 @@ internal sealed class DapperAdventurePlanRepository(
             }
 
             await ExecuteAsync(
-                "INSERT planning.Reservations VALUES (@CreatorId,@PlanId,@Id,@Subject,NULL,@Status);",
+                "INSERT planning.Reservations (CreatorId,AdventurePlanId,ReservationId,Subject,ConfirmationReference,Status) VALUES (@CreatorId,@PlanId,@Id,@Subject,NULL,@Status);",
                 new
                 {
                     CreatorId = creatorId.Value,
@@ -948,13 +948,13 @@ internal sealed class DapperAdventurePlanRepository(
             await ExecuteAsync("INSERT planning.PlannedActivities VALUES (@CreatorId,@PlanId,@Id,@DayId,@Title,@Start,@End,@Status);",
                 new { owner.CreatorId, owner.PlanId, Id = item.Id.Value, DayId = item.ItineraryDayId.Value, item.Title, Start = item.StartsAtLocal?.ToTimeSpan(), End = item.EndsAtLocal?.ToTimeSpan(), Status = item.Status.ToString() }, cancellationToken);
         foreach (var item in plan.Transportation)
-            await ExecuteAsync("INSERT planning.TransportationSegments VALUES (@CreatorId,@PlanId,@Id,@Mode,@From,@To,@DepartureDate,@DepartureTime,@DepartureZone,@ArrivalDate,@ArrivalTime,@ArrivalZone,@Status);",
+            await ExecuteAsync("INSERT planning.TransportationSegments (CreatorId,AdventurePlanId,TransportationSegmentId,Mode,Origin,Destination,DepartureDate,DepartureTimeLocal,DepartureTimeZone,ArrivalDate,ArrivalTimeLocal,ArrivalTimeZone,Status) VALUES (@CreatorId,@PlanId,@Id,@Mode,@From,@To,@DepartureDate,@DepartureTime,@DepartureZone,@ArrivalDate,@ArrivalTime,@ArrivalZone,@Status);",
                 new { owner.CreatorId, owner.PlanId, Id = item.Id.Value, item.Mode, item.From, item.To, DepartureDate = item.DepartureDate.ToDateTime(TimeOnly.MinValue), DepartureTime = item.DepartureTimeLocal?.ToTimeSpan(), DepartureZone = item.DepartureTimeZone.Value, ArrivalDate = item.ArrivalDate.ToDateTime(TimeOnly.MinValue), ArrivalTime = item.ArrivalTimeLocal?.ToTimeSpan(), ArrivalZone = item.ArrivalTimeZone.Value, Status = item.Status.ToString() }, cancellationToken);
         foreach (var item in plan.Accommodations)
-            await ExecuteAsync("INSERT planning.Accommodations VALUES (@CreatorId,@PlanId,@Id,@Name,@Start,@End,@Zone,@Status);",
+            await ExecuteAsync("INSERT planning.Accommodations (CreatorId,AdventurePlanId,AccommodationId,Name,StartDate,EndDate,TimeZone,Status) VALUES (@CreatorId,@PlanId,@Id,@Name,@Start,@End,@Zone,@Status);",
                 new { owner.CreatorId, owner.PlanId, Id = item.Id.Value, item.Name, Start = item.Dates.Start.ToDateTime(TimeOnly.MinValue), End = item.Dates.End.ToDateTime(TimeOnly.MinValue), Zone = item.TimeZone.Value, Status = item.Status.ToString() }, cancellationToken);
         foreach (var item in plan.Reservations)
-            await ExecuteAsync("INSERT planning.Reservations VALUES (@CreatorId,@PlanId,@Id,@Subject,@Reference,@Status);",
+            await ExecuteAsync("INSERT planning.Reservations (CreatorId,AdventurePlanId,ReservationId,Subject,ConfirmationReference,Status) VALUES (@CreatorId,@PlanId,@Id,@Subject,@Reference,@Status);",
                 new { owner.CreatorId, owner.PlanId, Id = item.Id.Value, item.Subject, Reference = item.ConfirmationReference, Status = item.Status.ToString() }, cancellationToken);
         foreach (var item in plan.Notes)
             await ExecuteAsync("INSERT planning.PlanningNotes VALUES (@CreatorId,@PlanId,@Id,@Text);",

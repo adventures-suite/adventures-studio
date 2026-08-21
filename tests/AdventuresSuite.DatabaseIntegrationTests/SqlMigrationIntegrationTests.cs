@@ -29,7 +29,7 @@ public sealed class SqlMigrationIntegrationTests
         try
         {
             var firstRun = await CompanionPolicyMigrationTestHarness.MigrateAllAsync(databaseConnectionString);
-            Assert.Equal(13, firstRun.Count);
+            Assert.Equal(14, firstRun.Count);
 
             await VerifySchemaAsync(databaseConnectionString);
             await VerifyConstraintsAsync(databaseConnectionString);
@@ -39,7 +39,7 @@ public sealed class SqlMigrationIntegrationTests
             var secondRun = await CompanionPolicyMigrationTestHarness.MigrateAllAsync(databaseConnectionString);
 
             Assert.Empty(secondRun);
-            Assert.Equal(13, await ScalarAsync<int>(databaseConnectionString,
+            Assert.Equal(14, await ScalarAsync<int>(databaseConnectionString,
                 "SELECT COUNT(*) FROM dbo.AdventuresSuiteSchemaVersions;"));
             Assert.Equal(signatureBefore, await GetSchemaSignatureAsync(databaseConnectionString));
 
@@ -76,7 +76,8 @@ public sealed class SqlMigrationIntegrationTests
                     && !name.EndsWith("0010_create_companion_policy_assignments.sql", StringComparison.Ordinal)
                     && !name.EndsWith("0011_create_adventure_plan_template_origins.sql", StringComparison.Ordinal)
                     && !name.EndsWith("0012_create_planner_footstep_applications.sql", StringComparison.Ordinal)
-                    && !name.EndsWith("0013_grant_planning_runtime_permissions.sql", StringComparison.Ordinal))
+                    && !name.EndsWith("0013_grant_planning_runtime_permissions.sql", StringComparison.Ordinal)
+                    && !name.EndsWith("0014_link_plan_items_to_destinations.sql", StringComparison.Ordinal))
                 .JournalToSqlTable("dbo", "AdventuresSuiteSchemaVersions")
                 .WithTransactionPerScript()
                 .Build()
@@ -85,7 +86,7 @@ public sealed class SqlMigrationIntegrationTests
             Assert.Equal(3, await ScalarAsync<int>(connectionString,
                 "SELECT COUNT(*) FROM dbo.AdventuresSuiteSchemaVersions;"));
 
-            Assert.Equal(10, (await CompanionPolicyMigrationTestHarness.MigrateAllAsync(connectionString)).Count);
+            Assert.Equal(11, (await CompanionPolicyMigrationTestHarness.MigrateAllAsync(connectionString)).Count);
             Assert.Equal(6, await ScalarAsync<int>(connectionString, """
                 SELECT COUNT(*) FROM sys.tables t JOIN sys.schemas s ON s.schema_id=t.schema_id
                 WHERE s.name='auth';
@@ -128,6 +129,9 @@ public sealed class SqlMigrationIntegrationTests
                         StringComparison.Ordinal)
                     && !name.EndsWith(
                         "0013_grant_planning_runtime_permissions.sql",
+                        StringComparison.Ordinal)
+                    && !name.EndsWith(
+                        "0014_link_plan_items_to_destinations.sql",
                         StringComparison.Ordinal))
                 .JournalToSqlTable("dbo", "AdventuresSuiteSchemaVersions")
                 .WithTransactionPerScript()
@@ -157,9 +161,9 @@ public sealed class SqlMigrationIntegrationTests
         }
     }
 
-    /// <summary>Proves one reviewed operation upgrades exact 0009 through 0013.</summary>
+    /// <summary>Proves one reviewed operation upgrades exact 0009 through 0014.</summary>
     [Fact]
-    public async Task ReviewedOperation_UpgradesExact0009Through0013ExactlyOnce()
+    public async Task ReviewedOperation_UpgradesExact0009Through0014ExactlyOnce()
     {
         var masterConnectionString = Environment.GetEnvironmentVariable(ConnectionVariable);
         Assert.False(string.IsNullOrWhiteSpace(masterConnectionString),
@@ -183,9 +187,9 @@ public sealed class SqlMigrationIntegrationTests
             IReadOnlyList<string> applied;
             using (DatabaseMigratorRunner.AcquireMigrationLock(connectionString))
                 applied = DatabaseMigratorRunner.MigrateWithLockHeld(
-                    connectionString, maximumMigrationNumber: "0013");
+                    connectionString, maximumMigrationNumber: "0014");
 
-            Assert.Equal(4, applied.Count);
+            Assert.Equal(5, applied.Count);
             Assert.EndsWith("0010_create_companion_policy_assignments.sql", applied[0],
                 StringComparison.Ordinal);
             Assert.EndsWith("0011_create_adventure_plan_template_origins.sql", applied[1],
@@ -194,14 +198,16 @@ public sealed class SqlMigrationIntegrationTests
                 StringComparison.Ordinal);
             Assert.EndsWith("0013_grant_planning_runtime_permissions.sql", applied[3],
                 StringComparison.Ordinal);
+            Assert.EndsWith("0014_link_plan_items_to_destinations.sql", applied[4],
+                StringComparison.Ordinal);
             var after = await MigrationOperationalState.CaptureAsync(connectionString);
-            Assert.Equal(MigrationJournalOutcome.At0013,
+            Assert.Equal(MigrationJournalOutcome.At0014,
                 MigrationOperationalState.Classify(after.Journal));
             Assert.Equal(before.ApplicationFingerprint, after.ApplicationFingerprint);
             Assert.True(MigrationOperationRunner.VerifyExpectedPostState(after));
             Assert.Equal(MigrationOperationClassification.Complete,
                 MigrationOperationRunner.ClassifyResult(
-                    before, after, MigrationJournalOutcome.At0013, null));
+                    before, after, MigrationJournalOutcome.At0014, null));
             Assert.Empty(DatabaseMigratorRunner.Migrate(connectionString));
         }
         finally
@@ -359,6 +365,58 @@ public sealed class SqlMigrationIntegrationTests
                   AND ((permissions.state_desc='GRANT' AND permissions.permission_name IN ('SELECT','INSERT','UPDATE'))
                     OR (permissions.state_desc='DENY' AND permissions.permission_name IN ('DELETE','ALTER')));
                 """));
+            using (DatabaseMigratorRunner.AcquireMigrationLock(connectionString))
+                Assert.Empty(DatabaseMigratorRunner.MigrateWithLockHeld(
+                    connectionString, maximumMigrationNumber: "0013"));
+        }
+        finally
+        {
+            await DropDatabaseAsync(masterConnectionString, databaseName);
+        }
+    }
+
+    /// <summary>Proves exact 0013 receives only the Creator-scoped destination plan-item links.</summary>
+    [Fact]
+    public async Task Migration0014_UpgradesExact0013ExactlyOnce()
+    {
+        var masterConnectionString = Environment.GetEnvironmentVariable(ConnectionVariable);
+        Assert.False(string.IsNullOrWhiteSpace(masterConnectionString),
+            $"Set {ConnectionVariable} for the SQL integration gate.");
+        var databaseName = $"AdventuresSuiteDestinationLinkUpgrade_{Guid.NewGuid():N}";
+        var connectionString = BuildDatabaseConnectionString(masterConnectionString, databaseName);
+        await CreateDatabaseAsync(masterConnectionString, databaseName);
+        try
+        {
+            using (DatabaseMigratorRunner.AcquireMigrationLock(connectionString))
+                Assert.Equal(9, DatabaseMigratorRunner.MigrateWithLockHeld(
+                    connectionString, maximumMigrationNumber: "0009").Count);
+            await ExecuteAsync(connectionString,
+                "CREATE ROLE AdventuresSuiteCompanionPolicyRuntime AUTHORIZATION dbo;");
+            using (DatabaseMigratorRunner.AcquireMigrationLock(connectionString))
+                Assert.Equal(4, DatabaseMigratorRunner.MigrateWithLockHeld(
+                    connectionString, maximumMigrationNumber: "0013").Count);
+
+            var before = await MigrationOperationalState.CaptureAsync(connectionString);
+            Assert.Equal(MigrationJournalOutcome.At0013,
+                MigrationOperationalState.Classify(before.Journal));
+            MigrationOperationRunner.ValidatePreMigrationState(before, MigrationJournalOutcome.At0013);
+
+            IReadOnlyList<string> applied;
+            using (DatabaseMigratorRunner.AcquireMigrationLock(connectionString))
+                applied = DatabaseMigratorRunner.MigrateWithLockHeld(
+                    connectionString, maximumMigrationNumber: "0014");
+
+            Assert.Single(applied);
+            Assert.EndsWith("0014_link_plan_items_to_destinations.sql", applied[0],
+                StringComparison.Ordinal);
+            var after = await MigrationOperationalState.CaptureAsync(connectionString);
+            Assert.Equal(MigrationJournalOutcome.At0014,
+                MigrationOperationalState.Classify(after.Journal));
+            Assert.Equal(before.ApplicationFingerprint, after.ApplicationFingerprint);
+            Assert.True(MigrationOperationRunner.VerifyExpectedPostState(after));
+            Assert.Equal(4, after.DestinationPlanItemLinkColumnCount);
+            Assert.Equal(4, after.DestinationPlanItemLinkForeignKeyCount);
+            Assert.Equal(4, after.DestinationPlanItemLinkIndexCount);
             Assert.Empty(DatabaseMigratorRunner.Migrate(connectionString));
         }
         finally
@@ -386,7 +444,7 @@ public sealed class SqlMigrationIntegrationTests
                 Assert.Equal("Another database migration is already running.", exception.Message);
             }
 
-            Assert.Equal(13, (await CompanionPolicyMigrationTestHarness.MigrateAllAsync(connectionString)).Count);
+            Assert.Equal(14, (await CompanionPolicyMigrationTestHarness.MigrateAllAsync(connectionString)).Count);
         }
         finally
         {
@@ -416,7 +474,8 @@ public sealed class SqlMigrationIntegrationTests
                     && !name.EndsWith("0010_create_companion_policy_assignments.sql", StringComparison.Ordinal)
                     && !name.EndsWith("0011_create_adventure_plan_template_origins.sql", StringComparison.Ordinal)
                     && !name.EndsWith("0012_create_planner_footstep_applications.sql", StringComparison.Ordinal)
-                    && !name.EndsWith("0013_grant_planning_runtime_permissions.sql", StringComparison.Ordinal))
+                    && !name.EndsWith("0013_grant_planning_runtime_permissions.sql", StringComparison.Ordinal)
+                    && !name.EndsWith("0014_link_plan_items_to_destinations.sql", StringComparison.Ordinal))
                 .JournalToSqlTable("dbo", "AdventuresSuiteSchemaVersions")
                 .WithTransactionPerScript()
                 .Build()
@@ -483,7 +542,8 @@ public sealed class SqlMigrationIntegrationTests
                     && !name.EndsWith("0010_create_companion_policy_assignments.sql", StringComparison.Ordinal)
                     && !name.EndsWith("0011_create_adventure_plan_template_origins.sql", StringComparison.Ordinal)
                     && !name.EndsWith("0012_create_planner_footstep_applications.sql", StringComparison.Ordinal)
-                    && !name.EndsWith("0013_grant_planning_runtime_permissions.sql", StringComparison.Ordinal))
+                    && !name.EndsWith("0013_grant_planning_runtime_permissions.sql", StringComparison.Ordinal)
+                    && !name.EndsWith("0014_link_plan_items_to_destinations.sql", StringComparison.Ordinal))
                 .JournalToSqlTable("dbo", "AdventuresSuiteSchemaVersions")
                 .WithTransactionPerScript()
                 .Build()
@@ -547,7 +607,8 @@ public sealed class SqlMigrationIntegrationTests
                     && !name.EndsWith("0010_create_companion_policy_assignments.sql", StringComparison.Ordinal)
                     && !name.EndsWith("0011_create_adventure_plan_template_origins.sql", StringComparison.Ordinal)
                     && !name.EndsWith("0012_create_planner_footstep_applications.sql", StringComparison.Ordinal)
-                    && !name.EndsWith("0013_grant_planning_runtime_permissions.sql", StringComparison.Ordinal))
+                    && !name.EndsWith("0013_grant_planning_runtime_permissions.sql", StringComparison.Ordinal)
+                    && !name.EndsWith("0014_link_plan_items_to_destinations.sql", StringComparison.Ordinal))
                 .JournalToSqlTable("dbo", "AdventuresSuiteSchemaVersions")
                 .WithTransactionPerScript()
                 .Build()
@@ -609,7 +670,8 @@ public sealed class SqlMigrationIntegrationTests
                     && !name.EndsWith("0010_create_companion_policy_assignments.sql", StringComparison.Ordinal)
                     && !name.EndsWith("0011_create_adventure_plan_template_origins.sql", StringComparison.Ordinal)
                     && !name.EndsWith("0012_create_planner_footstep_applications.sql", StringComparison.Ordinal)
-                    && !name.EndsWith("0013_grant_planning_runtime_permissions.sql", StringComparison.Ordinal))
+                    && !name.EndsWith("0013_grant_planning_runtime_permissions.sql", StringComparison.Ordinal)
+                    && !name.EndsWith("0014_link_plan_items_to_destinations.sql", StringComparison.Ordinal))
                 .JournalToSqlTable("dbo", "AdventuresSuiteSchemaVersions")
                 .WithTransactionPerScript()
                 .Build()
@@ -684,10 +746,10 @@ public sealed class SqlMigrationIntegrationTests
                     before, MigrationJournalOutcome.At0009);
                 await MigrationOperationRunner.VerifyPermissionsBeforeMigrationAsync(
                     () => new SqlConnection(restricted), "permission-gate-test");
-                Assert.Equal(4, DatabaseMigratorRunner.MigrateWithLockHeld(
-                    restricted, maximumMigrationNumber: "0013").Count);
+                Assert.Equal(5, DatabaseMigratorRunner.MigrateWithLockHeld(
+                    restricted, maximumMigrationNumber: "0014").Count);
                 var after = await MigrationOperationalState.CaptureAsync(restricted);
-                Assert.Equal(MigrationJournalOutcome.At0013,
+                Assert.Equal(MigrationJournalOutcome.At0014,
                     MigrationOperationalState.Classify(after.Journal));
                 Assert.Equal(before.ApplicationFingerprint, after.ApplicationFingerprint);
                 Assert.True(MigrationOperationRunner.VerifyExpectedPostState(after));
@@ -698,15 +760,15 @@ public sealed class SqlMigrationIntegrationTests
                     changedApplicationData.ApplicationFingerprint);
                 Assert.Equal(MigrationOperationClassification.Unexpected,
                     MigrationOperationRunner.ClassifyResult(
-                        before, changedApplicationData, MigrationJournalOutcome.At0013, null));
+                        before, changedApplicationData, MigrationJournalOutcome.At0014, null));
             }
 
             using (DatabaseMigratorRunner.AcquireMigrationLock(restricted))
                 Assert.Empty(DatabaseMigratorRunner.MigrateWithLockHeld(
-                    restricted, maximumMigrationNumber: "0013"));
+                    restricted, maximumMigrationNumber: "0014"));
             await AzureDevelopmentBootstrapper.VerifyMigrationPermissionsAsync(restricted);
             var state = await MigrationOperationalState.CaptureAsync(restricted);
-            Assert.Equal(MigrationJournalOutcome.At0013, MigrationOperationalState.Classify(state.Journal));
+            Assert.Equal(MigrationJournalOutcome.At0014, MigrationOperationalState.Classify(state.Journal));
             Assert.True(MigrationOperationRunner.VerifyExpectedPostState(state));
 
             using (DatabaseMigratorRunner.AcquireMigrationLock(restricted))

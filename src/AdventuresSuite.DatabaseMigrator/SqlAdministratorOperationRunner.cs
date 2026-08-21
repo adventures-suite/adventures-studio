@@ -30,7 +30,8 @@ internal static class SqlAdministratorOperationRunner
         "0010_create_companion_policy_assignments.sql",
         "0011_create_adventure_plan_template_origins.sql",
         "0012_create_planner_footstep_applications.sql",
-        "0013_grant_planning_runtime_permissions.sql"
+        "0013_grant_planning_runtime_permissions.sql",
+        "0014_link_plan_items_to_destinations.sql"
     ];
 
     private static readonly string[] At0006PermissionSignatures =
@@ -747,7 +748,7 @@ internal static class SqlAdministratorOperationRunner
             objectCountSignatures.Add($"{schema}|{type}|{count}");
         }
         if (schemas.Count > 3 || roles.Length > 5 || principals.Count > 2
-            || permissions.Count > 168 || rawScripts.Count > 13 || objectCounts.Count > 24)
+            || permissions.Count > 168 || rawScripts.Count > 14 || objectCounts.Count > 24)
             throw new InvalidOperationException("The SQL administrator baseline evidence exceeded its bounds.");
 
         var journalIsValid = TryNormalizeJournal(rawScripts, out var scripts);

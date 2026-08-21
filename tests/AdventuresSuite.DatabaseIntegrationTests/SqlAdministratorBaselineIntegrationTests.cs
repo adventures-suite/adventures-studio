@@ -225,7 +225,7 @@ public sealed class SqlAdministratorBaselineIntegrationTests
         finally { await DropDatabaseAsync(master, databaseName); }
     }
 
-    /// <summary>Consumes every baseline result set after the complete migration state through 0012.</summary>
+    /// <summary>Consumes every baseline result set after the complete migration state through 0014.</summary>
     [Fact]
     public async Task BaselineReader_ConsumesCompleteQueryForMigratedState()
     {
@@ -245,7 +245,7 @@ public sealed class SqlAdministratorBaselineIntegrationTests
             await ExecuteParameterizedAsync(connectionString,
                 AzureDevelopmentBootstrapper.BuildMigrationGrants($"[{MigrationPrincipalName}]"),
                 MigrationPrincipalName);
-            Assert.Equal(13,
+            Assert.Equal(14,
                 (await CompanionPolicyMigrationTestHarness.MigrateAllAsync(connectionString)).Count);
 
             await using var connection = new SqlConnection(connectionString);
