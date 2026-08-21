@@ -12,4 +12,8 @@ public partial class WorkspaceApplicationPlaceholder
     /// <summary>Gets or sets the authenticated Planner return path.</summary>
     [Parameter]
     public string PlannerPath { get; set; } = "/workspace";
+
+    /// <summary>Gets or sets the validated public Simonton Adventures preview URL.</summary>
+    [Parameter]
+    public Uri? SimontonAdventuresUrl { get; set; }
 }

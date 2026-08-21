@@ -79,6 +79,30 @@ public sealed class PlannerWorkspaceShellTests
         Assert.Contains("element.focus();", focusModule, StringComparison.Ordinal);
     }
 
+    /// <summary>Workspace appearance and rail preferences survive navigation between application routes.</summary>
+    [Fact]
+    public void Shell_PersistsAppearanceAndNavigationPreferences()
+    {
+        var applicationRoot = FindApplicationRoot();
+        var codeBehind = File.ReadAllText(Path.Combine(
+            applicationRoot,
+            "Components",
+            "Planner",
+            "PlannerWorkspaceShell.razor.cs"));
+        var module = File.ReadAllText(Path.Combine(
+            applicationRoot,
+            "Components",
+            "Planner",
+            "PlannerWorkspaceShell.razor.js"));
+
+        Assert.Contains("RestorePreferencesAsync", codeBehind, StringComparison.Ordinal);
+        Assert.Contains("PersistPreferencesAsync", codeBehind, StringComparison.Ordinal);
+        Assert.Contains("readWorkspacePreferences", module, StringComparison.Ordinal);
+        Assert.Contains("writeWorkspacePreferences", module, StringComparison.Ordinal);
+        Assert.Contains("adventures-suite.workspace.preferences.v1", module, StringComparison.Ordinal);
+        Assert.Contains("['light', 'dark', 'system']", module, StringComparison.Ordinal);
+    }
+
     /// <summary>Collapse, hide, show, and mobile state remain authoritative in the shell.</summary>
     [Fact]
     public async Task Shell_OwnsNavigationState()

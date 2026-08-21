@@ -51,6 +51,19 @@
                 <span>Journey story</span>
                 <strong>Across the Adriatic</strong>
             </div>
+            @if (SimontonAdventuresUrl is not null)
+            {
+                <div class="workspace-application__public-preview">
+                    <div>
+                        <strong>See a published Adventure experience</strong>
+                        <p>The Simonton Adventures shows how approved stories can become a visual, public Creator site.</p>
+                    </div>
+                    <a href="@SimontonAdventuresUrl.AbsoluteUri" target="_blank" rel="noopener noreferrer">
+                        Visit The Simonton Adventures
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 17 17 7M8 7h9v9" /></svg>
+                    </a>
+                </div>
+            }
         }
 
         <ul class="workspace-application__items">

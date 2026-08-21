@@ -28,6 +28,12 @@
 .workspace-application__story-image { align-content: end; background: linear-gradient(135deg, var(--planner-shell-primary), var(--planner-shell-accent)); border-radius: .9rem; color: var(--planner-shell-surface); display: grid; min-height: 10rem; padding: 1.2rem; }
 .workspace-application__story-image span { font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; }
 .workspace-application__story-image strong { font-size: clamp(1.35rem, 4vw, 2.15rem); }
+.workspace-application__public-preview { align-items: center; background: var(--planner-shell-background); border: 1px solid var(--planner-shell-border); border-radius: .9rem; display: flex; gap: 1rem; justify-content: space-between; margin-top: .8rem; padding: 1rem; position: relative; }
+.workspace-application__public-preview strong { display: block; margin-bottom: .2rem; }
+.workspace-application__public-preview p { color: var(--planner-shell-text-muted); font-size: .84rem; margin-bottom: 0; max-width: 38rem; }
+.workspace-application__public-preview a { align-items: center; background: var(--planner-shell-primary); border-radius: 999px; color: var(--planner-shell-surface); display: inline-flex; flex: 0 0 auto; font-weight: 800; gap: .45rem; min-height: 2.75rem; padding: .55rem 1rem; text-decoration: none; }
+.workspace-application__public-preview a:hover, .workspace-application__public-preview a:focus-visible { background: var(--planner-shell-primary-strong); outline: 3px solid var(--planner-shell-focus); outline-offset: 2px; }
+.workspace-application__public-preview svg { fill: none; height: 1rem; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; width: 1rem; }
 .workspace-application__map { background: linear-gradient(145deg, var(--planner-shell-hover), var(--planner-shell-background)); border: 1px solid var(--planner-shell-border); border-radius: .9rem; height: 11rem; margin-top: 1rem; overflow: hidden; position: relative; }
 .workspace-application__map::before, .workspace-application__map::after { border: 1px solid color-mix(in srgb, var(--planner-shell-text-muted) 25%, transparent); content: ""; inset: 0; position: absolute; transform: rotate(-12deg) scale(1.2); }
 .workspace-application__map::after { transform: rotate(17deg) scale(1.35); }
@@ -56,4 +62,5 @@
     .workspace-application__items li { grid-template-columns: .65rem minmax(0, 1fr); }
     .workspace-application__items small { grid-column: 2; }
     .workspace-application__footer { align-items: flex-start; flex-direction: column; }
+    .workspace-application__public-preview { align-items: flex-start; flex-direction: column; }
 }

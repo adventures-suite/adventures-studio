@@ -41,7 +41,8 @@
         @if (PlaceholderApplication is not null && LoadState == WorkspaceLoadState.Ready)
         {
             <WorkspaceApplicationPlaceholder Application="@PlaceholderApplication"
-                                             PlannerPath="@PlanListPath" />
+                                             PlannerPath="@PlanListPath"
+                                             SimontonAdventuresUrl="@WorkspaceNavigation.SimontonAdventuresUrl" />
         }
         else if (LoadState == WorkspaceLoadState.Loading)
         {
