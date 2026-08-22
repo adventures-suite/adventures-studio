@@ -100,7 +100,14 @@ public sealed class AdventureTemplateInstantiateServiceTests
         var command = Command() with
         {
             ConfiguredOrigin = new("Phoenix, Arizona", new IanaTimeZone("America/Phoenix")),
-            TravelEstimate = new(1300, 450)
+            TravelEstimate = new(1300, 450),
+            TravelStops =
+            [
+                new(AdventureTemplateTravelDirection.Outbound, 1, "Albuquerque, New Mexico"),
+                new(AdventureTemplateTravelDirection.Outbound, 2, "Denver, Colorado"),
+                new(AdventureTemplateTravelDirection.Return, 1, "Cheyenne, Wyoming"),
+                new(AdventureTemplateTravelDirection.Return, 2, "Moab, Utah")
+            ]
         };
 
         var result = await Service(transaction, new(OriginBlueprint(), "decision_origin_0001"))
@@ -109,22 +116,27 @@ public sealed class AdventureTemplateInstantiateServiceTests
         Assert.Equal(AdventureTemplateInstantiateOutcome.Created, result.Outcome);
         var plan = Assert.IsType<AdventurePlan>(transaction.Repository.Added);
         Assert.Equal(2, plan.DestinationVisits.Count(item => item.Name == "Phoenix, Arizona"));
+        Assert.Equal(7, plan.DestinationVisits.Count);
         Assert.All(
             plan.DestinationVisits.Where(item => item.Name == "Phoenix, Arizona"),
             item => Assert.Equal(new IanaTimeZone("America/Phoenix"), item.TimeZone));
+        Assert.Equal(6, plan.Transportation.Count);
         Assert.Equal("Phoenix, Arizona", plan.Transportation[0].From);
+        Assert.Equal("Albuquerque, New Mexico", plan.Transportation[0].To);
         Assert.Equal(new IanaTimeZone("America/Phoenix"), plan.Transportation[0].DepartureTimeZone);
-        Assert.Equal("Phoenix, Arizona", plan.Transportation[1].To);
-        Assert.Equal(new IanaTimeZone("America/Phoenix"), plan.Transportation[1].ArrivalTimeZone);
+        Assert.Equal("Phoenix, Arizona", plan.Transportation[^1].To);
+        Assert.Equal(new IanaTimeZone("America/Phoenix"), plan.Transportation[^1].ArrivalTimeZone);
         Assert.Equal(new IanaTimeZone("America/Phoenix"), plan.ItineraryDays[0].TimeZone);
         Assert.Equal(new PlanningDateRange(new(2026, 10, 3), new(2026, 10, 9)), plan.Dates);
         Assert.Equal(7, plan.ItineraryDays.Count);
-        Assert.Contains(plan.ItineraryDays, day => day.Title == "Ride toward the destination — day 2 of 3");
-        Assert.Contains(plan.ItineraryDays, day => day.Title == "Ride toward home — day 2 of 3");
-        Assert.Equal(new DateOnly(2026, 10, 6), plan.Transportation[0].ArrivalDate);
-        Assert.Equal(new DateOnly(2026, 10, 7), plan.Transportation[1].DepartureDate);
-        Assert.Equal(new DateOnly(2026, 10, 9), plan.Transportation[1].ArrivalDate);
-        Assert.Equal(3, transaction.Reservation!.Fingerprint.Version);
+        Assert.Contains(plan.ItineraryDays, day => day.Title == "Ride to Denver, Colorado");
+        Assert.Contains(plan.ItineraryDays, day => day.Title == "Ride to Moab, Utah");
+        Assert.Equal(new DateOnly(2026, 10, 3), plan.Transportation[0].ArrivalDate);
+        Assert.Equal(new DateOnly(2026, 10, 7), plan.Transportation[3].DepartureDate);
+        Assert.Equal(new DateOnly(2026, 10, 9), plan.Transportation[^1].ArrivalDate);
+        Assert.Equal(4, plan.Accommodations.Count);
+        Assert.All(plan.Accommodations, stay => Assert.StartsWith("Overnight near ", stay.Name));
+        Assert.Equal(4, transaction.Reservation!.Fingerprint.Version);
     }
 
     /// <summary>Existing non-origin requests retain the historical fingerprint version for retry compatibility.</summary>
@@ -168,6 +180,25 @@ public sealed class AdventureTemplateInstantiateServiceTests
 
         Assert.Equal(AdventureTemplateInstantiateOutcome.ValidationFailed, result.Outcome);
         Assert.Null(transaction.Repository.Added);
+    }
+
+    /// <summary>A multi-day route cannot be created without every reviewed overnight stop.</summary>
+    [Fact]
+    public async Task InstantiateAsync_OriginAwareTemplateWithoutTravelStops_FailsValidation()
+    {
+        var transaction = new RecordingTransaction(Creator);
+        var command = Command() with
+        {
+            ConfiguredOrigin = new("Phoenix, Arizona", new IanaTimeZone("America/Phoenix")),
+            TravelEstimate = new(1300, 450)
+        };
+
+        var result = await Service(transaction, new(OriginBlueprint(), "decision_origin_0001"))
+            .InstantiateAsync(command);
+
+        Assert.Equal(AdventureTemplateInstantiateOutcome.ValidationFailed, result.Outcome);
+        Assert.Null(transaction.Repository.Added);
+        Assert.False(transaction.Committed);
     }
 
     private static AdventureTemplateInstantiateCommand Command() => new(

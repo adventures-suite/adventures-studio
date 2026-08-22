@@ -45,6 +45,13 @@
 .journey-template__input-unit input { border-radius: .45rem 0 0 .45rem; min-width: 0; }
 .journey-template__input-unit > span { align-items: center; background: var(--planner-shell-surface-muted); border: 1px solid var(--planner-shell-border); border-left: 0; border-radius: 0 .45rem .45rem 0; color: var(--planner-shell-text-muted); display: flex; min-height: 2.75rem; padding: .55rem; }
 .journey-template__travel-estimate { background: color-mix(in srgb, var(--planner-shell-primary) 8%, var(--planner-shell-surface)); border-left: 3px solid var(--planner-shell-primary); color: var(--planner-shell-text-muted); margin: .2rem 0 1rem; max-width: 38.8rem; padding: .65rem .8rem; }
+.journey-template__travel-stops { border: 1px solid var(--planner-shell-border); border-radius: .7rem; margin: 1rem 0; max-width: 48rem; padding: 1rem; }
+.journey-template__travel-stops h5 { font-family: Georgia, serif; font-size: 1.05rem; margin: 0; }
+.journey-template__travel-stops p { color: var(--planner-shell-text-muted); margin: .35rem 0 1rem; }
+.journey-template__stop-columns { display: grid; gap: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.journey-template__stop-columns fieldset { border: 0; display: grid; gap: .7rem; margin: 0; min-width: 0; padding: 0; }
+.journey-template__stop-columns legend { font-weight: 800; margin-bottom: .6rem; }
+.journey-template__stop-columns label, .journey-template__stop-columns input { max-width: none; width: 100%; }
 .journey-template__validation { color: var(--planner-shell-danger, #a52a2a); font-weight: 700; }
 .journey-template__review > header { align-items: start; display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; }
 .journey-template__review > header p { margin-top: 0; }
@@ -66,4 +73,4 @@
 .journey-template__after { color: var(--planner-shell-text-muted); font-size: .9rem; }
 .journey-starter button:focus-visible, .journey-starter input:focus-visible { outline: 3px solid var(--planner-shell-focus); outline-offset: 3px; }
 @media (max-width: 48rem) { .journey-template__header, .journey-template__sections { grid-template-columns: 1fr; } }
-@media (max-width: 36rem) { .journey-starter__choices, .journey-template__origin-fields { grid-template-columns: 1fr; } .journey-template__create, .journey-template__create label, .journey-template__create input, .journey-template__create button { width: 100%; } }
+@media (max-width: 36rem) { .journey-starter__choices, .journey-template__origin-fields, .journey-template__stop-columns { grid-template-columns: 1fr; } .journey-template__create, .journey-template__create label, .journey-template__create input, .journey-template__create button { width: 100%; } }
