@@ -678,23 +678,23 @@ public sealed class AdventureTemplateInstantiateService(
                 }).ToArray(),
                 transportation: travelStops.Length == 0
                     ? transportation.Select(item => new TransportationSegment
-                {
-                    Id = ids.NewTransportationSegmentId(),
-                    DepartureDestinationVisitId = item.DepartureDestinationKey is null ? null : visitIds[item.DepartureDestinationKey],
-                    ArrivalDestinationVisitId = item.ArrivalDestinationKey is null ? null : visitIds[item.ArrivalDestinationKey],
-                    Mode = item.Mode,
-                    From = TransportationPlace(item.From, item.DepartureDestinationKey),
-                    To = TransportationPlace(item.To, item.ArrivalDestinationKey),
-                    DepartureDate = command.StartDate.AddDays(AdaptTransportationDepartureOffset(item)),
-                    DepartureTimeLocal = item.DepartureTimeLocal,
-                    DepartureTimeZone = TransportationTimeZone(
-                        item.DepartureTimeZone, item.DepartureDestinationKey),
-                    ArrivalDate = command.StartDate.AddDays(AdaptOffset(item.ArrivalDayOffset)),
-                    ArrivalTimeLocal = item.ArrivalTimeLocal,
-                    ArrivalTimeZone = TransportationTimeZone(
-                        item.ArrivalTimeZone, item.ArrivalDestinationKey),
-                    Status = PlanItemStatus.Proposed
-                }).ToArray()
+                    {
+                        Id = ids.NewTransportationSegmentId(),
+                        DepartureDestinationVisitId = item.DepartureDestinationKey is null ? null : visitIds[item.DepartureDestinationKey],
+                        ArrivalDestinationVisitId = item.ArrivalDestinationKey is null ? null : visitIds[item.ArrivalDestinationKey],
+                        Mode = item.Mode,
+                        From = TransportationPlace(item.From, item.DepartureDestinationKey),
+                        To = TransportationPlace(item.To, item.ArrivalDestinationKey),
+                        DepartureDate = command.StartDate.AddDays(AdaptTransportationDepartureOffset(item)),
+                        DepartureTimeLocal = item.DepartureTimeLocal,
+                        DepartureTimeZone = TransportationTimeZone(
+                            item.DepartureTimeZone, item.DepartureDestinationKey),
+                        ArrivalDate = command.StartDate.AddDays(AdaptOffset(item.ArrivalDayOffset)),
+                        ArrivalTimeLocal = item.ArrivalTimeLocal,
+                        ArrivalTimeZone = TransportationTimeZone(
+                            item.ArrivalTimeZone, item.ArrivalDestinationKey),
+                        Status = PlanItemStatus.Proposed
+                    }).ToArray()
                     : CreateDailyTravelSegments(),
                 accommodations: accommodations.Select(item => new Accommodation
                 {
