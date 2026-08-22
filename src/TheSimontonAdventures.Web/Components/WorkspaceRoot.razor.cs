@@ -46,6 +46,7 @@ public partial class WorkspaceRoot
     private string CreateIdempotencyKey { get; } = $"request_{Guid.NewGuid():N}";
     private PlannerIdeasContext? SelectedIdeasContext { get; set; }
     private IReadOnlyList<AdventureTemplateBlueprint> AdventureTemplates { get; set; } = [];
+    private AdventureTemplateBlueprint? SelectedJourneyTemplate { get; set; }
     private IReadOnlyList<PlannerFootStepDefinition> AuthorizedFootSteps { get; set; } = [];
     private ActorIdentity? WorkspaceActor { get; set; }
     private WorkspaceApplicationDefinition? PlaceholderApplication { get; set; }
@@ -292,6 +293,10 @@ public partial class WorkspaceRoot
 
                 AddressedCreatorId = applicationCreatorId;
                 PlaceholderApplication = application;
+                if (application.Kind == WorkspaceApplicationKind.Dream)
+                {
+                    await LoadAdventureTemplatesAsync(context, actor, applicationCreatorId);
+                }
                 LoadState = WorkspaceLoadState.Ready;
             }
             catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
@@ -327,6 +332,7 @@ public partial class WorkspaceRoot
                 {
                     AddressedCreatorId = AuthorizedCreatorWorkspaces[0].CreatorId;
                     PlaceholderApplication = dreamApplication;
+                    await LoadAdventureTemplatesAsync(context, actor, AddressedCreatorId);
                     LoadState = WorkspaceLoadState.Ready;
                 }
                 else
@@ -375,28 +381,7 @@ public partial class WorkspaceRoot
                 LoadState = result.IsAllowed ? WorkspaceLoadState.Ready : WorkspaceLoadState.Unavailable;
                 if (result.IsAllowed)
                 {
-                    var catalog = context.RequestServices
-                        .GetService<IAdventureTemplateCatalogQueryService>();
-                    if (catalog is not null)
-                    {
-                        try
-                        {
-                            var catalogResult = await catalog.ListAsync(
-                                actor, creatorId, "en-US", context.RequestAborted);
-                            AdventureTemplates = catalogResult.IsAllowed ? catalogResult.Templates : [];
-                        }
-                        catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
-                        {
-                            throw;
-                        }
-                        catch (Exception exception)
-                        {
-                            context.RequestServices.GetService<ILogger<WorkspaceRoot>>()?.LogError(
-                                exception,
-                                "Planner Journey Template catalog failed; manual planning remains available.");
-                            AdventureTemplates = [];
-                        }
-                    }
+                    await LoadAdventureTemplatesAsync(context, actor, creatorId);
                 }
             }
         }
@@ -410,6 +395,42 @@ public partial class WorkspaceRoot
                 exception,
                 "Planner dashboard read failed before a safe response could be rendered.");
             LoadState = WorkspaceLoadState.Failure;
+        }
+    }
+
+    private async Task LoadAdventureTemplatesAsync(
+        HttpContext context,
+        ActorIdentity actor,
+        CreatorId creatorId)
+    {
+        var catalog = context.RequestServices.GetService<IAdventureTemplateCatalogQueryService>();
+        if (catalog is null)
+        {
+            AdventureTemplates = [];
+            return;
+        }
+
+        try
+        {
+            var result = await catalog.ListAsync(actor, creatorId, "en-US", context.RequestAborted);
+            AdventureTemplates = result.IsAllowed ? result.Templates : [];
+            SelectedJourneyTemplate = PlaceholderApplication?.Kind == WorkspaceApplicationKind.Dream
+                ? AdventureTemplates.FirstOrDefault(template => string.Equals(
+                    template.VersionId.TemplateId,
+                    InitialJourneyFootStepId,
+                    StringComparison.Ordinal))
+                : null;
+        }
+        catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            context.RequestServices.GetService<ILogger<WorkspaceRoot>>()?.LogError(
+                exception,
+                "Journey FootStep catalog failed; the workspace remains available without catalog content.");
+            AdventureTemplates = [];
         }
     }
 
@@ -540,6 +561,7 @@ public partial class WorkspaceRoot
     }
 
     private string PlanListPath => $"/workspace/creators/{AddressedCreatorId.Value}/plans";
+    private string DreamPath => $"/workspace/creators/{AddressedCreatorId.Value}/dream";
     private string? WorkspaceBasePath => LoadState != WorkspaceLoadState.Ready
         || string.IsNullOrWhiteSpace(AddressedCreatorId.Value)
         ? null
@@ -552,6 +574,14 @@ public partial class WorkspaceRoot
     private string PlannerHeroImageUrl => PlatformHostConfiguration.Value.JourneyImageUrl;
     private string CreatePlanPath => $"{PlanListPath}/create";
     private string CreateFromTemplatePath => $"{PlanListPath}/create-from-template";
+    private string? InitialJourneyFootStepId
+    {
+        get
+        {
+            var value = GetQueryValue("journeyFootStep");
+            return string.IsNullOrWhiteSpace(value) ? null : value;
+        }
+    }
     private string EditPlanPath => $"{PlanListPath}/{Plan!.Id.Value}/overview";
     private string AddDestinationPath => $"{PlanListPath}/{Plan!.Id.Value}/destinations";
     private string ReorderDestinationPath => $"{AddDestinationPath}/reorder";

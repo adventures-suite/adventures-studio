@@ -1,0 +1,52 @@
+@namespace TheSimontonAdventures.Web.Components
+@using TheSimontonAdventures.Web.Planning
+
+@if (Templates.Count == 0)
+{
+    <PlannerWorkspaceState Kind="PlannerWorkspaceStateKind.Empty"
+                           Title="Journey FootSteps are coming soon"
+                           Message="The reviewed library is still being prepared for this workspace." />
+}
+else
+{
+    <div class="journey-footstep-catalog">
+        <ul class="journey-footstep-catalog__grid">
+            @foreach (var template in PagedTemplates)
+            {
+                <li>
+                    <article class="journey-footstep-card">
+                        <div class="journey-footstep-card__thumbnail" aria-hidden="true">@Monogram(template.Title)</div>
+                        <p class="journey-footstep-card__eyebrow">Journey FootStep</p>
+                        <h4>@template.Title</h4>
+                        <p>@template.WorkingDescription</p>
+                        <p class="journey-footstep-card__route">@Route(template)</p>
+                        <p class="journey-footstep-card__attribution">By @template.Attribution</p>
+                        <ul class="journey-footstep-card__tags" aria-label="FootStep details">
+                            @foreach (var tag in DiscoveryTags(template))
+                            {
+                                <li>@tag</li>
+                            }
+                        </ul>
+                        @if (OnConfigure.HasDelegate)
+                        {
+                            <button type="button"
+                                    aria-expanded="@(SelectedTemplateVersion == template.VersionId)"
+                                    aria-controls="journey-template-preview"
+                                    @onclick="() => OnConfigure.InvokeAsync(template)">Configure Journey</button>
+                        }
+                        else
+                        {
+                            <a href="@ConfigurePath(template)">Explore this Journey</a>
+                        }
+                    </article>
+                </li>
+            }
+        </ul>
+        <PlannerIdeaPager TotalItems="@Templates.Count"
+                          PageSize="@PageSize"
+                          CurrentPage="@CurrentPage"
+                          PageSizeOptions="@PageSizeOptions"
+                          OnPageSizeChanged="ChangePageSizeAsync"
+                          OnPageChanged="ChangePageAsync" />
+    </div>
+}

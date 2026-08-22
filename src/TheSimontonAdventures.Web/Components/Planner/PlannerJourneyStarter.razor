@@ -29,37 +29,9 @@
             </div>
             @if (Templates.Count > 0)
             {
-                <ul class="journey-starter__ideas">
-                    @foreach (var template in PagedTemplates)
-                    {
-                        <li>
-                            <article class="journey-starter__idea">
-                                <div class="journey-starter__thumbnail" aria-hidden="true">@Monogram(template.Title)</div>
-                                <p class="journey-starter__eyebrow">Journey FootStep</p>
-                                <h4>@template.Title</h4>
-                                <p>@template.WorkingDescription</p>
-                                <p class="journey-starter__route">@Route(template)</p>
-                                <p class="journey-starter__attribution">By @template.Attribution</p>
-                                <ul class="journey-starter__tags" aria-label="FootStep details">
-                                    @foreach (var tag in DiscoveryTags(template))
-                                    {
-                                        <li>@tag</li>
-                                    }
-                                </ul>
-                                <button type="button"
-                                        aria-expanded="@(SelectedTemplate?.VersionId == template.VersionId)"
-                                        aria-controls="journey-template-preview"
-                                        @onclick="() => PreviewTemplate(template)">Configure Journey</button>
-                            </article>
-                        </li>
-                    }
-                </ul>
-                <PlannerIdeaPager TotalItems="@Templates.Count"
-                                  PageSize="@PageSize"
-                                  CurrentPage="@CurrentPage"
-                                  PageSizeOptions="@JourneyPageSizeOptions"
-                                  OnPageSizeChanged="ChangePageSizeAsync"
-                                  OnPageChanged="ChangePageAsync" />
+                <JourneyFootStepCatalog Templates="@Templates"
+                                        SelectedTemplateVersion="@SelectedTemplate?.VersionId"
+                                        OnConfigure="PreviewTemplate" />
                 @if (SelectedTemplate is not null)
                 {
                     <section id="journey-template-preview" class="journey-template" aria-labelledby="journey-template-title">

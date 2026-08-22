@@ -1,0 +1,84 @@
+@namespace TheSimontonAdventures.Web.Components
+@using TheSimontonAdventures.Web.Planning
+
+<article class="dream-journey" aria-labelledby="dream-journey-title">
+    <a class="dream-journey__back" href="@DreamPath">← Back to Journey FootSteps</a>
+
+    <header class="dream-journey__hero">
+        <p class="dream-journey__eyebrow">Journey FootStep · @Template.DurationDays days</p>
+        <h4 id="dream-journey-title">@Template.Title</h4>
+        @if (!string.IsNullOrWhiteSpace(Template.WorkingDescription))
+        {
+            <p>@Template.WorkingDescription</p>
+        }
+        <p class="dream-journey__attribution">Created by @Template.Attribution</p>
+        <a class="dream-journey__customize" href="@CustomizePath">Customize this Journey</a>
+        <small>Planner will ask you to review dates, origin, route, stays, and activities before creating your private Journey.</small>
+    </header>
+
+    <section aria-labelledby="dream-route-title">
+        <h5 id="dream-route-title">Journey route</h5>
+        <ol class="dream-journey__route">
+            @foreach (var destination in Template.Destinations)
+            {
+                <li>
+                    <strong>@destination.Name</strong>
+                    <span>Days @(destination.StartDayOffset + 1)–@(destination.EndDayOffset + 1)</span>
+                </li>
+            }
+        </ol>
+    </section>
+
+    <div class="dream-journey__summary">
+        <section aria-labelledby="dream-activities-title">
+            <h5 id="dream-activities-title">Activity ideas</h5>
+            @if (Template.Activities.Count == 0)
+            {
+                <p>Shape activities after you bring this Journey into Planner.</p>
+            }
+            else
+            {
+                <ul>
+                    @foreach (var activity in Template.Activities)
+                    {
+                        <li>@activity.Title</li>
+                    }
+                </ul>
+            }
+        </section>
+
+        <section aria-labelledby="dream-transport-title">
+            <h5 id="dream-transport-title">Travel pattern</h5>
+            @if (Template.Transportation.Count == 0)
+            {
+                <p>Transportation remains open for your plan.</p>
+            }
+            else
+            {
+                <ul>
+                    @foreach (var segment in Template.Transportation)
+                    {
+                        <li><strong>@segment.Mode</strong> · @segment.From to @segment.To</li>
+                    }
+                </ul>
+            }
+        </section>
+
+        <section aria-labelledby="dream-stays-title">
+            <h5 id="dream-stays-title">Stay pattern</h5>
+            @if (Template.Accommodations.Count == 0)
+            {
+                <p>Choose stays after you customize this Journey.</p>
+            }
+            else
+            {
+                <ul>
+                    @foreach (var stay in Template.Accommodations)
+                    {
+                        <li>@stay.Name · Days @(stay.StartDayOffset + 1)–@(stay.EndDayOffset + 1)</li>
+                    }
+                </ul>
+            }
+        </section>
+    </div>
+</article>
