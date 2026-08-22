@@ -92,12 +92,92 @@ public sealed class AdventureTemplateInstantiateServiceTests
         Assert.True(transaction.Disposed);
     }
 
+    /// <summary>A reviewed origin replaces only typed origin slots and is covered by plan creation.</summary>
+    [Fact]
+    public async Task InstantiateAsync_OriginAwareTemplate_MaterializesReviewedStartingPlace()
+    {
+        var transaction = new RecordingTransaction(Creator);
+        var command = Command() with
+        {
+            ConfiguredOrigin = new("Phoenix, Arizona", new IanaTimeZone("America/Phoenix")),
+            TravelEstimate = new(1300, 450)
+        };
+
+        var result = await Service(transaction, new(OriginBlueprint(), "decision_origin_0001"))
+            .InstantiateAsync(command);
+
+        Assert.Equal(AdventureTemplateInstantiateOutcome.Created, result.Outcome);
+        var plan = Assert.IsType<AdventurePlan>(transaction.Repository.Added);
+        Assert.Equal(2, plan.DestinationVisits.Count(item => item.Name == "Phoenix, Arizona"));
+        Assert.All(
+            plan.DestinationVisits.Where(item => item.Name == "Phoenix, Arizona"),
+            item => Assert.Equal(new IanaTimeZone("America/Phoenix"), item.TimeZone));
+        Assert.Equal("Phoenix, Arizona", plan.Transportation[0].From);
+        Assert.Equal(new IanaTimeZone("America/Phoenix"), plan.Transportation[0].DepartureTimeZone);
+        Assert.Equal("Phoenix, Arizona", plan.Transportation[1].To);
+        Assert.Equal(new IanaTimeZone("America/Phoenix"), plan.Transportation[1].ArrivalTimeZone);
+        Assert.Equal(new IanaTimeZone("America/Phoenix"), plan.ItineraryDays[0].TimeZone);
+        Assert.Equal(new PlanningDateRange(new(2026, 10, 3), new(2026, 10, 9)), plan.Dates);
+        Assert.Equal(7, plan.ItineraryDays.Count);
+        Assert.Contains(plan.ItineraryDays, day => day.Title == "Ride toward the destination — day 2 of 3");
+        Assert.Contains(plan.ItineraryDays, day => day.Title == "Ride toward home — day 2 of 3");
+        Assert.Equal(new DateOnly(2026, 10, 6), plan.Transportation[0].ArrivalDate);
+        Assert.Equal(new DateOnly(2026, 10, 7), plan.Transportation[1].DepartureDate);
+        Assert.Equal(new DateOnly(2026, 10, 9), plan.Transportation[1].ArrivalDate);
+        Assert.Equal(3, transaction.Reservation!.Fingerprint.Version);
+    }
+
+    /// <summary>Existing non-origin requests retain the historical fingerprint version for retry compatibility.</summary>
+    [Fact]
+    public async Task InstantiateAsync_ExistingTemplate_RetainsOriginalFingerprintVersion()
+    {
+        var transaction = new RecordingTransaction(Creator);
+
+        var result = await Service(transaction).InstantiateAsync(Command());
+
+        Assert.Equal(AdventureTemplateInstantiateOutcome.Created, result.Outcome);
+        Assert.Equal(1, transaction.Reservation!.Fingerprint.Version);
+    }
+
+    /// <summary>An origin-aware template fails before persistence when its required origin is absent.</summary>
+    [Fact]
+    public async Task InstantiateAsync_OriginAwareTemplateWithoutOrigin_FailsValidation()
+    {
+        var transaction = new RecordingTransaction(Creator);
+
+        var result = await Service(transaction, new(OriginBlueprint(), "decision_origin_0001"))
+            .InstantiateAsync(Command());
+
+        Assert.Equal(AdventureTemplateInstantiateOutcome.ValidationFailed, result.Outcome);
+        Assert.Null(transaction.Repository.Added);
+        Assert.False(transaction.Committed);
+    }
+
+    /// <summary>An origin-aware request cannot omit its reviewed distance assumptions.</summary>
+    [Fact]
+    public async Task InstantiateAsync_OriginAwareTemplateWithoutTravelEstimate_FailsValidation()
+    {
+        var transaction = new RecordingTransaction(Creator);
+        var command = Command() with
+        {
+            ConfiguredOrigin = new("Phoenix, Arizona", new IanaTimeZone("America/Phoenix"))
+        };
+
+        var result = await Service(transaction, new(OriginBlueprint(), "decision_origin_0001"))
+            .InstantiateAsync(command);
+
+        Assert.Equal(AdventureTemplateInstantiateOutcome.ValidationFailed, result.Outcome);
+        Assert.Null(transaction.Repository.Added);
+    }
+
     private static AdventureTemplateInstantiateCommand Command() => new(
         Actor, Creator, new PlanningIdempotencyKey("template-request-000001"),
         TemplateVersion, new DateOnly(2026, 10, 3), "en-US");
 
-    private static AdventureTemplateInstantiateService Service(RecordingTransaction transaction) => new(
-        Membership(), new AllowEvaluator(), new StubUseResolver(Use()),
+    private static AdventureTemplateInstantiateService Service(
+        RecordingTransaction transaction,
+        AuthorizedAdventureTemplateUse? use = null) => new(
+        Membership(), new AllowEvaluator(), new StubUseResolver(use ?? Use()),
         new RecordingFactory(transaction), new FixedIdentities(), new FixedTimeProvider());
 
     private static AuthorizedAdventureTemplateUse Use() => new(Blueprint(), "decision_alpha_0001");
@@ -131,6 +211,36 @@ public sealed class AdventureTemplateInstantiateServiceTests
         Accommodations =
         [
             new("Central Lisbon stay", 0, 1, new IanaTimeZone("Europe/Lisbon"))
+        ]
+    };
+
+    private static AdventureTemplateBlueprint OriginBlueprint() => new()
+    {
+        VersionId = TemplateVersion,
+        OwnerType = AdventureTemplateOwnerType.Creator,
+        OwnerId = "creator_tsa_01",
+        SourceLocale = "en-US",
+        Attribution = "Reviewed test source",
+        Title = "Sturgis motorcycle Journey",
+        DurationDays = 3,
+        Destinations =
+        [
+            new("origin-out", "Configured origin", 0, 0, new("UTC"), UsesConfiguredOrigin: true),
+            new("sturgis", "Sturgis", 1, 1, new("America/Denver")),
+            new("origin-back", "Configured origin", 2, 2, new("UTC"), UsesConfiguredOrigin: true)
+        ],
+        Days =
+        [
+            new("out", 0, "origin-out", new("UTC"), "Depart"),
+            new("rally", 1, "sturgis", new("America/Denver"), "Rally"),
+            new("back", 2, "origin-back", new("UTC"), "Return")
+        ],
+        Transportation =
+        [
+            new("Motorcycle", "Configured origin", "Sturgis", 0, null, new("UTC"),
+                1, null, new("America/Denver"), "origin-out", "sturgis"),
+            new("Motorcycle", "Sturgis", "Configured origin", 2, null, new("America/Denver"),
+                2, null, new("UTC"), "sturgis", "origin-back")
         ]
     };
 

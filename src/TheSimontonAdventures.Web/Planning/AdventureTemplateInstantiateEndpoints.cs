@@ -97,6 +97,32 @@ public static class AdventureTemplateInstantiateEndpoints
 
         try
         {
+            AdventureTemplateConfiguredOrigin? configuredOrigin = null;
+            AdventureTemplateTravelEstimate? travelEstimate = null;
+            var originName = form["originName"].ToString();
+            var originTimeZone = form["originTimeZone"].ToString();
+            if (!string.IsNullOrEmpty(originName) || !string.IsNullOrEmpty(originTimeZone))
+            {
+                if (string.IsNullOrWhiteSpace(originName) || string.IsNullOrWhiteSpace(originTimeZone))
+                {
+                    return false;
+                }
+
+                configuredOrigin = new(
+                    originName,
+                    new IanaTimeZone(originTimeZone));
+
+                if (!int.TryParse(form["oneWayDistanceMiles"], NumberStyles.None,
+                        CultureInfo.InvariantCulture, out var oneWayDistanceMiles)
+                    || !int.TryParse(form["dailyDistanceMiles"], NumberStyles.None,
+                        CultureInfo.InvariantCulture, out var dailyDistanceMiles))
+                {
+                    return false;
+                }
+
+                travelEstimate = new(oneWayDistanceMiles, dailyDistanceMiles);
+            }
+
             command = new(
                 actor,
                 creatorId,
@@ -104,7 +130,9 @@ public static class AdventureTemplateInstantiateEndpoints
                 new AdventureTemplateVersionId(
                     form["templateId"].ToString(), form["templateVersion"].ToString()),
                 startDate,
-                form["locale"].ToString());
+                form["locale"].ToString(),
+                configuredOrigin,
+                travelEstimate);
             return true;
         }
         catch (ArgumentException)

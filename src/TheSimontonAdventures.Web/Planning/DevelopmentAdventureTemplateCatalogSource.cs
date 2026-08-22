@@ -83,7 +83,7 @@ public sealed class DevelopmentAdventureTemplateCatalogSource : IAdventureTempla
             DurationDays = source.DurationDays,
             Destinations = source.Destinations.Select(item => new AdventureTemplateDestination(
                 item.Key, item.Name, item.StartDayOffset, item.EndDayOffset,
-                new IanaTimeZone(item.TimeZone), item.Guidance)).ToArray(),
+                new IanaTimeZone(item.TimeZone), item.Guidance, item.UsesConfiguredOrigin)).ToArray(),
             Days = source.Days.Select(item => new AdventureTemplateDay(
                 item.Key, item.DayOffset, item.DestinationKey,
                 new IanaTimeZone(item.TimeZone), item.Title)).ToArray(),
@@ -122,7 +122,7 @@ public sealed class DevelopmentAdventureTemplateCatalogSource : IAdventureTempla
 
     private sealed record DestinationRecord(
         string Key, string Name, int StartDayOffset, int EndDayOffset,
-        string TimeZone, string? Guidance);
+        string TimeZone, string? Guidance, bool UsesConfiguredOrigin = false);
 
     private sealed record DayRecord(
         string Key, int DayOffset, string? DestinationKey, string TimeZone, string Title);

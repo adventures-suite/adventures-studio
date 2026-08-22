@@ -50,6 +50,49 @@ public sealed class AdventureTemplateInstantiateEndpointTests
         Assert.Equal("1.0", service.Command.TemplateVersion.Version);
         Assert.Equal(new DateOnly(2026, 10, 4), service.Command.StartDate);
         Assert.Equal("en-US", service.Command.RequestedLocale);
+        Assert.Null(service.Command.ConfiguredOrigin);
+    }
+
+    /// <summary>An origin-aware form passes only the reviewed bounded origin and IANA time zone.</summary>
+    [Fact]
+    public async Task HandleAsync_OriginAwareForm_PassesConfiguredOrigin()
+    {
+        var service = new RecordingService(new(
+            AdventureTemplateInstantiateOutcome.Created, new("plan_template_02")));
+        var fields = Form().ToDictionary(item => item.Key, item => item.Value);
+        fields["originName"] = "Phoenix, Arizona";
+        fields["originTimeZone"] = "America/Phoenix";
+        fields["oneWayDistanceMiles"] = "1300";
+        fields["dailyDistanceMiles"] = "450";
+        var context = Context(new FormCollection(fields));
+
+        await AdventureTemplateInstantiateEndpoints.HandleAsync(
+            context, "creator_alpha_01", new WorkspaceActorResolver(), service, default);
+
+        Assert.Equal("Phoenix, Arizona", service.Command!.ConfiguredOrigin!.Name);
+        Assert.Equal(new IanaTimeZone("America/Phoenix"), service.Command.ConfiguredOrigin.TimeZone);
+        Assert.Equal(1300, service.Command.TravelEstimate!.OneWayDistanceMiles);
+        Assert.Equal(450, service.Command.TravelEstimate.DailyDistanceMiles);
+        Assert.Equal(3, service.Command.TravelEstimate.DaysEachWay);
+    }
+
+    /// <summary>A partial origin cannot cross the web boundary.</summary>
+    [Fact]
+    public async Task HandleAsync_PartialOrigin_IsValidationFailure()
+    {
+        var service = new RecordingService(new(
+            AdventureTemplateInstantiateOutcome.Created, new("plan_template_03")));
+        var fields = Form().ToDictionary(item => item.Key, item => item.Value);
+        fields["originName"] = "Phoenix, Arizona";
+        var context = Context(new FormCollection(fields));
+
+        await AdventureTemplateInstantiateEndpoints.HandleAsync(
+            context, "creator_alpha_01", new WorkspaceActorResolver(), service, default);
+
+        Assert.Null(service.Command);
+        Assert.Equal(
+            "/workspace/creators/creator_alpha_01/plans?template=validation",
+            context.Response.Headers.Location);
     }
 
     /// <summary>Anonymous requests fail closed before the service sees template identity.</summary>
