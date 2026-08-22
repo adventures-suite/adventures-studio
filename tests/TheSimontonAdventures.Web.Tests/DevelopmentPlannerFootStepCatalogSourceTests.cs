@@ -17,8 +17,8 @@ public sealed class DevelopmentPlannerFootStepCatalogSourceTests
         var items = await source.ListAsync(new("creator_demo_01"), "en-US");
         var realWorld = items.Where(item => item.SourceClasses.Contains("real-world-curated")).ToArray();
 
-        Assert.Equal(23, realWorld.Length);
-        Assert.Equal(23, realWorld.Select(item => (item.Id, item.Version)).Distinct().Count());
+        Assert.Equal(33, realWorld.Length);
+        Assert.Equal(33, realWorld.Select(item => (item.Id, item.Version)).Distinct().Count());
         Assert.All(realWorld, item =>
         {
             Assert.Equal(new CreatorId("creator_tsa_01"), item.OwnerCreatorId);
@@ -128,6 +128,44 @@ public sealed class DevelopmentPlannerFootStepCatalogSourceTests
             && item.Categories.Contains("short-ride"));
 
         Assert.Equal("footstep_route_peak_to_peak_motorcycle", coloradoDayRide.Id);
+    }
+
+    /// <summary>National-park RV ideas expose trip-planning facets without asserting campsite or vehicle suitability.</summary>
+    [Fact]
+    public async Task ListAsync_NationalParkRvCatalog_IsSourcedFilterableAndAdvisory()
+    {
+        var items = await CreateSource().ListAsync(new("creator_demo_01"), "en-US");
+        var rvTrips = items.Where(item =>
+            item.SourceClasses.Contains("real-world-curated")
+            && item.TransportationModes.Contains("rv")
+            && item.Categories.Contains("national-park")).ToArray();
+
+        Assert.Equal(10, rvTrips.Length);
+        Assert.Contains(rvTrips, item => item.Id == "footstep_route_yellowstone_rv_loop");
+        Assert.Contains(rvTrips, item => item.Id == "footstep_route_zion_bryce_rv");
+        Assert.Contains(rvTrips, item => item.Places.Contains("olympic-national-park"));
+        Assert.Contains(rvTrips, item => item.Places.Contains("acadia-national-park"));
+        Assert.Contains(rvTrips, item => item.BudgetBands.Contains("budget"));
+        Assert.Contains(rvTrips, item => item.BudgetBands.Contains("premium"));
+        Assert.Contains(rvTrips, item => item.Seasons.Contains("winter"));
+        Assert.All(rvTrips, item =>
+        {
+            Assert.Null(item.DestinationDraft);
+            Assert.Null(item.ActivityDraft);
+            Assert.Contains("no campsite availability", item.Freshness, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("vehicle-length-review-required", item.Accessibility);
+            Assert.NotEmpty(item.Sources);
+        });
+
+        var shuttleBase = Assert.Single(rvTrips, item =>
+            item.ContextKinds.Contains(PlannerFootStepContextKind.Destination)
+            && item.Places.Contains("glacier-national-park")
+            && item.Kind == "destination"
+            && item.TransportationModes.Contains("shuttle")
+            && item.Accessibility.Contains("boarding-review-required")
+            && item.Categories.Contains("wildlife"));
+
+        Assert.Equal("footstep_destination_glacier_rv_base", shuttleBase.Id);
     }
 
     private static DevelopmentPlannerFootStepCatalogSource CreateSource() =>

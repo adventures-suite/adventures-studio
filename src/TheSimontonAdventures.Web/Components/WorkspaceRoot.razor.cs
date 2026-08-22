@@ -442,7 +442,7 @@ public partial class WorkspaceRoot
         {
             var result = await service.QueryAsync(new PlannerFootStepQuery(
                 WorkspaceActor, AddressedCreatorId, Plan.Id, kind, context.Id, "en-US",
-                new PlannerFootStepFilters(), 1, 24));
+                new PlannerFootStepFilters(), 1, 64));
             AuthorizedFootSteps = result.IsAllowed ? result.Items : [];
         }
         catch (OperationCanceledException) when (
