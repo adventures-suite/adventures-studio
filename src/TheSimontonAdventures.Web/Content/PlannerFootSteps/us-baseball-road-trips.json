@@ -1,0 +1,67 @@
+[
+  {
+    "id":"footstep_destination_boston_fenway_base","version":"1.0","ownerCreatorId":"creator_tsa_01","kind":"destination","title":"Boston and Fenway baseball base",
+    "summary":"Consider Boston as a baseball-history base for a scheduled Fenway Park game or separately confirmed tour, with public-transit and city-walking options. Recheck the official schedule, ticket terms, entry and bag policies, weather, transit service, tour operation, seating access, and sensory accommodations before travel.",
+    "attribution":"The Simonton Adventures · reviewed from the Boston Red Sox","freshness":"Reviewed 22 Aug 2026 · schedule, tickets, tours, policies, transit, weather, and accessibility require recheck",
+    "sources":[{"owner":"Boston Red Sox","url":"https://www.mlb.com/redsox/ballpark","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-09-22"}],
+    "contextKinds":["Adventure","Destination"],"places":["united-states","us-northeast","massachusetts","boston","fenway-park"],"transportationModes":["intercity-rail","public-transit","walking","car"],
+    "categories":["baseball-travel","sports-travel","destination-base","baseball-history","live-events","city-break"],"routeStyles":["destination-base","car-light-options"],"surfaces":["paved","sidewalk"],
+    "accessibility":["venue-specific-access-review-required","mobility-review-required","sensory-review-required","ticket-policy-review-required"],"paces":["unhurried","balanced"],"seasons":["spring","summer","fall"],
+    "equipmentNeeds":["digital-ticket-plan","weather-layers","hearing-protection-as-needed"],"budgetBands":["budget","moderate","premium"],"travelerCompositions":["solo","couple","family","multigenerational","friends","group"],"sourceClasses":["real-world-curated","official-team"],"languages":["en-US"],"durationDays":3
+  },
+  {
+    "id":"footstep_journey_northeast_ballpark_corridor","version":"1.0","ownerCreatorId":"creator_tsa_01","kind":"journey-pattern","title":"Northeast ballpark corridor Journey",
+    "summary":"Build a Boston-to-Washington Journey around only mutually compatible home-game dates, using separate city bases for Fenway Park, New York ballparks, Citizens Bank Park, Oriole Park, and Nationals Park. Compare rail and road transfers, preserve rest and city days, and recheck every schedule, ticket, venue policy, transit service, weather risk, and access need.",
+    "attribution":"The Simonton Adventures · reviewed from MLB teams and Amtrak","freshness":"Reviewed 22 Aug 2026 · schedules, tickets, venues, rail service, road transfers, weather, and accessibility require recheck",
+    "sources":[
+      {"owner":"Boston Red Sox","url":"https://www.mlb.com/redsox/ballpark","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-09-22"},
+      {"owner":"New York Yankees","url":"https://www.mlb.com/yankees/ballpark","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-09-22"},
+      {"owner":"Baltimore Orioles","url":"https://www.mlb.com/orioles/ballpark","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-09-22"},
+      {"owner":"Amtrak","url":"https://content.amtrak.com/content/timetable/Northeast%20Regional.pdf","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-09-22"}
+    ],
+    "contextKinds":["Adventure"],"places":["united-states","us-northeast","massachusetts","boston","new-york","new-york-city","pennsylvania","philadelphia","maryland","baltimore","washington-dc"],"transportationModes":["intercity-rail","public-transit","walking","car"],
+    "categories":["baseball-travel","sports-travel","journey-blueprint","live-events","baseball-history","road-trip","rail-trip","city-break"],"routeStyles":["multi-base","point-to-point","multi-day","flex-day"],"surfaces":["paved","sidewalk"],
+    "accessibility":["venue-specific-access-review-required","mobility-review-required","sensory-review-required","ticket-policy-review-required"],"paces":["unhurried","balanced","active"],"seasons":["spring","summer","fall"],
+    "equipmentNeeds":["digital-ticket-plan","weather-layers","luggage-transfer-plan","hearing-protection-as-needed"],"budgetBands":["budget","moderate","premium"],"travelerCompositions":["solo","couple","family","multigenerational","friends","group"],"sourceClasses":["real-world-curated","official-team","transportation-operator"],"languages":["en-US"],"durationDays":12
+  },
+  {
+    "id":"footstep_destination_chicago_wrigley_base","version":"1.0","ownerCreatorId":"creator_tsa_01","kind":"destination","title":"Chicago and Wrigley baseball base",
+    "summary":"Use Chicago as a baseball base for a scheduled Wrigley Field game, neighborhood time, and optional additional baseball history. Favor verified CTA service over assuming game-day parking. Recheck schedules, tickets, entry rules, transit alerts, weather, seating access, crowd conditions, and sensory support before travel.",
+    "attribution":"The Simonton Adventures · reviewed from the Chicago Cubs and Chicago Transit Authority","freshness":"Reviewed 22 Aug 2026 · schedules, tickets, policies, CTA service, weather, crowd conditions, and accessibility require recheck",
+    "sources":[{"owner":"Chicago Cubs","url":"https://www.mlb.com/cubs/ballpark/information","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-09-22"},{"owner":"Chicago Transit Authority","url":"https://www.transitchicago.com/sports/","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-09-22"}],
+    "contextKinds":["Adventure","Destination"],"places":["united-states","us-midwest","illinois","chicago","wrigley-field"],"transportationModes":["intercity-rail","public-transit","walking","car"],
+    "categories":["baseball-travel","sports-travel","destination-base","baseball-history","live-events","city-break"],"routeStyles":["destination-base","car-light-options"],"surfaces":["paved","sidewalk"],
+    "accessibility":["venue-specific-access-review-required","mobility-review-required","sensory-review-required","ticket-policy-review-required"],"paces":["unhurried","balanced","active"],"seasons":["spring","summer","fall"],
+    "equipmentNeeds":["digital-ticket-plan","weather-layers","hearing-protection-as-needed"],"budgetBands":["budget","moderate","premium"],"travelerCompositions":["solo","couple","family","multigenerational","friends","group"],"sourceClasses":["real-world-curated","official-team","government-transportation"],"languages":["en-US"],"durationDays":3
+  },
+  {
+    "id":"footstep_journey_great_lakes_ballpark_road_trip","version":"1.0","ownerCreatorId":"creator_tsa_01","kind":"journey-pattern","title":"Great Lakes ballpark road-trip Journey",
+    "summary":"Plan separate Chicago, Milwaukee, Detroit, and Cleveland bases only after finding compatible home-game dates, with a rail option between Chicago and Milwaukee and conservative driving days elsewhere. Recheck schedules, tickets, venue policies, roadwork, parking, rail service, weather, fatigue, and access requirements.",
+    "attribution":"The Simonton Adventures · reviewed from MLB teams and Amtrak","freshness":"Reviewed 22 Aug 2026 · schedules, tickets, venues, roads, parking, rail service, weather, and accessibility require recheck",
+    "sources":[{"owner":"Chicago Cubs","url":"https://www.mlb.com/cubs/ballpark/information","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-09-22"},{"owner":"Milwaukee Brewers","url":"https://www.mlb.com/brewers/ballpark/information","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-09-22"},{"owner":"Amtrak","url":"https://content.amtrak.com/content/timetable/Hiawatha%20Service.pdf","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-09-22"}],
+    "contextKinds":["Adventure"],"places":["united-states","us-midwest","great-lakes","illinois","chicago","wisconsin","milwaukee","michigan","detroit","ohio","cleveland"],"transportationModes":["car","intercity-rail","public-transit","walking"],
+    "categories":["baseball-travel","sports-travel","journey-blueprint","live-events","baseball-history","road-trip","city-break"],"routeStyles":["multi-base","loop","multi-day","flex-day"],"surfaces":["paved","sidewalk"],
+    "accessibility":["venue-specific-access-review-required","mobility-review-required","sensory-review-required","ticket-policy-review-required","driving-fatigue-review-required"],"paces":["balanced","active"],"seasons":["spring","summer","fall"],
+    "equipmentNeeds":["digital-ticket-plan","weather-layers","roadside-kit","hearing-protection-as-needed"],"budgetBands":["budget","moderate","premium"],"travelerCompositions":["solo","couple","family","multigenerational","friends","group"],"sourceClasses":["real-world-curated","official-team","transportation-operator"],"languages":["en-US"],"durationDays":10
+  },
+  {
+    "id":"footstep_destination_san_diego_petco_base","version":"1.0","ownerCreatorId":"creator_tsa_01","kind":"destination","title":"San Diego and Petco baseball base",
+    "summary":"Consider downtown San Diego as a baseball base for a scheduled Petco Park game plus waterfront, neighborhood, or museum time. Compare trolley, bus, walking, and driving rather than assuming event parking. Recheck schedules, tickets, entry rules, transit, heat and sun exposure, seating access, and sensory services.",
+    "attribution":"The Simonton Adventures · reviewed from the San Diego Padres","freshness":"Reviewed 22 Aug 2026 · schedules, tickets, policies, transit, parking, weather, sun exposure, and accessibility require recheck",
+    "sources":[{"owner":"San Diego Padres","url":"https://www.mlb.com/padres/ballpark/transportation","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-09-22"},{"owner":"San Diego Padres","url":"https://www.mlb.com/padres/ballpark/information/guide","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-09-22"}],
+    "contextKinds":["Adventure","Destination"],"places":["united-states","us-pacific","california","san-diego","petco-park"],"transportationModes":["public-transit","walking","car"],
+    "categories":["baseball-travel","sports-travel","destination-base","live-events","city-break","waterfront"],"routeStyles":["destination-base","car-light-options"],"surfaces":["paved","sidewalk"],
+    "accessibility":["venue-specific-access-review-required","mobility-review-required","sensory-review-required","ticket-policy-review-required","heat-review-required"],"paces":["unhurried","balanced","active"],"seasons":["spring","summer","fall"],
+    "equipmentNeeds":["digital-ticket-plan","sun-protection","water","hearing-protection-as-needed"],"budgetBands":["budget","moderate","premium"],"travelerCompositions":["solo","couple","family","multigenerational","friends","group"],"sourceClasses":["real-world-curated","official-team"],"languages":["en-US"],"durationDays":3
+  },
+  {
+    "id":"footstep_journey_california_ballpark_coast","version":"1.0","ownerCreatorId":"creator_tsa_01","kind":"journey-pattern","title":"California ballpark coast Journey",
+    "summary":"Build a San Diego, Los Angeles, and San Francisco Journey around compatible Padres, Dodgers, and Giants home dates, with separate city bases and a recovery day after long transfers. Compare rail, flights, and driving rather than assuming one continuous road day. Recheck schedules, tickets, venue rules, traffic, transit, weather, wildfire effects, and access needs.",
+    "attribution":"The Simonton Adventures · reviewed from the Padres, Dodgers, and Giants","freshness":"Reviewed 22 Aug 2026 · schedules, tickets, venues, traffic, transit, weather, wildfire effects, and accessibility require recheck",
+    "sources":[{"owner":"San Diego Padres","url":"https://www.mlb.com/padres/ballpark/transportation","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-09-22"},{"owner":"Los Angeles Dodgers","url":"https://www.mlb.com/dodgers/ballpark/information","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-09-22"},{"owner":"San Francisco Giants","url":"https://www.mlb.com/giants/ballpark","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-09-22"},{"owner":"San Francisco Giants","url":"https://www.mlb.com/giants/ballpark/transportation/accessible","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-09-22"}],
+    "contextKinds":["Adventure"],"places":["united-states","us-pacific","california","san-diego","los-angeles","san-francisco","petco-park","dodger-stadium","oracle-park"],"transportationModes":["car","intercity-rail","public-transit","walking","flight"],
+    "categories":["baseball-travel","sports-travel","journey-blueprint","live-events","road-trip","coast","city-break"],"routeStyles":["multi-base","point-to-point","multi-day","flex-day"],"surfaces":["paved","sidewalk"],
+    "accessibility":["venue-specific-access-review-required","mobility-review-required","sensory-review-required","ticket-policy-review-required","driving-fatigue-review-required"],"paces":["unhurried","balanced","active"],"seasons":["spring","summer","fall"],
+    "equipmentNeeds":["digital-ticket-plan","sun-protection","weather-layers","luggage-transfer-plan","hearing-protection-as-needed"],"budgetBands":["budget","moderate","premium"],"travelerCompositions":["solo","couple","family","multigenerational","friends","group"],"sourceClasses":["real-world-curated","official-team"],"languages":["en-US"],"durationDays":12
+  }
+]
