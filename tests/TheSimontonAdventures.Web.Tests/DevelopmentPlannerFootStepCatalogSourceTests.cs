@@ -6,7 +6,7 @@ namespace TheSimontonAdventures.Web.Tests;
 /// <summary>Verifies the reviewed Development FootStep catalog and its trust boundaries.</summary>
 public sealed class DevelopmentPlannerFootStepCatalogSourceTests
 {
-    private static readonly DateOnly RetrievalDate = new(2026, 8, 21);
+    private static readonly DateOnly EarliestRetrievalDate = new(2026, 8, 21);
 
     /// <summary>Real-world cards have stable identities, explicit ownership, and reviewable primary-source evidence.</summary>
     [Fact]
@@ -17,8 +17,8 @@ public sealed class DevelopmentPlannerFootStepCatalogSourceTests
         var items = await source.ListAsync(new("creator_demo_01"), "en-US");
         var realWorld = items.Where(item => item.SourceClasses.Contains("real-world-curated")).ToArray();
 
-        Assert.Equal(40, realWorld.Length);
-        Assert.Equal(40, realWorld.Select(item => (item.Id, item.Version)).Distinct().Count());
+        Assert.Equal(50, realWorld.Length);
+        Assert.Equal(50, realWorld.Select(item => (item.Id, item.Version)).Distinct().Count());
         Assert.All(realWorld, item =>
         {
             Assert.Equal(new CreatorId("creator_tsa_01"), item.OwnerCreatorId);
@@ -26,7 +26,7 @@ public sealed class DevelopmentPlannerFootStepCatalogSourceTests
             Assert.All(item.Sources, evidence =>
             {
                 Assert.Equal(Uri.UriSchemeHttps, evidence.Url.Scheme);
-                Assert.Equal(RetrievalDate, evidence.RetrievedOn);
+                Assert.True(evidence.RetrievedOn >= EarliestRetrievalDate);
                 Assert.True(evidence.ReviewedOn >= evidence.RetrievedOn);
                 Assert.True(evidence.ReviewAfter > evidence.ReviewedOn);
             });
@@ -198,6 +198,55 @@ public sealed class DevelopmentPlannerFootStepCatalogSourceTests
             Assert.True(item.DurationDays >= 5);
             Assert.Contains("recheck", item.Freshness, StringComparison.OrdinalIgnoreCase);
             Assert.NotEmpty(item.Sources);
+        });
+    }
+
+    /// <summary>U.S. camping and hiking ideas cover stays, day activities, and Journey blueprints safely.</summary>
+    [Fact]
+    public async Task ListAsync_UnitedStatesCampingAndHikingCatalog_IsDiverseAndAdvisory()
+    {
+        var items = await CreateSource().ListAsync(new("creator_demo_01"), "en-US");
+        var campingAndHiking = items.Where(item =>
+            item.SourceClasses.Contains("real-world-curated")
+            && item.Categories.Contains("usa-camping-hiking")).ToArray();
+
+        Assert.Equal(10, campingAndHiking.Length);
+        Assert.Equal(3, campingAndHiking.Count(item => item.Kind == "accommodation"));
+        Assert.Equal(4, campingAndHiking.Count(item => item.Kind == "activity"));
+        Assert.Equal(3, campingAndHiking.Count(item => item.Kind == "journey-pattern"));
+        Assert.Contains(campingAndHiking, item => item.Places.Contains("california"));
+        Assert.Contains(campingAndHiking, item => item.Places.Contains("washington"));
+        Assert.Contains(campingAndHiking, item => item.Places.Contains("virginia"));
+        Assert.Contains(campingAndHiking, item => item.Places.Contains("arizona"));
+        Assert.Contains(campingAndHiking, item => item.Places.Contains("utah"));
+        Assert.Contains(campingAndHiking, item => item.Accessibility.Contains("mobility-access-details-published"));
+        Assert.Contains(campingAndHiking, item => item.Categories.Contains("strenuous-hike"));
+        Assert.Contains(campingAndHiking, item => item.Paces.Contains("unhurried"));
+        Assert.Contains(campingAndHiking, item => item.Paces.Contains("active"));
+        Assert.All(campingAndHiking, item =>
+        {
+            Assert.Null(item.DestinationDraft);
+            Assert.Null(item.ActivityDraft);
+            Assert.NotEmpty(item.Sources);
+            Assert.Contains("recheck", item.Freshness, StringComparison.OrdinalIgnoreCase);
+        });
+
+        Assert.All(campingAndHiking.Where(item => item.Kind == "accommodation"), item =>
+        {
+            Assert.Contains("before booking", item.Summary, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("no availability or price claim", item.Freshness, StringComparison.OrdinalIgnoreCase);
+        });
+        Assert.All(campingAndHiking.Where(item => item.Kind == "journey-pattern"), item =>
+        {
+            Assert.Contains(PlannerFootStepContextKind.Adventure, item.ContextKinds);
+            Assert.Contains("journey-blueprint", item.Categories);
+            Assert.True(item.DurationDays >= 5);
+        });
+        Assert.All(campingAndHiking.Where(item => item.Kind == "activity"), item =>
+        {
+            Assert.Contains(PlannerFootStepContextKind.Adventure, item.ContextKinds);
+            Assert.Contains(PlannerFootStepContextKind.Destination, item.ContextKinds);
+            Assert.Contains(PlannerFootStepContextKind.Day, item.ContextKinds);
         });
     }
 

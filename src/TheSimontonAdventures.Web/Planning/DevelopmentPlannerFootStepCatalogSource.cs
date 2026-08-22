@@ -16,7 +16,7 @@ public sealed class DevelopmentPlannerFootStepCatalogSource : IPlannerFootStepCa
         var records = new[]
         {
             "development.json", "real-world.json", "us-motorcycle.json", "us-motorcycle-journeys.json",
-            "us-national-parks-rv.json"
+            "us-national-parks-rv.json", "us-camping-hiking.json"
         }
             .SelectMany(fileName => Deserialize(Path.Combine(directory, fileName)))
             .ToArray();
