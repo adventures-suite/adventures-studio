@@ -30,10 +30,33 @@
 .journey-template__days, .journey-template__plain-list { display: grid; gap: .8rem; margin: .8rem 0 0; padding-left: 1.25rem; }
 .journey-template__boundary { border-left: 3px solid #8a5b24; color: var(--planner-shell-text-muted); padding: .15rem 1rem; }
 .journey-template__boundary p { margin: .35rem 0; }
+.journey-template__progress { counter-reset: journey-step; display: grid; gap: .5rem; grid-template-columns: repeat(4, 1fr); list-style: none; margin: 1.25rem 0 0; padding: 0; }
+.journey-template__progress li { align-items: center; color: var(--planner-shell-text-muted); display: flex; font-size: .78rem; font-weight: 800; gap: .4rem; text-transform: uppercase; }
+.journey-template__progress li::before { align-items: center; border: 1px solid var(--planner-shell-border); border-radius: 50%; content: counter(journey-step); counter-increment: journey-step; display: inline-flex; height: 1.65rem; justify-content: center; width: 1.65rem; }
+.journey-template__progress li.is-complete, .journey-template__progress li.is-current { color: var(--planner-shell-text); }
+.journey-template__progress li.is-complete::before { background: var(--planner-shell-primary); border-color: var(--planner-shell-primary); color: var(--planner-shell-surface); content: "\2713"; }
+.journey-template__progress li.is-current::before { border-color: var(--planner-shell-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--planner-shell-primary) 18%, transparent); }
+.journey-template__configuration, .journey-template__review { background: var(--planner-shell-surface); border: 1px solid var(--planner-shell-border); border-radius: .8rem; margin-top: 1rem; padding: 1rem; }
+.journey-template__configuration > div > p:last-child { color: var(--planner-shell-text-muted); }
+.journey-template__configuration label { display: grid; font-weight: 700; gap: .35rem; max-width: 19rem; }
+.journey-template__configuration input { background: var(--planner-shell-surface-muted); border: 1px solid var(--planner-shell-border); border-radius: .45rem; color: var(--planner-shell-text); font: inherit; min-height: 2.75rem; padding: .55rem; }
+.journey-template__validation { color: var(--planner-shell-danger, #a52a2a); font-weight: 700; }
+.journey-template__review > header { align-items: start; display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; }
+.journey-template__review > header p { margin-top: 0; }
+.journey-template__dated-route { display: grid; gap: .5rem; list-style: none; margin: 1rem 0; padding: 0; }
+.journey-template__dated-route li { align-items: center; background: var(--planner-shell-surface-muted); border-radius: .5rem; display: flex; flex-wrap: wrap; gap: .5rem 1rem; justify-content: space-between; padding: .65rem .8rem; }
+.journey-template__dated-route span { font-weight: 800; }
+.journey-template__dated-route small { color: var(--planner-shell-text-muted); }
+.journey-template__review-counts { display: flex; flex-wrap: wrap; gap: .65rem; margin: 0; }
+.journey-template__review-counts div { border: 1px solid var(--planner-shell-border); border-radius: .5rem; min-width: 7rem; padding: .5rem .65rem; }
+.journey-template__review-counts dt { color: var(--planner-shell-text-muted); font-size: .75rem; }
+.journey-template__review-counts dd { font-size: 1.1rem; font-weight: 800; margin: .15rem 0 0; }
 .journey-template__create { align-items: end; display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 1rem; }
 .journey-template__create label { display: grid; font-weight: 700; gap: .35rem; }
 .journey-template__create input { background: var(--planner-shell-surface); border: 1px solid var(--planner-shell-border); border-radius: .45rem; color: var(--planner-shell-text); font: inherit; min-height: 2.75rem; padding: .55rem; }
 .journey-template__continue { background: var(--planner-shell-primary); border: 0; border-radius: 999px; color: var(--planner-shell-surface); cursor: pointer; font: inherit; font-weight: 800; margin-top: 1rem; padding: .75rem 1.1rem; }
+.journey-template__continue:disabled { cursor: not-allowed; opacity: .45; }
+.journey-template__secondary { background: transparent; border: 1px solid var(--planner-shell-border); border-radius: 999px; color: var(--planner-shell-text); cursor: pointer; font: inherit; font-weight: 800; padding: .75rem 1.1rem; }
 .journey-template__create .journey-template__continue { margin-top: 0; min-height: 2.75rem; }
 .journey-template__after { color: var(--planner-shell-text-muted); font-size: .9rem; }
 .journey-starter button:focus-visible, .journey-starter input:focus-visible { outline: 3px solid var(--planner-shell-focus); outline-offset: 3px; }

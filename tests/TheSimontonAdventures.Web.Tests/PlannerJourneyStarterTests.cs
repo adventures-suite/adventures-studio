@@ -19,7 +19,7 @@ public sealed class PlannerJourneyStarterTests
         Assert.Contains("Start a journey", html, StringComparison.Ordinal);
         Assert.Contains("Start from scratch", html, StringComparison.Ordinal);
         Assert.Contains("Browse Journey FootSteps", html, StringComparison.Ordinal);
-        Assert.DoesNotContain("Preview FootStep", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Configure Journey", html, StringComparison.Ordinal);
         Assert.DoesNotContain("Import", html, StringComparison.Ordinal);
     }
 
@@ -42,7 +42,7 @@ public sealed class PlannerJourneyStarterTests
         Assert.Contains("Portugal by rail", html, StringComparison.Ordinal);
         Assert.Contains("Lisbon", html, StringComparison.Ordinal);
         Assert.Contains("Journey FootStep", html, StringComparison.Ordinal);
-        Assert.Contains("Preview FootStep", html, StringComparison.Ordinal);
+        Assert.Contains("Configure Journey", html, StringComparison.Ordinal);
         Assert.Contains("By Curated collection", html, StringComparison.Ordinal);
         Assert.Contains("8 days", html, StringComparison.Ordinal);
         Assert.Contains("1 destination", html, StringComparison.Ordinal);
@@ -51,14 +51,17 @@ public sealed class PlannerJourneyStarterTests
         Assert.Contains("not bookings, prices, or availability", html, StringComparison.Ordinal);
     }
 
-    /// <summary>A selected template offers one direct atomic creation form without pretend customization.</summary>
+    /// <summary>A selected template requires dated review before offering the atomic creation form.</summary>
     [Fact]
     public async Task Starter_SelectedTemplateRendersDirectCreationContract()
     {
         var markup = File.ReadAllText(Path.Combine(
             FindApplicationRoot(), "Components", "Planner", "PlannerJourneyStarter.razor"));
 
-        Assert.Contains("Complete Journey FootStep preview", markup, StringComparison.Ordinal);
+        Assert.Contains("Journey FootStep setup", markup, StringComparison.Ordinal);
+        Assert.Contains("Review configured Journey", markup, StringComparison.Ordinal);
+        Assert.Contains("Your dated Journey", markup, StringComparison.Ordinal);
+        Assert.Contains("Change start date", markup, StringComparison.Ordinal);
         Assert.Contains("CreateFromTemplatePath", markup, StringComparison.Ordinal);
         Assert.Contains("AntiforgeryToken", markup, StringComparison.Ordinal);
         Assert.Contains("name=\"templateId\"", markup, StringComparison.Ordinal);
