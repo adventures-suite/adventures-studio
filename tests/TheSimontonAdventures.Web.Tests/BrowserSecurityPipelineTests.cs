@@ -98,6 +98,31 @@ public sealed class BrowserSecurityPipelineTests
         Assert.False(nextCalled);
     }
 
+    /// <summary>Ensures framework-validated endpoint metadata is not evaluated a second time.</summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task MetadataEndpoint_UsesFrameworkAntiforgeryValidation(bool requiresValidation)
+    {
+        var context = AuthenticatedContext("POST", "/authentication/sign-in");
+        context.SetEndpoint(new Endpoint(
+            _ => Task.CompletedTask,
+            new EndpointMetadataCollection(new TestAntiforgeryMetadata(requiresValidation)),
+            "metadata endpoint"));
+        var antiforgery = new RecordingAntiforgery();
+        var nextCalled = false;
+        var middleware = new CookieAuthenticatedAntiforgeryMiddleware(_ =>
+        {
+            nextCalled = true;
+            return Task.CompletedTask;
+        }, AuthenticationConfiguration.Disabled());
+
+        await middleware.InvokeAsync(context, antiforgery);
+
+        Assert.False(antiforgery.Validated);
+        Assert.True(nextCalled);
+    }
+
     /// <summary>Ensures future bearer APIs are not accidentally assigned browser CSRF semantics.</summary>
     [Fact]
     public async Task BearerMutation_IsExplicitlyOutsideBrowserAntiforgeryPolicy()
@@ -301,6 +326,8 @@ public sealed class BrowserSecurityPipelineTests
             return Task.CompletedTask;
         }
     }
+
+    private sealed record TestAntiforgeryMetadata(bool RequiresValidation) : IAntiforgeryMetadata;
 
     private sealed class RecordingSessionAuthenticator : IServerSessionAuthenticator
     {

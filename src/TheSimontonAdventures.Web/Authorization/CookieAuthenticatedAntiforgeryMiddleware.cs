@@ -20,14 +20,18 @@ public sealed class CookieAuthenticatedAntiforgeryMiddleware(
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(antiforgery);
 
+        var antiforgeryMetadata = context.GetEndpoint()?.Metadata.GetMetadata<IAntiforgeryMetadata>();
         if (IsUnsafe(context.Request.Method)
             && context.User.Identity?.IsAuthenticated == true
             && context.Request.Cookies.ContainsKey(
                 BrowserAuthenticationDefaults.ApplicationCookieName)
             && !context.Request.Path.StartsWithSegments("/_blazor")
             && !IsProtocolEndpoint(context.Request.Path)
-            && context.GetEndpoint()?.Metadata.GetMetadata<IAntiforgeryMetadata>()?.RequiresValidation
-                != false)
+            // Endpoint-aware antiforgery middleware has already evaluated
+            // explicit metadata. This fallback protects only endpoints whose
+            // authors omitted that metadata, avoiding a second form read after
+            // a failed framework validation.
+            && antiforgeryMetadata is null)
         {
             await antiforgery.ValidateRequestAsync(context);
         }
