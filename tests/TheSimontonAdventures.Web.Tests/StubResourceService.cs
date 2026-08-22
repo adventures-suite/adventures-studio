@@ -7,15 +7,18 @@ namespace TheSimontonAdventures.Web.Tests;
 internal sealed class StubResourceService : IResourceService
 {
     private readonly bool _resolveKnownHeroForEveryCreator;
+    private readonly bool _throwForUnknownCreator;
     private readonly string _knownHeroUrl;
     private readonly Dictionary<(CreatorId CreatorId, ResourceId ResourceId), ResourceRecord> _resources = [];
 
     internal StubResourceService(
         bool resolveKnownHeroForEveryCreator = true,
-        string knownHeroUrl = "/images/test-hero.jpeg")
+        string knownHeroUrl = "/images/test-hero.jpeg",
+        bool throwForUnknownCreator = false)
     {
         _resolveKnownHeroForEveryCreator = resolveKnownHeroForEveryCreator;
         _knownHeroUrl = knownHeroUrl;
+        _throwForUnknownCreator = throwForUnknownCreator;
     }
 
     internal void Add(ResourceRecord resource) =>
@@ -47,6 +50,11 @@ internal sealed class StubResourceService : IResourceService
 
     public async Task<ResolvedResource?> ResolvePublicAsync(CreatorId creatorId, ResourceId resourceId, CancellationToken cancellationToken = default)
     {
+        if (_throwForUnknownCreator)
+        {
+            throw new InvalidDataException($"Resource registry references unknown Creator '{creatorId}'.");
+        }
+
         var url = await GetPublicUrlAsync(creatorId, resourceId, cancellationToken);
         if (url is null)
         {

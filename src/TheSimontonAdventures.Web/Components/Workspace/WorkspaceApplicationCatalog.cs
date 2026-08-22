@@ -3,6 +3,8 @@ namespace TheSimontonAdventures.Web.Components;
 /// <summary>Identifies one presentation-only AdventuresSuite workspace preview.</summary>
 public enum WorkspaceApplicationKind
 {
+    /// <summary>Represents visual Journey discovery and creation.</summary>
+    Dream,
     /// <summary>Represents guided planning advice.</summary>
     Advisor,
     /// <summary>Represents the traveler companion experience.</summary>
@@ -52,6 +54,13 @@ public static class WorkspaceApplicationCatalog
 {
     private static readonly IReadOnlyList<WorkspaceApplicationDefinition> Applications =
     [
+        Definition("dream", WorkspaceApplicationKind.Dream, "Dream",
+            "A visual place to discover Journey possibilities, explore FootSteps, and begin a private Adventure.",
+            "Imagine the Journey before planning it",
+            "A representative discovery experience for photography, curated Journey FootSteps, and clear paths into a new private plan.",
+            ("Explore", "Browse complete Journey FootSteps and editorial collections.", "Inspiration"),
+            ("Shape", "Choose an origin, dates, pace, and supported preferences.", "Review first"),
+            ("Begin", "Create an independent private Journey and continue in Planner.", "Creator-owned")),
         Definition("advisor", WorkspaceApplicationKind.Advisor, "Advisor",
             "Thoughtful guidance for turning travel intent into reviewable planning decisions.",
             "A calmer planning brief",

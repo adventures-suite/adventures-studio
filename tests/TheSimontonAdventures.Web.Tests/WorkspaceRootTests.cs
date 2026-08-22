@@ -77,9 +77,9 @@ public sealed class WorkspaceRootTests
         Assert.DoesNotContain("user_alpha_01", html);
     }
 
-    /// <summary>A sole authorized Creator renders direct new and existing Adventure entry points.</summary>
+    /// <summary>A sole authorized Creator enters Dream without reading Planner data.</summary>
     [Fact]
-    public async Task AuthenticatedWorkspace_WithOneCreator_RendersAdventureLauncher()
+    public async Task AuthenticatedWorkspace_WithOneCreator_RendersDreamByDefault()
     {
         var query = new StubPlannerWorkspaceQueryService(
             PlannerWorkspaceResult.Allowed([new AdventurePlanDashboardItem
@@ -102,11 +102,11 @@ public sealed class WorkspaceRootTests
             services.AddSingleton<IPlannerWorkspaceQueryService>(query);
         });
 
-        Assert.Contains("Plan a new Adventure", html);
-        Assert.Contains("Italy, Greece &amp; Croatia", html);
+        Assert.Contains(">Dream</h2>", html, StringComparison.Ordinal);
+        Assert.Contains("Imagine the Journey before planning it", html, StringComparison.Ordinal);
+        Assert.Contains("aria-current=\"page\" title=\"Dream\"", html, StringComparison.Ordinal);
         Assert.Contains("href=\"/workspace/creators/creator_tsa_01/plans\"", html);
-        Assert.Contains("href=\"/workspace/creators/creator_tsa_01/plans/plan_italy_01\"", html);
-        Assert.Equal(new CreatorId("creator_tsa_01"), query.LastCreatorId);
+        Assert.Equal(0, query.CallCount);
         Assert.DoesNotContain("creator_forged", html);
         Assert.DoesNotContain("Your AdventuresSuite user ID", html);
         Assert.DoesNotContain("user_planner_01", html);
@@ -129,11 +129,15 @@ public sealed class WorkspaceRootTests
         Assert.Contains("Choose a Creator workspace", html);
         Assert.Contains("Alpha Adventures", html);
         Assert.Contains("Beta Adventures", html);
+        Assert.Contains("href=\"/workspace/creators/creator_alpha_01/dream\"", html);
+        Assert.Contains("href=\"/workspace/creators/creator_beta_01/dream\"", html);
+        Assert.Contains("Open Dream", html);
         Assert.DoesNotContain("Plan a new Adventure", html);
     }
 
     /// <summary>An authorized Creator member can open an honest, non-interactive workspace preview.</summary>
     [Theory]
+    [InlineData("dream", "Dream")]
     [InlineData("advisor", "Advisor")]
     [InlineData("companion", "Companion")]
     [InlineData("publisher", "Publisher")]
@@ -176,6 +180,30 @@ public sealed class WorkspaceRootTests
             Assert.Contains("Google Play", html, StringComparison.Ordinal);
             Assert.Contains("not currently available for download", html, StringComparison.Ordinal);
         }
+    }
+
+    /// <summary>A private Creator without a public resource registry receives the safe Companion preview fallback.</summary>
+    [Fact]
+    public async Task CompanionWorkspace_WithoutPublicCreatorRegistry_RendersFallback()
+    {
+        var html = await RenderAsync(
+            ApplicationPrincipal(),
+            "/workspace/creators/creator_local_alpha/companion",
+            services =>
+            {
+                services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>();
+                services.AddSingleton<ICreatorWorkspaceDirectoryService>(
+                    new StubCreatorWorkspaceDirectoryService([
+                        new(new("creator_local_alpha"), "Local Alpha")
+                    ]));
+                services.AddSingleton<IResourceService>(
+                    new StubResourceService(throwForUnknownCreator: true));
+            });
+
+        Assert.Contains("Companion mobile experience preview", html, StringComparison.Ordinal);
+        Assert.Contains(">Companion</strong>", html, StringComparison.Ordinal);
+        Assert.Contains("Planned for iPhone, iPad, and Android", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("adventures-companion-preview.jpeg", html, StringComparison.Ordinal);
     }
 
     /// <summary>A placeholder route fails closed when the signed-in user lacks the addressed Creator membership.</summary>

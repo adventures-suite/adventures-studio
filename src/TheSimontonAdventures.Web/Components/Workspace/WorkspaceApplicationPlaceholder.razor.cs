@@ -34,7 +34,21 @@ public partial class WorkspaceApplicationPlaceholder
     protected override async Task OnParametersSetAsync()
     {
         CompanionPreview = Application.Kind == WorkspaceApplicationKind.Companion
-            ? await ResourceService.ResolvePublicAsync(CreatorId, CompanionPreviewResourceId)
+            ? await ResolveCompanionPreviewAsync()
             : null;
+    }
+
+    private async Task<ResolvedResource?> ResolveCompanionPreviewAsync()
+    {
+        try
+        {
+            return await ResourceService.ResolvePublicAsync(CreatorId, CompanionPreviewResourceId);
+        }
+        catch (InvalidDataException)
+        {
+            // A private Creator does not need a public Content Engine registry.
+            // The Companion placeholder remains useful with its built-in preview.
+            return null;
+        }
     }
 }
