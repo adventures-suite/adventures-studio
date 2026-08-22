@@ -54,6 +54,20 @@ public sealed class PlannerFootStepQueryServiceTests
         Assert.Equal(0, source.CallCount);
     }
 
+    /// <summary>A request beyond the bounded discovery page cannot read or disclose catalog content.</summary>
+    [Fact]
+    public async Task QueryAsync_PageSizeBeyondCatalogBound_DoesNotDiscloseCatalog()
+    {
+        var source = new RecordingSource(Item("a", "Private title", "rv", "national-park", "park-base", "paved"));
+        var service = Service(source, Plan());
+
+        var result = await service.QueryAsync(Query(new()) with { PageSize = 65 });
+
+        Assert.False(result.IsAllowed);
+        Assert.Empty(result.Items);
+        Assert.Equal(0, source.CallCount);
+    }
+
     /// <summary>Denied instance authorization cannot load Planning or catalog data.</summary>
     [Fact]
     public async Task QueryAsync_DeniedAuthorization_DoesNotReadSources()

@@ -220,6 +220,8 @@ public sealed class PlannerFootStepQueryService(
     IPlanningTransactionFactory transactionFactory,
     IPlannerFootStepCatalogSource source) : IPlannerFootStepQueryService
 {
+    private const int MaximumPageSize = 64;
+
     /// <inheritdoc />
     public async Task<PlannerFootStepQueryResult> QueryAsync(
         PlannerFootStepQuery query,
@@ -228,9 +230,9 @@ public sealed class PlannerFootStepQueryService(
         if (query is null || query.Actor is null || !query.Actor.IsHuman || !query.Actor.UserId.HasValue
             || query.CreatorId == default || query.AdventurePlanId == default
             || string.IsNullOrWhiteSpace(query.ContextId) || string.IsNullOrWhiteSpace(query.RequestedLocale)
-            || query.Page < 1 || query.PageSize is < 1 or > 24)
+            || query.Page < 1 || query.PageSize is < 1 or > MaximumPageSize)
         {
-            return PlannerFootStepQueryResult.Denied(query?.PageSize is > 0 and <= 24 ? query.PageSize : 6);
+            return PlannerFootStepQueryResult.Denied(query?.PageSize is > 0 and <= MaximumPageSize ? query.PageSize : 6);
         }
 
         var membership = await membershipProvider.GetMembershipAsync(query.Actor.UserId.Value, query.CreatorId, cancellationToken);
