@@ -22,6 +22,11 @@
 
     <p class="planner-activity-footstep-card__summary">@FootStep.Summary</p>
 
+    <p class="planner-activity-footstep-card__context">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m5 12 4 4L19 6" /></svg>
+        @ContextSummary
+    </p>
+
     <div class="planner-activity-footstep-card__facts" aria-label="Activity suggestion details">
         @if (SuggestedTime is not null)
         {

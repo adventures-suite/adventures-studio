@@ -10,6 +10,14 @@ public partial class PlannerActivityFootStepCard
     [Parameter, EditorRequired]
     public PlannerFootStepDefinition FootStep { get; set; } = null!;
 
+    /// <summary>Gets or sets the selected plan context label used to explain relevance.</summary>
+    [Parameter]
+    public string ContextLabel { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the selected plan context kind used to explain relevance.</summary>
+    [Parameter]
+    public PlannerIdeasContextKind ContextKind { get; set; }
+
     /// <summary>Gets or sets the authorized itinerary-day targets for this card.</summary>
     [Parameter]
     public IReadOnlyList<PlannerActivityTarget> Targets { get; set; } = [];
@@ -38,6 +46,12 @@ public partial class PlannerActivityFootStepCard
         0 => "Select an itinerary day to use this FootStep",
         1 => $"Suggested for {Targets[0].Label}",
         _ => $"Fits {Targets.Count} itinerary days in the selected destination"
+    };
+    private string ContextSummary => ContextKind switch
+    {
+        PlannerIdeasContextKind.Day => $"Shown for {ContextLabel}",
+        PlannerIdeasContextKind.Destination => $"Matches {ContextLabel}",
+        _ => "Suggested for this Adventure"
     };
     private string? SuggestedTime => FootStep.ActivityDraft switch
     {
