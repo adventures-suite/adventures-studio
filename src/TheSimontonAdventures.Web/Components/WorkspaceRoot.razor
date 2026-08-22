@@ -41,6 +41,7 @@
         @if (PlaceholderApplication is not null && LoadState == WorkspaceLoadState.Ready)
         {
             <WorkspaceApplicationPlaceholder Application="@PlaceholderApplication"
+                                             CreatorId="@AddressedCreatorId"
                                              PlannerPath="@PlanListPath"
                                              SimontonAdventuresUrl="@WorkspaceNavigation.SimontonAdventuresUrl" />
         }
