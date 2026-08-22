@@ -17,8 +17,8 @@ public sealed class DevelopmentPlannerFootStepCatalogSourceTests
         var items = await source.ListAsync(new("creator_demo_01"), "en-US");
         var realWorld = items.Where(item => item.SourceClasses.Contains("real-world-curated")).ToArray();
 
-        Assert.Equal(50, realWorld.Length);
-        Assert.Equal(50, realWorld.Select(item => (item.Id, item.Version)).Distinct().Count());
+        Assert.Equal(58, realWorld.Length);
+        Assert.Equal(58, realWorld.Select(item => (item.Id, item.Version)).Distinct().Count());
         Assert.All(realWorld, item =>
         {
             Assert.Equal(new CreatorId("creator_tsa_01"), item.OwnerCreatorId);
@@ -101,6 +101,7 @@ public sealed class DevelopmentPlannerFootStepCatalogSourceTests
         var motorcycle = items.Where(item =>
             item.SourceClasses.Contains("real-world-curated")
             && item.TransportationModes.Contains("motorcycle")
+            && !item.Categories.Contains("us-southwest")
             && item.Kind != "journey-pattern").ToArray();
 
         Assert.Equal(10, motorcycle.Length);
@@ -139,6 +140,7 @@ public sealed class DevelopmentPlannerFootStepCatalogSourceTests
         var rvTrips = items.Where(item =>
             item.SourceClasses.Contains("real-world-curated")
             && item.TransportationModes.Contains("rv")
+            && !item.Categories.Contains("us-southwest")
             && item.Categories.Contains("national-park")).ToArray();
 
         Assert.Equal(10, rvTrips.Length);
@@ -177,6 +179,7 @@ public sealed class DevelopmentPlannerFootStepCatalogSourceTests
         var journeys = items.Where(item =>
             item.SourceClasses.Contains("real-world-curated")
             && item.Kind == "journey-pattern"
+            && !item.Categories.Contains("us-southwest")
             && item.TransportationModes.Contains("motorcycle")).ToArray();
 
         Assert.Equal(7, journeys.Length);
@@ -247,6 +250,41 @@ public sealed class DevelopmentPlannerFootStepCatalogSourceTests
             Assert.Contains(PlannerFootStepContextKind.Adventure, item.ContextKinds);
             Assert.Contains(PlannerFootStepContextKind.Destination, item.ContextKinds);
             Assert.Contains(PlannerFootStepContextKind.Day, item.ContextKinds);
+        });
+    }
+
+    /// <summary>Southwest coverage provides one Destination and one Journey for every developed travel category.</summary>
+    [Fact]
+    public async Task ListAsync_SouthwestCatalog_CoversEveryCategoryWithDestinationsAndJourneys()
+    {
+        var items = await CreateSource().ListAsync(new("creator_demo_01"), "en-US");
+        var southwest = items.Where(item => item.Categories.Contains("us-southwest")).ToArray();
+
+        Assert.Equal(8, southwest.Length);
+        Assert.Equal(4, southwest.Count(item => item.Kind == "destination"));
+        Assert.Equal(4, southwest.Count(item => item.Kind == "journey-pattern"));
+        foreach (var category in new[] { "motorcycle-touring", "rv-travel", "camping", "hiking" })
+        {
+            Assert.Contains(southwest, item => item.Kind == "destination" && item.Categories.Contains(category));
+            Assert.Contains(southwest, item => item.Kind == "journey-pattern" && item.Categories.Contains(category));
+        }
+
+        Assert.Contains(southwest, item => item.Places.Contains("arizona"));
+        Assert.Contains(southwest, item => item.Places.Contains("new-mexico"));
+        Assert.Contains(southwest, item => item.Places.Contains("texas"));
+        Assert.All(southwest, item =>
+        {
+            Assert.Null(item.DestinationDraft);
+            Assert.Null(item.ActivityDraft);
+            Assert.Contains(PlannerFootStepContextKind.Adventure, item.ContextKinds);
+            Assert.NotEmpty(item.Accessibility);
+            Assert.NotEmpty(item.Sources);
+            Assert.Contains("recheck", item.Freshness, StringComparison.OrdinalIgnoreCase);
+        });
+        Assert.All(southwest.Where(item => item.Kind == "journey-pattern"), item =>
+        {
+            Assert.Contains("journey-blueprint", item.Categories);
+            Assert.True(item.DurationDays >= 5);
         });
     }
 
