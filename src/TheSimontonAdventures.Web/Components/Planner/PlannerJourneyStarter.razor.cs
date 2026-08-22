@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using TheSimontonAdventures.Web.Planning;
@@ -45,6 +46,11 @@ public partial class PlannerJourneyStarter : ComponentBase, IAsyncDisposable
     private AdventureTemplateBlueprint? SelectedTemplate { get; set; }
     private int PageSize { get; set; } = 2;
     private int CurrentPage { get; set; } = 1;
+    private DateOnly? ConfiguredStartDate { get; set; }
+    private string StartDateText { get; set; } = string.Empty;
+    private string? StartDateError { get; set; }
+    private bool IsReviewReady { get; set; }
+    private DateOnly JourneyEndDate => ConfiguredStartDate!.Value.AddDays(SelectedTemplate!.DurationDays - 1);
     private IReadOnlyList<AdventureTemplateBlueprint> PagedTemplates => Templates
         .Skip((CurrentPage - 1) * PageSize)
         .Take(PageSize)
@@ -75,8 +81,51 @@ public partial class PlannerJourneyStarter : ComponentBase, IAsyncDisposable
         await OnTemplateModeChanged.InvokeAsync(false);
     }
 
-    private void PreviewTemplate(AdventureTemplateBlueprint template) =>
+    private void PreviewTemplate(AdventureTemplateBlueprint template)
+    {
         SelectedTemplate = template;
+        ResetConfiguration();
+    }
+
+    private void StartDateChanged(ChangeEventArgs args)
+    {
+        StartDateText = args.Value?.ToString() ?? string.Empty;
+        IsReviewReady = false;
+        if (DateOnly.TryParseExact(
+                StartDateText, "yyyy-MM-dd", CultureInfo.InvariantCulture,
+                DateTimeStyles.None, out var startDate))
+        {
+            ConfiguredStartDate = startDate;
+            StartDateError = null;
+            return;
+        }
+
+        ConfiguredStartDate = null;
+        StartDateError = string.IsNullOrWhiteSpace(StartDateText)
+            ? null
+            : "Choose a valid Journey start date.";
+    }
+
+    private void ReviewConfiguration()
+    {
+        if (ConfiguredStartDate.HasValue)
+        {
+            IsReviewReady = true;
+        }
+    }
+
+    private void ChangeConfiguration() => IsReviewReady = false;
+
+    private void ResetConfiguration()
+    {
+        ConfiguredStartDate = null;
+        StartDateText = string.Empty;
+        StartDateError = null;
+        IsReviewReady = false;
+    }
+
+    private static string FormatDate(DateOnly date) =>
+        date.ToString("MMM d, yyyy", CultureInfo.InvariantCulture);
 
     private async Task ChangePageSizeAsync(int pageSize)
     {
@@ -92,6 +141,7 @@ public partial class PlannerJourneyStarter : ComponentBase, IAsyncDisposable
     {
         CurrentPage = page;
         SelectedTemplate = null;
+        ResetConfiguration();
         return Task.CompletedTask;
     }
 

@@ -48,7 +48,7 @@
                                 <button type="button"
                                         aria-expanded="@(SelectedTemplate?.VersionId == template.VersionId)"
                                         aria-controls="journey-template-preview"
-                                        @onclick="() => PreviewTemplate(template)">Preview FootStep</button>
+                                        @onclick="() => PreviewTemplate(template)">Configure Journey</button>
                             </article>
                         </li>
                     }
@@ -64,7 +64,7 @@
                     <section id="journey-template-preview" class="journey-template" aria-labelledby="journey-template-title">
                         <header class="journey-template__header">
                             <div>
-                                <p class="journey-starter__eyebrow">Complete Journey FootStep preview</p>
+                                <p class="journey-starter__eyebrow">Journey FootStep setup</p>
                                 <h3 id="journey-template-title">@SelectedTemplate.Title</h3>
                                 <p>@SelectedTemplate.WorkingDescription</p>
                             </div>
@@ -75,7 +75,14 @@
                             </dl>
                         </header>
 
-                        <div class="journey-template__sections">
+                        <ol class="journey-template__progress" aria-label="Journey creation progress">
+                            <li class="is-complete">Choose</li>
+                            <li class="@(IsReviewReady ? "is-complete" : "is-current")">Configure</li>
+                            <li class="@(IsReviewReady ? "is-current" : null)">Review</li>
+                            <li>Create</li>
+                        </ol>
+
+                        <div class="journey-template__sections" aria-label="FootStep contents">
                             <section aria-labelledby="template-destinations">
                                 <h4 id="template-destinations">Destinations</h4>
                                 <ol class="journey-template__plain-list">
@@ -130,19 +137,69 @@
                             <p><strong>Your private copy.</strong> Creating this Journey copies the complete template into a new plan owned by your Creator.</p>
                             <p>Nothing is booked. Later template changes cannot alter your plan, and the template author receives no access.</p>
                         </div>
-                        <form method="post" action="@CreateFromTemplatePath" class="journey-template__create">
-                            <AntiforgeryToken />
-                            <input type="hidden" name="idempotencyKey" value="@IdempotencyKey(SelectedTemplate.VersionId)" />
-                            <input type="hidden" name="templateId" value="@SelectedTemplate.VersionId.TemplateId" />
-                            <input type="hidden" name="templateVersion" value="@SelectedTemplate.VersionId.Version" />
-                            <input type="hidden" name="locale" value="@Locale" />
+                        <section class="journey-template__configuration" aria-labelledby="journey-configuration-title">
+                            <div>
+                                <p class="journey-starter__eyebrow">Configure</p>
+                                <h4 id="journey-configuration-title">When does your Journey begin?</h4>
+                                <p>This FootStep has a fixed @SelectedTemplate.DurationDays-day shape. You can adjust its copied details after creation.</p>
+                            </div>
                             <label>
                                 Start date
-                                <input type="date" name="startDate" required />
+                                <input type="date"
+                                       value="@StartDateText"
+                                       aria-describedby="journey-start-date-guidance"
+                                       @onchange="StartDateChanged" />
                             </label>
-                            <button type="submit" class="journey-template__continue">Create my private Journey</button>
-                        </form>
-                        <p class="journey-template__after">After creation, adjust destinations, dates, itinerary items, transportation, and stays in your private plan.</p>
+                            <p id="journey-start-date-guidance" class="journey-template__after">Dates below will be calculated before anything is created.</p>
+                            @if (!string.IsNullOrEmpty(StartDateError))
+                            {
+                                <p class="journey-template__validation" role="alert">@StartDateError</p>
+                            }
+                            <button type="button"
+                                    class="journey-template__continue"
+                                    disabled="@(!ConfiguredStartDate.HasValue)"
+                                    @onclick="ReviewConfiguration">Review configured Journey</button>
+                        </section>
+
+                        @if (IsReviewReady && ConfiguredStartDate.HasValue)
+                        {
+                            <section class="journey-template__review" aria-labelledby="journey-review-title">
+                                <header>
+                                    <div>
+                                        <p class="journey-starter__eyebrow">Review before creation</p>
+                                        <h4 id="journey-review-title">Your dated Journey</h4>
+                                    </div>
+                                    <p><strong>@FormatDate(ConfiguredStartDate.Value)</strong> – <strong>@FormatDate(JourneyEndDate)</strong></p>
+                                </header>
+                                <ol class="journey-template__dated-route">
+                                    @foreach (var destination in SelectedTemplate.Destinations)
+                                    {
+                                        <li>
+                                            <span>@destination.Name</span>
+                                            <small>@FormatDate(ConfiguredStartDate.Value.AddDays(destination.StartDayOffset)) – @FormatDate(ConfiguredStartDate.Value.AddDays(destination.EndDayOffset))</small>
+                                        </li>
+                                    }
+                                </ol>
+                                <dl class="journey-template__review-counts">
+                                    <div><dt>Destinations</dt><dd>@SelectedTemplate.Destinations.Count</dd></div>
+                                    <div><dt>Itinerary days</dt><dd>@SelectedTemplate.Days.Count</dd></div>
+                                    <div><dt>Activities</dt><dd>@SelectedTemplate.Activities.Count</dd></div>
+                                    <div><dt>Travel segments</dt><dd>@SelectedTemplate.Transportation.Count</dd></div>
+                                    <div><dt>Stay patterns</dt><dd>@SelectedTemplate.Accommodations.Count</dd></div>
+                                </dl>
+                                <form method="post" action="@CreateFromTemplatePath" class="journey-template__create">
+                                    <AntiforgeryToken />
+                                    <input type="hidden" name="idempotencyKey" value="@IdempotencyKey(SelectedTemplate.VersionId)" />
+                                    <input type="hidden" name="templateId" value="@SelectedTemplate.VersionId.TemplateId" />
+                                    <input type="hidden" name="templateVersion" value="@SelectedTemplate.VersionId.Version" />
+                                    <input type="hidden" name="locale" value="@Locale" />
+                                    <input type="hidden" name="startDate" value="@StartDateText" />
+                                    <button type="button" class="journey-template__secondary" @onclick="ChangeConfiguration">Change start date</button>
+                                    <button type="submit" class="journey-template__continue">Create my private Journey</button>
+                                </form>
+                                <p class="journey-template__after">After creation, adjust destinations, dates, itinerary items, transportation, and stays in your private plan.</p>
+                            </section>
+                        }
                     </section>
                 }
             }
