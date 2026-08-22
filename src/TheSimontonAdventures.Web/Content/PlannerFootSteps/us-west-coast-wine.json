@@ -1,0 +1,109 @@
+[
+  {
+    "id": "footstep_destination_napa_sonoma_wine_country", "version": "1.0", "ownerCreatorId": "creator_tsa_01", "kind": "destination",
+    "title": "Napa and Sonoma wine-country base",
+    "summary": "Consider a Napa- or Sonoma-area base for reserved tastings, local food, town walks, and a Vine Trail outing. Keep daily stops limited, include non-wine options, and arrange a nondrinking driver or verified transportation for tasting days. Recheck reservations, hours, fees, transport, trail conditions, and individual access before travel.",
+    "attribution": "The Simonton Adventures · reviewed from Visit California, Visit Napa Valley, and Sonoma County Tourism",
+    "freshness": "Reviewed 22 Aug 2026 · reservations, hours, fees, transportation, trail conditions, and accessibility require recheck",
+    "sources": [
+      {"owner":"Visit California","url":"https://media.visitcalifornia.com/story-inspiration/story-ideas/the-ultimate-free-california-road-trip","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"},
+      {"owner":"Visit Napa Valley","url":"https://www.visitnapavalley.com/wineries/wine-tours-transportation/","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"},
+      {"owner":"Sonoma County Tourism","url":"https://www.sonomacounty.com/wine/sonoma-county-wine-tasting-road-trip-itinerary/","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"}
+    ],
+    "contextKinds": ["Adventure", "Destination"], "places": ["united-states", "us-pacific", "california", "napa-valley", "sonoma-county"],
+    "transportationModes": ["walking", "bicycle", "hired-driver", "car"], "categories": ["wine-travel", "destination-base", "culinary", "agriculture", "responsible-tasting"],
+    "routeStyles": ["destination-base", "day-loops", "car-light-options"], "surfaces": ["paved", "multi-use-trail"],
+    "accessibility": ["venue-specific-access-review-required", "mobility-review-required", "responsible-transport-review-required"], "paces": ["unhurried", "balanced", "active"],
+    "seasons": ["spring", "summer", "fall", "winter"], "equipmentNeeds": ["advance-reservations", "sun-protection", "water"],
+    "budgetBands": ["moderate", "premium"], "travelerCompositions": ["solo", "couple", "friends", "group"], "sourceClasses": ["real-world-curated", "official-tourism"], "languages": ["en-US"], "durationDays": 3
+  },
+  {
+    "id": "footstep_journey_northern_california_wine_country", "version": "1.0", "ownerCreatorId": "creator_tsa_01", "kind": "journey-pattern",
+    "title": "Northern California wine-country Journey",
+    "summary": "Build separate Sonoma and Napa bases with one tasting-focused day in each, a food or agricultural day, and a walking, cycling, or redwood alternative. Use a nondrinking driver or verified transportation whenever tasting is planned. Recheck every reservation, route, opening, fee, transport service, weather, fire condition, and accessibility detail.",
+    "attribution": "The Simonton Adventures · reviewed from Visit California, Visit Napa Valley, and Sonoma County Tourism",
+    "freshness": "Reviewed 22 Aug 2026 · reservations, routes, openings, fees, transport, fire conditions, and accessibility require recheck",
+    "sources": [
+      {"owner":"Visit California","url":"https://media.visitcalifornia.com/-/media/us-media-trade-site/marketing-communications/travel-trade/itineraries/041624_ipw_newitineraries_winecountrynorthernca_444_final.pdf","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"},
+      {"owner":"Visit Napa Valley","url":"https://www.visitnapavalley.com/wineries/wine-tasting-tips/","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"},
+      {"owner":"Sonoma County Tourism","url":"https://www.sonomacounty.com/wine/sonoma-county-wine-tasting-road-trip-itinerary/","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"}
+    ],
+    "contextKinds": ["Adventure"], "places": ["united-states", "us-pacific", "california", "northern-california", "napa-valley", "sonoma-county"],
+    "transportationModes": ["hired-driver", "car", "walking", "bicycle"], "categories": ["wine-travel", "journey-blueprint", "culinary", "agriculture", "responsible-tasting", "road-trip"],
+    "routeStyles": ["multi-base", "day-loops", "multi-day", "flex-day"], "surfaces": ["paved", "multi-use-trail"],
+    "accessibility": ["venue-specific-access-review-required", "mobility-review-required", "sensory-review-required", "responsible-transport-review-required"], "paces": ["unhurried", "balanced"],
+    "seasons": ["spring", "summer", "fall", "winter"], "equipmentNeeds": ["advance-reservations", "weather-layers", "water"],
+    "budgetBands": ["moderate", "premium"], "travelerCompositions": ["solo", "couple", "friends", "group"], "sourceClasses": ["real-world-curated", "official-tourism"], "languages": ["en-US"], "durationDays": 6
+  },
+  {
+    "id": "footstep_destination_willamette_valley_wine_country", "version": "1.0", "ownerCreatorId": "creator_tsa_01", "kind": "destination",
+    "title": "Willamette Valley wine-country base",
+    "summary": "Consider Newberg, McMinnville, or another Willamette Valley town as a base for reserved tastings, local food, and a scenic or cycling day. Choose a nondrinking driver or verified tour for tasting travel. Recheck appointments, hours, fees, road and trail conditions, weather, transportation, and venue accessibility before travel.",
+    "attribution": "The Simonton Adventures · reviewed from Travel Oregon and the Oregon Wine Board",
+    "freshness": "Reviewed 22 Aug 2026 · appointments, hours, fees, roads, trails, transportation, and accessibility require recheck",
+    "sources": [
+      {"owner":"Travel Oregon","url":"https://traveloregon.com/places-to-go/regions/willamette-valley/","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"},
+      {"owner":"Oregon Wine Board","url":"https://www.oregonwine.org/regions/willamette-valley/","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"}
+    ],
+    "contextKinds": ["Adventure", "Destination"], "places": ["united-states", "us-pacific", "oregon", "willamette-valley", "newberg", "mcminnville"],
+    "transportationModes": ["hired-driver", "car", "bicycle", "walking"], "categories": ["wine-travel", "destination-base", "culinary", "agriculture", "cycling", "responsible-tasting"],
+    "routeStyles": ["destination-base", "day-loops", "scenic-route"], "surfaces": ["paved", "bike-route"],
+    "accessibility": ["venue-specific-access-review-required", "mobility-review-required", "responsible-transport-review-required"], "paces": ["unhurried", "balanced", "active"],
+    "seasons": ["spring", "summer", "fall", "winter"], "equipmentNeeds": ["advance-reservations", "rain-gear", "weather-layers"],
+    "budgetBands": ["budget", "moderate", "premium"], "travelerCompositions": ["solo", "couple", "friends", "group"], "sourceClasses": ["real-world-curated", "official-tourism", "official-wine-region"], "languages": ["en-US"], "durationDays": 3
+  },
+  {
+    "id": "footstep_journey_willamette_valley_wine_and_landscape", "version": "1.0", "ownerCreatorId": "creator_tsa_01", "kind": "journey-pattern",
+    "title": "Willamette Valley wine and landscape Journey",
+    "summary": "Shape a north-to-central Willamette Valley Journey around two town bases, limited tasting appointments, local food, and a non-wine outdoor or cultural day. Assign a nondrinking driver or verify tour transportation for tasting days. Recheck bookings, roads, weather, wildfire effects, trail access, transport, and venue accessibility.",
+    "attribution": "The Simonton Adventures · reviewed from Travel Oregon and the Oregon Wine Board",
+    "freshness": "Reviewed 22 Aug 2026 · bookings, roads, weather, wildfire effects, trails, transport, and accessibility require recheck",
+    "sources": [
+      {"owner":"Travel Oregon","url":"https://traveloregon.com/things-to-do/eat-drink/wine-wineries/","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"},
+      {"owner":"Oregon Wine Board","url":"https://www.oregonwine.org/visit/","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"},
+      {"owner":"Oregon Wine Board","url":"https://www.oregonwine.org/regions/willamette-valley/","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"}
+    ],
+    "contextKinds": ["Adventure"], "places": ["united-states", "us-pacific", "oregon", "willamette-valley", "newberg", "mcminnville", "salem"],
+    "transportationModes": ["hired-driver", "car", "bicycle", "walking"], "categories": ["wine-travel", "journey-blueprint", "culinary", "agriculture", "cycling", "responsible-tasting"],
+    "routeStyles": ["multi-base", "day-loops", "multi-day", "flex-day"], "surfaces": ["paved", "bike-route", "walking-trail"],
+    "accessibility": ["venue-specific-access-review-required", "mobility-review-required", "weather-review-required", "responsible-transport-review-required"], "paces": ["unhurried", "balanced", "active"],
+    "seasons": ["spring", "summer", "fall"], "equipmentNeeds": ["advance-reservations", "rain-gear", "weather-layers"],
+    "budgetBands": ["budget", "moderate", "premium"], "travelerCompositions": ["solo", "couple", "friends", "group"], "sourceClasses": ["real-world-curated", "official-tourism", "official-wine-region"], "languages": ["en-US"], "durationDays": 5
+  },
+  {
+    "id": "footstep_destination_walla_walla_wine_districts", "version": "1.0", "ownerCreatorId": "creator_tsa_01", "kind": "destination",
+    "title": "Walla Walla wine-district base",
+    "summary": "Use downtown Walla Walla as a walkable starting point, then select only a manageable set of tasting districts and arrange transportation beyond downtown. Include food, art, or outdoor time for a mixed-interest stay. Recheck appointments, hours, fees, transit and tour schedules, weather, and venue accessibility.",
+    "attribution": "The Simonton Adventures · reviewed from Visit Walla Walla and the Washington State Wine Commission",
+    "freshness": "Reviewed 22 Aug 2026 · appointments, hours, fees, transit, tours, weather, and accessibility require recheck",
+    "sources": [
+      {"owner":"Visit Walla Walla","url":"https://wallawalla.org/wineries/","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"},
+      {"owner":"Visit Walla Walla","url":"https://wallawalla.org/wineries/tours-transportation/","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"},
+      {"owner":"Washington State Wine Commission","url":"https://www.washingtonwine.org/regions-and-avas/","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"}
+    ],
+    "contextKinds": ["Adventure", "Destination"], "places": ["united-states", "us-pacific", "washington", "walla-walla", "walla-walla-valley"],
+    "transportationModes": ["walking", "public-transit", "hired-driver", "car"], "categories": ["wine-travel", "destination-base", "culinary", "art", "responsible-tasting"],
+    "routeStyles": ["destination-base", "district-based", "car-light-options"], "surfaces": ["paved", "sidewalk"],
+    "accessibility": ["venue-specific-access-review-required", "mobility-review-required", "transit-access-review-required", "responsible-transport-review-required"], "paces": ["unhurried", "balanced"],
+    "seasons": ["spring", "summer", "fall", "winter"], "equipmentNeeds": ["advance-reservations", "sun-protection", "weather-layers"],
+    "budgetBands": ["budget", "moderate", "premium"], "travelerCompositions": ["solo", "couple", "friends", "group"], "sourceClasses": ["real-world-curated", "official-tourism", "official-wine-region"], "languages": ["en-US"], "durationDays": 3
+  },
+  {
+    "id": "footstep_journey_yakima_to_walla_walla_wine_country", "version": "1.0", "ownerCreatorId": "creator_tsa_01", "kind": "journey-pattern",
+    "title": "Yakima Valley to Walla Walla wine-country Journey",
+    "summary": "Build separate Yakima Valley and Walla Walla bases rather than attempting one continuous tasting day. Mix reserved tastings with agricultural, culinary, walking, or arts stops, and use a nondrinking driver or verified transportation. Recheck every appointment, route, construction, weather, wildfire effect, transport option, and access detail.",
+    "attribution": "The Simonton Adventures · reviewed from the Washington State Wine Commission and Visit Walla Walla",
+    "freshness": "Reviewed 22 Aug 2026 · appointments, routes, construction, weather, wildfire effects, transport, and accessibility require recheck",
+    "sources": [
+      {"owner":"Washington State Wine Commission","url":"https://www.washingtonwine.org/wine-touring-regions/","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"},
+      {"owner":"Washington State Wine Commission","url":"https://www.washingtonwine.org/regions-and-avas/","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"},
+      {"owner":"Visit Walla Walla","url":"https://wallawalla.org/walla-walla-transportation-getting-around/","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"}
+    ],
+    "contextKinds": ["Adventure"], "places": ["united-states", "us-pacific", "washington", "yakima-valley", "prosser", "walla-walla", "walla-walla-valley"],
+    "transportationModes": ["hired-driver", "car", "walking", "public-transit"], "categories": ["wine-travel", "journey-blueprint", "culinary", "agriculture", "art", "responsible-tasting", "road-trip"],
+    "routeStyles": ["multi-base", "district-based", "multi-day", "flex-day"], "surfaces": ["paved", "sidewalk"],
+    "accessibility": ["venue-specific-access-review-required", "mobility-review-required", "heat-review-required", "responsible-transport-review-required"], "paces": ["unhurried", "balanced"],
+    "seasons": ["spring", "summer", "fall"], "equipmentNeeds": ["advance-reservations", "sun-protection", "water", "weather-layers"],
+    "budgetBands": ["budget", "moderate", "premium"], "travelerCompositions": ["solo", "couple", "friends", "group"], "sourceClasses": ["real-world-curated", "official-tourism", "official-wine-region"], "languages": ["en-US"], "durationDays": 6
+  }
+]
