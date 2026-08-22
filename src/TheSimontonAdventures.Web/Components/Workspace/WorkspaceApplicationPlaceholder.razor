@@ -39,10 +39,43 @@
         }
         else if (Application.Kind == WorkspaceApplicationKind.Companion)
         {
-            <div class="workspace-application__phone" aria-hidden="true">
-                <span>Today</span>
-                <strong>Venice</strong>
-                <div></div><div></div><div></div>
+            <div class="workspace-application__companion-showcase">
+                <figure class="workspace-application__companion-device">
+                    @if (CompanionPreview is not null)
+                    {
+                        <img src="@CompanionPreview.PublicUrl"
+                             alt="@CompanionPreview.Resource.AlternativeText" />
+                    }
+                    else
+                    {
+                        <div class="workspace-application__companion-fallback" role="img" aria-label="Companion mobile experience preview">
+                            <span>AdventuresSuite</span>
+                            <strong>Companion</strong>
+                        </div>
+                    }
+                    <figcaption>Companion experience concept</figcaption>
+                </figure>
+                <div class="workspace-application__store-preview" aria-label="Planned mobile distribution">
+                    <p>Designed to travel with you</p>
+                    <strong>Planned for iPhone, iPad, and Android</strong>
+                    <div class="workspace-application__store-badges">
+                        <span class="workspace-application__store-badge">
+                            <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+                                <circle cx="16" cy="16" r="13" />
+                                <path d="m11 22 5-13m5 13L16 9m-7 8h14" />
+                            </svg>
+                            <span><small>Planned for the</small>App Store</span>
+                        </span>
+                        <span class="workspace-application__store-badge">
+                            <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+                                <path d="M7 5v22l19-11Z" />
+                                <path d="m7 5 12 11L7 27" />
+                            </svg>
+                            <span><small>Planned for</small>Google Play</span>
+                        </span>
+                    </div>
+                    <small class="workspace-application__store-note">Preview only — Companion is not currently available for download.</small>
+                </div>
             </div>
         }
         else if (Application.Kind == WorkspaceApplicationKind.Web)

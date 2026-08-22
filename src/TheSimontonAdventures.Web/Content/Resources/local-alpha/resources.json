@@ -1,0 +1,19 @@
+{
+  "resources": [
+    {
+      "id": "resource_workspace_companion_preview",
+      "creatorId": "creator_local_alpha",
+      "type": "Image",
+      "title": "AdventuresSuite Companion workspace preview",
+      "description": "A concept view of the traveler-focused AdventuresSuite Companion application.",
+      "storageProvider": "local-public",
+      "storageLocation": "/images/platform/adventures-companion-preview.jpeg",
+      "mediaType": "image/jpeg",
+      "alternativeText": "AdventuresSuite Companion concept showing the Italy, Greece and Croatia Adventure, readiness status, and traveler navigation",
+      "attribution": "The Simonton Adventures",
+      "copyright": "Copyright The Simonton Adventures",
+      "usageRights": "Creator-owned; approved for AdventuresSuite workspace presentation.",
+      "publicationStatus": "Published"
+    }
+  ]
+}
