@@ -36,7 +36,16 @@
 
         @if (Application.Kind == WorkspaceApplicationKind.Dream)
         {
-            <JourneyFootStepCatalog Templates="@JourneyTemplates" PlannerPath="@PlannerPath" />
+            @if (SelectedJourneyTemplate is not null)
+            {
+                <DreamJourneyFootStepDetail Template="@SelectedJourneyTemplate"
+                                            DreamPath="@DreamPath"
+                                            PlannerPath="@PlannerPath" />
+            }
+            else
+            {
+                <JourneyFootStepCatalog Templates="@JourneyTemplates" DetailsPath="@DreamPath" />
+            }
         }
         else if (Application.Kind == WorkspaceApplicationKind.Maps)
         {

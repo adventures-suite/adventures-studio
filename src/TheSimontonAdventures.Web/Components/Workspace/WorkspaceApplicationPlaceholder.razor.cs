@@ -33,6 +33,14 @@ public partial class WorkspaceApplicationPlaceholder
     [Parameter]
     public IReadOnlyList<AdventureTemplateBlueprint> JourneyTemplates { get; set; } = [];
 
+    /// <summary>Gets or sets the exact authorized Journey FootStep being explored in Dream.</summary>
+    [Parameter]
+    public AdventureTemplateBlueprint? SelectedJourneyTemplate { get; set; }
+
+    /// <summary>Gets or sets the authenticated Dream catalog path.</summary>
+    [Parameter]
+    public string DreamPath { get; set; } = "/workspace";
+
     private ResolvedResource? CompanionPreview { get; set; }
 
     /// <inheritdoc />

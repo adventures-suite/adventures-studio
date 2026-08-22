@@ -20,9 +20,9 @@ public partial class JourneyFootStepCatalog
     [Parameter]
     public EventCallback<AdventureTemplateBlueprint> OnConfigure { get; set; }
 
-    /// <summary>Gets or sets the Planner path used when Dream hands off an exact template.</summary>
+    /// <summary>Gets or sets the Dream path used to explore an exact Journey FootStep.</summary>
     [Parameter]
-    public string PlannerPath { get; set; } = "/workspace";
+    public string DetailsPath { get; set; } = "/workspace";
 
     private int PageSize { get; set; } = 3;
     private int CurrentPage { get; set; } = 1;
@@ -45,7 +45,7 @@ public partial class JourneyFootStepCatalog
     }
 
     private string ConfigurePath(AdventureTemplateBlueprint template) =>
-        $"{PlannerPath}?journeyFootStep={Uri.EscapeDataString(template.VersionId.TemplateId)}";
+        $"{DetailsPath}?journeyFootStep={Uri.EscapeDataString(template.VersionId.TemplateId)}";
 
     private static string Monogram(string title) => string.Concat(
         title.Split(' ', StringSplitOptions.RemoveEmptyEntries)

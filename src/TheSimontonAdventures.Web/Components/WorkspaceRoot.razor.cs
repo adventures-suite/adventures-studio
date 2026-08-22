@@ -46,6 +46,7 @@ public partial class WorkspaceRoot
     private string CreateIdempotencyKey { get; } = $"request_{Guid.NewGuid():N}";
     private PlannerIdeasContext? SelectedIdeasContext { get; set; }
     private IReadOnlyList<AdventureTemplateBlueprint> AdventureTemplates { get; set; } = [];
+    private AdventureTemplateBlueprint? SelectedJourneyTemplate { get; set; }
     private IReadOnlyList<PlannerFootStepDefinition> AuthorizedFootSteps { get; set; } = [];
     private ActorIdentity? WorkspaceActor { get; set; }
     private WorkspaceApplicationDefinition? PlaceholderApplication { get; set; }
@@ -413,6 +414,12 @@ public partial class WorkspaceRoot
         {
             var result = await catalog.ListAsync(actor, creatorId, "en-US", context.RequestAborted);
             AdventureTemplates = result.IsAllowed ? result.Templates : [];
+            SelectedJourneyTemplate = PlaceholderApplication?.Kind == WorkspaceApplicationKind.Dream
+                ? AdventureTemplates.FirstOrDefault(template => string.Equals(
+                    template.VersionId.TemplateId,
+                    InitialJourneyFootStepId,
+                    StringComparison.Ordinal))
+                : null;
         }
         catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
         {
@@ -554,6 +561,7 @@ public partial class WorkspaceRoot
     }
 
     private string PlanListPath => $"/workspace/creators/{AddressedCreatorId.Value}/plans";
+    private string DreamPath => $"/workspace/creators/{AddressedCreatorId.Value}/dream";
     private string? WorkspaceBasePath => LoadState != WorkspaceLoadState.Ready
         || string.IsNullOrWhiteSpace(AddressedCreatorId.Value)
         ? null

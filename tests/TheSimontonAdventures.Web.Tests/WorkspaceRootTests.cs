@@ -189,7 +189,7 @@ public sealed class WorkspaceRootTests
         }
     }
 
-    /// <summary>Dream renders the authorized shared catalog and hands an exact FootStep to Planner.</summary>
+    /// <summary>Dream renders the authorized shared catalog and opens exact FootSteps inside Dream.</summary>
     [Fact]
     public async Task DreamWorkspace_WithAuthorizedCatalog_RendersPlannerHandoff()
     {
@@ -211,10 +211,42 @@ public sealed class WorkspaceRootTests
         Assert.Contains("Portugal by rail", html, StringComparison.Ordinal);
         Assert.Contains("Explore this Journey", html, StringComparison.Ordinal);
         Assert.Contains(
-            "href=\"/workspace/creators/creator_tsa_01/plans?journeyFootStep=platform.portugal-by-rail\"",
+            "href=\"/workspace/creators/creator_tsa_01/dream?journeyFootStep=platform.portugal-by-rail\"",
             html,
             StringComparison.Ordinal);
         Assert.Contains("Cards per page", html, StringComparison.Ordinal);
+    }
+
+    /// <summary>Dream explores one exact Journey before an explicit Planner customization handoff.</summary>
+    [Fact]
+    public async Task DreamWorkspace_WithSelectedFootStep_RendersDetailAndExplicitPlannerHandoff()
+    {
+        var template = JourneyTemplate();
+        var html = await RenderAsync(
+            ApplicationPrincipal(),
+            "/workspace/creators/creator_tsa_01/dream?journeyFootStep=platform.portugal-by-rail",
+            services =>
+            {
+                services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>();
+                services.AddSingleton<ICreatorWorkspaceDirectoryService>(
+                    new StubCreatorWorkspaceDirectoryService([
+                        new(new("creator_tsa_01"), "The Simonton Adventures")
+                    ]));
+                services.AddSingleton<IAdventureTemplateCatalogQueryService>(
+                    new StubAdventureTemplateCatalogQueryService([template]));
+            });
+
+        Assert.Contains("Back to Journey FootSteps", html, StringComparison.Ordinal);
+        Assert.Contains("Journey route", html, StringComparison.Ordinal);
+        Assert.Contains("Activity ideas", html, StringComparison.Ordinal);
+        Assert.Contains("Travel pattern", html, StringComparison.Ordinal);
+        Assert.Contains("Stay pattern", html, StringComparison.Ordinal);
+        Assert.Contains("Customize this Journey", html, StringComparison.Ordinal);
+        Assert.Contains(
+            "href=\"/workspace/creators/creator_tsa_01/plans?journeyFootStep=platform.portugal-by-rail\"",
+            html,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain("Explore this Journey", html, StringComparison.Ordinal);
     }
 
     /// <summary>Planner opens the exact Dream-selected FootStep in its existing review workflow.</summary>
