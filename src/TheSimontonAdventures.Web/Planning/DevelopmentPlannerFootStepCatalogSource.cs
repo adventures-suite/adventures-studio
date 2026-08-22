@@ -13,7 +13,7 @@ public sealed class DevelopmentPlannerFootStepCatalogSource : IPlannerFootStepCa
     {
         ArgumentNullException.ThrowIfNull(environment);
         var directory = Path.Combine(environment.ContentRootPath, "Content", "PlannerFootSteps");
-        var records = new[] { "development.json", "real-world.json" }
+        var records = new[] { "development.json", "real-world.json", "us-motorcycle.json" }
             .SelectMany(fileName => Deserialize(Path.Combine(directory, fileName)))
             .ToArray();
         Validate(records);

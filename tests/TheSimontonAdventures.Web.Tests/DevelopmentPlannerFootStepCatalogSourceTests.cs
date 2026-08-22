@@ -17,8 +17,8 @@ public sealed class DevelopmentPlannerFootStepCatalogSourceTests
         var items = await source.ListAsync(new("creator_demo_01"), "en-US");
         var realWorld = items.Where(item => item.SourceClasses.Contains("real-world-curated")).ToArray();
 
-        Assert.Equal(13, realWorld.Length);
-        Assert.Equal(13, realWorld.Select(item => (item.Id, item.Version)).Distinct().Count());
+        Assert.Equal(23, realWorld.Length);
+        Assert.Equal(23, realWorld.Select(item => (item.Id, item.Version)).Distinct().Count());
         Assert.All(realWorld, item =>
         {
             Assert.Equal(new CreatorId("creator_tsa_01"), item.OwnerCreatorId);
@@ -91,6 +91,43 @@ public sealed class DevelopmentPlannerFootStepCatalogSourceTests
             && item.Categories.Contains("history"));
 
         Assert.Equal("footstep_activity_fort_zachary_taylor", match.Id);
+    }
+
+    /// <summary>U.S. motorcycle ideas cover major rallies and varied routes without asserting event or road status.</summary>
+    [Fact]
+    public async Task ListAsync_UnitedStatesMotorcycleCatalog_IsSourcedFilterableAndAdvisory()
+    {
+        var items = await CreateSource().ListAsync(new("creator_demo_01"), "en-US");
+        var motorcycle = items.Where(item =>
+            item.SourceClasses.Contains("real-world-curated")
+            && item.TransportationModes.Contains("motorcycle")).ToArray();
+
+        Assert.Equal(10, motorcycle.Length);
+        Assert.Contains(motorcycle, item => item.Id == "footstep_activity_sturgis_motorcycle_rally");
+        Assert.Contains(motorcycle, item => item.Id == "footstep_route_historic_route_66_motorcycle");
+        Assert.Equal(3, motorcycle.Count(item => item.Places.Contains("colorado")));
+        Assert.Contains(motorcycle, item => item.BudgetBands.Contains("budget"));
+        Assert.Contains(motorcycle, item => item.BudgetBands.Contains("premium"));
+        Assert.Contains(motorcycle, item => item.Paces.Contains("unhurried"));
+        Assert.Contains(motorcycle, item => item.Paces.Contains("active"));
+        Assert.All(motorcycle, item =>
+        {
+            Assert.Null(item.DestinationDraft);
+            Assert.Null(item.ActivityDraft);
+            Assert.Contains("recheck", item.Freshness, StringComparison.OrdinalIgnoreCase);
+            Assert.NotEmpty(item.Accessibility);
+            Assert.NotEmpty(item.Sources);
+        });
+
+        var coloradoDayRide = Assert.Single(motorcycle, item =>
+            item.ContextKinds.Contains(PlannerFootStepContextKind.Day)
+            && item.Places.Contains("colorado")
+            && item.Kind == "route-pattern"
+            && item.BudgetBands.Contains("free")
+            && item.Accessibility.Contains("altitude-review-required")
+            && item.Categories.Contains("short-ride"));
+
+        Assert.Equal("footstep_route_peak_to_peak_motorcycle", coloradoDayRide.Id);
     }
 
     private static DevelopmentPlannerFootStepCatalogSource CreateSource() =>
