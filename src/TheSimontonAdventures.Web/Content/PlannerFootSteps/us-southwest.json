@@ -6,7 +6,7 @@
     "attribution": "The Simonton Adventures · reviewed from the Arizona Department of Transportation",
     "freshness": "Reviewed 22 Aug 2026 · roads, traffic, weather, services, lodging, and rider fit require recheck",
     "sources": [{"owner":"Arizona Department of Transportation","url":"https://azdot.gov/about/historic-and-scenic-roads/list-scenic-roads","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"}],
-    "contextKinds": ["Adventure", "Destination"], "places": ["united-states", "southwest", "arizona", "sedona", "oak-creek-canyon", "verde-valley"],
+    "contextKinds": ["Adventure", "Destination"], "places": ["united-states", "us-southwest", "arizona", "sedona", "oak-creek-canyon", "verde-valley"],
     "transportationModes": ["motorcycle"], "categories": ["us-southwest", "motorcycle-touring", "destination-base", "scenic-riding", "desert", "mountains"],
     "routeStyles": ["destination-base", "day-rides", "paved"], "surfaces": ["paved"],
     "accessibility": ["rider-experience-review-required", "heat-risk-review-required", "altitude-review-required"], "paces": ["unhurried", "balanced", "active"],
@@ -23,7 +23,7 @@
       {"owner":"Arizona Department of Transportation","url":"https://azdot.gov/about/historic-and-scenic-roads/list-scenic-roads","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"},
       {"owner":"Arizona Department of Transportation","url":"https://azdot.gov/about/historic-and-scenic-roads/list-historic-roads","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"}
     ],
-    "contextKinds": ["Adventure"], "places": ["united-states", "southwest", "arizona", "prescott", "jerome", "sedona", "oak-creek-canyon", "flagstaff"],
+    "contextKinds": ["Adventure"], "places": ["united-states", "us-southwest", "arizona", "prescott", "jerome", "sedona", "oak-creek-canyon", "flagstaff"],
     "transportationModes": ["motorcycle"], "categories": ["us-southwest", "journey-blueprint", "motorcycle-touring", "scenic-riding", "road-trip", "desert", "mountains"],
     "routeStyles": ["multi-base", "paved", "multi-day", "flex-day"], "surfaces": ["paved"],
     "accessibility": ["rider-experience-review-required", "heat-risk-review-required", "altitude-review-required"], "paces": ["balanced", "active"],
@@ -40,7 +40,7 @@
       {"owner":"U.S. National Park Service","url":"https://www.nps.gov/bibe/planyourvisit/camping.htm","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"},
       {"owner":"U.S. National Park Service","url":"https://www.nps.gov/bibe/planyourvisit/directions.htm","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"}
     ],
-    "contextKinds": ["Adventure", "Destination"], "places": ["united-states", "southwest", "texas", "big-bend-national-park", "chihuahuan-desert"],
+    "contextKinds": ["Adventure", "Destination"], "places": ["united-states", "us-southwest", "texas", "big-bend-national-park", "chihuahuan-desert"],
     "transportationModes": ["rv", "walking"], "categories": ["us-southwest", "rv-travel", "destination-base", "camping", "national-park", "desert", "stargazing"],
     "routeStyles": ["park-base", "day-loops"], "surfaces": ["paved", "campground-roads"],
     "accessibility": ["vehicle-length-review-required", "accessible-site-review-required", "heat-risk-review-required", "remote-services-review-required"], "paces": ["unhurried", "balanced"],
@@ -59,7 +59,7 @@
       {"owner":"U.S. National Park Service","url":"https://www.nps.gov/cave/planyourvisit/index.htm","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-09-22"},
       {"owner":"U.S. National Park Service","url":"https://www.nps.gov/bibe/planyourvisit/camping.htm","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"}
     ],
-    "contextKinds": ["Adventure"], "places": ["united-states", "southwest", "new-mexico", "texas", "white-sands-national-park", "guadalupe-mountains-national-park", "carlsbad-caverns-national-park", "big-bend-national-park", "chihuahuan-desert"],
+    "contextKinds": ["Adventure"], "places": ["united-states", "us-southwest", "new-mexico", "texas", "white-sands-national-park", "guadalupe-mountains-national-park", "carlsbad-caverns-national-park", "big-bend-national-park", "chihuahuan-desert"],
     "transportationModes": ["rv", "walking"], "categories": ["us-southwest", "journey-blueprint", "rv-travel", "camping", "national-park", "desert", "road-trip"],
     "routeStyles": ["multi-base", "multi-day", "road-trip", "flex-day"], "surfaces": ["paved", "campground-roads"],
     "accessibility": ["vehicle-length-review-required", "accessible-site-review-required", "heat-risk-review-required", "remote-services-review-required"], "paces": ["unhurried", "balanced"],
@@ -76,7 +76,7 @@
       {"owner":"U.S. National Park Service","url":"https://www.nps.gov/orpi/planyourvisit/camping.htm","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"},
       {"owner":"U.S. National Park Service","url":"https://www.nps.gov/orpi/planyourvisit/hiking.htm","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"}
     ],
-    "contextKinds": ["Adventure", "Destination"], "places": ["united-states", "southwest", "arizona", "organ-pipe-cactus-national-monument", "sonoran-desert", "ajo"],
+    "contextKinds": ["Adventure", "Destination"], "places": ["united-states", "us-southwest", "arizona", "organ-pipe-cactus-national-monument", "sonoran-desert", "ajo"],
     "transportationModes": ["car", "walking"], "categories": ["us-southwest", "camping", "destination-base", "desert", "hiking", "stargazing"],
     "routeStyles": ["campground-base", "day-hikes"], "surfaces": ["paved", "gravel", "campground-roads", "desert-trail"],
     "accessibility": ["accessible-site-review-required", "mobility-access-details-published", "heat-risk-review-required", "remote-services-review-required"], "paces": ["unhurried", "balanced"],
@@ -93,7 +93,7 @@
       {"owner":"U.S. National Park Service","url":"https://www.nps.gov/orpi/planyourvisit/camping.htm","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"},
       {"owner":"U.S. National Park Service","url":"https://www.nps.gov/sagu/planyourvisit/camping.htm","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"}
     ],
-    "contextKinds": ["Adventure"], "places": ["united-states", "southwest", "arizona", "tucson", "saguaro-national-park", "organ-pipe-cactus-national-monument", "sonoran-desert"],
+    "contextKinds": ["Adventure"], "places": ["united-states", "us-southwest", "arizona", "tucson", "saguaro-national-park", "organ-pipe-cactus-national-monument", "sonoran-desert"],
     "transportationModes": ["car", "walking"], "categories": ["us-southwest", "journey-blueprint", "camping", "hiking", "desert", "national-park"],
     "routeStyles": ["multi-base", "campground-base", "backpacking-option", "multi-day"], "surfaces": ["paved", "campground-roads", "desert-trail"],
     "accessibility": ["accessible-site-review-required", "backpacking-fit-review-required", "heat-risk-review-required", "remote-services-review-required"], "paces": ["unhurried", "balanced", "active"],
@@ -110,7 +110,7 @@
       {"owner":"U.S. National Park Service","url":"https://www.nps.gov/whsa/planyourvisit/trails.htm","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-09-22"},
       {"owner":"U.S. National Park Service","url":"https://www.nps.gov/whsa/planyourvisit/conditions.htm","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-09-22"}
     ],
-    "contextKinds": ["Adventure", "Destination"], "places": ["united-states", "southwest", "new-mexico", "white-sands-national-park", "tularosa-basin", "alamogordo"],
+    "contextKinds": ["Adventure", "Destination"], "places": ["united-states", "us-southwest", "new-mexico", "white-sands-national-park", "tularosa-basin", "alamogordo"],
     "transportationModes": ["car", "walking"], "categories": ["us-southwest", "hiking", "destination-base", "desert", "national-park", "geology"],
     "routeStyles": ["destination-base", "day-hikes", "out-and-back", "loop"], "surfaces": ["sand", "boardwalk-options"],
     "accessibility": ["trail-specific-access-review-required", "heat-risk-review-required", "navigation-review-required"], "paces": ["unhurried", "balanced", "active"],
@@ -128,7 +128,7 @@
       {"owner":"U.S. National Park Service","url":"https://www.nps.gov/cave/planyourvisit/index.htm","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-09-22"},
       {"owner":"U.S. National Park Service","url":"https://www.nps.gov/gumo/planyourvisit/things2do.htm","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"}
     ],
-    "contextKinds": ["Adventure"], "places": ["united-states", "southwest", "new-mexico", "texas", "white-sands-national-park", "carlsbad-caverns-national-park", "guadalupe-mountains-national-park", "chihuahuan-desert"],
+    "contextKinds": ["Adventure"], "places": ["united-states", "us-southwest", "new-mexico", "texas", "white-sands-national-park", "carlsbad-caverns-national-park", "guadalupe-mountains-national-park", "chihuahuan-desert"],
     "transportationModes": ["car", "walking"], "categories": ["us-southwest", "journey-blueprint", "hiking", "desert", "national-park", "geology", "road-trip"],
     "routeStyles": ["multi-base", "day-hikes", "multi-day", "flex-day"], "surfaces": ["sand", "paved", "rock", "mountain-trail"],
     "accessibility": ["trail-specific-access-review-required", "heat-risk-review-required", "altitude-review-required", "cave-access-review-required"], "paces": ["unhurried", "balanced", "active"],

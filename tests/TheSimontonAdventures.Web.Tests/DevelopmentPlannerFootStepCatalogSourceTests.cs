@@ -280,6 +280,7 @@ public sealed class DevelopmentPlannerFootStepCatalogSourceTests
             Assert.NotEmpty(item.Accessibility);
             Assert.NotEmpty(item.Sources);
             Assert.Contains("recheck", item.Freshness, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("us-southwest", item.Places);
         });
         Assert.All(southwest.Where(item => item.Kind == "journey-pattern"), item =>
         {
