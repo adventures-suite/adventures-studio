@@ -17,8 +17,8 @@ public sealed class DevelopmentPlannerFootStepCatalogSourceTests
         var items = await source.ListAsync(new("creator_demo_01"), "en-US");
         var realWorld = items.Where(item => item.SourceClasses.Contains("real-world-curated")).ToArray();
 
-        Assert.Equal(84, realWorld.Length);
-        Assert.Equal(84, realWorld.Select(item => (item.Id, item.Version)).Distinct().Count());
+        Assert.Equal(120, realWorld.Length);
+        Assert.Equal(120, realWorld.Select(item => (item.Id, item.Version)).Distinct().Count());
         Assert.All(realWorld, item =>
         {
             Assert.Equal(new CreatorId("creator_tsa_01"), item.OwnerCreatorId);
@@ -350,7 +350,10 @@ public sealed class DevelopmentPlannerFootStepCatalogSourceTests
             "music-festival", "college-sports", "motorsports", "historic-rail", "culinary-trail",
             "winter-sports", "boating", "wellness-retreat", "theme-parks", "birding"
         };
-        var specialInterest = items.Where(item => categories.Any(item.Categories.Contains)).ToArray();
+        var specialInterest = items.Where(item =>
+            categories.Any(item.Categories.Contains)
+            && !item.SourceClasses.Contains("expanded-travel-launch")
+            && !item.SourceClasses.Contains("expanded-rail-launch")).ToArray();
 
         Assert.Equal(20, specialInterest.Length);
         foreach (var category in categories)
@@ -394,6 +397,81 @@ public sealed class DevelopmentPlannerFootStepCatalogSourceTests
             && item.BudgetBands.Contains("budget")
             && item.Accessibility.Contains("quiet-viewing-required"));
         Assert.Equal("footstep_destination_bosque_del_apache_birding_base", birdingMatch.Id);
+    }
+
+    /// <summary>Expanded travel gaps provide paired Destination and Journey records with safe, filterable planning metadata.</summary>
+    [Fact]
+    public async Task ListAsync_ExpandedTravelCatalog_CoversEveryRequestedTypeAndRemainsAdvisory()
+    {
+        var items = await CreateSource().ListAsync(new("creator_demo_01"), "en-US");
+        var expanded = items.Where(item => item.SourceClasses.Contains("expanded-travel-launch")).ToArray();
+        var categories = new[]
+        {
+            "cycling-travel", "dark-sky", "fishing-travel", "diving-travel", "equestrian-travel",
+            "arts-travel", "space-travel", "pilgrimage-travel", "agritourism", "literary-travel",
+            "island-travel", "citizen-science"
+        };
+
+        Assert.Equal(24, expanded.Length);
+        foreach (var category in categories)
+        {
+            Assert.Contains(expanded, item => item.Kind == "destination" && item.Categories.Contains(category));
+            Assert.Contains(expanded, item => item.Kind == "journey-pattern" && item.Categories.Contains(category));
+        }
+
+        Assert.All(expanded, AssertSafeExpandedItem);
+        Assert.All(expanded.Where(item => item.Kind == "journey-pattern"), item =>
+        {
+            Assert.Contains("journey-blueprint", item.Categories);
+            Assert.True(item.DurationDays >= 8);
+        });
+    }
+
+    /// <summary>Expanded rail records cover the named routes and rail styles without claiming inventory or protected connections.</summary>
+    [Fact]
+    public async Task ListAsync_ExpandedRailCatalog_CoversNamedRoutesAndRailStyles()
+    {
+        var items = await CreateSource().ListAsync(new("creator_demo_01"), "en-US");
+        var rail = items.Where(item => item.SourceClasses.Contains("expanded-rail-launch")).ToArray();
+
+        Assert.Equal(12, rail.Length);
+        Assert.Equal(5, rail.Count(item => item.Kind == "destination"));
+        Assert.Equal(7, rail.Count(item => item.Kind == "journey-pattern"));
+        foreach (var id in new[]
+        {
+            "footstep_journey_california_zephyr", "footstep_journey_coast_starlight",
+            "footstep_journey_empire_builder", "footstep_journey_southwest_chief",
+            "footstep_journey_adirondack_foliage_rail", "footstep_destination_anchorage_alaska_rail_base",
+            "footstep_destination_durango_colorado_rail_base", "footstep_destination_williams_grand_canyon_rail_base",
+            "footstep_journey_northeast_corridor_car_free", "footstep_journey_pacific_northwest_rail_ferry"
+        })
+        {
+            Assert.Contains(rail, item => item.Id == id);
+        }
+
+        Assert.Contains(rail, item => item.Categories.Contains("sleeper-train"));
+        Assert.Contains(rail, item => item.Categories.Contains("national-park-by-rail"));
+        Assert.Contains(rail, item => item.Categories.Contains("urban-rail"));
+        Assert.Contains(rail, item => item.Categories.Contains("fall-foliage"));
+        Assert.Contains(rail, item => item.Categories.Contains("winter-rail"));
+        Assert.Contains(rail, item => item.Categories.Contains("premium-rail-suggestion"));
+        Assert.Contains(rail, item => item.Categories.Contains("ferry-travel"));
+        Assert.All(rail, AssertSafeExpandedItem);
+    }
+
+    private static void AssertSafeExpandedItem(PlannerFootStepDefinition item)
+    {
+        Assert.Equal(new CreatorId("creator_tsa_01"), item.OwnerCreatorId);
+        Assert.Null(item.DestinationDraft);
+        Assert.Null(item.ActivityDraft);
+        Assert.Contains(PlannerFootStepContextKind.Adventure, item.ContextKinds);
+        Assert.NotEmpty(item.Sources);
+        Assert.NotEmpty(item.Accessibility);
+        Assert.Contains("recheck", item.Freshness, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("available now", item.Summary, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("book through", item.Summary, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("guaranteed accessibility", item.Summary, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("guaranteed connection", item.Summary, StringComparison.OrdinalIgnoreCase);
     }
 
     private static DevelopmentPlannerFootStepCatalogSource CreateSource() =>
