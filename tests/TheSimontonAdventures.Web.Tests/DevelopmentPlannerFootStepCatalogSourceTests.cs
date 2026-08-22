@@ -17,8 +17,8 @@ public sealed class DevelopmentPlannerFootStepCatalogSourceTests
         var items = await source.ListAsync(new("creator_demo_01"), "en-US");
         var realWorld = items.Where(item => item.SourceClasses.Contains("real-world-curated")).ToArray();
 
-        Assert.Equal(33, realWorld.Length);
-        Assert.Equal(33, realWorld.Select(item => (item.Id, item.Version)).Distinct().Count());
+        Assert.Equal(40, realWorld.Length);
+        Assert.Equal(40, realWorld.Select(item => (item.Id, item.Version)).Distinct().Count());
         Assert.All(realWorld, item =>
         {
             Assert.Equal(new CreatorId("creator_tsa_01"), item.OwnerCreatorId);
@@ -100,7 +100,8 @@ public sealed class DevelopmentPlannerFootStepCatalogSourceTests
         var items = await CreateSource().ListAsync(new("creator_demo_01"), "en-US");
         var motorcycle = items.Where(item =>
             item.SourceClasses.Contains("real-world-curated")
-            && item.TransportationModes.Contains("motorcycle")).ToArray();
+            && item.TransportationModes.Contains("motorcycle")
+            && item.Kind != "journey-pattern").ToArray();
 
         Assert.Equal(10, motorcycle.Length);
         Assert.Contains(motorcycle, item => item.Id == "footstep_activity_sturgis_motorcycle_rally");
@@ -166,6 +167,38 @@ public sealed class DevelopmentPlannerFootStepCatalogSourceTests
             && item.Categories.Contains("wildlife"));
 
         Assert.Equal("footstep_destination_glacier_rv_base", shuttleBase.Id);
+    }
+
+    /// <summary>Motorcycle Journey blueprints cover every launch rally and riding region without becoming plan state.</summary>
+    [Fact]
+    public async Task ListAsync_MotorcycleJourneyCatalog_CoversLaunchPlacesAndRemainsAdvisory()
+    {
+        var items = await CreateSource().ListAsync(new("creator_demo_01"), "en-US");
+        var journeys = items.Where(item =>
+            item.SourceClasses.Contains("real-world-curated")
+            && item.Kind == "journey-pattern"
+            && item.TransportationModes.Contains("motorcycle")).ToArray();
+
+        Assert.Equal(7, journeys.Length);
+        Assert.Contains(journeys, item => item.Places.Contains("sturgis"));
+        Assert.Contains(journeys, item => item.Places.Contains("daytona-beach"));
+        Assert.Contains(journeys, item => item.Places.Contains("lake-george") && item.Places.Contains("laconia"));
+        Assert.Contains(journeys, item => item.Places.Contains("route-66"));
+        Assert.Contains(journeys, item => item.Places.Contains("peak-to-peak")
+            && item.Places.Contains("rocky-mountain-national-park")
+            && item.Places.Contains("san-juan-mountains"));
+        Assert.Contains(journeys, item => item.Places.Contains("blue-ridge-parkway"));
+        Assert.Contains(journeys, item => item.Places.Contains("natchez-trace-parkway"));
+        Assert.All(journeys, item =>
+        {
+            Assert.Null(item.DestinationDraft);
+            Assert.Null(item.ActivityDraft);
+            Assert.Contains(PlannerFootStepContextKind.Adventure, item.ContextKinds);
+            Assert.Contains("journey-blueprint", item.Categories);
+            Assert.True(item.DurationDays >= 5);
+            Assert.Contains("recheck", item.Freshness, StringComparison.OrdinalIgnoreCase);
+            Assert.NotEmpty(item.Sources);
+        });
     }
 
     private static DevelopmentPlannerFootStepCatalogSource CreateSource() =>
