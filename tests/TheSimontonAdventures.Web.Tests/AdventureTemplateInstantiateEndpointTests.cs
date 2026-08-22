@@ -64,6 +64,8 @@ public sealed class AdventureTemplateInstantiateEndpointTests
         fields["originTimeZone"] = "America/Phoenix";
         fields["oneWayDistanceMiles"] = "1300";
         fields["dailyDistanceMiles"] = "450";
+        fields["outboundStop"] = new StringValues(["Albuquerque, New Mexico", "Denver, Colorado"]);
+        fields["returnStop"] = new StringValues(["Cheyenne, Wyoming", "Moab, Utah"]);
         var context = Context(new FormCollection(fields));
 
         await AdventureTemplateInstantiateEndpoints.HandleAsync(
@@ -74,6 +76,11 @@ public sealed class AdventureTemplateInstantiateEndpointTests
         Assert.Equal(1300, service.Command.TravelEstimate!.OneWayDistanceMiles);
         Assert.Equal(450, service.Command.TravelEstimate.DailyDistanceMiles);
         Assert.Equal(3, service.Command.TravelEstimate.DaysEachWay);
+        Assert.Collection(service.Command.TravelStops!,
+            stop => Assert.Equal("Albuquerque, New Mexico", stop.Name),
+            stop => Assert.Equal("Denver, Colorado", stop.Name),
+            stop => Assert.Equal("Cheyenne, Wyoming", stop.Name),
+            stop => Assert.Equal("Moab, Utah", stop.Name));
     }
 
     /// <summary>A partial origin cannot cross the web boundary.</summary>
