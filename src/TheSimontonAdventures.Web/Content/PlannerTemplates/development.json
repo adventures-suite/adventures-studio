@@ -291,6 +291,32 @@
     ],
     "accommodations": [
       { "name": "Sturgis and Black Hills rally-base stay pattern", "startDayOffset": 1, "endDayOffset": 7, "timeZone": "America/Denver", "destinationKey": "sturgis" }
+    ],
+    "travelStopSuggestions": [
+      {
+        "originAliases": [ "Phoenix AZ", "Phoenix, AZ", "Phoenix, Arizona" ],
+        "oneWayDistanceMiles": 1300,
+        "dailyDistanceMiles": 300,
+        "outboundStops": [ "Flagstaff, Arizona", "Albuquerque, New Mexico", "Denver, Colorado", "Cheyenne, Wyoming" ],
+        "returnStops": [ "Cheyenne, Wyoming", "Denver, Colorado", "Albuquerque, New Mexico", "Flagstaff, Arizona" ],
+        "basis": "Curated planning starting points for a relaxed Phoenix–Black Hills pace. Confirm the actual route, mileage, weather, road conditions, time zones, fuel, and lodging before travel."
+      },
+      {
+        "originAliases": [ "Phoenix AZ", "Phoenix, AZ", "Phoenix, Arizona" ],
+        "oneWayDistanceMiles": 1300,
+        "dailyDistanceMiles": 450,
+        "outboundStops": [ "Albuquerque, New Mexico", "Denver, Colorado" ],
+        "returnStops": [ "Denver, Colorado", "Albuquerque, New Mexico" ],
+        "basis": "Curated planning starting points for a balanced Phoenix–Black Hills pace. Confirm the actual route, mileage, weather, road conditions, time zones, fuel, and lodging before travel."
+      },
+      {
+        "originAliases": [ "Phoenix AZ", "Phoenix, AZ", "Phoenix, Arizona" ],
+        "oneWayDistanceMiles": 1300,
+        "dailyDistanceMiles": 600,
+        "outboundStops": [ "Albuquerque, New Mexico", "Denver, Colorado" ],
+        "returnStops": [ "Denver, Colorado", "Albuquerque, New Mexico" ],
+        "basis": "Curated planning starting points for an ambitious Phoenix–Black Hills pace. Confirm rider fit and the actual route, mileage, weather, road conditions, time zones, fuel, and lodging before travel."
+      }
     ]
   }
 ]
