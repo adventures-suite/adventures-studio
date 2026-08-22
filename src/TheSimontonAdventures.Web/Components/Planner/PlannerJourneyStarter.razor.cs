@@ -65,6 +65,8 @@ public partial class PlannerJourneyStarter : ComponentBase, IAsyncDisposable
     private int DailyDistanceMiles { get; set; } = 450;
     private List<string> OutboundTravelStops { get; } = [];
     private List<string> ReturnTravelStops { get; } = [];
+    private bool TravelStopsWereSuggested { get; set; }
+    private string? TravelStopSuggestionBasis { get; set; }
     private bool IsReviewReady { get; set; }
     private bool IsConfigurationComplete => ConfiguredStartDate.HasValue
         && (SelectedTemplate?.RequiresConfiguredOrigin != true
@@ -154,6 +156,7 @@ public partial class PlannerJourneyStarter : ComponentBase, IAsyncDisposable
     private void ConfigurationChanged()
     {
         EnsureTravelStopInputs();
+        ApplyTravelStopSuggestion();
         IsReviewReady = false;
     }
 
@@ -166,6 +169,8 @@ public partial class PlannerJourneyStarter : ComponentBase, IAsyncDisposable
             ? OutboundTravelStops
             : ReturnTravelStops;
         stops[index] = args.Value?.ToString() ?? string.Empty;
+        TravelStopsWereSuggested = false;
+        TravelStopSuggestionBasis = null;
         IsReviewReady = false;
     }
 
@@ -182,8 +187,59 @@ public partial class PlannerJourneyStarter : ComponentBase, IAsyncDisposable
         DailyDistanceMiles = 450;
         OutboundTravelStops.Clear();
         ReturnTravelStops.Clear();
+        TravelStopsWereSuggested = false;
+        TravelStopSuggestionBasis = null;
         EnsureTravelStopInputs();
         IsReviewReady = false;
+    }
+
+    private void ApplyTravelStopSuggestion()
+    {
+        if (SelectedTemplate?.RequiresConfiguredOrigin != true || TravelExpansionDays == 0)
+        {
+            TravelStopsWereSuggested = false;
+            TravelStopSuggestionBasis = null;
+            return;
+        }
+
+        var suggestion = AdventureTemplateTravelStopSuggestionSelector.Find(
+            SelectedTemplate.TravelStopSuggestions,
+            OriginName,
+            OneWayDistanceMiles,
+            DailyDistanceMiles,
+            TravelExpansionDays);
+
+        if (suggestion is null)
+        {
+            if (TravelStopsWereSuggested)
+            {
+                for (var index = 0; index < TravelExpansionDays; index++)
+                {
+                    OutboundTravelStops[index] = string.Empty;
+                    ReturnTravelStops[index] = string.Empty;
+                }
+            }
+
+            TravelStopsWereSuggested = false;
+            TravelStopSuggestionBasis = null;
+            return;
+        }
+
+        if (!TravelStopsWereSuggested
+            && (OutboundTravelStops.Any(value => !string.IsNullOrWhiteSpace(value))
+                || ReturnTravelStops.Any(value => !string.IsNullOrWhiteSpace(value))))
+        {
+            return;
+        }
+
+        for (var index = 0; index < TravelExpansionDays; index++)
+        {
+            OutboundTravelStops[index] = suggestion.OutboundStops[index];
+            ReturnTravelStops[index] = suggestion.ReturnStops[index];
+        }
+
+        TravelStopsWereSuggested = true;
+        TravelStopSuggestionBasis = suggestion.Basis;
     }
 
     private void EnsureTravelStopInputs()

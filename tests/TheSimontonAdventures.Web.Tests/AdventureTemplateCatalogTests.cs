@@ -90,6 +90,11 @@ public sealed class AdventureTemplateCatalogTests
         Assert.Equal(9, sturgis.DurationDays);
         Assert.Equal(2, sturgis.Destinations.Count(item => item.UsesConfiguredOrigin));
         Assert.Equal("Motorcycle", Assert.Single(sturgis.Transportation.DistinctBy(item => item.Mode)).Mode);
+        Assert.Equal(3, sturgis.TravelStopSuggestions.Count);
+        var balancedStops = Assert.Single(sturgis.TravelStopSuggestions,
+            item => item.DailyDistanceMiles == 450);
+        Assert.Equal(["Albuquerque, New Mexico", "Denver, Colorado"], balancedStops.OutboundStops);
+        Assert.Equal(["Denver, Colorado", "Albuquerque, New Mexico"], balancedStops.ReturnStops);
 
         Assert.All(
             templates.Where(item => item.OwnerType == AdventureTemplateOwnerType.Creator

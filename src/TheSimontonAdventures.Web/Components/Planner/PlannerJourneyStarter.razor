@@ -209,6 +209,10 @@
                                         <div>
                                             <h5 id="journey-travel-stops-title">Plan the overnight stops</h5>
                                             <p>Add one overnight place between each full riding day. These remain proposed until you confirm the route, lodging, time zone, weather, and road conditions.</p>
+                                            @if (TravelStopsWereSuggested)
+                                            {
+                                                <p class="journey-template__suggestion-status" role="status"><strong>Suggested for this Journey.</strong> Review or replace every overnight place below.</p>
+                                            }
                                         </div>
                                         <div class="journey-template__stop-columns">
                                             <fieldset>
@@ -244,6 +248,10 @@
                                                 }
                                             </fieldset>
                                         </div>
+                                        @if (!string.IsNullOrWhiteSpace(TravelStopSuggestionBasis))
+                                        {
+                                            <p class="journey-template__suggestion-basis">@TravelStopSuggestionBasis</p>
+                                        }
                                     </section>
                                 }
                             }

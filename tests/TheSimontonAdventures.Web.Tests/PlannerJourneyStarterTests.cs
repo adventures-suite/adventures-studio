@@ -71,6 +71,8 @@ public sealed class PlannerJourneyStarterTests
         Assert.Contains("Travel legs", markup, StringComparison.Ordinal);
         Assert.Contains("Riding days", markup, StringComparison.Ordinal);
         Assert.Contains("Plan the overnight stops", markup, StringComparison.Ordinal);
+        Assert.Contains("Suggested for this Journey", markup, StringComparison.Ordinal);
+        Assert.Contains("Review or replace every overnight place", markup, StringComparison.Ordinal);
         Assert.Contains("Daily route segments", markup, StringComparison.Ordinal);
         Assert.Contains("name=\"outboundStop\"", markup, StringComparison.Ordinal);
         Assert.Contains("name=\"returnStop\"", markup, StringComparison.Ordinal);

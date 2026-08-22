@@ -161,6 +161,47 @@ public sealed record AdventureTemplateAccommodation(
     IanaTimeZone TimeZone,
     string? DestinationKey = null);
 
+/// <summary>Defines one reviewed, editable overnight-stop suggestion set for an origin-aware template.</summary>
+/// <param name="OriginAliases">The reviewed origin labels that may select this suggestion.</param>
+/// <param name="OneWayDistanceMiles">The reviewed approximate one-way distance assumption.</param>
+/// <param name="DailyDistanceMiles">The reviewed daily travel-distance assumption.</param>
+/// <param name="OutboundStops">The ordered proposed overnight places on the outbound leg.</param>
+/// <param name="ReturnStops">The ordered proposed overnight places on the return leg.</param>
+/// <param name="Basis">The concise source and limitation statement shown during review.</param>
+public sealed record AdventureTemplateTravelStopSuggestion(
+    IReadOnlyList<string> OriginAliases,
+    int OneWayDistanceMiles,
+    int DailyDistanceMiles,
+    IReadOnlyList<string> OutboundStops,
+    IReadOnlyList<string> ReturnStops,
+    string Basis);
+
+/// <summary>Selects an exact reviewed travel-stop suggestion without invoking a route provider.</summary>
+public static class AdventureTemplateTravelStopSuggestionSelector
+{
+    /// <summary>Returns the matching suggestion for reviewed inputs, or no suggestion when the catalog has no exact fit.</summary>
+    public static AdventureTemplateTravelStopSuggestion? Find(
+        IReadOnlyList<AdventureTemplateTravelStopSuggestion> suggestions,
+        string originName,
+        int oneWayDistanceMiles,
+        int dailyDistanceMiles,
+        int requiredStopsEachWay)
+    {
+        ArgumentNullException.ThrowIfNull(suggestions);
+        var normalizedOrigin = NormalizeOrigin(originName);
+        return suggestions.FirstOrDefault(candidate =>
+            candidate.OneWayDistanceMiles == oneWayDistanceMiles
+            && candidate.DailyDistanceMiles == dailyDistanceMiles
+            && candidate.OutboundStops.Count == requiredStopsEachWay
+            && candidate.ReturnStops.Count == requiredStopsEachWay
+            && candidate.OriginAliases.Any(alias => string.Equals(
+                NormalizeOrigin(alias), normalizedOrigin, StringComparison.Ordinal)));
+    }
+
+    private static string NormalizeOrigin(string value) => string.Concat(
+        (value ?? string.Empty).Where(char.IsLetterOrDigit).Select(char.ToUpperInvariant));
+}
+
 /// <summary>Contains a validated immutable blueprint safe for plan materialization.</summary>
 public sealed record AdventureTemplateBlueprint
 {
@@ -190,6 +231,8 @@ public sealed record AdventureTemplateBlueprint
     public IReadOnlyList<AdventureTemplateTransportation> Transportation { get; init; } = [];
     /// <summary>Gets proposed accommodation blueprints.</summary>
     public IReadOnlyList<AdventureTemplateAccommodation> Accommodations { get; init; } = [];
+    /// <summary>Gets reviewed, editable travel-stop suggestions supplied by this exact template version.</summary>
+    public IReadOnlyList<AdventureTemplateTravelStopSuggestion> TravelStopSuggestions { get; init; } = [];
     /// <summary>Gets whether this template requires a reviewed starting place and time zone.</summary>
     public bool RequiresConfiguredOrigin => Destinations.Any(item => item.UsesConfiguredOrigin);
 }
