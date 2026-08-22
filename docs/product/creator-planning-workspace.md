@@ -68,6 +68,32 @@ domain and authorization model preserve a path to multiple members.
 
 ## Initial Workspace Areas
 
+### Dream and Planner Boundary
+
+Dream owns visual Journey discovery and the beginning of a new Adventure. It
+may present licensed photography, editorial collections, complete Journey
+FootSteps, catalog filters, previews, and supported setup questions before an
+authorized human creates a private Journey. Planner owns existing private
+Journeys and the operational work needed to make them actionable.
+
+The transition remains continuously demoable. Until Dream reproduces the
+proven Journey catalog and creation workflow, the current Planner discovery
+entry point remains available. Both surfaces must compose the same authorized
+catalog and reusable FootSteps presentation contracts rather than copy catalog
+data or mutation logic. Removing the Planner entry point requires separate
+visual approval after desktop, tablet, and phone verification.
+
+The product flow is:
+
+`Dream -> preview and configure -> create private Journey -> Planner`
+
+Creating from Dream produces an independent, Creator-owned private plan with
+exact template-version provenance. It never live-links a customer plan to a
+catalog item, grants the template author plan access, proves availability or
+price, or bypasses authorization, entitlement, licensing, review, audit, and
+atomic persistence requirements. Contextual FootSteps remain available inside
+Planner for adding or adapting pieces of an existing Journey.
+
 ### Adventure Dashboard
 
 - list accessible private plans

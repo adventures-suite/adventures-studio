@@ -234,7 +234,7 @@ public sealed class PlannerWorkspaceShellTests
         Assert.Contains("aria-label=\"Widen Planner navigation\"", html, StringComparison.Ordinal);
         Assert.Contains(">Planner</span>", html, StringComparison.Ordinal);
         Assert.DoesNotContain(">Planner workspace</span>", html, StringComparison.Ordinal);
-        foreach (var application in new[] { "Advisor", "Companion", "Publisher", "Web", "Search", "Maps" })
+        foreach (var application in new[] { "Dream", "Advisor", "Companion", "Publisher", "Web", "Search", "Maps" })
         {
             Assert.Contains($"title=\"{application}\"", html, StringComparison.Ordinal);
         }
@@ -243,6 +243,9 @@ public sealed class PlannerWorkspaceShellTests
         Assert.Equal(0, CountOccurrences(html, " disabled"));
         Assert.Contains("href=\"/workspace/creators/creator_tsa_01/advisor\"", html, StringComparison.Ordinal);
         Assert.Contains("href=\"/workspace/creators/creator_tsa_01/maps\"", html, StringComparison.Ordinal);
+        Assert.True(
+            html.IndexOf("title=\"Dream\"", StringComparison.Ordinal)
+            < html.IndexOf("title=\"Planner\"", StringComparison.Ordinal));
     }
 
     /// <summary>The Web application stays inside the authorized workspace preview instead of implying the public site is the workspace.</summary>

@@ -321,16 +321,13 @@ public partial class WorkspaceRoot
             try
             {
                 AuthorizedCreatorWorkspaces = await directory.ListAsync(actor, context.RequestAborted);
-                if (AuthorizedCreatorWorkspaces.Count == 1 && query is not null)
+                if (AuthorizedCreatorWorkspaces.Count == 1
+                    && WorkspaceApplicationCatalog.TryGet("dream", out var dreamApplication)
+                    && dreamApplication is not null)
                 {
                     AddressedCreatorId = AuthorizedCreatorWorkspaces[0].CreatorId;
-                    var result = await query.ListAsync(
-                        actor, AddressedCreatorId, context.RequestAborted);
-                    Plans = result.Plans;
-                    IsRootAdventureLanding = result.IsAllowed;
-                    LoadState = result.IsAllowed
-                        ? WorkspaceLoadState.Ready
-                        : WorkspaceLoadState.Unavailable;
+                    PlaceholderApplication = dreamApplication;
+                    LoadState = WorkspaceLoadState.Ready;
                 }
                 else
                 {
