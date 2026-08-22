@@ -60,6 +60,8 @@ public sealed record PlannerFootStepDefinition
     public required string Id { get; init; }
     /// <summary>Gets the exact immutable source version.</summary>
     public required string Version { get; init; }
+    /// <summary>Gets the Creator that owns this reusable Content Engine record.</summary>
+    public CreatorId OwnerCreatorId { get; init; }
     /// <summary>Gets the stable kind identifier.</summary>
     public required string Kind { get; init; }
     /// <summary>Gets the localized title.</summary>
@@ -70,6 +72,8 @@ public sealed record PlannerFootStepDefinition
     public required string Attribution { get; init; }
     /// <summary>Gets the localized freshness label.</summary>
     public required string Freshness { get; init; }
+    /// <summary>Gets the allowlisted editorial sources used to review this version.</summary>
+    public IReadOnlyList<PlannerFootStepSourceEvidence> Sources { get; init; } = [];
     /// <summary>Gets applicable Planning context kinds.</summary>
     public IReadOnlySet<PlannerFootStepContextKind> ContextKinds { get; init; } = new HashSet<PlannerFootStepContextKind>();
     /// <summary>Gets stable country or region identifiers.</summary>
@@ -105,6 +109,19 @@ public sealed record PlannerFootStepDefinition
     /// <summary>Gets the typed activity draft when this FootStep can seed a reviewed manual activity.</summary>
     public PlannerFootStepActivityDraft? ActivityDraft { get; init; }
 }
+
+/// <summary>Records minimal, reviewable source evidence for one immutable FootStep version.</summary>
+/// <param name="Owner">The authoritative organization that owns the source page.</param>
+/// <param name="Url">The absolute public source URL.</param>
+/// <param name="RetrievedOn">The UTC calendar date on which the source was retrieved.</param>
+/// <param name="ReviewedOn">The UTC calendar date on which the catalog claim was reviewed.</param>
+/// <param name="ReviewAfter">The UTC calendar date after which operational details require editorial review.</param>
+public sealed record PlannerFootStepSourceEvidence(
+    string Owner,
+    Uri Url,
+    DateOnly RetrievedOn,
+    DateOnly ReviewedOn,
+    DateOnly ReviewAfter);
 
 /// <summary>Defines allowlisted destination values proposed by an immutable FootStep version.</summary>
 /// <param name="Name">The proposed destination working name.</param>
