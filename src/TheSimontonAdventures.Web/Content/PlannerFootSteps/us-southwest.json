@@ -1,0 +1,138 @@
+[
+  {
+    "id": "footstep_destination_sedona_motorcycle_base", "version": "1.0", "ownerCreatorId": "creator_tsa_01", "kind": "destination",
+    "title": "Sedona motorcycle touring base",
+    "summary": "Consider Sedona as a base for paved Arizona scenic-road days, including SR 89A, only after checking current construction, closures, traffic, weather, parking, fuel, lodging, and every rider's mountain-road experience. This is not a road-status or lodging-availability claim.",
+    "attribution": "The Simonton Adventures · reviewed from the Arizona Department of Transportation",
+    "freshness": "Reviewed 22 Aug 2026 · roads, traffic, weather, services, lodging, and rider fit require recheck",
+    "sources": [{"owner":"Arizona Department of Transportation","url":"https://azdot.gov/about/historic-and-scenic-roads/list-scenic-roads","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"}],
+    "contextKinds": ["Adventure", "Destination"], "places": ["united-states", "us-southwest", "arizona", "sedona", "oak-creek-canyon", "verde-valley"],
+    "transportationModes": ["motorcycle"], "categories": ["us-southwest", "motorcycle-touring", "destination-base", "scenic-riding", "desert", "mountains"],
+    "routeStyles": ["destination-base", "day-rides", "paved"], "surfaces": ["paved"],
+    "accessibility": ["rider-experience-review-required", "heat-risk-review-required", "altitude-review-required"], "paces": ["unhurried", "balanced", "active"],
+    "seasons": ["spring", "summer", "fall", "winter"], "equipmentNeeds": ["motorcycle", "riding-gear", "rain-gear", "water", "sun-protection"],
+    "budgetBands": ["moderate", "premium"], "travelerCompositions": ["solo", "couple", "group"], "sourceClasses": ["real-world-curated", "government"], "languages": ["en-US"], "durationDays": 3
+  },
+  {
+    "id": "footstep_journey_arizona_scenic_motorcycle", "version": "1.0", "ownerCreatorId": "creator_tsa_01", "kind": "journey-pattern",
+    "title": "Arizona high-desert motorcycle Journey",
+    "summary": "Build a paved Journey with separate Prescott, Sedona, and Flagstaff-area stops along Arizona scenic-road corridors, conservative daily mileage, and a weather flex day. Recheck roadwork, closures, wildfire effects, traffic, altitude, temperatures, fuel, lodging, and rider capability before departure.",
+    "attribution": "The Simonton Adventures · reviewed from the Arizona Department of Transportation",
+    "freshness": "Reviewed 22 Aug 2026 · route, road, wildfire, weather, lodging, and rider assumptions require recheck",
+    "sources": [
+      {"owner":"Arizona Department of Transportation","url":"https://azdot.gov/about/historic-and-scenic-roads/list-scenic-roads","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"},
+      {"owner":"Arizona Department of Transportation","url":"https://azdot.gov/about/historic-and-scenic-roads/list-historic-roads","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"}
+    ],
+    "contextKinds": ["Adventure"], "places": ["united-states", "us-southwest", "arizona", "prescott", "jerome", "sedona", "oak-creek-canyon", "flagstaff"],
+    "transportationModes": ["motorcycle"], "categories": ["us-southwest", "journey-blueprint", "motorcycle-touring", "scenic-riding", "road-trip", "desert", "mountains"],
+    "routeStyles": ["multi-base", "paved", "multi-day", "flex-day"], "surfaces": ["paved"],
+    "accessibility": ["rider-experience-review-required", "heat-risk-review-required", "altitude-review-required"], "paces": ["balanced", "active"],
+    "seasons": ["spring", "summer", "fall"], "equipmentNeeds": ["motorcycle", "riding-gear", "weather-layers", "water", "offline-navigation"],
+    "budgetBands": ["moderate", "premium"], "travelerCompositions": ["solo", "couple", "group"], "sourceClasses": ["real-world-curated", "government"], "languages": ["en-US"], "durationDays": 6
+  },
+  {
+    "id": "footstep_destination_big_bend_rv_base", "version": "1.0", "ownerCreatorId": "creator_tsa_01", "kind": "destination",
+    "title": "Big Bend RV planning base",
+    "summary": "Treat Big Bend as a remote RV planning destination only after matching the exact vehicle and tow length to roads and a confirmed site. Recheck campground reservations, hookups, fuel, water, groceries, heat, road conditions, communications, and emergency preparation before travel.",
+    "attribution": "The Simonton Adventures · reviewed from the U.S. National Park Service",
+    "freshness": "Reviewed 22 Aug 2026 · no campsite availability or price claim; vehicle fit, roads, weather, and services require recheck",
+    "sources": [
+      {"owner":"U.S. National Park Service","url":"https://www.nps.gov/bibe/planyourvisit/camping.htm","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"},
+      {"owner":"U.S. National Park Service","url":"https://www.nps.gov/bibe/planyourvisit/directions.htm","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"}
+    ],
+    "contextKinds": ["Adventure", "Destination"], "places": ["united-states", "us-southwest", "texas", "big-bend-national-park", "chihuahuan-desert"],
+    "transportationModes": ["rv", "walking"], "categories": ["us-southwest", "rv-travel", "destination-base", "camping", "national-park", "desert", "stargazing"],
+    "routeStyles": ["park-base", "day-loops"], "surfaces": ["paved", "campground-roads"],
+    "accessibility": ["vehicle-length-review-required", "accessible-site-review-required", "heat-risk-review-required", "remote-services-review-required"], "paces": ["unhurried", "balanced"],
+    "seasons": ["fall", "winter", "spring"], "equipmentNeeds": ["rv", "water-capacity", "sun-protection", "offline-navigation", "emergency-supplies"],
+    "budgetBands": ["moderate", "premium"], "travelerCompositions": ["solo", "couple", "family", "multigenerational", "group"], "sourceClasses": ["real-world-curated", "government"], "languages": ["en-US"], "durationDays": 5
+  },
+  {
+    "id": "footstep_journey_chihuahuan_desert_rv", "version": "1.0", "ownerCreatorId": "creator_tsa_01", "kind": "journey-pattern",
+    "title": "Chihuahuan Desert RV Journey",
+    "summary": "Plan separate White Sands, Guadalupe Mountains, Carlsbad-area, and Big Bend bases rather than assuming short transfers or continuous services. Confirm every campsite, vehicle limit, road, timed entry, fuel stop, water source, temperature, wind condition, and alternate before departure.",
+    "attribution": "The Simonton Adventures · reviewed from the U.S. National Park Service",
+    "freshness": "Reviewed 22 Aug 2026 · no campsite availability or price claim; roads, tickets, weather, services, and vehicle fit require recheck",
+    "sources": [
+      {"owner":"U.S. National Park Service","url":"https://www.nps.gov/whsa/planyourvisit/conditions.htm","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-09-22"},
+      {"owner":"U.S. National Park Service","url":"https://www.nps.gov/gumo/planyourvisit/things2do.htm","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"},
+      {"owner":"U.S. National Park Service","url":"https://www.nps.gov/cave/planyourvisit/index.htm","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-09-22"},
+      {"owner":"U.S. National Park Service","url":"https://www.nps.gov/bibe/planyourvisit/camping.htm","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"}
+    ],
+    "contextKinds": ["Adventure"], "places": ["united-states", "us-southwest", "new-mexico", "texas", "white-sands-national-park", "guadalupe-mountains-national-park", "carlsbad-caverns-national-park", "big-bend-national-park", "chihuahuan-desert"],
+    "transportationModes": ["rv", "walking"], "categories": ["us-southwest", "journey-blueprint", "rv-travel", "camping", "national-park", "desert", "road-trip"],
+    "routeStyles": ["multi-base", "multi-day", "road-trip", "flex-day"], "surfaces": ["paved", "campground-roads"],
+    "accessibility": ["vehicle-length-review-required", "accessible-site-review-required", "heat-risk-review-required", "remote-services-review-required"], "paces": ["unhurried", "balanced"],
+    "seasons": ["fall", "winter", "spring"], "equipmentNeeds": ["rv", "water-capacity", "weather-layers", "offline-navigation", "emergency-supplies"],
+    "budgetBands": ["moderate", "premium"], "travelerCompositions": ["solo", "couple", "family", "multigenerational", "group"], "sourceClasses": ["real-world-curated", "government"], "languages": ["en-US"], "durationDays": 12
+  },
+  {
+    "id": "footstep_destination_organ_pipe_camping", "version": "1.0", "ownerCreatorId": "creator_tsa_01", "kind": "destination",
+    "title": "Organ Pipe desert camping destination",
+    "summary": "Consider Organ Pipe Cactus as a cool-season desert camping destination, then choose developed, primitive, or permitted backcountry camping only after reviewing current reservations, water, toilets, vehicle rules, accessibility, heat, road conditions, communications, and emergency guidance before booking.",
+    "attribution": "The Simonton Adventures · reviewed from the U.S. National Park Service",
+    "freshness": "Reviewed 22 Aug 2026 · no availability or price claim; camping, permits, roads, weather, and access require recheck",
+    "sources": [
+      {"owner":"U.S. National Park Service","url":"https://www.nps.gov/orpi/planyourvisit/camping.htm","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"},
+      {"owner":"U.S. National Park Service","url":"https://www.nps.gov/orpi/planyourvisit/hiking.htm","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"}
+    ],
+    "contextKinds": ["Adventure", "Destination"], "places": ["united-states", "us-southwest", "arizona", "organ-pipe-cactus-national-monument", "sonoran-desert", "ajo"],
+    "transportationModes": ["car", "walking"], "categories": ["us-southwest", "camping", "destination-base", "desert", "hiking", "stargazing"],
+    "routeStyles": ["campground-base", "day-hikes"], "surfaces": ["paved", "gravel", "campground-roads", "desert-trail"],
+    "accessibility": ["accessible-site-review-required", "mobility-access-details-published", "heat-risk-review-required", "remote-services-review-required"], "paces": ["unhurried", "balanced"],
+    "seasons": ["fall", "winter", "spring"], "equipmentNeeds": ["camping-kit", "water-capacity", "sun-protection", "offline-navigation"],
+    "budgetBands": ["budget", "moderate"], "travelerCompositions": ["solo", "couple", "family", "multigenerational", "group"], "sourceClasses": ["real-world-curated", "government"], "languages": ["en-US"], "durationDays": 4
+  },
+  {
+    "id": "footstep_journey_sonoran_desert_camping", "version": "1.0", "ownerCreatorId": "creator_tsa_01", "kind": "journey-pattern",
+    "title": "Sonoran Desert camping Journey",
+    "summary": "Combine a Tucson-area base with Organ Pipe camping and only a separately permitted Saguaro wilderness overnight when the group is prepared for backpacking. Recheck reservations, permits, water reports, heat, fire restrictions, roads, trail access, communications, and capability before travel.",
+    "attribution": "The Simonton Adventures · reviewed from the U.S. National Park Service",
+    "freshness": "Reviewed 22 Aug 2026 · no availability or price claim; permits, water, fire, roads, weather, and group fit require recheck",
+    "sources": [
+      {"owner":"U.S. National Park Service","url":"https://www.nps.gov/orpi/planyourvisit/camping.htm","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"},
+      {"owner":"U.S. National Park Service","url":"https://www.nps.gov/sagu/planyourvisit/camping.htm","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"}
+    ],
+    "contextKinds": ["Adventure"], "places": ["united-states", "us-southwest", "arizona", "tucson", "saguaro-national-park", "organ-pipe-cactus-national-monument", "sonoran-desert"],
+    "transportationModes": ["car", "walking"], "categories": ["us-southwest", "journey-blueprint", "camping", "hiking", "desert", "national-park"],
+    "routeStyles": ["multi-base", "campground-base", "backpacking-option", "multi-day"], "surfaces": ["paved", "campground-roads", "desert-trail"],
+    "accessibility": ["accessible-site-review-required", "backpacking-fit-review-required", "heat-risk-review-required", "remote-services-review-required"], "paces": ["unhurried", "balanced", "active"],
+    "seasons": ["fall", "winter", "spring"], "equipmentNeeds": ["camping-kit", "backpacking-kit-as-applicable", "water-capacity", "sun-protection", "offline-navigation"],
+    "budgetBands": ["budget", "moderate"], "travelerCompositions": ["solo", "couple", "family", "group"], "sourceClasses": ["real-world-curated", "government"], "languages": ["en-US"], "durationDays": 7
+  },
+  {
+    "id": "footstep_destination_white_sands_hiking", "version": "1.0", "ownerCreatorId": "creator_tsa_01", "kind": "destination",
+    "title": "White Sands hiking destination",
+    "summary": "Use White Sands as a hiking destination only with a trail choice matched to heat, wind, dune terrain, navigation ability, elevation, and group fitness. Recheck park hours, missile-range road closures, weather, trail markers, water, accessibility details, and current camping closure before arrival.",
+    "attribution": "The Simonton Adventures · reviewed from the U.S. National Park Service",
+    "freshness": "Reviewed 22 Aug 2026 · hours, road closures, weather, trails, accessibility, and camping status require recheck",
+    "sources": [
+      {"owner":"U.S. National Park Service","url":"https://www.nps.gov/whsa/planyourvisit/trails.htm","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-09-22"},
+      {"owner":"U.S. National Park Service","url":"https://www.nps.gov/whsa/planyourvisit/conditions.htm","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-09-22"}
+    ],
+    "contextKinds": ["Adventure", "Destination"], "places": ["united-states", "us-southwest", "new-mexico", "white-sands-national-park", "tularosa-basin", "alamogordo"],
+    "transportationModes": ["car", "walking"], "categories": ["us-southwest", "hiking", "destination-base", "desert", "national-park", "geology"],
+    "routeStyles": ["destination-base", "day-hikes", "out-and-back", "loop"], "surfaces": ["sand", "boardwalk-options"],
+    "accessibility": ["trail-specific-access-review-required", "heat-risk-review-required", "navigation-review-required"], "paces": ["unhurried", "balanced", "active"],
+    "seasons": ["fall", "winter", "spring"], "equipmentNeeds": ["hiking-footwear", "water-capacity", "sun-protection", "navigation"],
+    "budgetBands": ["free", "budget"], "travelerCompositions": ["solo", "couple", "family", "multigenerational", "group"], "sourceClasses": ["real-world-curated", "government"], "languages": ["en-US"], "durationDays": 2
+  },
+  {
+    "id": "footstep_journey_new_mexico_desert_hiking", "version": "1.0", "ownerCreatorId": "creator_tsa_01", "kind": "journey-pattern",
+    "title": "Southern New Mexico desert hiking Journey",
+    "summary": "Build a Southern New Mexico hiking Journey with White Sands dune walks, Carlsbad-area surface or cavern plans, and Guadalupe Mountains day-hike options from separate bases. Confirm timed entry, roads, trail and cave access, heat, wind, water, elevation, daylight, and each traveler's conditioning.",
+    "attribution": "The Simonton Adventures · reviewed from the U.S. National Park Service",
+    "freshness": "Reviewed 22 Aug 2026 · tickets, roads, trails, cave access, weather, water, and group fit require recheck",
+    "sources": [
+      {"owner":"U.S. National Park Service","url":"https://www.nps.gov/whsa/planyourvisit/trails.htm","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-09-22"},
+      {"owner":"U.S. National Park Service","url":"https://www.nps.gov/cave/planyourvisit/index.htm","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-09-22"},
+      {"owner":"U.S. National Park Service","url":"https://www.nps.gov/gumo/planyourvisit/things2do.htm","retrievedOn":"2026-08-22","reviewedOn":"2026-08-22","reviewAfter":"2026-10-22"}
+    ],
+    "contextKinds": ["Adventure"], "places": ["united-states", "us-southwest", "new-mexico", "texas", "white-sands-national-park", "carlsbad-caverns-national-park", "guadalupe-mountains-national-park", "chihuahuan-desert"],
+    "transportationModes": ["car", "walking"], "categories": ["us-southwest", "journey-blueprint", "hiking", "desert", "national-park", "geology", "road-trip"],
+    "routeStyles": ["multi-base", "day-hikes", "multi-day", "flex-day"], "surfaces": ["sand", "paved", "rock", "mountain-trail"],
+    "accessibility": ["trail-specific-access-review-required", "heat-risk-review-required", "altitude-review-required", "cave-access-review-required"], "paces": ["unhurried", "balanced", "active"],
+    "seasons": ["fall", "winter", "spring"], "equipmentNeeds": ["hiking-footwear", "water-capacity", "sun-protection", "weather-layers", "offline-navigation"],
+    "budgetBands": ["budget", "moderate"], "travelerCompositions": ["solo", "couple", "family", "multigenerational", "group"], "sourceClasses": ["real-world-curated", "government"], "languages": ["en-US"], "durationDays": 8
+  }
+]
