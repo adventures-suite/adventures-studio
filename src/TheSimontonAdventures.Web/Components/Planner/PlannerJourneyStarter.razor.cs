@@ -1,14 +1,12 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
 using TheSimontonAdventures.Web.Planning;
 
 namespace TheSimontonAdventures.Web.Components;
 
 /// <summary>Renders the pre-plan choice between manual creation and authorized Journey Templates.</summary>
-public partial class PlannerJourneyStarter : ComponentBase, IAsyncDisposable
+public partial class PlannerJourneyStarter : ComponentBase
 {
-    private static readonly IReadOnlyList<int> JourneyPageSizeOptions = [1, 2, 4];
     private static readonly IReadOnlyList<OriginTimeZoneOption> OriginTimeZoneOptions =
     [
         new("America/Los_Angeles", "Pacific time"),
@@ -19,12 +17,7 @@ public partial class PlannerJourneyStarter : ComponentBase, IAsyncDisposable
         new("America/Anchorage", "Alaska time"),
         new("Pacific/Honolulu", "Hawaii time")
     ];
-    private const string PageSizePreferenceKey = "adventures-suite.planner.footsteps.journey-page-size";
     private readonly Dictionary<AdventureTemplateVersionId, string> idempotencyKeys = [];
-    private IJSObjectReference? PreferenceModule { get; set; }
-
-    [Inject]
-    private IJSRuntime JavaScript { get; set; } = null!;
 
     /// <summary>Gets or sets the authorized immutable Journey Templates.</summary>
     [Parameter]
@@ -54,8 +47,6 @@ public partial class PlannerJourneyStarter : ComponentBase, IAsyncDisposable
     public bool IsBrowsingIdeas { get; private set; }
 
     private AdventureTemplateBlueprint? SelectedTemplate { get; set; }
-    private int PageSize { get; set; } = 2;
-    private int CurrentPage { get; set; } = 1;
     private DateOnly? ConfiguredStartDate { get; set; }
     private string StartDateText { get; set; } = string.Empty;
     private string? StartDateError { get; set; }
@@ -89,11 +80,6 @@ public partial class PlannerJourneyStarter : ComponentBase, IAsyncDisposable
         ? 2 * TravelDaysEachWay
         : 0;
     private DateOnly JourneyEndDate => ConfiguredStartDate!.Value.AddDays(AdaptedDurationDays - 1);
-    private IReadOnlyList<AdventureTemplateBlueprint> PagedTemplates => Templates
-        .Skip((CurrentPage - 1) * PageSize)
-        .Take(PageSize)
-        .ToArray();
-
     /// <inheritdoc />
     protected override void OnInitialized()
     {
@@ -109,7 +95,6 @@ public partial class PlannerJourneyStarter : ComponentBase, IAsyncDisposable
     private async Task BrowseIdeasAsync()
     {
         IsBrowsingIdeas = true;
-        CurrentPage = 1;
         await OnTemplateModeChanged.InvokeAsync(true);
     }
 
@@ -290,24 +275,6 @@ public partial class PlannerJourneyStarter : ComponentBase, IAsyncDisposable
                 : offset;
     }
 
-    private async Task ChangePageSizeAsync(int pageSize)
-    {
-        PageSize = pageSize;
-        CurrentPage = 1;
-        if (PreferenceModule is not null)
-        {
-            await PreferenceModule.InvokeVoidAsync("writePageSize", PageSizePreferenceKey, pageSize);
-        }
-    }
-
-    private Task ChangePageAsync(int page)
-    {
-        CurrentPage = page;
-        SelectedTemplate = null;
-        ResetConfiguration();
-        return Task.CompletedTask;
-    }
-
     private string IdempotencyKey(AdventureTemplateVersionId versionId)
     {
         if (!idempotencyKeys.TryGetValue(versionId, out var key))
@@ -317,63 +284,6 @@ public partial class PlannerJourneyStarter : ComponentBase, IAsyncDisposable
         }
 
         return key;
-    }
-
-    private static string Monogram(string title) => string.Concat(
-        title.Split(' ', StringSplitOptions.RemoveEmptyEntries)
-            .Take(2)
-            .Select(word => char.ToUpperInvariant(word[0])));
-
-    private static string Route(AdventureTemplateBlueprint template) =>
-        string.Join(" → ", template.Destinations.Select(destination => destination.Name));
-
-    private static IReadOnlyList<string> DiscoveryTags(AdventureTemplateBlueprint template) =>
-        new[]
-        {
-            $"{template.DurationDays} days",
-            $"{template.Destinations.Count} {(template.Destinations.Count == 1 ? "destination" : "destinations")}"
-        }
-        .Concat(template.Transportation
-            .Select(segment => segment.Mode)
-            .Distinct(StringComparer.OrdinalIgnoreCase))
-        .ToArray();
-
-    /// <inheritdoc />
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (!firstRender)
-        {
-            return;
-        }
-
-        PreferenceModule = await JavaScript.InvokeAsync<IJSObjectReference>(
-            "import", "./js/plannerPreferences.js");
-        var savedPageSize = await PreferenceModule.InvokeAsync<int?>(
-            "readPageSize", PageSizePreferenceKey);
-        if (savedPageSize is { } value && JourneyPageSizeOptions.Contains(value) && value != PageSize)
-        {
-            PageSize = value;
-            CurrentPage = 1;
-            await InvokeAsync(StateHasChanged);
-        }
-    }
-
-    /// <summary>Releases the browser preference module owned by this component.</summary>
-    public async ValueTask DisposeAsync()
-    {
-        if (PreferenceModule is not null)
-        {
-            try
-            {
-                await PreferenceModule.DisposeAsync();
-            }
-            catch (JSDisconnectedException)
-            {
-                // Browser teardown already owns the disconnected module.
-            }
-        }
-
-        GC.SuppressFinalize(this);
     }
 
     private sealed record OriginTimeZoneOption(string Value, string Label);

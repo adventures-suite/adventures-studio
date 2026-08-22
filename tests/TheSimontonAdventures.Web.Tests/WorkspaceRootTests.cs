@@ -166,7 +166,14 @@ public sealed class WorkspaceRootTests
         Assert.Contains($">{applicationName}</h2>", html, StringComparison.Ordinal);
         Assert.Contains("In development", html);
         Assert.Contains("Representative · non-interactive", html);
-        Assert.Contains("does not grant access", html);
+        if (slug == "dream")
+        {
+            Assert.Contains("not bookings, live prices, or availability", html);
+        }
+        else
+        {
+            Assert.Contains("does not grant access", html);
+        }
         Assert.Contains("subscription, user-type, and time-bound entitlement checks", html);
         Assert.Contains("href=\"/workspace/creators/creator_tsa_01/plans\"", html);
         Assert.Contains($"aria-current=\"page\" title=\"{applicationName}\"", html);
@@ -180,6 +187,57 @@ public sealed class WorkspaceRootTests
             Assert.Contains("Google Play", html, StringComparison.Ordinal);
             Assert.Contains("not currently available for download", html, StringComparison.Ordinal);
         }
+    }
+
+    /// <summary>Dream renders the authorized shared catalog and hands an exact FootStep to Planner.</summary>
+    [Fact]
+    public async Task DreamWorkspace_WithAuthorizedCatalog_RendersPlannerHandoff()
+    {
+        var template = JourneyTemplate();
+        var html = await RenderAsync(
+            ApplicationPrincipal(),
+            "/workspace/creators/creator_tsa_01/dream",
+            services =>
+            {
+                services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>();
+                services.AddSingleton<ICreatorWorkspaceDirectoryService>(
+                    new StubCreatorWorkspaceDirectoryService([
+                        new(new("creator_tsa_01"), "The Simonton Adventures")
+                    ]));
+                services.AddSingleton<IAdventureTemplateCatalogQueryService>(
+                    new StubAdventureTemplateCatalogQueryService([template]));
+            });
+
+        Assert.Contains("Portugal by rail", html, StringComparison.Ordinal);
+        Assert.Contains("Explore this Journey", html, StringComparison.Ordinal);
+        Assert.Contains(
+            "href=\"/workspace/creators/creator_tsa_01/plans?journeyFootStep=platform.portugal-by-rail\"",
+            html,
+            StringComparison.Ordinal);
+        Assert.Contains("Cards per page", html, StringComparison.Ordinal);
+    }
+
+    /// <summary>Planner opens the exact Dream-selected FootStep in its existing review workflow.</summary>
+    [Fact]
+    public async Task PlannerWorkspace_WithDreamFootStepHandoff_OpensConfiguration()
+    {
+        var template = JourneyTemplate();
+        var html = await RenderAsync(
+            ApplicationPrincipal(),
+            "/workspace/creators/creator_tsa_01/plans?journeyFootStep=platform.portugal-by-rail",
+            services =>
+            {
+                services.AddSingleton<IWorkspaceActorResolver, WorkspaceActorResolver>();
+                services.AddSingleton<IPlannerWorkspaceQueryService>(
+                    new StubPlannerWorkspaceQueryService(PlannerWorkspaceResult.Allowed([])));
+                services.AddSingleton<IAdventureTemplateCatalogQueryService>(
+                    new StubAdventureTemplateCatalogQueryService([template]));
+            });
+
+        Assert.Contains("Journey FootStep setup", html, StringComparison.Ordinal);
+        Assert.Contains("Portugal by rail", html, StringComparison.Ordinal);
+        Assert.Contains("When does your Journey begin?", html, StringComparison.Ordinal);
+        Assert.Contains("Review configured Journey", html, StringComparison.Ordinal);
     }
 
     /// <summary>A private Creator without a public resource registry receives the safe Companion preview fallback.</summary>
@@ -713,6 +771,32 @@ public sealed class WorkspaceRootTests
         });
 
         return html;
+    }
+
+    private static AdventureTemplateBlueprint JourneyTemplate() => new()
+    {
+        VersionId = new("platform.portugal-by-rail", "1.0"),
+        OwnerType = AdventureTemplateOwnerType.Platform,
+        OwnerId = "adventures-suite",
+        SourceLocale = "en-US",
+        Attribution = "Curated collection",
+        Title = "Portugal by rail",
+        WorkingDescription = "A comfortable rail-first Journey.",
+        DurationDays = 8,
+        Destinations = [new("lisbon", "Lisbon", 0, 2, new("Europe/Lisbon"))],
+        Days = [new("day-1", 0, "lisbon", new("Europe/Lisbon"), "Arrive")]
+    };
+
+    private sealed class StubAdventureTemplateCatalogQueryService(
+        IReadOnlyList<AdventureTemplateBlueprint> templates)
+        : IAdventureTemplateCatalogQueryService
+    {
+        public Task<AdventureTemplateCatalogResult> ListAsync(
+            AdventuresSuite.Identity.ActorIdentity actor,
+            CreatorId creatorId,
+            string requestedLocale,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(new AdventureTemplateCatalogResult(true, templates));
     }
 
     private sealed class StubPlannerWorkspaceQueryService(

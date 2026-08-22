@@ -14,8 +14,14 @@
         <span class="workspace-application__status">In development</span>
         <p class="workspace-application__lead">@Application.Description</p>
         <p class="workspace-application__availability">
-            This preview demonstrates product direction only. It does not grant access,
-            entitlement, availability, or permission to use unfinished capabilities.
+            @if (Application.Kind == WorkspaceApplicationKind.Dream)
+            {
+                <text>FootSteps are reviewed starting points, not bookings, live prices, or availability. Creating one continues through Planner review.</text>
+            }
+            else
+            {
+                <text>This preview demonstrates product direction only. It does not grant access, entitlement, availability, or permission to use unfinished capabilities.</text>
+            }
         </p>
     </header>
 
@@ -28,7 +34,11 @@
         </div>
         <p class="workspace-application__preview-description">@Application.PreviewDescription</p>
 
-        @if (Application.Kind == WorkspaceApplicationKind.Maps)
+        @if (Application.Kind == WorkspaceApplicationKind.Dream)
+        {
+            <JourneyFootStepCatalog Templates="@JourneyTemplates" PlannerPath="@PlannerPath" />
+        }
+        else if (Application.Kind == WorkspaceApplicationKind.Maps)
         {
             <div class="workspace-application__map" aria-label="Illustrative Journey map preview">
                 <span class="workspace-application__route" aria-hidden="true"></span>

@@ -43,6 +43,7 @@
             <WorkspaceApplicationPlaceholder Application="@PlaceholderApplication"
                                              CreatorId="@AddressedCreatorId"
                                              PlannerPath="@PlanListPath"
+                                             JourneyTemplates="@AdventureTemplates"
                                              SimontonAdventuresUrl="@WorkspaceNavigation.SimontonAdventuresUrl" />
         }
         else if (LoadState == WorkspaceLoadState.Loading)
@@ -235,6 +236,8 @@
             }
             <PlannerJourneyStarter Templates="@AdventureTemplates"
                                    CreateFromTemplatePath="@CreateFromTemplatePath"
+                                   StartWithIdeasOpen="@(!string.IsNullOrWhiteSpace(InitialJourneyFootStepId))"
+                                   InitialPreviewTemplateId="@InitialJourneyFootStepId"
                                    OnTemplateModeChanged="SetTemplateModeAsync" />
             @if (!IsTemplateMode)
             {

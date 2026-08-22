@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using TheSimontonAdventures.Web.Creators;
 using TheSimontonAdventures.Web.Resources;
+using TheSimontonAdventures.Web.Planning;
 
 namespace TheSimontonAdventures.Web.Components;
 
@@ -27,6 +28,10 @@ public partial class WorkspaceApplicationPlaceholder
     /// <summary>Gets or sets the validated public Simonton Adventures preview URL.</summary>
     [Parameter]
     public Uri? SimontonAdventuresUrl { get; set; }
+
+    /// <summary>Gets or sets the authorized Journey FootSteps shown by Dream.</summary>
+    [Parameter]
+    public IReadOnlyList<AdventureTemplateBlueprint> JourneyTemplates { get; set; } = [];
 
     private ResolvedResource? CompanionPreview { get; set; }
 
