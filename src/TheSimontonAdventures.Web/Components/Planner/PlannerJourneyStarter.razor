@@ -88,7 +88,7 @@
                                 <ol class="journey-template__plain-list">
                                     @foreach (var destination in SelectedTemplate.Destinations)
                                     {
-                                        <li><strong>@destination.Name</strong><span>@destination.Guidance</span></li>
+                                        <li><strong>@TemplateDestinationName(destination)</strong><span>@destination.Guidance</span></li>
                                     }
                                 </ol>
                             </section>
@@ -141,14 +141,74 @@
                             <div>
                                 <p class="journey-starter__eyebrow">Configure</p>
                                 <h4 id="journey-configuration-title">When does your Journey begin?</h4>
-                                <p>This FootStep has a fixed @SelectedTemplate.DurationDays-day shape. You can adjust its copied details after creation.</p>
+                                @if (SelectedTemplate.RequiresConfiguredOrigin)
+                                {
+                                    <p>This FootStep has a fixed destination stay. Your reviewed travel assumptions add realistic riding days before and after it.</p>
+                                }
+                                else
+                                {
+                                    <p>This FootStep has a fixed @SelectedTemplate.DurationDays-day shape. You can adjust its copied details after creation.</p>
+                                }
                             </div>
+                            @if (SelectedTemplate.RequiresConfiguredOrigin)
+                            {
+                                <div class="journey-template__origin-fields">
+                                    <label>
+                                        Starting place
+                                        <input type="text"
+                                               @bind="OriginName"
+                                               @bind:event="oninput"
+                                               @bind:after="ConfigurationChanged"
+                                               maxlength="200"
+                                               placeholder="City, state or region"
+                                               autocomplete="off" />
+                                    </label>
+                                    <label>
+                                        Starting time zone
+                                        <select @bind="OriginTimeZone" @bind:after="ConfigurationChanged">
+                                            <option value="">Choose a time zone</option>
+                                            @foreach (var option in OriginTimeZoneOptions)
+                                            {
+                                                <option value="@option.Value">@option.Label</option>
+                                            }
+                                        </select>
+                                    </label>
+                                </div>
+                                <p class="journey-template__after">Your starting place becomes part of the copied route. It is not shared with the FootStep author.</p>
+                                <div class="journey-template__origin-fields">
+                                    <label>
+                                        Estimated one-way distance
+                                        <span class="journey-template__input-unit">
+                                            <input type="number"
+                                                   @bind="OneWayDistanceMiles"
+                                                   @bind:event="oninput"
+                                                   @bind:after="ConfigurationChanged"
+                                                   min="25"
+                                                   max="10000"
+                                                   step="25" />
+                                            <span>miles</span>
+                                        </span>
+                                    </label>
+                                    <label>
+                                        Daily riding target
+                                        <select @bind="DailyDistanceMiles" @bind:after="ConfigurationChanged">
+                                            <option value="300">Relaxed · about 300 miles</option>
+                                            <option value="450">Balanced · about 450 miles</option>
+                                            <option value="600">Ambitious · about 600 miles</option>
+                                        </select>
+                                    </label>
+                                </div>
+                                <p class="journey-template__travel-estimate">
+                                    Plan for <strong>@TravelDaysEachWay riding days each way</strong>.
+                                    This is a reviewed planning estimate, not live routing or safety guidance.
+                                </p>
+                            }
                             <label>
                                 Start date
                                 <input type="date"
                                        value="@StartDateText"
                                        aria-describedby="journey-start-date-guidance"
-                                       @onchange="StartDateChanged" />
+                                       @oninput="StartDateChanged" />
                             </label>
                             <p id="journey-start-date-guidance" class="journey-template__after">Dates below will be calculated before anything is created.</p>
                             @if (!string.IsNullOrEmpty(StartDateError))
@@ -157,7 +217,7 @@
                             }
                             <button type="button"
                                     class="journey-template__continue"
-                                    disabled="@(!ConfiguredStartDate.HasValue)"
+                                    disabled="@(!IsConfigurationComplete)"
                                     @onclick="ReviewConfiguration">Review configured Journey</button>
                         </section>
 
@@ -175,16 +235,20 @@
                                     @foreach (var destination in SelectedTemplate.Destinations)
                                     {
                                         <li>
-                                            <span>@destination.Name</span>
-                                            <small>@FormatDate(ConfiguredStartDate.Value.AddDays(destination.StartDayOffset)) – @FormatDate(ConfiguredStartDate.Value.AddDays(destination.EndDayOffset))</small>
+                                            <span>@ConfiguredDestinationName(destination)</span>
+                                            <small>@FormatDate(ConfiguredStartDate.Value.AddDays(AdaptedOffset(destination.StartDayOffset))) – @FormatDate(ConfiguredStartDate.Value.AddDays(AdaptedOffset(destination.EndDayOffset)))</small>
                                         </li>
                                     }
                                 </ol>
                                 <dl class="journey-template__review-counts">
                                     <div><dt>Destinations</dt><dd>@SelectedTemplate.Destinations.Count</dd></div>
-                                    <div><dt>Itinerary days</dt><dd>@SelectedTemplate.Days.Count</dd></div>
+                                    <div><dt>Itinerary days</dt><dd>@AdaptedItineraryDayCount</dd></div>
                                     <div><dt>Activities</dt><dd>@SelectedTemplate.Activities.Count</dd></div>
-                                    <div><dt>Travel segments</dt><dd>@SelectedTemplate.Transportation.Count</dd></div>
+                                    <div><dt>Travel legs</dt><dd>@SelectedTemplate.Transportation.Count</dd></div>
+                                    @if (SelectedTemplate.RequiresConfiguredOrigin)
+                                    {
+                                        <div><dt>Riding days</dt><dd>@RidingDayCount</dd></div>
+                                    }
                                     <div><dt>Stay patterns</dt><dd>@SelectedTemplate.Accommodations.Count</dd></div>
                                 </dl>
                                 <form method="post" action="@CreateFromTemplatePath" class="journey-template__create">
@@ -194,6 +258,13 @@
                                     <input type="hidden" name="templateVersion" value="@SelectedTemplate.VersionId.Version" />
                                     <input type="hidden" name="locale" value="@Locale" />
                                     <input type="hidden" name="startDate" value="@StartDateText" />
+                                    @if (SelectedTemplate.RequiresConfiguredOrigin)
+                                    {
+                                        <input type="hidden" name="originName" value="@OriginName" />
+                                        <input type="hidden" name="originTimeZone" value="@OriginTimeZone" />
+                                        <input type="hidden" name="oneWayDistanceMiles" value="@OneWayDistanceMiles" />
+                                        <input type="hidden" name="dailyDistanceMiles" value="@DailyDistanceMiles" />
+                                    }
                                     <button type="button" class="journey-template__secondary" @onclick="ChangeConfiguration">Change start date</button>
                                     <button type="submit" class="journey-template__continue">Create my private Journey</button>
                                 </form>

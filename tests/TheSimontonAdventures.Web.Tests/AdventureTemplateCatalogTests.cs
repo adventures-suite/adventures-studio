@@ -55,7 +55,7 @@ public sealed class AdventureTemplateCatalogTests
         });
 
         var templates = await source.ListAsync(Creator, "en-US");
-        Assert.Equal(5, templates.Count);
+        Assert.Equal(6, templates.Count);
         var portugal = Assert.Single(templates, item =>
             item.VersionId.TemplateId == "platform.portugal-by-rail");
         Assert.Equal("1.0", portugal.VersionId.Version);
@@ -84,8 +84,16 @@ public sealed class AdventureTemplateCatalogTests
         Assert.Equal(22, transatlantic.DurationDays);
         Assert.Equal(5, transatlantic.Transportation.Count);
 
+        var sturgis = Assert.Single(templates, item =>
+            item.VersionId.TemplateId == "creator-tsa.sturgis-black-hills-motorcycle");
+        Assert.True(sturgis.RequiresConfiguredOrigin);
+        Assert.Equal(9, sturgis.DurationDays);
+        Assert.Equal(2, sturgis.Destinations.Count(item => item.UsesConfiguredOrigin));
+        Assert.Equal("Motorcycle", Assert.Single(sturgis.Transportation.DistinctBy(item => item.Mode)).Mode);
+
         Assert.All(
-            templates.Where(item => item.OwnerType == AdventureTemplateOwnerType.Creator),
+            templates.Where(item => item.OwnerType == AdventureTemplateOwnerType.Creator
+                && item.VersionId != sturgis.VersionId),
             item => Assert.Equal(
                 "The Simonton Adventures approved journey record",
                 item.Attribution));

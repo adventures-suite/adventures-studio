@@ -62,6 +62,16 @@ public sealed class PlannerJourneyStarterTests
         Assert.Contains("Review configured Journey", markup, StringComparison.Ordinal);
         Assert.Contains("Your dated Journey", markup, StringComparison.Ordinal);
         Assert.Contains("Change start date", markup, StringComparison.Ordinal);
+        Assert.Contains("Starting place", markup, StringComparison.Ordinal);
+        Assert.Contains("Starting time zone", markup, StringComparison.Ordinal);
+        Assert.Contains("name=\"originName\"", markup, StringComparison.Ordinal);
+        Assert.Contains("name=\"originTimeZone\"", markup, StringComparison.Ordinal);
+        Assert.Contains("Estimated one-way distance", markup, StringComparison.Ordinal);
+        Assert.Contains("Daily riding target", markup, StringComparison.Ordinal);
+        Assert.Contains("Travel legs", markup, StringComparison.Ordinal);
+        Assert.Contains("Riding days", markup, StringComparison.Ordinal);
+        Assert.Contains("name=\"oneWayDistanceMiles\"", markup, StringComparison.Ordinal);
+        Assert.Contains("name=\"dailyDistanceMiles\"", markup, StringComparison.Ordinal);
         Assert.Contains("CreateFromTemplatePath", markup, StringComparison.Ordinal);
         Assert.Contains("AntiforgeryToken", markup, StringComparison.Ordinal);
         Assert.Contains("name=\"templateId\"", markup, StringComparison.Ordinal);

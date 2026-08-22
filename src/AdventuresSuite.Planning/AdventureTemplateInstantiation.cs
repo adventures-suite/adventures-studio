@@ -53,13 +53,33 @@ public enum AdventureTemplateOwnerType
 /// <param name="EndDayOffset">The zero-based inclusive end offset.</param>
 /// <param name="TimeZone">The destination IANA time zone.</param>
 /// <param name="Guidance">Optional planning guidance copied into private notes.</param>
+/// <param name="UsesConfiguredOrigin">Whether the destination is materialized from the reviewed origin parameter.</param>
 public sealed record AdventureTemplateDestination(
     string Key,
     string Name,
     int StartDayOffset,
     int EndDayOffset,
     IanaTimeZone TimeZone,
-    string? Guidance = null);
+    string? Guidance = null,
+    bool UsesConfiguredOrigin = false);
+
+/// <summary>Contains the reviewed starting-place parameter for an origin-aware template.</summary>
+/// <param name="Name">The bounded user-facing starting-place name.</param>
+/// <param name="TimeZone">The starting place's reviewed IANA time zone.</param>
+public sealed record AdventureTemplateConfiguredOrigin(
+    string Name,
+    IanaTimeZone TimeZone);
+
+/// <summary>Contains the reviewed distance assumptions used to expand a round-trip Journey.</summary>
+/// <param name="OneWayDistanceMiles">The estimated one-way road distance in whole miles.</param>
+/// <param name="DailyDistanceMiles">The reviewed maximum planning distance per riding day.</param>
+public sealed record AdventureTemplateTravelEstimate(
+    int OneWayDistanceMiles,
+    int DailyDistanceMiles)
+{
+    /// <summary>Gets the calculated number of riding days required in each direction.</summary>
+    public int DaysEachWay => (int)Math.Ceiling((double)OneWayDistanceMiles / DailyDistanceMiles);
+}
 
 /// <summary>Defines one local itinerary day relative to the plan start date.</summary>
 /// <param name="Key">The template-local day key.</param>
@@ -152,6 +172,8 @@ public sealed record AdventureTemplateBlueprint
     public IReadOnlyList<AdventureTemplateTransportation> Transportation { get; init; } = [];
     /// <summary>Gets proposed accommodation blueprints.</summary>
     public IReadOnlyList<AdventureTemplateAccommodation> Accommodations { get; init; } = [];
+    /// <summary>Gets whether this template requires a reviewed starting place and time zone.</summary>
+    public bool RequiresConfiguredOrigin => Destinations.Any(item => item.UsesConfiguredOrigin);
 }
 
 /// <summary>Returns an authorized template together with the use-decision evidence.</summary>
@@ -180,13 +202,17 @@ public interface IAdventureTemplateUseResolver
 /// <param name="TemplateVersion">The exact immutable source template version.</param>
 /// <param name="StartDate">The requested local calendar start date.</param>
 /// <param name="RequestedLocale">The requested BCP 47 presentation locale.</param>
+/// <param name="ConfiguredOrigin">The optional reviewed origin required by an origin-aware template.</param>
+/// <param name="TravelEstimate">The optional reviewed road-distance assumptions for round-trip adaptation.</param>
 public sealed record AdventureTemplateInstantiateCommand(
     ActorIdentity Actor,
     CreatorId CreatorId,
     PlanningIdempotencyKey IdempotencyKey,
     AdventureTemplateVersionId TemplateVersion,
     DateOnly StartDate,
-    string RequestedLocale);
+    string RequestedLocale,
+    AdventureTemplateConfiguredOrigin? ConfiguredOrigin = null,
+    AdventureTemplateTravelEstimate? TravelEstimate = null);
 
 /// <summary>Classifies safe template-instantiation outcomes.</summary>
 public enum AdventureTemplateInstantiateOutcome
@@ -231,6 +257,7 @@ public sealed class AdventureTemplateInstantiateService(
     TimeProvider timeProvider) : IAdventureTemplateInstantiateService
 {
     private const int FingerprintVersion = 1;
+    private const int OriginFingerprintVersion = 2;
     private static readonly TimeSpan IdempotencyRetention = TimeSpan.FromDays(30);
 
     /// <inheritdoc />
@@ -376,6 +403,26 @@ public sealed class AdventureTemplateInstantiateService(
         var activities = template.Activities.ToArray();
         var transportation = template.Transportation.ToArray();
         var accommodations = template.Accommodations.ToArray();
+        var originDestinations = destinations.Where(item => item.UsesConfiguredOrigin).ToArray();
+        var travelDaysEachWay = command.TravelEstimate?.DaysEachWay ?? 1;
+        var travelExpansionDays = travelDaysEachWay - 1;
+        var lastOriginOffset = originDestinations.Length == 0
+            ? int.MaxValue
+            : originDestinations.Max(item => item.StartDayOffset);
+        int AdaptOffset(int offset) => offset >= lastOriginOffset
+            ? offset + (2 * travelExpansionDays)
+            : offset > 0
+                ? offset + travelExpansionDays
+                : offset;
+        int AdaptTransportationDepartureOffset(AdventureTemplateTransportation item) =>
+            item.ArrivalDestinationKey is not null
+            && destinations.First(destination => destination.Key == item.ArrivalDestinationKey)
+                .UsesConfiguredOrigin
+            && item.DepartureDestinationKey is not null
+            && !destinations.First(destination => destination.Key == item.DepartureDestinationKey)
+                .UsesConfiguredOrigin
+                ? item.DepartureDayOffset + travelExpansionDays
+                : AdaptOffset(item.DepartureDayOffset);
         if (destinations.Select(item => item.Key).Distinct(StringComparer.Ordinal).Count() != destinations.Length
             || days.Select(item => item.Key).Distinct(StringComparer.Ordinal).Count() != days.Length
             || destinations.Any(item => !ValidText(item.Key, 64) || !ValidText(item.Name, 200)
@@ -402,40 +449,90 @@ public sealed class AdventureTemplateInstantiateService(
                 || item.StartDayOffset < 0 || item.EndDayOffset < item.StartDayOffset
                 || item.EndDayOffset >= template.DurationDays
                 || (item.DestinationKey is not null
-                    && !destinations.Any(destination => destination.Key == item.DestinationKey))))
+                    && !destinations.Any(destination => destination.Key == item.DestinationKey)))
+            || (originDestinations.Length == 0) != (command.ConfiguredOrigin is null)
+            || (command.ConfiguredOrigin is not null
+                && (!ValidText(command.ConfiguredOrigin.Name, 200)
+                    || command.ConfiguredOrigin.TimeZone == default))
+            || (command.TravelEstimate is not null) != (originDestinations.Length == 2)
+            || (command.TravelEstimate is not null
+                && (command.TravelEstimate.OneWayDistanceMiles < 25
+                    || command.TravelEstimate.OneWayDistanceMiles > 10000
+                    || command.TravelEstimate.DailyDistanceMiles < 100
+                    || command.TravelEstimate.DailyDistanceMiles > 1000
+                    || travelDaysEachWay > 30)))
         {
             return false;
         }
+
+        var adaptedDays = days
+            .Select(item => item with { DayOffset = AdaptOffset(item.DayOffset) })
+            .Concat(Enumerable.Range(1, travelExpansionDays).Select(index =>
+                new AdventureTemplateDay(
+                    $"adapt-outbound-{index + 1}", index, null,
+                    command.ConfiguredOrigin!.TimeZone,
+                    $"Ride toward the destination — day {index + 1} of {travelDaysEachWay}")))
+            .Concat(Enumerable.Range(1, travelExpansionDays).Select(index =>
+                new AdventureTemplateDay(
+                    $"adapt-return-{index}", lastOriginOffset + travelExpansionDays + index - 1,
+                    null, command.ConfiguredOrigin!.TimeZone,
+                    $"Ride toward home — day {index} of {travelDaysEachWay}")))
+            .OrderBy(item => item.DayOffset)
+            .ToArray();
+        var adaptedDurationDays = template.DurationDays + (2 * travelExpansionDays);
 
         materialize = (planId, now, ids) =>
         {
             var visitIds = destinations.ToDictionary(
                 item => item.Key, _ => ids.NewDestinationVisitId(), StringComparer.Ordinal);
-            var dayIds = days.ToDictionary(
+            var dayIds = adaptedDays.ToDictionary(
                 item => item.Key, _ => ids.NewItineraryDayId(), StringComparer.Ordinal);
+            string DestinationName(AdventureTemplateDestination item) =>
+                item.UsesConfiguredOrigin ? command.ConfiguredOrigin!.Name : item.Name;
+
+            IanaTimeZone DestinationTimeZone(AdventureTemplateDestination item) =>
+                item.UsesConfiguredOrigin ? command.ConfiguredOrigin!.TimeZone : item.TimeZone;
+
+            var destinationByKey = destinations.ToDictionary(item => item.Key, StringComparer.Ordinal);
+            string TransportationPlace(string value, string? destinationKey) =>
+                destinationKey is not null
+                && destinationByKey[destinationKey].UsesConfiguredOrigin
+                    ? command.ConfiguredOrigin!.Name
+                    : value;
+            IanaTimeZone TransportationTimeZone(IanaTimeZone value, string? destinationKey) =>
+                destinationKey is not null
+                && destinationByKey[destinationKey].UsesConfiguredOrigin
+                    ? command.ConfiguredOrigin!.TimeZone
+                    : value;
+            IanaTimeZone ItineraryTimeZone(AdventureTemplateDay item) =>
+                item.DestinationKey is not null
+                && destinationByKey[item.DestinationKey].UsesConfiguredOrigin
+                    ? command.ConfiguredOrigin!.TimeZone
+                    : item.TimeZone;
+
             return new AdventurePlan(
                 planId, command.CreatorId, template.Title, template.WorkingDescription,
                 AdventureLifecycleStage.Plan, PlanningStatus.Draft,
                 new PlanningDateRange(
-                    command.StartDate, command.StartDate.AddDays(template.DurationDays - 1)),
+                    command.StartDate, command.StartDate.AddDays(adaptedDurationDays - 1)),
                 new PlanAudit(1, now, now),
                 destinationVisits: destinations.Select((item, index) => new DestinationVisit
                 {
                     Id = visitIds[item.Key],
-                    Name = item.Name,
+                    Name = DestinationName(item),
                     Dates = new PlanningDateRange(
-                        command.StartDate.AddDays(item.StartDayOffset),
-                        command.StartDate.AddDays(item.EndDayOffset)),
-                    TimeZone = item.TimeZone,
+                        command.StartDate.AddDays(AdaptOffset(item.StartDayOffset)),
+                        command.StartDate.AddDays(AdaptOffset(item.EndDayOffset))),
+                    TimeZone = DestinationTimeZone(item),
                     Sequence = index + 1,
                     Notes = item.Guidance
                 }).ToArray(),
-                itineraryDays: days.Select(item => new ItineraryDay
+                itineraryDays: adaptedDays.Select(item => new ItineraryDay
                 {
                     Id = dayIds[item.Key],
                     Date = command.StartDate.AddDays(item.DayOffset),
                     DestinationVisitId = item.DestinationKey is null ? null : visitIds[item.DestinationKey],
-                    TimeZone = item.TimeZone,
+                    TimeZone = ItineraryTimeZone(item),
                     Title = item.Title
                 }).ToArray(),
                 activities: activities.Select(item => new PlannedActivity
@@ -453,14 +550,16 @@ public sealed class AdventureTemplateInstantiateService(
                     DepartureDestinationVisitId = item.DepartureDestinationKey is null ? null : visitIds[item.DepartureDestinationKey],
                     ArrivalDestinationVisitId = item.ArrivalDestinationKey is null ? null : visitIds[item.ArrivalDestinationKey],
                     Mode = item.Mode,
-                    From = item.From,
-                    To = item.To,
-                    DepartureDate = command.StartDate.AddDays(item.DepartureDayOffset),
+                    From = TransportationPlace(item.From, item.DepartureDestinationKey),
+                    To = TransportationPlace(item.To, item.ArrivalDestinationKey),
+                    DepartureDate = command.StartDate.AddDays(AdaptTransportationDepartureOffset(item)),
                     DepartureTimeLocal = item.DepartureTimeLocal,
-                    DepartureTimeZone = item.DepartureTimeZone,
-                    ArrivalDate = command.StartDate.AddDays(item.ArrivalDayOffset),
+                    DepartureTimeZone = TransportationTimeZone(
+                        item.DepartureTimeZone, item.DepartureDestinationKey),
+                    ArrivalDate = command.StartDate.AddDays(AdaptOffset(item.ArrivalDayOffset)),
                     ArrivalTimeLocal = item.ArrivalTimeLocal,
-                    ArrivalTimeZone = item.ArrivalTimeZone,
+                    ArrivalTimeZone = TransportationTimeZone(
+                        item.ArrivalTimeZone, item.ArrivalDestinationKey),
                     Status = PlanItemStatus.Proposed
                 }).ToArray(),
                 accommodations: accommodations.Select(item => new Accommodation
@@ -469,8 +568,8 @@ public sealed class AdventureTemplateInstantiateService(
                     DestinationVisitId = item.DestinationKey is null ? null : visitIds[item.DestinationKey],
                     Name = item.Name,
                     Dates = new PlanningDateRange(
-                        command.StartDate.AddDays(item.StartDayOffset),
-                        command.StartDate.AddDays(item.EndDayOffset)),
+                        command.StartDate.AddDays(AdaptOffset(item.StartDayOffset)),
+                        command.StartDate.AddDays(AdaptOffset(item.EndDayOffset))),
                     TimeZone = item.TimeZone,
                     Status = PlanItemStatus.Proposed
                 }).ToArray());
@@ -508,22 +607,37 @@ public sealed class AdventureTemplateInstantiateService(
         AdventureTemplateInstantiateCommand command,
         AuthorizedAdventureTemplateUse use)
     {
+        var fingerprintVersion = command.TravelEstimate is not null
+            ? 3
+            : command.ConfiguredOrigin is null
+                ? FingerprintVersion
+                : OriginFingerprintVersion;
         using var stream = new MemoryStream();
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
         {
             writer.Write(PlanningIdempotencyOperations.AdventurePlanTemplateInstantiateV1);
-            writer.Write(FingerprintVersion);
+            writer.Write(fingerprintVersion);
             writer.Write(command.CreatorId.Value);
             writer.Write(command.Actor.UserId!.Value.Value);
             writer.Write(command.TemplateVersion.TemplateId);
             writer.Write(command.TemplateVersion.Version);
             writer.Write(command.StartDate.DayNumber);
             writer.Write(command.RequestedLocale);
+            if (command.ConfiguredOrigin is not null)
+            {
+                writer.Write(command.ConfiguredOrigin.Name);
+                writer.Write(command.ConfiguredOrigin.TimeZone.Value);
+            }
+            if (command.TravelEstimate is not null)
+            {
+                writer.Write(command.TravelEstimate.OneWayDistanceMiles);
+                writer.Write(command.TravelEstimate.DailyDistanceMiles);
+            }
             writer.Write(use.UseDecisionReference);
         }
 
         return new PlanningRequestFingerprint(
-            FingerprintVersion,
+            fingerprintVersion,
             SHA256.HashData(stream.GetBuffer().AsSpan(0, checked((int)stream.Length))));
     }
 }

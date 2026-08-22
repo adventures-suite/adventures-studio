@@ -9,6 +9,16 @@ namespace TheSimontonAdventures.Web.Components;
 public partial class PlannerJourneyStarter : ComponentBase, IAsyncDisposable
 {
     private static readonly IReadOnlyList<int> JourneyPageSizeOptions = [1, 2, 4];
+    private static readonly IReadOnlyList<OriginTimeZoneOption> OriginTimeZoneOptions =
+    [
+        new("America/Los_Angeles", "Pacific time"),
+        new("America/Phoenix", "Arizona time"),
+        new("America/Denver", "Mountain time"),
+        new("America/Chicago", "Central time"),
+        new("America/New_York", "Eastern time"),
+        new("America/Anchorage", "Alaska time"),
+        new("Pacific/Honolulu", "Hawaii time")
+    ];
     private const string PageSizePreferenceKey = "adventures-suite.planner.footsteps.journey-page-size";
     private readonly Dictionary<AdventureTemplateVersionId, string> idempotencyKeys = [];
     private IJSObjectReference? PreferenceModule { get; set; }
@@ -49,8 +59,28 @@ public partial class PlannerJourneyStarter : ComponentBase, IAsyncDisposable
     private DateOnly? ConfiguredStartDate { get; set; }
     private string StartDateText { get; set; } = string.Empty;
     private string? StartDateError { get; set; }
+    private string OriginName { get; set; } = string.Empty;
+    private string OriginTimeZone { get; set; } = string.Empty;
+    private int OneWayDistanceMiles { get; set; } = 1300;
+    private int DailyDistanceMiles { get; set; } = 450;
     private bool IsReviewReady { get; set; }
-    private DateOnly JourneyEndDate => ConfiguredStartDate!.Value.AddDays(SelectedTemplate!.DurationDays - 1);
+    private bool IsConfigurationComplete => ConfiguredStartDate.HasValue
+        && (SelectedTemplate?.RequiresConfiguredOrigin != true
+            || (!string.IsNullOrWhiteSpace(OriginName)
+                && !string.IsNullOrWhiteSpace(OriginTimeZone)
+                && OneWayDistanceMiles is >= 25 and <= 10000
+                && DailyDistanceMiles is >= 100 and <= 1000));
+    private int TravelDaysEachWay => Math.Max(1,
+        (int)Math.Ceiling((double)OneWayDistanceMiles / Math.Max(1, DailyDistanceMiles)));
+    private int TravelExpansionDays => SelectedTemplate?.RequiresConfiguredOrigin == true
+        ? TravelDaysEachWay - 1
+        : 0;
+    private int AdaptedDurationDays => SelectedTemplate!.DurationDays + (2 * TravelExpansionDays);
+    private int AdaptedItineraryDayCount => SelectedTemplate!.Days.Count + (2 * TravelExpansionDays);
+    private int RidingDayCount => SelectedTemplate?.RequiresConfiguredOrigin == true
+        ? 2 * TravelDaysEachWay
+        : 0;
+    private DateOnly JourneyEndDate => ConfiguredStartDate!.Value.AddDays(AdaptedDurationDays - 1);
     private IReadOnlyList<AdventureTemplateBlueprint> PagedTemplates => Templates
         .Skip((CurrentPage - 1) * PageSize)
         .Take(PageSize)
@@ -108,11 +138,13 @@ public partial class PlannerJourneyStarter : ComponentBase, IAsyncDisposable
 
     private void ReviewConfiguration()
     {
-        if (ConfiguredStartDate.HasValue)
+        if (IsConfigurationComplete)
         {
             IsReviewReady = true;
         }
     }
+
+    private void ConfigurationChanged() => IsReviewReady = false;
 
     private void ChangeConfiguration() => IsReviewReady = false;
 
@@ -121,11 +153,38 @@ public partial class PlannerJourneyStarter : ComponentBase, IAsyncDisposable
         ConfiguredStartDate = null;
         StartDateText = string.Empty;
         StartDateError = null;
+        OriginName = string.Empty;
+        OriginTimeZone = string.Empty;
+        OneWayDistanceMiles = 1300;
+        DailyDistanceMiles = 450;
         IsReviewReady = false;
     }
 
     private static string FormatDate(DateOnly date) =>
         date.ToString("MMM d, yyyy", CultureInfo.InvariantCulture);
+
+    private static string TemplateDestinationName(AdventureTemplateDestination destination) =>
+        destination.UsesConfiguredOrigin ? "Your starting place" : destination.Name;
+
+    private string ConfiguredDestinationName(AdventureTemplateDestination destination) =>
+        destination.UsesConfiguredOrigin ? OriginName : destination.Name;
+
+    private int AdaptedOffset(int offset)
+    {
+        if (SelectedTemplate?.RequiresConfiguredOrigin != true)
+        {
+            return offset;
+        }
+
+        var lastOriginOffset = SelectedTemplate.Destinations
+            .Where(destination => destination.UsesConfiguredOrigin)
+            .Max(destination => destination.StartDayOffset);
+        return offset >= lastOriginOffset
+            ? offset + (2 * TravelExpansionDays)
+            : offset > 0
+                ? offset + TravelExpansionDays
+                : offset;
+    }
 
     private async Task ChangePageSizeAsync(int pageSize)
     {
@@ -212,4 +271,6 @@ public partial class PlannerJourneyStarter : ComponentBase, IAsyncDisposable
 
         GC.SuppressFinalize(this);
     }
+
+    private sealed record OriginTimeZoneOption(string Value, string Label);
 }

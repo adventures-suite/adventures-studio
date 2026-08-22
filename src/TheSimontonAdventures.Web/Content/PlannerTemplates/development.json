@@ -252,5 +252,45 @@
       { "name": "Barcelona pre-cruise stay", "startDayOffset": 1, "endDayOffset": 3, "timeZone": "Europe/Madrid" },
       { "name": "Royal Caribbean transatlantic cruise", "startDayOffset": 4, "endDayOffset": 20, "timeZone": "UTC" }
     ]
+  },
+  {
+    "templateId": "creator-tsa.sturgis-black-hills-motorcycle",
+    "version": "1.0",
+    "ownerType": "Creator",
+    "ownerId": "creator_tsa_01",
+    "sourceLocale": "en-US",
+    "attribution": "The Simonton Adventures · reviewed from the City of Sturgis",
+    "title": "Sturgis and Black Hills motorcycle Journey",
+    "workingDescription": "A configurable round-trip motorcycle Journey with Sturgis as the event base, Black Hills day rides, and deliberate rest time. Rally dates, roads, weather, fuel, lodging, parking, and rider fit require rechecking.",
+    "durationDays": 9,
+    "destinations": [
+      { "key": "origin-departure", "name": "Configured origin", "startDayOffset": 0, "endDayOffset": 0, "timeZone": "UTC", "guidance": "Review motorcycle readiness, route conditions, weather, fuel range, and the first day's distance", "usesConfiguredOrigin": true },
+      { "key": "sturgis", "name": "Sturgis and the Black Hills", "startDayOffset": 1, "endDayOffset": 7, "timeZone": "America/Denver", "guidance": "Confirm current rally dates, official event locations, traffic controls, roadwork, lodging, parking, and rider fit" },
+      { "key": "origin-return", "name": "Configured origin", "startDayOffset": 8, "endDayOffset": 8, "timeZone": "UTC", "guidance": "Keep the return day flexible for fatigue, weather, maintenance, and road conditions", "usesConfiguredOrigin": true }
+    ],
+    "days": [
+      { "key": "day-1", "dayOffset": 0, "destinationKey": "origin-departure", "timeZone": "UTC", "title": "Depart for Sturgis" },
+      { "key": "day-2", "dayOffset": 1, "destinationKey": "sturgis", "timeZone": "America/Denver", "title": "Arrive and settle into the rally base" },
+      { "key": "day-3", "dayOffset": 2, "destinationKey": "sturgis", "timeZone": "America/Denver", "title": "Orient to Sturgis and current event conditions" },
+      { "key": "day-4", "dayOffset": 3, "destinationKey": "sturgis", "timeZone": "America/Denver", "title": "Choose a Black Hills day ride" },
+      { "key": "day-5", "dayOffset": 4, "destinationKey": "sturgis", "timeZone": "America/Denver", "title": "Rally events and a shorter ride" },
+      { "key": "day-6", "dayOffset": 5, "destinationKey": "sturgis", "timeZone": "America/Denver", "title": "Weather or recovery day" },
+      { "key": "day-7", "dayOffset": 6, "destinationKey": "sturgis", "timeZone": "America/Denver", "title": "Choose a second Black Hills day ride" },
+      { "key": "day-8", "dayOffset": 7, "destinationKey": "sturgis", "timeZone": "America/Denver", "title": "Final rally day and prepare for departure" },
+      { "key": "day-9", "dayOffset": 8, "destinationKey": "origin-return", "timeZone": "UTC", "title": "Return home" }
+    ],
+    "activities": [
+      { "dayKey": "day-3", "title": "Review official rally events and traffic information" },
+      { "dayKey": "day-4", "title": "Choose a conditions-appropriate Black Hills ride" },
+      { "dayKey": "day-5", "title": "Choose one official rally experience" },
+      { "dayKey": "day-7", "title": "Choose a second conditions-appropriate ride" }
+    ],
+    "transportation": [
+      { "mode": "Motorcycle", "from": "Configured origin", "to": "Sturgis", "departureDayOffset": 0, "departureTimeZone": "UTC", "arrivalDayOffset": 1, "arrivalTimeZone": "America/Denver", "departureDestinationKey": "origin-departure", "arrivalDestinationKey": "sturgis" },
+      { "mode": "Motorcycle", "from": "Sturgis", "to": "Configured origin", "departureDayOffset": 8, "departureTimeZone": "America/Denver", "arrivalDayOffset": 8, "arrivalTimeZone": "UTC", "departureDestinationKey": "sturgis", "arrivalDestinationKey": "origin-return" }
+    ],
+    "accommodations": [
+      { "name": "Sturgis and Black Hills rally-base stay pattern", "startDayOffset": 1, "endDayOffset": 7, "timeZone": "America/Denver", "destinationKey": "sturgis" }
+    ]
   }
 ]
