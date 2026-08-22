@@ -22,9 +22,21 @@
 .workspace-application__items strong, .workspace-application__items p { display: block; margin-bottom: .2rem; }
 .workspace-application__items p, .workspace-application__items small { color: var(--planner-shell-text-muted); font-size: .84rem; }
 .workspace-application__item-mark { background: var(--planner-shell-accent); border-radius: 50%; height: .55rem; margin-top: .3rem; width: .55rem; }
-.workspace-application__phone { background: var(--planner-shell-primary); border: .35rem solid var(--planner-shell-text); border-radius: 1.5rem; color: var(--planner-shell-surface); display: grid; gap: .45rem; margin: 1.15rem auto; max-width: 13rem; padding: 1.2rem .9rem; }
-.workspace-application__phone span { font-size: .7rem; text-transform: uppercase; }
-.workspace-application__phone div { background: color-mix(in srgb, currentColor 22%, transparent); border-radius: .45rem; height: 1.6rem; }
+.workspace-application__companion-showcase { align-items: center; background: linear-gradient(145deg, color-mix(in srgb, var(--planner-shell-primary) 92%, black), var(--planner-shell-primary)); border-radius: 1rem; color: white; display: grid; gap: clamp(1.25rem, 5vw, 3.5rem); grid-template-columns: minmax(12rem, 20rem) minmax(0, 1fr); margin-top: 1rem; overflow: hidden; padding: clamp(1rem, 4vw, 2.5rem); position: relative; }
+.workspace-application__companion-showcase::after { background: color-mix(in srgb, var(--planner-shell-accent) 24%, transparent); border-radius: 50%; content: ""; height: 18rem; position: absolute; right: -8rem; top: -9rem; width: 18rem; }
+.workspace-application__companion-device { margin: 0; position: relative; z-index: 1; }
+.workspace-application__companion-device img { border: .35rem solid color-mix(in srgb, white 78%, transparent); border-radius: 1.65rem; box-shadow: 0 1.25rem 2.75rem rgb(0 0 0 / 38%); display: block; height: auto; margin: 0 auto; max-height: 38rem; max-width: 100%; object-fit: contain; }
+.workspace-application__companion-fallback { align-content: center; aspect-ratio: 9 / 19; border: .35rem solid color-mix(in srgb, white 78%, transparent); border-radius: 1.65rem; display: grid; justify-items: center; margin: 0 auto; max-height: 38rem; padding: 1rem; }
+.workspace-application__companion-device figcaption { color: rgb(255 255 255 / 68%); font-size: .7rem; margin-top: .65rem; text-align: center; }
+.workspace-application__store-preview { display: grid; gap: .7rem; position: relative; z-index: 1; }
+.workspace-application__store-preview > p { color: color-mix(in srgb, white 72%, var(--planner-shell-accent)); font-size: .76rem; font-weight: 850; letter-spacing: .1em; margin-bottom: 0; text-transform: uppercase; }
+.workspace-application__store-preview > strong { font-family: Georgia, serif; font-size: clamp(1.65rem, 4vw, 2.8rem); line-height: 1.08; max-width: 32rem; }
+.workspace-application__store-badges { display: flex; flex-wrap: wrap; gap: .65rem; margin-top: .35rem; }
+.workspace-application__store-badge { align-items: center; background: #050505; border: 1px solid rgb(255 255 255 / 38%); border-radius: .65rem; color: white; display: inline-flex; gap: .55rem; min-height: 3.5rem; padding: .55rem .85rem; }
+.workspace-application__store-badge svg { fill: none; height: 2rem; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; width: 2rem; }
+.workspace-application__store-badge > span { display: grid; font-size: 1rem; font-weight: 750; line-height: 1.05; }
+.workspace-application__store-badge small { font-size: .58rem; font-weight: 500; letter-spacing: .02em; }
+.workspace-application__store-note { color: rgb(255 255 255 / 68%); font-size: .72rem; max-width: 28rem; }
 .workspace-application__story-image { align-content: end; background: linear-gradient(135deg, var(--planner-shell-primary), var(--planner-shell-accent)); border-radius: .9rem; color: var(--planner-shell-surface); display: grid; min-height: 10rem; padding: 1.2rem; }
 .workspace-application__story-image span { font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; }
 .workspace-application__story-image strong { font-size: clamp(1.35rem, 4vw, 2.15rem); }
@@ -63,4 +75,6 @@
     .workspace-application__items small { grid-column: 2; }
     .workspace-application__footer { align-items: flex-start; flex-direction: column; }
     .workspace-application__public-preview { align-items: flex-start; flex-direction: column; }
+    .workspace-application__companion-showcase { grid-template-columns: 1fr; }
+    .workspace-application__companion-device img { max-height: 32rem; }
 }

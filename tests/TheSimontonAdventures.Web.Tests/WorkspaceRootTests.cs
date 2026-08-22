@@ -10,6 +10,7 @@ using TheSimontonAdventures.Web.Components;
 using TheSimontonAdventures.Web.Creators;
 using TheSimontonAdventures.Web.Planning;
 using TheSimontonAdventures.Web.Planning.Persistence;
+using TheSimontonAdventures.Web.Resources;
 
 namespace TheSimontonAdventures.Web.Tests;
 
@@ -166,6 +167,15 @@ public sealed class WorkspaceRootTests
         Assert.Contains("href=\"/workspace/creators/creator_tsa_01/plans\"", html);
         Assert.Contains($"aria-current=\"page\" title=\"{applicationName}\"", html);
         Assert.Equal(0, query.CallCount);
+
+        if (slug == "companion")
+        {
+            Assert.Contains("adventures-companion-preview.jpeg", html, StringComparison.Ordinal);
+            Assert.Contains("Planned for the", html, StringComparison.Ordinal);
+            Assert.Contains("App Store", html, StringComparison.Ordinal);
+            Assert.Contains("Google Play", html, StringComparison.Ordinal);
+            Assert.Contains("not currently available for download", html, StringComparison.Ordinal);
+        }
     }
 
     /// <summary>A placeholder route fails closed when the signed-in user lacks the addressed Creator membership.</summary>
@@ -634,6 +644,8 @@ public sealed class WorkspaceRootTests
         services.AddSingleton<Microsoft.JSInterop.IJSRuntime, StaticTestJavaScriptRuntime>();
         services.AddSingleton<NavigationManager, StaticTestNavigationManager>();
         services.AddSingleton(new WorkspaceNavigationConfiguration());
+        services.AddSingleton<IResourceService>(
+            new StubResourceService(knownHeroUrl: "/resolved/adventures-companion-preview.jpeg"));
         configure?.Invoke(services);
         await using var provider = services.BuildServiceProvider();
         var context = new DefaultHttpContext
