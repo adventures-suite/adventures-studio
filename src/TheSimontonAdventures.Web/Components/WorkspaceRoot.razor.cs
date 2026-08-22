@@ -440,10 +440,28 @@ public partial class WorkspaceRoot
         };
         try
         {
-            var result = await service.QueryAsync(new PlannerFootStepQuery(
-                WorkspaceActor, AddressedCreatorId, Plan.Id, kind, context.Id, "en-US",
-                new PlannerFootStepFilters(), 1, 64));
-            AuthorizedFootSteps = result.IsAllowed ? result.Items : [];
+            const int queryPageSize = 64;
+            const int maximumCatalogPages = 16;
+            var authorized = new List<PlannerFootStepDefinition>();
+            for (var page = 1; page <= maximumCatalogPages; page++)
+            {
+                var result = await service.QueryAsync(new PlannerFootStepQuery(
+                    WorkspaceActor, AddressedCreatorId, Plan.Id, kind, context.Id, "en-US",
+                    new PlannerFootStepFilters(), page, queryPageSize));
+                if (!result.IsAllowed)
+                {
+                    AuthorizedFootSteps = [];
+                    return;
+                }
+
+                authorized.AddRange(result.Items);
+                if (authorized.Count >= result.TotalItems || result.Items.Count == 0)
+                {
+                    break;
+                }
+            }
+
+            AuthorizedFootSteps = authorized;
         }
         catch (OperationCanceledException) when (
             HttpContextAccessor.HttpContext?.RequestAborted.IsCancellationRequested is true)
