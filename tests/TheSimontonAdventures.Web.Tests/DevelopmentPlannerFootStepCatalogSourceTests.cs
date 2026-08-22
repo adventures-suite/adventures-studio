@@ -17,8 +17,8 @@ public sealed class DevelopmentPlannerFootStepCatalogSourceTests
         var items = await source.ListAsync(new("creator_demo_01"), "en-US");
         var realWorld = items.Where(item => item.SourceClasses.Contains("real-world-curated")).ToArray();
 
-        Assert.Equal(58, realWorld.Length);
-        Assert.Equal(58, realWorld.Select(item => (item.Id, item.Version)).Distinct().Count());
+        Assert.Equal(64, realWorld.Length);
+        Assert.Equal(64, realWorld.Select(item => (item.Id, item.Version)).Distinct().Count());
         Assert.All(realWorld, item =>
         {
             Assert.Equal(new CreatorId("creator_tsa_01"), item.OwnerCreatorId);
@@ -283,6 +283,57 @@ public sealed class DevelopmentPlannerFootStepCatalogSourceTests
             Assert.Contains("us-southwest", item.Places);
         });
         Assert.All(southwest.Where(item => item.Kind == "journey-pattern"), item =>
+        {
+            Assert.Contains("journey-blueprint", item.Categories);
+            Assert.True(item.DurationDays >= 5);
+        });
+    }
+
+    /// <summary>West Coast wine ideas provide one Destination and Journey per state with responsible, reviewable claims.</summary>
+    [Fact]
+    public async Task ListAsync_WestCoastWineCatalog_CoversEachStateAndRemainsAdvisory()
+    {
+        var items = await CreateSource().ListAsync(new("creator_demo_01"), "en-US");
+        var wine = items.Where(item => item.Categories.Contains("wine-travel")).ToArray();
+
+        Assert.Equal(6, wine.Length);
+        Assert.Equal(3, wine.Count(item => item.Kind == "destination"));
+        Assert.Equal(3, wine.Count(item => item.Kind == "journey-pattern"));
+        foreach (var state in new[] { "california", "oregon", "washington" })
+        {
+            Assert.Contains(wine, item => item.Kind == "destination" && item.Places.Contains(state));
+            Assert.Contains(wine, item => item.Kind == "journey-pattern" && item.Places.Contains(state));
+        }
+
+        Assert.Contains(wine, item => item.TransportationModes.Contains("walking"));
+        Assert.Contains(wine, item => item.TransportationModes.Contains("bicycle"));
+        Assert.Contains(wine, item => item.TransportationModes.Contains("hired-driver"));
+        Assert.Contains(wine, item => item.BudgetBands.Contains("budget"));
+        Assert.Contains(wine, item => item.BudgetBands.Contains("premium"));
+        Assert.Contains(wine, item => item.Paces.Contains("unhurried"));
+        Assert.Contains(wine, item => item.Paces.Contains("active"));
+        var washingtonMatch = Assert.Single(wine, item =>
+            item.Kind == "destination"
+            && item.Places.Contains("washington")
+            && item.TransportationModes.Contains("walking")
+            && item.BudgetBands.Contains("budget")
+            && item.Categories.Contains("art"));
+        Assert.Equal("footstep_destination_walla_walla_wine_districts", washingtonMatch.Id);
+        Assert.All(wine, item =>
+        {
+            Assert.Equal(new CreatorId("creator_tsa_01"), item.OwnerCreatorId);
+            Assert.Null(item.DestinationDraft);
+            Assert.Null(item.ActivityDraft);
+            Assert.Contains(PlannerFootStepContextKind.Adventure, item.ContextKinds);
+            Assert.Contains("us-pacific", item.Places);
+            Assert.Contains("recheck", item.Freshness, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("responsible-transport-review-required", item.Accessibility);
+            Assert.NotEmpty(item.Sources);
+            Assert.DoesNotContain("guaranteed", item.Summary, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("available now", item.Summary, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("book through", item.Summary, StringComparison.OrdinalIgnoreCase);
+        });
+        Assert.All(wine.Where(item => item.Kind == "journey-pattern"), item =>
         {
             Assert.Contains("journey-blueprint", item.Categories);
             Assert.True(item.DurationDays >= 5);
