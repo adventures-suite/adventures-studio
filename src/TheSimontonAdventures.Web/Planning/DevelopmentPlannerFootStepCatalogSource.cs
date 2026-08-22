@@ -18,7 +18,7 @@ public sealed class DevelopmentPlannerFootStepCatalogSource : IPlannerFootStepCa
             "development.json", "real-world.json", "us-motorcycle.json", "us-motorcycle-journeys.json",
             "us-national-parks-rv.json", "us-camping-hiking.json", "us-southwest.json",
             "us-west-coast-wine.json", "us-special-interest.json", "us-expanded-travel-types.json",
-            "us-expanded-rail.json"
+            "us-expanded-rail.json", "us-travel-category-depth.json"
         }
             .SelectMany(fileName => Deserialize(Path.Combine(directory, fileName)))
             .ToArray();

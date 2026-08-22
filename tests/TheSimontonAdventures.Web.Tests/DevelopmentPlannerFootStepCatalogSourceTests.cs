@@ -17,8 +17,8 @@ public sealed class DevelopmentPlannerFootStepCatalogSourceTests
         var items = await source.ListAsync(new("creator_demo_01"), "en-US");
         var realWorld = items.Where(item => item.SourceClasses.Contains("real-world-curated")).ToArray();
 
-        Assert.Equal(120, realWorld.Length);
-        Assert.Equal(120, realWorld.Select(item => (item.Id, item.Version)).Distinct().Count());
+        Assert.Equal(252, realWorld.Length);
+        Assert.Equal(252, realWorld.Select(item => (item.Id, item.Version)).Distinct().Count());
         Assert.All(realWorld, item =>
         {
             Assert.Equal(new CreatorId("creator_tsa_01"), item.OwnerCreatorId);
@@ -457,6 +457,64 @@ public sealed class DevelopmentPlannerFootStepCatalogSourceTests
         Assert.Contains(rail, item => item.Categories.Contains("premium-rail-suggestion"));
         Assert.Contains(rail, item => item.Categories.Contains("ferry-travel"));
         Assert.All(rail, AssertSafeExpandedItem);
+    }
+
+    /// <summary>Each requested travel category gains exactly eleven additional, balanced Destination and Journey suggestions.</summary>
+    [Fact]
+    public async Task ListAsync_TravelCategoryDepth_AddsElevenRecordsPerCategory()
+    {
+        var items = await CreateSource().ListAsync(new("creator_demo_01"), "en-US");
+        var depth = items.Where(item => item.SourceClasses.Contains("us-travel-category-depth")).ToArray();
+        var categories = new[]
+        {
+            "cycling-travel", "dark-sky", "fishing-travel", "diving-travel", "equestrian-travel",
+            "arts-travel", "space-travel", "pilgrimage-travel", "agritourism", "literary-travel",
+            "island-travel", "citizen-science"
+        };
+
+        Assert.Equal(132, depth.Length);
+        foreach (var category in categories)
+        {
+            var categoryItems = depth.Where(item => item.Categories.Contains(category)).ToArray();
+            Assert.Equal(11, categoryItems.Length);
+            Assert.Equal(6, categoryItems.Count(item => item.Kind == "destination"));
+            Assert.Equal(5, categoryItems.Count(item => item.Kind == "journey-pattern"));
+            Assert.All(categoryItems, AssertSafeExpandedItem);
+        }
+    }
+
+    /// <summary>Specialized categories retain the safety and planning metadata required for contextual filtering.</summary>
+    [Fact]
+    public async Task ListAsync_TravelCategoryDepth_PreservesSpecializedSafetyMetadata()
+    {
+        var items = await CreateSource().ListAsync(new("creator_demo_01"), "en-US");
+        var depth = items.Where(item => item.SourceClasses.Contains("us-travel-category-depth")).ToArray();
+
+        Assert.All(depth.Where(item => item.Categories.Contains("cycling-travel")), item =>
+            Assert.Contains("e-bike-class-rule-review-required", item.Accessibility));
+        Assert.All(depth.Where(item => item.Categories.Contains("fishing-travel")), item =>
+            Assert.Contains("license-plan", item.EquipmentNeeds));
+        Assert.All(depth.Where(item => item.Categories.Contains("diving-travel")), item =>
+            Assert.Contains("certification-and-skill-review-required", item.Accessibility));
+        Assert.All(depth.Where(item => item.Categories.Contains("equestrian-travel")), item =>
+            Assert.Contains("animal-welfare-review", item.EquipmentNeeds));
+        Assert.All(depth.Where(item => item.Categories.Contains("arts-travel")
+            || item.Categories.Contains("pilgrimage-travel")), item =>
+            Assert.Contains("cultural-protocol-review-required", item.Accessibility));
+        Assert.All(depth.Where(item => item.Categories.Contains("island-travel")), item =>
+            Assert.Contains("boarding-and-transfer-review-required", item.Accessibility));
+        Assert.All(depth.Where(item => item.Categories.Contains("citizen-science")), item =>
+            Assert.Contains("volunteer-eligibility-review-required", item.Accessibility));
+
+        var accessibleFishing = Assert.Single(depth, item =>
+            item.Id == "footstep_destination_little_pend_oreille_accessible_fishing");
+        Assert.Contains("accessible-shore-fishing", accessibleFishing.Categories);
+        Assert.Contains("washington", accessibleFishing.Places);
+        Assert.Contains("budget", accessibleFishing.BudgetBands);
+
+        var eclipse = Assert.Single(depth, item => item.Id == "footstep_journey_us_eclipse_readiness");
+        Assert.Contains("eclipse-planning", eclipse.Categories);
+        Assert.Contains("night-navigation-plan", eclipse.EquipmentNeeds);
     }
 
     private static void AssertSafeExpandedItem(PlannerFootStepDefinition item)
