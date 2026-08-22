@@ -98,7 +98,11 @@ public sealed class DevelopmentAdventureTemplateCatalogSource : IAdventureTempla
                 item.DepartureDestinationKey, item.ArrivalDestinationKey)).ToArray(),
             Accommodations = source.Accommodations.Select(item => new AdventureTemplateAccommodation(
                 item.Name, item.StartDayOffset, item.EndDayOffset,
-                new IanaTimeZone(item.TimeZone), item.DestinationKey)).ToArray()
+                new IanaTimeZone(item.TimeZone), item.DestinationKey)).ToArray(),
+            TravelStopSuggestions = (source.TravelStopSuggestions ?? []).Select(item =>
+                new AdventureTemplateTravelStopSuggestion(
+                    item.OriginAliases, item.OneWayDistanceMiles, item.DailyDistanceMiles,
+                    item.OutboundStops, item.ReturnStops, item.Basis)).ToArray()
         };
     }
 
@@ -118,7 +122,8 @@ public sealed class DevelopmentAdventureTemplateCatalogSource : IAdventureTempla
         DayRecord[] Days,
         ActivityRecord[] Activities,
         TransportationRecord[] Transportation,
-        AccommodationRecord[] Accommodations);
+        AccommodationRecord[] Accommodations,
+        TravelStopSuggestionRecord[]? TravelStopSuggestions = null);
 
     private sealed record DestinationRecord(
         string Key, string Name, int StartDayOffset, int EndDayOffset,
@@ -139,4 +144,12 @@ public sealed class DevelopmentAdventureTemplateCatalogSource : IAdventureTempla
     private sealed record AccommodationRecord(
         string Name, int StartDayOffset, int EndDayOffset, string TimeZone,
         string? DestinationKey);
+
+    private sealed record TravelStopSuggestionRecord(
+        string[] OriginAliases,
+        int OneWayDistanceMiles,
+        int DailyDistanceMiles,
+        string[] OutboundStops,
+        string[] ReturnStops,
+        string Basis);
 }

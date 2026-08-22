@@ -48,6 +48,8 @@
 .journey-template__travel-stops { border: 1px solid var(--planner-shell-border); border-radius: .7rem; margin: 1rem 0; max-width: 48rem; padding: 1rem; }
 .journey-template__travel-stops h5 { font-family: Georgia, serif; font-size: 1.05rem; margin: 0; }
 .journey-template__travel-stops p { color: var(--planner-shell-text-muted); margin: .35rem 0 1rem; }
+.journey-template__travel-stops .journey-template__suggestion-status { background: color-mix(in srgb, var(--planner-shell-primary) 10%, var(--planner-shell-surface)); border-radius: .5rem; color: var(--planner-shell-text); padding: .6rem .75rem; }
+.journey-template__travel-stops .journey-template__suggestion-basis { border-top: 1px solid var(--planner-shell-border); font-size: .85rem; margin: 1rem 0 0; padding-top: .75rem; }
 .journey-template__stop-columns { display: grid; gap: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .journey-template__stop-columns fieldset { border: 0; display: grid; gap: .7rem; margin: 0; min-width: 0; padding: 0; }
 .journey-template__stop-columns legend { font-weight: 800; margin-bottom: .6rem; }
