@@ -17,8 +17,8 @@ public sealed class DevelopmentPlannerFootStepCatalogSourceTests
         var items = await source.ListAsync(new("creator_demo_01"), "en-US");
         var realWorld = items.Where(item => item.SourceClasses.Contains("real-world-curated")).ToArray();
 
-        Assert.Equal(64, realWorld.Length);
-        Assert.Equal(64, realWorld.Select(item => (item.Id, item.Version)).Distinct().Count());
+        Assert.Equal(84, realWorld.Length);
+        Assert.Equal(84, realWorld.Select(item => (item.Id, item.Version)).Distinct().Count());
         Assert.All(realWorld, item =>
         {
             Assert.Equal(new CreatorId("creator_tsa_01"), item.OwnerCreatorId);
@@ -338,6 +338,62 @@ public sealed class DevelopmentPlannerFootStepCatalogSourceTests
             Assert.Contains("journey-blueprint", item.Categories);
             Assert.True(item.DurationDays >= 5);
         });
+    }
+
+    /// <summary>Special-interest travel gaps each provide one sourced Destination and one Journey without unsafe operational claims.</summary>
+    [Fact]
+    public async Task ListAsync_SpecialInterestCatalog_CoversEveryRequestedGapAndRemainsAdvisory()
+    {
+        var items = await CreateSource().ListAsync(new("creator_demo_01"), "en-US");
+        var categories = new[]
+        {
+            "music-festival", "college-sports", "motorsports", "historic-rail", "culinary-trail",
+            "winter-sports", "boating", "wellness-retreat", "theme-parks", "birding"
+        };
+        var specialInterest = items.Where(item => categories.Any(item.Categories.Contains)).ToArray();
+
+        Assert.Equal(20, specialInterest.Length);
+        foreach (var category in categories)
+        {
+            Assert.Contains(specialInterest, item => item.Kind == "destination" && item.Categories.Contains(category));
+            Assert.Contains(specialInterest, item => item.Kind == "journey-pattern" && item.Categories.Contains(category));
+        }
+
+        Assert.Contains(specialInterest, item => item.BudgetBands.Contains("budget"));
+        Assert.Contains(specialInterest, item => item.BudgetBands.Contains("premium"));
+        Assert.Contains(specialInterest, item => item.Paces.Contains("unhurried"));
+        Assert.Contains(specialInterest, item => item.Paces.Contains("active"));
+        Assert.Contains(specialInterest, item => item.TransportationModes.Contains("heritage-rail"));
+        Assert.Contains(specialInterest, item => item.TransportationModes.Contains("boat"));
+        Assert.Contains(specialInterest, item => item.Seasons.Contains("winter"));
+        Assert.All(specialInterest, item =>
+        {
+            Assert.Equal(new CreatorId("creator_tsa_01"), item.OwnerCreatorId);
+            Assert.Null(item.DestinationDraft);
+            Assert.Null(item.ActivityDraft);
+            Assert.Contains(PlannerFootStepContextKind.Adventure, item.ContextKinds);
+            Assert.NotEmpty(item.Accessibility);
+            Assert.NotEmpty(item.Sources);
+            Assert.Contains("recheck", item.Freshness, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("guaranteed access", item.Summary, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("guaranteed sightings", item.Summary, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("available now", item.Summary, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("book through", item.Summary, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("cure", item.Summary, StringComparison.OrdinalIgnoreCase);
+        });
+        Assert.All(specialInterest.Where(item => item.Kind == "journey-pattern"), item =>
+        {
+            Assert.Contains("journey-blueprint", item.Categories);
+            Assert.True(item.DurationDays >= 8);
+        });
+
+        var birdingMatch = Assert.Single(specialInterest, item =>
+            item.Kind == "destination"
+            && item.Places.Contains("new-mexico")
+            && item.Categories.Contains("birding")
+            && item.BudgetBands.Contains("budget")
+            && item.Accessibility.Contains("quiet-viewing-required"));
+        Assert.Equal("footstep_destination_bosque_del_apache_birding_base", birdingMatch.Id);
     }
 
     private static DevelopmentPlannerFootStepCatalogSource CreateSource() =>
