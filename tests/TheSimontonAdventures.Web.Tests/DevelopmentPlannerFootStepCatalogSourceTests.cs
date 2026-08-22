@@ -17,8 +17,8 @@ public sealed class DevelopmentPlannerFootStepCatalogSourceTests
         var items = await source.ListAsync(new("creator_demo_01"), "en-US");
         var realWorld = items.Where(item => item.SourceClasses.Contains("real-world-curated")).ToArray();
 
-        Assert.Equal(64, realWorld.Length);
-        Assert.Equal(64, realWorld.Select(item => (item.Id, item.Version)).Distinct().Count());
+        Assert.Equal(70, realWorld.Length);
+        Assert.Equal(70, realWorld.Select(item => (item.Id, item.Version)).Distinct().Count());
         Assert.All(realWorld, item =>
         {
             Assert.Equal(new CreatorId("creator_tsa_01"), item.OwnerCreatorId);
@@ -337,6 +337,45 @@ public sealed class DevelopmentPlannerFootStepCatalogSourceTests
         {
             Assert.Contains("journey-blueprint", item.Categories);
             Assert.True(item.DurationDays >= 5);
+        });
+    }
+
+    /// <summary>Baseball travel ideas cover three regions while keeping schedules, tickets, and access advisory.</summary>
+    [Fact]
+    public async Task ListAsync_BaseballRoadTripCatalog_IsRegionalFilterableAndAdvisory()
+    {
+        var items = await CreateSource().ListAsync(new("creator_demo_01"), "en-US");
+        var baseball = items.Where(item => item.Categories.Contains("baseball-travel")).ToArray();
+
+        Assert.Equal(6, baseball.Length);
+        Assert.Equal(3, baseball.Count(item => item.Kind == "destination"));
+        Assert.Equal(3, baseball.Count(item => item.Kind == "journey-pattern"));
+        foreach (var region in new[] { "us-northeast", "us-midwest", "us-pacific" })
+        {
+            Assert.Contains(baseball, item => item.Kind == "destination" && item.Places.Contains(region));
+            Assert.Contains(baseball, item => item.Kind == "journey-pattern" && item.Places.Contains(region));
+        }
+
+        Assert.Contains(baseball, item => item.TransportationModes.Contains("intercity-rail"));
+        Assert.Contains(baseball, item => item.TransportationModes.Contains("car"));
+        Assert.Contains(baseball, item => item.BudgetBands.Contains("budget"));
+        Assert.Contains(baseball, item => item.BudgetBands.Contains("premium"));
+        Assert.All(baseball, item =>
+        {
+            Assert.Equal(new CreatorId("creator_tsa_01"), item.OwnerCreatorId);
+            Assert.Null(item.DestinationDraft);
+            Assert.Null(item.ActivityDraft);
+            Assert.Contains(PlannerFootStepContextKind.Adventure, item.ContextKinds);
+            Assert.Contains("venue-specific-access-review-required", item.Accessibility);
+            Assert.Contains("recheck", item.Freshness, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("guaranteed", item.Summary, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("tickets available", item.Summary, StringComparison.OrdinalIgnoreCase);
+            Assert.NotEmpty(item.Sources);
+        });
+        Assert.All(baseball.Where(item => item.Kind == "journey-pattern"), item =>
+        {
+            Assert.Contains("journey-blueprint", item.Categories);
+            Assert.True(item.DurationDays >= 7);
         });
     }
 
