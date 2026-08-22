@@ -1,4 +1,5 @@
 @namespace TheSimontonAdventures.Web.Components
+@using TheSimontonAdventures.Web.Planning
 
 <section class="journey-starter" aria-labelledby="journey-starter-title">
     <p class="journey-starter__eyebrow">Begin with confidence</p>
@@ -202,6 +203,49 @@
                                     Plan for <strong>@TravelDaysEachWay riding days each way</strong>.
                                     This is a reviewed planning estimate, not live routing or safety guidance.
                                 </p>
+                                @if (TravelExpansionDays > 0)
+                                {
+                                    <section class="journey-template__travel-stops" aria-labelledby="journey-travel-stops-title">
+                                        <div>
+                                            <h5 id="journey-travel-stops-title">Plan the overnight stops</h5>
+                                            <p>Add one overnight place between each full riding day. These remain proposed until you confirm the route, lodging, time zone, weather, and road conditions.</p>
+                                        </div>
+                                        <div class="journey-template__stop-columns">
+                                            <fieldset>
+                                                <legend>Ride to @SelectedTemplate.Destinations.First(destination => !destination.UsesConfiguredOrigin).Name</legend>
+                                                @for (var index = 0; index < OutboundTravelStops.Count; index++)
+                                                {
+                                                    var stopIndex = index;
+                                                    <label>
+                                                        Night @(index + 1)
+                                                        <input type="text"
+                                                               value="@OutboundTravelStops[index]"
+                                                               @oninput="args => TravelStopChanged(AdventureTemplateTravelDirection.Outbound, stopIndex, args)"
+                                                               maxlength="200"
+                                                               placeholder="City or region"
+                                                               autocomplete="off" />
+                                                    </label>
+                                                }
+                                            </fieldset>
+                                            <fieldset>
+                                                <legend>Ride home to @OriginName</legend>
+                                                @for (var index = 0; index < ReturnTravelStops.Count; index++)
+                                                {
+                                                    var stopIndex = index;
+                                                    <label>
+                                                        Night @(index + 1)
+                                                        <input type="text"
+                                                               value="@ReturnTravelStops[index]"
+                                                               @oninput="args => TravelStopChanged(AdventureTemplateTravelDirection.Return, stopIndex, args)"
+                                                               maxlength="200"
+                                                               placeholder="City or region"
+                                                               autocomplete="off" />
+                                                    </label>
+                                                }
+                                            </fieldset>
+                                        </div>
+                                    </section>
+                                }
                             }
                             <label>
                                 Start date
@@ -232,24 +276,49 @@
                                     <p><strong>@FormatDate(ConfiguredStartDate.Value)</strong> – <strong>@FormatDate(JourneyEndDate)</strong></p>
                                 </header>
                                 <ol class="journey-template__dated-route">
-                                    @foreach (var destination in SelectedTemplate.Destinations)
+                                    @if (SelectedTemplate.RequiresConfiguredOrigin)
                                     {
                                         <li>
-                                            <span>@ConfiguredDestinationName(destination)</span>
-                                            <small>@FormatDate(ConfiguredStartDate.Value.AddDays(AdaptedOffset(destination.StartDayOffset))) – @FormatDate(ConfiguredStartDate.Value.AddDays(AdaptedOffset(destination.EndDayOffset)))</small>
+                                            <span>@OriginName</span>
+                                            <small>Start · @FormatDate(ConfiguredStartDate.Value)</small>
                                         </li>
+                                        @for (var index = 0; index < OutboundTravelStops.Count; index++)
+                                        {
+                                            <li><span>@OutboundTravelStops[index]</span><small>Outbound night · @FormatDate(ConfiguredStartDate.Value.AddDays(index))</small></li>
+                                        }
+                                        var destination = SelectedTemplate.Destinations.First(item => !item.UsesConfiguredOrigin);
+                                        <li>
+                                            <span>@destination.Name</span>
+                                            <small>@FormatDate(ConfiguredStartDate.Value.AddDays(AdaptedOffset(destination.StartDayOffset) - (TravelExpansionDays > 0 ? 1 : 0))) – @FormatDate(ConfiguredStartDate.Value.AddDays(AdaptedOffset(destination.EndDayOffset)))</small>
+                                        </li>
+                                        @for (var index = 0; index < ReturnTravelStops.Count; index++)
+                                        {
+                                            <li><span>@ReturnTravelStops[index]</span><small>Return night · @FormatDate(ConfiguredStartDate.Value.AddDays(AdaptedOffset(SelectedTemplate.Destinations.Last(item => item.UsesConfiguredOrigin).StartDayOffset) - TravelExpansionDays + index))</small></li>
+                                        }
+                                        <li><span>@OriginName</span><small>Return · @FormatDate(JourneyEndDate)</small></li>
+                                    }
+                                    else
+                                    {
+                                        @foreach (var destination in SelectedTemplate.Destinations)
+                                        {
+                                            <li>
+                                                <span>@ConfiguredDestinationName(destination)</span>
+                                                <small>@FormatDate(ConfiguredStartDate.Value.AddDays(AdaptedOffset(destination.StartDayOffset))) – @FormatDate(ConfiguredStartDate.Value.AddDays(AdaptedOffset(destination.EndDayOffset)))</small>
+                                            </li>
+                                        }
                                     }
                                 </ol>
                                 <dl class="journey-template__review-counts">
-                                    <div><dt>Destinations</dt><dd>@SelectedTemplate.Destinations.Count</dd></div>
+                                    <div><dt>Destinations</dt><dd>@(SelectedTemplate.Destinations.Count + OutboundTravelStops.Count + ReturnTravelStops.Count)</dd></div>
                                     <div><dt>Itinerary days</dt><dd>@AdaptedItineraryDayCount</dd></div>
                                     <div><dt>Activities</dt><dd>@SelectedTemplate.Activities.Count</dd></div>
                                     <div><dt>Travel legs</dt><dd>@SelectedTemplate.Transportation.Count</dd></div>
                                     @if (SelectedTemplate.RequiresConfiguredOrigin)
                                     {
                                         <div><dt>Riding days</dt><dd>@RidingDayCount</dd></div>
+                                        <div><dt>Daily route segments</dt><dd>@RidingDayCount</dd></div>
                                     }
-                                    <div><dt>Stay patterns</dt><dd>@SelectedTemplate.Accommodations.Count</dd></div>
+                                    <div><dt>Stay patterns</dt><dd>@(SelectedTemplate.Accommodations.Count + OutboundTravelStops.Count + ReturnTravelStops.Count)</dd></div>
                                 </dl>
                                 <form method="post" action="@CreateFromTemplatePath" class="journey-template__create">
                                     <AntiforgeryToken />
@@ -264,6 +333,14 @@
                                         <input type="hidden" name="originTimeZone" value="@OriginTimeZone" />
                                         <input type="hidden" name="oneWayDistanceMiles" value="@OneWayDistanceMiles" />
                                         <input type="hidden" name="dailyDistanceMiles" value="@DailyDistanceMiles" />
+                                        @foreach (var stop in OutboundTravelStops)
+                                        {
+                                            <input type="hidden" name="outboundStop" value="@stop" />
+                                        }
+                                        @foreach (var stop in ReturnTravelStops)
+                                        {
+                                            <input type="hidden" name="returnStop" value="@stop" />
+                                        }
                                     }
                                     <button type="button" class="journey-template__secondary" @onclick="ChangeConfiguration">Change start date</button>
                                     <button type="submit" class="journey-template__continue">Create my private Journey</button>

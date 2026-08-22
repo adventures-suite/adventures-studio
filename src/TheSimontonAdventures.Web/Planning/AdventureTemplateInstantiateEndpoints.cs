@@ -99,6 +99,7 @@ public static class AdventureTemplateInstantiateEndpoints
         {
             AdventureTemplateConfiguredOrigin? configuredOrigin = null;
             AdventureTemplateTravelEstimate? travelEstimate = null;
+            IReadOnlyList<AdventureTemplateTravelStop>? travelStops = null;
             var originName = form["originName"].ToString();
             var originTimeZone = form["originTimeZone"].ToString();
             if (!string.IsNullOrEmpty(originName) || !string.IsNullOrEmpty(originTimeZone))
@@ -121,6 +122,17 @@ public static class AdventureTemplateInstantiateEndpoints
                 }
 
                 travelEstimate = new(oneWayDistanceMiles, dailyDistanceMiles);
+                var outboundStops = form["outboundStop"]
+                    .Select(value => value ?? string.Empty)
+                    .ToArray();
+                var returnStops = form["returnStop"]
+                    .Select(value => value ?? string.Empty)
+                    .ToArray();
+                travelStops = outboundStops.Select((name, index) => new AdventureTemplateTravelStop(
+                        AdventureTemplateTravelDirection.Outbound, index + 1, name))
+                    .Concat(returnStops.Select((name, index) => new AdventureTemplateTravelStop(
+                        AdventureTemplateTravelDirection.Return, index + 1, name)))
+                    .ToArray();
             }
 
             command = new(
@@ -132,7 +144,8 @@ public static class AdventureTemplateInstantiateEndpoints
                 startDate,
                 form["locale"].ToString(),
                 configuredOrigin,
-                travelEstimate);
+                travelEstimate,
+                travelStops);
             return true;
         }
         catch (ArgumentException)

@@ -63,13 +63,19 @@ public partial class PlannerJourneyStarter : ComponentBase, IAsyncDisposable
     private string OriginTimeZone { get; set; } = string.Empty;
     private int OneWayDistanceMiles { get; set; } = 1300;
     private int DailyDistanceMiles { get; set; } = 450;
+    private List<string> OutboundTravelStops { get; } = [];
+    private List<string> ReturnTravelStops { get; } = [];
     private bool IsReviewReady { get; set; }
     private bool IsConfigurationComplete => ConfiguredStartDate.HasValue
         && (SelectedTemplate?.RequiresConfiguredOrigin != true
             || (!string.IsNullOrWhiteSpace(OriginName)
                 && !string.IsNullOrWhiteSpace(OriginTimeZone)
                 && OneWayDistanceMiles is >= 25 and <= 10000
-                && DailyDistanceMiles is >= 100 and <= 1000));
+                && DailyDistanceMiles is >= 100 and <= 1000
+                && OutboundTravelStops.Count == TravelExpansionDays
+                && ReturnTravelStops.Count == TravelExpansionDays
+                && OutboundTravelStops.All(IsValidTravelStop)
+                && ReturnTravelStops.All(IsValidTravelStop)));
     private int TravelDaysEachWay => Math.Max(1,
         (int)Math.Ceiling((double)OneWayDistanceMiles / Math.Max(1, DailyDistanceMiles)));
     private int TravelExpansionDays => SelectedTemplate?.RequiresConfiguredOrigin == true
@@ -94,6 +100,7 @@ public partial class PlannerJourneyStarter : ComponentBase, IAsyncDisposable
         {
             SelectedTemplate = Templates.FirstOrDefault(candidate =>
                 candidate.VersionId.TemplateId == InitialPreviewTemplateId);
+            ResetConfiguration();
         }
     }
 
@@ -144,7 +151,23 @@ public partial class PlannerJourneyStarter : ComponentBase, IAsyncDisposable
         }
     }
 
-    private void ConfigurationChanged() => IsReviewReady = false;
+    private void ConfigurationChanged()
+    {
+        EnsureTravelStopInputs();
+        IsReviewReady = false;
+    }
+
+    private void TravelStopChanged(
+        AdventureTemplateTravelDirection direction,
+        int index,
+        ChangeEventArgs args)
+    {
+        var stops = direction == AdventureTemplateTravelDirection.Outbound
+            ? OutboundTravelStops
+            : ReturnTravelStops;
+        stops[index] = args.Value?.ToString() ?? string.Empty;
+        IsReviewReady = false;
+    }
 
     private void ChangeConfiguration() => IsReviewReady = false;
 
@@ -157,8 +180,33 @@ public partial class PlannerJourneyStarter : ComponentBase, IAsyncDisposable
         OriginTimeZone = string.Empty;
         OneWayDistanceMiles = 1300;
         DailyDistanceMiles = 450;
+        OutboundTravelStops.Clear();
+        ReturnTravelStops.Clear();
+        EnsureTravelStopInputs();
         IsReviewReady = false;
     }
+
+    private void EnsureTravelStopInputs()
+    {
+        Resize(OutboundTravelStops, TravelExpansionDays);
+        Resize(ReturnTravelStops, TravelExpansionDays);
+
+        static void Resize(List<string> values, int count)
+        {
+            while (values.Count < count)
+            {
+                values.Add(string.Empty);
+            }
+
+            if (values.Count > count)
+            {
+                values.RemoveRange(count, values.Count - count);
+            }
+        }
+    }
+
+    private static bool IsValidTravelStop(string value) =>
+        !string.IsNullOrWhiteSpace(value) && value.Trim().Length <= 200;
 
     private static string FormatDate(DateOnly date) =>
         date.ToString("MMM d, yyyy", CultureInfo.InvariantCulture);
